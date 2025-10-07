@@ -12,6 +12,12 @@ import Appointments from "./pages/Appointments";
 import Prescription from "./pages/Prescription";
 import LabOrder from "./pages/LabOrder";
 import Inpatient from "./pages/Inpatient";
+import LabResults from "./pages/LabResults";
+import Billing from "./pages/Billing";
+import Reports from "./pages/Reports";
+import Radiology from "./pages/Radiology";
+import Settings from "./pages/Settings";
+import PatientPortal from "./pages/PatientPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +38,12 @@ const App = () => (
           <Route path="/prescription" element={<Prescription />} />
           <Route path="/lab-order" element={<LabOrder />} />
           <Route path="/inpatient" element={<Inpatient />} />
+          <Route path="/lab-results" element={<LabResults />} />
+          <Route path="/billing" element={<Billing />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/radiology" element={<Radiology />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/patient-portal" element={<PatientPortal />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
