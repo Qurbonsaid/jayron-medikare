@@ -1,31 +1,22 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Filter, Eye, ArrowLeft, Users } from "lucide-react";
+import { Search, Filter, Eye, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const Patients = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
-  const allPatients = [
+  const patients = [
     { id: "P-001", name: "Алиев Жасур Абдуллаевич", age: 35, gender: "Эркак", phone: "+998 90 123 45 67", doctor: "Др. Алимов" },
     { id: "P-002", name: "Каримова Нодира Рахимовна", age: 42, gender: "Аёл", phone: "+998 91 234 56 78", doctor: "Др. Алимов" },
     { id: "P-003", name: "Усмонов Азиз Шухратович", age: 28, gender: "Эркак", phone: "+998 93 345 67 89", doctor: "Др. Нурматова" },
     { id: "P-004", name: "Рахимова Малика Ахмедовна", age: 55, gender: "Аёл", phone: "+998 94 456 78 90", doctor: "Др. Алимов" },
     { id: "P-005", name: "Хасанов Фаррух Баходирович", age: 31, gender: "Эркак", phone: "+998 95 567 89 01", doctor: "Др. Каримов" },
   ];
-
-  const patients = allPatients.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.phone.includes(searchQuery)
-  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -134,108 +125,86 @@ const Patients = () => {
         </Card>
 
         {/* Results Counter */}
-        {!isLoading && patients.length > 0 && (
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-muted-foreground">
-              Жами: <span className="font-semibold text-foreground">{patients.length}</span> бемор
-            </p>
-            <Select defaultValue="25">
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-muted-foreground">
+            Жами: <span className="font-semibold text-foreground">{patients.length}</span> бемор
+          </p>
+          <Select defaultValue="25">
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* Patients Table or Empty State */}
-        {isLoading ? (
-          <Card className="card-shadow p-12">
-            <LoadingSpinner size="lg" text="Юкланмоқда..." className="justify-center" />
-          </Card>
-        ) : patients.length === 0 ? (
-          <Card className="card-shadow">
-            <EmptyState
-              icon={Users}
-              title={searchQuery ? "Ҳеч нарса топилмади" : "Ҳали беморлар йўқ"}
-              description={
-                searchQuery 
-                  ? "Қидирув сўзини текширинг ёки филтрни ўзгартиринг" 
-                  : "Биринчи беморни қўшиш учун қуйидаги тугмани босинг"
-              }
-              actionLabel={searchQuery ? "Филтрни тозалаш" : "+ Янги Бемор Қўшиш"}
-              onAction={() => searchQuery ? setSearchQuery("") : navigate("/patients/new")}
-            />
-          </Card>
-        ) : (
-          <Card className="card-shadow">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">ID</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">ФИО</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">Ёш/Жинс</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">Телефон</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">Шифокор</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold">Ҳаракатлар</th>
+        {/* Patients Table */}
+        <Card className="card-shadow">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">ID</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">ФИО</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Ёш/Жинс</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Телефон</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Шифокор</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold">Ҳаракатлар</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {patients.map((patient) => (
+                  <tr key={patient.id} className="hover:bg-accent/50 transition-smooth">
+                    <td className="px-6 py-4 text-sm font-medium text-primary">{patient.id}</td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium">{patient.name}</div>
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      {patient.age} йош / {patient.gender}
+                    </td>
+                    <td className="px-6 py-4 text-sm">{patient.phone}</td>
+                    <td className="px-6 py-4 text-sm">{patient.doctor}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/patient/${patient.id}`)}
+                          className="hover:bg-primary hover:text-white transition-smooth"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Кўриш
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {patients.map((patient) => (
-                    <tr key={patient.id} className="hover:bg-accent/50 transition-smooth">
-                      <td className="px-6 py-4 text-sm font-medium text-primary">{patient.id}</td>
-                      <td className="px-6 py-4">
-                        <div className="font-medium">{patient.name}</div>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {patient.age} йош / {patient.gender}
-                      </td>
-                      <td className="px-6 py-4 text-sm">{patient.phone}</td>
-                      <td className="px-6 py-4 text-sm">{patient.doctor}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-center">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => navigate(`/patient/${patient.id}`)}
-                            className="hover:bg-primary hover:text-white transition-smooth"
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Кўриш
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-            {/* Pagination */}
-            <div className="px-6 py-4 border-t flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                1-{patients.length} дан {patients.length} та кўрсатилмоқда
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled>
-                  Олдинги
-                </Button>
-                <Button variant="outline" size="sm" className="bg-primary text-white">
-                  1
-                </Button>
-                <Button variant="outline" size="sm" disabled>
-                  Кейинги
-                </Button>
-              </div>
+          {/* Pagination */}
+          <div className="px-6 py-4 border-t flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              1-5 дан 5 та кўрсатилмоқда
             </div>
-          </Card>
-        )}
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" disabled>
+                Олдинги
+              </Button>
+              <Button variant="outline" size="sm" className="bg-primary text-white">
+                1
+              </Button>
+              <Button variant="outline" size="sm" disabled>
+                Кейинги
+              </Button>
+            </div>
+          </div>
+        </Card>
       </main>
     </div>
   );

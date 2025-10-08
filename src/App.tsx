@@ -3,10 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { useGlobalShortcuts } from "@/hooks/use-keyboard-shortcuts";
-import { KeyboardShortcutsDialog } from "@/components/ui/keyboard-shortcuts-dialog";
-import { useState, useEffect } from "react";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
@@ -26,19 +22,11 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function AppContent() {
-  useGlobalShortcuts();
-  const [showShortcuts, setShowShortcuts] = useState(false);
-
-  useEffect(() => {
-    const handleShowShortcuts = () => setShowShortcuts(true);
-    window.addEventListener("show-shortcuts", handleShowShortcuts);
-    return () => window.removeEventListener("show-shortcuts", handleShowShortcuts);
-  }, []);
-
-  return (
-    <>
-      <KeyboardShortcutsDialog open={showShortcuts} onOpenChange={setShowShortcuts} />
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login />} />
@@ -60,20 +48,8 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-    </>
-  );
-}
-
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AppContent />
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;
