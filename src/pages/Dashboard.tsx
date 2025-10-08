@@ -1,4 +1,4 @@
-import { Calendar, Users, CheckCircle, MessageSquare, FileText, Search, FileEdit, Clock } from "lucide-react";
+import { Calendar, Users, CheckCircle, MessageSquare, FileText, Search, FileEdit, Clock, TestTube, DollarSign, BarChart3, ImageIcon, Settings } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -41,7 +41,9 @@ const Dashboard = () => {
                 <Button variant="ghost" className="text-primary font-medium">Бош сахифа</Button>
                 <Button variant="ghost" onClick={() => navigate("/patients")}>Беморлар</Button>
                 <Button variant="ghost" onClick={() => navigate("/appointments")}>Навбат</Button>
-                <Button variant="ghost">Хисоботлар</Button>
+                <Button variant="ghost" onClick={() => navigate("/reports")}>Хисоботлар</Button>
+                <Button variant="ghost" onClick={() => navigate("/billing")}>Ҳисоб-китоб</Button>
+                <Button variant="ghost" onClick={() => navigate("/settings")}>Созламалар</Button>
               </nav>
             </div>
 
@@ -208,6 +210,66 @@ const Dashboard = () => {
                     <div className="text-left">
                       <div className="font-semibold">Стационар</div>
                       <div className="text-xs text-muted-foreground">Ётоқхона бошқаруви</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
+                    onClick={() => navigate("/lab-results")}
+                  >
+                    <TestTube className="w-5 h-5 mr-3 text-primary" />
+                    <div className="text-left">
+                      <div className="font-semibold">Таҳлил натижалари</div>
+                      <div className="text-xs text-muted-foreground">Лаборатория натижалари</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
+                    onClick={() => navigate("/radiology")}
+                  >
+                    <ImageIcon className="w-5 h-5 mr-3 text-primary" />
+                    <div className="text-left">
+                      <div className="font-semibold">Рентген/МРТ/КТ</div>
+                      <div className="text-xs text-muted-foreground">Тасвирлаш текширувлари</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
+                    onClick={() => navigate("/billing")}
+                  >
+                    <DollarSign className="w-5 h-5 mr-3 text-primary" />
+                    <div className="text-left">
+                      <div className="font-semibold">Ҳисоб-китоб</div>
+                      <div className="text-xs text-muted-foreground">Тўлов ва хисоб варақлари</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
+                    onClick={() => navigate("/reports")}
+                  >
+                    <BarChart3 className="w-5 h-5 mr-3 text-primary" />
+                    <div className="text-left">
+                      <div className="font-semibold">Ҳисоботлар</div>
+                      <div className="text-xs text-muted-foreground">Аналитика ва статистика</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
+                    onClick={() => navigate("/settings")}
+                  >
+                    <Settings className="w-5 h-5 mr-3 text-primary" />
+                    <div className="text-left">
+                      <div className="font-semibold">Созламалар</div>
+                      <div className="text-xs text-muted-foreground">Тизим созламалари</div>
                     </div>
                   </Button>
                 </div>
