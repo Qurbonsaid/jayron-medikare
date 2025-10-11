@@ -50,8 +50,6 @@ const menuCategories = [
     title: "БЕМОРЛАР",
     icon: Users,
     items: [
-      { title: "Бемор қидириш", url: "/patients", icon: Users },
-      { title: "Янги бемор", url: "/patients/new", icon: UserPlus },
       { title: "Беморлар рўйхати", url: "/patients", icon: List },
     ],
   },
@@ -80,8 +78,7 @@ const menuCategories = [
     title: "СТАЦИОНАР",
     icon: BedDouble,
     items: [
-      { title: "Палаталар харитаси", url: "/inpatient", icon: BedDouble },
-      { title: "Янги ётқизиш", url: "/inpatient/admission", icon: PlusCircle },
+      { title: "Стационар бошқаруви", url: "/inpatient", icon: BedDouble },
     ],
   },
   {
@@ -90,7 +87,6 @@ const menuCategories = [
     icon: Wallet,
     items: [
       { title: "Ҳисоб-китоб", url: "/billing", icon: Wallet },
-      { title: "Тўловлар", url: "/billing/payments", icon: CreditCard },
     ],
   },
   {
@@ -98,8 +94,7 @@ const menuCategories = [
     title: "ҲИСОБОТЛАР",
     icon: BarChart3,
     items: [
-      { title: "Аналитика", url: "/reports", icon: BarChart3 },
-      { title: "ССВ ҳисоботлари", url: "/reports/ssv", icon: FileText },
+      { title: "Ҳисоботлар", url: "/reports", icon: BarChart3 },
     ],
   },
 ];
@@ -110,8 +105,6 @@ const systemMenu = {
   icon: Settings,
   items: [
     { title: "Созламалар", url: "/settings", icon: Settings },
-    { title: "Фойдаланувчилар", url: "/settings/users", icon: UsersRound },
-    { title: "Аудит журнали", url: "/settings/audit", icon: Clock },
   ],
 };
 
