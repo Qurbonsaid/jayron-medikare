@@ -26,7 +26,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function AppContent() {
+function RoutesContent() {
   useGlobalShortcuts();
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -39,27 +39,25 @@ function AppContent() {
   return (
     <>
       <KeyboardShortcutsDialog open={showShortcuts} onOpenChange={setShowShortcuts} />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/patients" element={<Patients />} />
-          <Route path="/patient/:id" element={<PatientProfile />} />
-          <Route path="/new-visit" element={<NewVisit />} />
-          <Route path="/appointments" element={<Appointments />} />
-          <Route path="/prescription" element={<Prescription />} />
-          <Route path="/lab-order" element={<LabOrder />} />
-          <Route path="/inpatient" element={<Inpatient />} />
-          <Route path="/lab-results" element={<LabResults />} />
-          <Route path="/billing" element={<Billing />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/radiology" element={<Radiology />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/patient-portal" element={<PatientPortal />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/patients" element={<Patients />} />
+        <Route path="/patient/:id" element={<PatientProfile />} />
+        <Route path="/new-visit" element={<NewVisit />} />
+        <Route path="/appointments" element={<Appointments />} />
+        <Route path="/prescription" element={<Prescription />} />
+        <Route path="/lab-order" element={<LabOrder />} />
+        <Route path="/inpatient" element={<Inpatient />} />
+        <Route path="/lab-results" element={<LabResults />} />
+        <Route path="/billing" element={<Billing />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/radiology" element={<Radiology />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/patient-portal" element={<PatientPortal />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </>
   );
 }
@@ -70,7 +68,9 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <AppContent />
+        <BrowserRouter>
+          <RoutesContent />
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   </ErrorBoundary>
