@@ -23,6 +23,7 @@ import Radiology from "./pages/Radiology";
 import Settings from "./pages/Settings";
 import PatientPortal from "./pages/PatientPortal";
 import NotFound from "./pages/NotFound";
+import { AppLayout } from "./components/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -41,20 +42,20 @@ function RoutesContent() {
       <KeyboardShortcutsDialog open={showShortcuts} onOpenChange={setShowShortcuts} />
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/patients" element={<Patients />} />
-        <Route path="/patient/:id" element={<PatientProfile />} />
-        <Route path="/new-visit" element={<NewVisit />} />
-        <Route path="/appointments" element={<Appointments />} />
-        <Route path="/prescription" element={<Prescription />} />
-        <Route path="/lab-order" element={<LabOrder />} />
-        <Route path="/inpatient" element={<Inpatient />} />
-        <Route path="/lab-results" element={<LabResults />} />
-        <Route path="/billing" element={<Billing />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/radiology" element={<Radiology />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/patient-portal" element={<PatientPortal />} />
+        <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+        <Route path="/patients" element={<AppLayout><Patients /></AppLayout>} />
+        <Route path="/patient/:id" element={<AppLayout><PatientProfile /></AppLayout>} />
+        <Route path="/new-visit" element={<AppLayout><NewVisit /></AppLayout>} />
+        <Route path="/appointments" element={<AppLayout><Appointments /></AppLayout>} />
+        <Route path="/prescription" element={<AppLayout><Prescription /></AppLayout>} />
+        <Route path="/lab-order" element={<AppLayout><LabOrder /></AppLayout>} />
+        <Route path="/inpatient" element={<AppLayout><Inpatient /></AppLayout>} />
+        <Route path="/lab-results" element={<AppLayout><LabResults /></AppLayout>} />
+        <Route path="/billing" element={<AppLayout><Billing /></AppLayout>} />
+        <Route path="/reports" element={<AppLayout><Reports /></AppLayout>} />
+        <Route path="/radiology" element={<AppLayout><Radiology /></AppLayout>} />
+        <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
+        <Route path="/patient-portal" element={<AppLayout><PatientPortal /></AppLayout>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

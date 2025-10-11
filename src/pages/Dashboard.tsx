@@ -23,53 +23,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b sticky top-0 z-10 card-shadow">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 gradient-primary rounded-lg flex items-center justify-center">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <span className="text-xl font-bold">JAYRON MEDSERVIS</span>
-              </div>
-              
-              <nav className="hidden md:flex items-center gap-1">
-                <Button variant="ghost" className="text-primary font-medium">Бош сахифа</Button>
-                <Button variant="ghost" onClick={() => navigate("/patients")}>Беморлар</Button>
-                <Button variant="ghost" onClick={() => navigate("/appointments")}>Навбат</Button>
-                <Button variant="ghost" onClick={() => navigate("/reports")}>Хисоботлар</Button>
-                <Button variant="ghost" onClick={() => navigate("/billing")}>Ҳисоб-китоб</Button>
-                <Button variant="ghost" onClick={() => navigate("/settings")}>Созламалар</Button>
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <MessageSquare className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 gradient-danger rounded-full text-xs flex items-center justify-center text-white">
-                  3
-                </span>
-              </Button>
-              
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
-                  ДА
-                </div>
-                <div className="hidden md:block text-right">
-                  <p className="text-sm font-medium">Др. Алимов</p>
-                  <p className="text-xs text-muted-foreground">Терапевт</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Хуш келибсиз, Др. Алимов!</h1>
@@ -106,9 +60,9 @@ const Dashboard = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Today's Appointments */}
-          <div className="lg:col-span-2">
+          <div>
             <Card className="card-shadow">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -145,138 +99,8 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Quick Actions */}
-          <div className="space-y-6">
-            <Card className="card-shadow">
-              <div className="p-6">
-                <h2 className="text-xl font-bold mb-4">Тез Амаллар</h2>
-                <div className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
-                    onClick={() => navigate("/new-visit")}
-                  >
-                    <FileEdit className="w-5 h-5 mr-3 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">Янги кўрик</div>
-                      <div className="text-xs text-muted-foreground">SOAP ёзув яратиш</div>
-                    </div>
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
-                    onClick={() => navigate("/patients")}
-                  >
-                    <Search className="w-5 h-5 mr-3 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">Бемор қидириш</div>
-                      <div className="text-xs text-muted-foreground">Рўйхатдан топиш</div>
-                    </div>
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
-                    onClick={() => navigate("/prescription")}
-                  >
-                    <FileText className="w-5 h-5 mr-3 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">Рецепт ёзиш</div>
-                      <div className="text-xs text-muted-foreground">Дори буюртма қилиш</div>
-                    </div>
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
-                    onClick={() => navigate("/lab-order")}
-                  >
-                    <svg className="w-5 h-5 mr-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                    <div className="text-left">
-                      <div className="font-semibold">Таҳлил буюртмаси</div>
-                      <div className="text-xs text-muted-foreground">Лаборатория текширувлари</div>
-                    </div>
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
-                    onClick={() => navigate("/inpatient")}
-                  >
-                    <Users className="w-5 h-5 mr-3 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">Стационар</div>
-                      <div className="text-xs text-muted-foreground">Ётоқхона бошқаруви</div>
-                    </div>
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
-                    onClick={() => navigate("/lab-results")}
-                  >
-                    <TestTube className="w-5 h-5 mr-3 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">Таҳлил натижалари</div>
-                      <div className="text-xs text-muted-foreground">Лаборатория натижалари</div>
-                    </div>
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
-                    onClick={() => navigate("/radiology")}
-                  >
-                    <ImageIcon className="w-5 h-5 mr-3 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">Рентген/МРТ/КТ</div>
-                      <div className="text-xs text-muted-foreground">Тасвирлаш текширувлари</div>
-                    </div>
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
-                    onClick={() => navigate("/billing")}
-                  >
-                    <DollarSign className="w-5 h-5 mr-3 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">Ҳисоб-китоб</div>
-                      <div className="text-xs text-muted-foreground">Тўлов ва хисоб варақлари</div>
-                    </div>
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
-                    onClick={() => navigate("/reports")}
-                  >
-                    <BarChart3 className="w-5 h-5 mr-3 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">Ҳисоботлар</div>
-                      <div className="text-xs text-muted-foreground">Аналитика ва статистика</div>
-                    </div>
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start h-auto py-4 hover:bg-accent transition-smooth"
-                    onClick={() => navigate("/settings")}
-                  >
-                    <Settings className="w-5 h-5 mr-3 text-primary" />
-                    <div className="text-left">
-                      <div className="font-semibold">Созламалар</div>
-                      <div className="text-xs text-muted-foreground">Тизим созламалари</div>
-                    </div>
-                  </Button>
-                </div>
-              </div>
-            </Card>
-
-            {/* Recent Activity */}
+          {/* Recent Activity */}
+          <div>
             <Card className="card-shadow">
               <div className="p-6">
                 <h2 className="text-xl font-bold mb-4">Охирги Фаолият</h2>
@@ -295,7 +119,7 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
