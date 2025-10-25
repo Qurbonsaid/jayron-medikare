@@ -16,84 +16,17 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { menuCategories, systemMenu } from '@/constants/Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
-  BarChart3,
-  BedDouble,
-  Calendar,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ClipboardCheck,
-  FileEdit,
-  List,
-  Microscope,
-  Pill,
-  ScanLine,
-  Settings,
-  Stethoscope,
-  TestTube,
-  Users,
-  Wallet,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
-const menuCategories = [
-  {
-    id: 'patients',
-    title: 'БЕМОРЛАР',
-    icon: Users,
-    items: [{ title: 'Беморлар рўйхати', url: '/patients', icon: List }],
-  },
-  {
-    id: 'clinical',
-    title: 'КЎРИКЛАР',
-    icon: Stethoscope,
-    items: [
-      { title: 'Янги кўрик SOAP', url: '/new-visit', icon: FileEdit },
-      { title: 'Навбатлар', url: '/appointments', icon: Calendar },
-      { title: 'Рецепт ёзиш', url: '/prescription', icon: Pill },
-    ],
-  },
-  {
-    id: 'diagnostics',
-    title: 'ДИАГНОСТИКА',
-    icon: Microscope,
-    items: [
-      { title: 'Таҳлил буюртмаси', url: '/lab-order', icon: TestTube },
-      { title: 'Таҳлил натижалари', url: '/lab-results', icon: ClipboardCheck },
-      { title: 'Рентген/МРТ/КТ', url: '/radiology', icon: ScanLine },
-    ],
-  },
-  {
-    id: 'inpatient',
-    title: 'СТАЦИОНАР',
-    icon: BedDouble,
-    items: [
-      { title: 'Стационар бошқаруви', url: '/inpatient', icon: BedDouble },
-    ],
-  },
-  {
-    id: 'finance',
-    title: 'МОЛИЯ',
-    icon: Wallet,
-    items: [{ title: 'Ҳисоб-китоб', url: '/billing', icon: Wallet }],
-  },
-  {
-    id: 'reports',
-    title: 'ҲИСОБОТЛАР',
-    icon: BarChart3,
-    items: [{ title: 'Ҳисоботлар', url: '/reports', icon: BarChart3 }],
-  },
-];
 
-const systemMenu = {
-  id: 'system',
-  title: 'ТИЗИМ',
-  icon: Settings,
-  items: [{ title: 'Созламалар', url: '/settings', icon: Settings }],
-};
 
 export function AppSidebar() {
   const { open, setOpen, openMobile, setOpenMobile, isMobile: isMobileContext } = useSidebar();
@@ -198,11 +131,14 @@ export function AppSidebar() {
             </div>
           )}
         </Link>
+      </div>
+
+      <SidebarContent className={open ? 'px-2 py-4' : 'px-1 py-2 gap-0'}>
         <Button
           variant='ghost'
           size='icon'
           onClick={() => setOpen(!open)}
-          className='rounded-full w-7 h-7 hover:bg-accent absolute right-[-22px] top-5 bg-white  max-md:hidden'
+          className='rounded-full w-7 h-7 hover:bg-accent absolute right-[-22px] top-28 border-2 border-l-0 border-slate-700 bg-white  max-md:hidden'
         >
           {open ? (
             <ChevronLeft className='w-7 h-7 scale-150' />
@@ -210,9 +146,6 @@ export function AppSidebar() {
             <ChevronRight className='w-7 h-7 scale-150' />
           )}
         </Button>
-      </div>
-
-      <SidebarContent className={open ? 'px-2 py-4' : 'px-1 py-2 gap-0'}>
         {/* Main Categories */}
         {menuCategories.map((category) => (
           <SidebarGroup key={category.id} className={open ? 'mb-2' : ''}>

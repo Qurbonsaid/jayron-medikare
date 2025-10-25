@@ -4,11 +4,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import ListIcon from '@/icons/ListIcon';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
+import { navigator } from '@/constants/Navigator';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -26,100 +26,9 @@ export function AppLayout({ children }: AppLayoutProps) {
     localStorage.setItem('sidebar-state', String(sidebarOpen));
   }, [sidebarOpen]);
 
-  const navigator = [
-    {
-      path: '/dashboard',
-      to: null,
-      title: 'Бош саҳифа',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/patients',
-      to: null,
-      title: 'Беморлар',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/patient/:id',
-      to: '/patients',
-      title: 'Бемор профили',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/new-visit',
-      to: null,
-      title: (
-        <div>
-          <h1 className='text-xl font-bold'>Янги Кўрик</h1>
-          <p className='text-sm text-muted-foreground'>SOAP Ёзув</p>
-        </div>
-      ),
-      icon: <ListIcon />,
-    },
-    {
-      path: '/appointments',
-      to: null,
-      title: 'Учрашувлар',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/prescription',
-      to: null,
-      title: 'Рецептлар',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/lab-order',
-      to: null,
-      title: 'Лаборатория буюртмаси',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/inpatient',
-      to: null,
-      title: 'Стационар',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/lab-results',
-      to: null,
-      title: 'Таҳлил натижалари',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/billing',
-      to: null,
-      title: 'Ҳисоб-китоб',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/reports',
-      to: null,
-      title: 'Ҳисоботлар',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/radiology',
-      to: null,
-      title: 'Рентген',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/settings',
-      to: null,
-      title: 'Созламалар',
-      icon: <ListIcon />,
-    },
-    {
-      path: '/patient-portal',
-      to: null,
-      title: 'Бемор портали',
-      icon: <ListIcon />,
-    },
-  ];
+  
 
   const currentLocation = navigator.find((item) => {
-    // Exact match for static routes
     if (item.path === location.pathname) return true;
 
     // Pattern match for dynamic routes (e.g., /patient/:id)
@@ -127,9 +36,6 @@ export function AppLayout({ children }: AppLayoutProps) {
     const regex = new RegExp(`^${pattern}$`);
     return regex.test(location.pathname);
   });
-
-  console.log(location.pathname);
-  console.log(currentLocation);
 
   return (
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -146,11 +52,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <ArrowLeft className='w-5 h-5' />
                   </Link>
                 )}
-                {/* {currentLocation?.icon && (
-                  <div className='w-12 h-12 gradient-primary rounded-lg flex items-center justify-center'>
-                    {currentLocation?.icon}
-                  </div>
-                )} */}
                 <h1 className='text-xl font-bold'>
                   {currentLocation?.title || 'JAYRON MEDSERVIS'}
                 </h1>
