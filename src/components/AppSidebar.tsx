@@ -92,7 +92,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible='icon' className='border-r bg-card z-20'>
       {/* Logo Area */}
-      <div className='h-16 flex items-center justify-center border-b relative'>
+      <div className='h-18 flex items-center justify-center border-b relative'>
         <Link to='/dashboard'>
           {open ? (
             <div className='flex items-center gap-3'>
@@ -138,12 +138,12 @@ export function AppSidebar() {
           variant='ghost'
           size='icon'
           onClick={() => setOpen(!open)}
-          className='rounded-full w-7 h-7 hover:bg-accent absolute right-[-22px] top-28 border-2 border-l-0 border-slate-700 bg-white  max-md:hidden'
+          className='rounded-full w-7 h-7 hover:bg-accent absolute right-[-22px] top-28 border-2 border-l-0 bg-white  max-md:hidden border-blue-400'
         >
           {open ? (
-            <ChevronLeft className='w-7 h-7 scale-150' />
+            <ChevronLeft className='w-7 h-7 scale-150 text-blue-500' />
           ) : (
-            <ChevronRight className='w-7 h-7 scale-150' />
+            <ChevronRight className='w-7 h-7 scale-150 text-blue-500' />
           )}
         </Button>
         {/* Main Categories */}
