@@ -67,44 +67,46 @@ const Reports = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold">Ҳисоботлар ва аналитика</h1>
-                <p className="text-sm text-muted-foreground">Клиника статистикаси ва кўрсаткичлари</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => handleExport("excel")}>
-                <FileSpreadsheet className="w-4 h-4 mr-2" />
-                Excel
-              </Button>
-              <Button variant="outline" onClick={() => handleExport("pdf")}>
-                <Download className="w-4 h-4 mr-2" />
-                PDF
-              </Button>
-              <Button variant="outline" onClick={() => window.print()}>
-                <Printer className="w-4 h-4 mr-2" />
-                Чоп этиш
-              </Button>
-            </div>
-          </div>
+      {/* Export Buttons - Mobile */}
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:hidden">
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => handleExport("excel")} className="flex-1 text-xs">
+            <FileSpreadsheet className="w-3 h-3 mr-1" />
+            Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleExport("pdf")} className="flex-1 text-xs">
+            <Download className="w-3 h-3 mr-1" />
+            PDF
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()} className="flex-1 text-xs">
+            <Printer className="w-3 h-3 mr-1" />
+            Чоп
+          </Button>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+        {/* Export Buttons - Desktop */}
+        <div className="hidden sm:flex items-center gap-2 mb-4 sm:mb-6 justify-end">
+          <Button variant="outline" onClick={() => handleExport("excel")} className="text-sm">
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            Excel
+          </Button>
+          <Button variant="outline" onClick={() => handleExport("pdf")} className="text-sm">
+            <Download className="w-4 h-4 mr-2" />
+            PDF
+          </Button>
+          <Button variant="outline" onClick={() => window.print()} className="text-sm">
+            <Printer className="w-4 h-4 mr-2" />
+            Чоп этиш
+          </Button>
+        </div>
         {/* Filters */}
-        <Card className="p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div>
-              <Label>Давр</Label>
+              <Label className="text-xs sm:text-sm">Давр</Label>
               <Select value={dateRange} onValueChange={setDateRange}>
                 <SelectTrigger>
                   <SelectValue />
@@ -119,7 +121,7 @@ const Reports = () => {
               </Select>
             </div>
             <div>
-              <Label>Бўлим</Label>
+              <Label className="text-xs sm:text-sm">Бўлим</Label>
               <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
                 <SelectTrigger>
                   <SelectValue />
@@ -136,7 +138,7 @@ const Reports = () => {
         </Card>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           <StatCard
             title="Жами беморлар"
             value="1,248"
@@ -168,10 +170,10 @@ const Reports = () => {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
           {/* Patient Flow Chart */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Card className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary" />
               Беморлар оқими
             </h3>
@@ -189,8 +191,8 @@ const Reports = () => {
           </Card>
 
           {/* Revenue Chart */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Card className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-success" />
               Даромад хизматлар бўйича
             </h3>
@@ -206,8 +208,8 @@ const Reports = () => {
           </Card>
 
           {/* Disease Distribution Chart */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Касалликлар тақсимоти</h3>
+          <Card className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Касалликлар тақсимоти</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -230,27 +232,27 @@ const Reports = () => {
           </Card>
 
           {/* Doctor Performance */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Шифокорлар самарадорлиги</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+          <Card className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Шифокорлар самарадорлиги</h3>
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <table className="w-full min-w-[400px]">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 text-sm font-medium text-muted-foreground">Шифокор</th>
-                    <th className="text-center py-2 text-sm font-medium text-muted-foreground">Беморлар</th>
-                    <th className="text-center py-2 text-sm font-medium text-muted-foreground">Ўрт. вақт</th>
-                    <th className="text-right py-2 text-sm font-medium text-muted-foreground">Даромад</th>
+                    <th className="text-left py-2 px-2 sm:px-0 text-xs sm:text-sm font-medium text-muted-foreground">Шифокор</th>
+                    <th className="text-center py-2 text-xs sm:text-sm font-medium text-muted-foreground hidden sm:table-cell">Беморлар</th>
+                    <th className="text-center py-2 text-xs sm:text-sm font-medium text-muted-foreground hidden md:table-cell">Ўрт. вақт</th>
+                    <th className="text-right py-2 px-2 sm:px-0 text-xs sm:text-sm font-medium text-muted-foreground">Даромад</th>
                   </tr>
                 </thead>
                 <tbody>
                   {doctorPerformance.map((doc, index) => (
                     <tr key={index} className="border-b hover:bg-muted/50 transition-colors">
-                      <td className="py-3 font-medium">{doc.doctor}</td>
-                      <td className="py-3 text-center">
-                        <Badge variant="outline">{doc.patients}</Badge>
+                      <td className="py-2 sm:py-3 px-2 sm:px-0 font-medium text-xs sm:text-sm">{doc.doctor}</td>
+                      <td className="py-2 sm:py-3 text-center hidden sm:table-cell">
+                        <Badge variant="outline" className="text-xs">{doc.patients}</Badge>
                       </td>
-                      <td className="py-3 text-center text-sm text-muted-foreground">{doc.avgTime}</td>
-                      <td className="py-3 text-right font-semibold text-success">{doc.revenue}</td>
+                      <td className="py-2 sm:py-3 text-center text-xs text-muted-foreground hidden md:table-cell">{doc.avgTime}</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-0 text-right font-semibold text-success text-xs sm:text-sm">{doc.revenue}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -260,11 +262,11 @@ const Reports = () => {
         </div>
 
         {/* SSV Report Generator */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">ССВ ҳисобот яратиш</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label>Шаблон танлаш</Label>
+        <Card className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">ССВ ҳисобот яратиш</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <Label className="text-xs sm:text-sm">Шаблон танлаш</Label>
               <Select defaultValue="monthly">
                 <SelectTrigger>
                   <SelectValue />
@@ -277,14 +279,14 @@ const Reports = () => {
               </Select>
             </div>
             <div className="flex items-end">
-              <Button className="w-full">
-                <Download className="w-4 h-4 mr-2" />
+              <Button className="w-full text-sm">
+                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 XML юклаш
               </Button>
             </div>
             <div className="flex items-end">
-              <Button variant="outline" className="w-full">
-                <FileSpreadsheet className="w-4 h-4 mr-2" />
+              <Button variant="outline" className="w-full text-sm">
+                <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Excel юклаш
               </Button>
             </div>
