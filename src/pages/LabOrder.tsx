@@ -69,48 +69,36 @@ const LabOrder = () => {
 					</div>
 				</div>
 
-				{/* Patient Info */}
-				<Card className='mb-6'>
-					<CardHeader>
-						<CardTitle className='text-sm sm:text-base md:text-lg'>
-							Бемор Маълумоти
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4'>
-							<div>
-								<Label className='text-xs sm:text-sm md:text-base'>
-									Бемор Исми
-								</Label>
-								<p className='font-semibold text-xs sm:text-sm md:text-base'>
-									Каримов Жавлон Алишерович
-								</p>
-							</div>
-							<div>
-								<Label className='text-xs sm:text-sm md:text-base'>
-									Туғилган Сана
-								</Label>
-								<p className='font-semibold text-xs sm:text-sm md:text-base'>
-									20.08.1978 (46 йош)
-								</p>
-							</div>
-							<div>
-								<Label className='text-xs sm:text-sm md:text-base'>ID</Label>
-								<p className='font-semibold text-xs sm:text-sm md:text-base'>
-									#PAT-2025-001
-								</p>
-							</div>
-							<div>
-								<Label className='text-xs sm:text-sm md:text-base'>
-									Телефон
-								</Label>
-								<p className='font-semibold text-xs sm:text-sm md:text-base'>
-									+998 91 234 56 78
-								</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
+        {/* Patient Info */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Бемор Маълумоти</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div>
+                <Label>Бемор Исми</Label>
+                <p className="font-semibold">Каримов Жавлон Алишерович</p>
+              </div>
+              <div>
+                <Label>Туғилган Сана</Label>
+                <p className="font-semibold">20.08.1978 (46 йош)</p>
+              </div>
+              <div>
+                <Label>ID</Label>
+                <p className="font-semibold">#PAT-2025-001</p>
+              </div>
+              <div>
+                <Label>Diagnostika</Label>
+                <p className="font-semibold">Yurak kasalligi</p>
+              </div>
+              <div>
+                <Label>Телефон</Label>
+                <p className="font-semibold">+998 91 234 56 78</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
 				{/* Test Selection */}
 				<Card className='mb-6'>
