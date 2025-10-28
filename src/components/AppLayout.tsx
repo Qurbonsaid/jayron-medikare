@@ -45,7 +45,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* Top Header */}
           <header className='sticky top-0 z-10 bg-card border-b card-shadow'>
             <div className='flex items-center justify-between px-6 py-4 lg:px-2'>
-              <div className='flex items-center gap-4 md:px-6'>
+              <div className='flex items-center gap-4 md:px-4'>
                 <SidebarTrigger className='md:hidden' />
                 {currentLocation?.to && (
                   <Link to={currentLocation?.to}>
@@ -57,7 +57,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </h1>
               </div>
 
-              <div className='flex items-center gap-4'>
+              <div className='flex items-center gap-4 px-4'>
                 <Button variant='ghost' size='icon' className='relative'>
                   <MessageSquare className='w-5 h-5' />
                   <span className='absolute -top-1 -right-1 w-5 h-5 gradient-danger rounded-full text-xs flex items-center justify-center text-white'>

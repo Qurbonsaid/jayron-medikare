@@ -1,0 +1,1 @@
+export const SERVER_URL = 'https://jayron-med.onrender.com/';
