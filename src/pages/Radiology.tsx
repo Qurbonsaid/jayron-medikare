@@ -265,7 +265,7 @@ const Radiology = () => {
 
             {/* Main Viewer */}
             <div className="col-span-7 bg-black rounded-lg relative overflow-hidden">
-              <div 
+              <div
                 className="w-full h-full flex items-center justify-center"
                 style={{
                   transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
