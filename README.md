@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/d7938b29-d466-47ef-992d-119d236aad9f
+**URL**: https://jayronmedservis.vercel.app/dashboard
 
 ## How can I edit this code?
 
@@ -10,7 +10,7 @@ There are several ways of editing your application.
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d7938b29-d466-47ef-992d-119d236aad9f) and start prompting.
+Simply visit the [Lovable Project](https://jayronmedservis.vercel.app/dashboard) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
@@ -62,7 +62,7 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/d7938b29-d466-47ef-992d-119d236aad9f) and click on Share -> Publish.
+Simply open [Lovable](https://jayronmedservis.vercel.app/dashboard) and click on Share -> Publish.
 
 ## Can I connect a custom domain to my Lovable project?
 
