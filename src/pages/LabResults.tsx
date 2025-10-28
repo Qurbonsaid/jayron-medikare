@@ -90,7 +90,7 @@ const LabResults = () => {
   ]);
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { class: string; icon: any }> = {
+    const variants: Record<string, { class: string; icon: React.ElementType}> = {
       "Кутилмоқда": { class: "bg-warning/10 text-warning border-warning/20", icon: Clock },
       "Тайёр": { class: "bg-success/10 text-success border-success/20", icon: CheckCircle },
       "Тасдиқланган": { class: "bg-primary/10 text-primary border-primary/20", icon: FileText }
