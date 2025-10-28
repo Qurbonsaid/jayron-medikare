@@ -69,7 +69,7 @@ const LabOrder = () => {
             <CardTitle>Бемор Маълумоти</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
                 <Label>Бемор Исми</Label>
                 <p className="font-semibold">Каримов Жавлон Алишерович</p>
@@ -81,6 +81,10 @@ const LabOrder = () => {
               <div>
                 <Label>ID</Label>
                 <p className="font-semibold">#PAT-2025-001</p>
+              </div>
+              <div>
+                <Label>Diagnostika</Label>
+                <p className="font-semibold">Yurak kasalligi</p>
               </div>
               <div>
                 <Label>Телефон</Label>

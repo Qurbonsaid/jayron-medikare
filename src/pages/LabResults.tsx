@@ -29,6 +29,7 @@ interface TestResult {
   patientName: string;
   testType: string;
   orderedDate: string;
+  diagnostika:string;
   priority: "Оддий" | "Шошилинч" | "Жуда шошилинч";
   status: "Кутилмоқда" | "Тайёр" | "Тасдиқланган";
 }
@@ -57,7 +58,8 @@ const LabResults = () => {
       testType: "Умумий қон таҳлили",
       orderedDate: "07.10.2025 09:30",
       priority: "Оддий",
-      status: "Кутилмоқда"
+      status: "Кутилмоқда",
+      diagnostika:"Karonavirus"
     },
     {
       orderId: "LAB-2025-002",
@@ -65,7 +67,8 @@ const LabResults = () => {
       testType: "Биохимия қони",
       orderedDate: "07.10.2025 10:15",
       priority: "Шошилинч",
-      status: "Тайёр"
+      status: "Тайёр",
+      diagnostika:"Revmatizm"
     },
     {
       orderId: "LAB-2025-003",
@@ -73,7 +76,8 @@ const LabResults = () => {
       testType: "Умумий сийдик таҳлили",
       orderedDate: "06.10.2025 14:20",
       priority: "Оддий",
-      status: "Тасдиқланган"
+      status: "Тасдиқланган",
+      diagnostika:"Animiya"
     }
   ];
 
@@ -229,6 +233,8 @@ const LabResults = () => {
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Бемор</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Таҳлил тури</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Сана</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Диагностика</th>
+
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Устунлик</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Ҳолат</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Ҳаракатлар</th>
@@ -241,6 +247,7 @@ const LabResults = () => {
                       <td className="py-3 px-4">{result.patientName}</td>
                       <td className="py-3 px-4">{result.testType}</td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">{result.orderedDate}</td>
+                      <td className="py-3 px-4">{result.diagnostika}</td>
                       <td className="py-3 px-4">{getPriorityBadge(result.priority)}</td>
                       <td className="py-3 px-4">{getStatusBadge(result.status)}</td>
                       <td className="py-3 px-4">

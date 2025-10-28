@@ -30,6 +30,7 @@ interface RadiologyOrder {
   bodyPart: string;
   status: string;
   scheduledDate: string;
+  diagnostika:string;
 }
 
 const Radiology = () => {
@@ -48,7 +49,8 @@ const Radiology = () => {
       modality: "МРТ",
       bodyPart: "Бош мия",
       status: "Буюртма берилган",
-      scheduledDate: "08.10.2025 10:00"
+      scheduledDate: "08.10.2025 10:00",
+      diagnostika:"Revmatizm"
     },
     {
       orderId: "RAD-2025-002",
@@ -56,7 +58,8 @@ const Radiology = () => {
       modality: "КТ",
       bodyPart: "Ўпка",
       status: "Бажарилмоқда",
-      scheduledDate: "07.10.2025 14:30"
+      scheduledDate: "07.10.2025 14:30",
+      diagnostika:"Revmatizm"
     },
   ];
 
@@ -118,6 +121,7 @@ const Radiology = () => {
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Буюртма №</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Бемор</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Тури</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Диагностика</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Қисм</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Ҳолат</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Режа</th>
@@ -132,6 +136,7 @@ const Radiology = () => {
                       <td className="py-3 px-4">
                         <Badge variant="outline">{order.modality}</Badge>
                       </td>
+                      <td className="py-3 px-4">{order.diagnostika}</td>
                       <td className="py-3 px-4">{order.bodyPart}</td>
                       <td className="py-3 px-4">{getStatusBadge(order.status)}</td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">{order.scheduledDate}</td>
