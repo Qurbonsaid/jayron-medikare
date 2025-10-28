@@ -4,20 +4,17 @@ import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useGlobalShortcuts } from '@/hooks/use-keyboard-shortcuts';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Provider } from 'react-redux';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Login from './pages/Login';
-import NotFound from './pages/NotFound';
+import store from './app/store';
 import { AppLayout } from './components/AppLayout';
 import { routers } from './constants/Navigator';
-// RouterLayout was removed — use direct <Route> inside <Routes> because
-// React Router requires direct <Route> children (or fragments).
-
-const queryClient = new QueryClient();
+import { PrivateRoute } from './hooks/Router/PrivateRouter';
+import Login from './pages/Login';
+import NotFound from './pages/NotFound';
 
 function RoutesContent() {
-  
   useGlobalShortcuts();
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -36,7 +33,9 @@ function RoutesContent() {
       />
       <Routes>
         <Route path='/' element={<Login />} />
-        <Fragment>
+
+        {/* Protected Routes */}
+        <Route element={<PrivateRoute />}>
           {routers.map(({ path, element }) => (
             <Route
               key={path}
@@ -44,7 +43,8 @@ function RoutesContent() {
               element={<AppLayout>{element}</AppLayout>}
             />
           ))}
-        </Fragment>
+        </Route>
+
         <Route path='*' element={<NotFound />} />
       </Routes>
     </>
@@ -53,7 +53,7 @@ function RoutesContent() {
 
 const App = () => (
   <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
+    <Provider store={store}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -61,7 +61,7 @@ const App = () => (
           <RoutesContent />
         </BrowserRouter>
       </TooltipProvider>
-    </QueryClientProvider>
+    </Provider>
   </ErrorBoundary>
 );
 
