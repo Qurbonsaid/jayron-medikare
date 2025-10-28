@@ -1,8 +1,14 @@
-import { MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "./AppSidebar";
-import { useEffect, useState } from "react";
+import { Button } from '@/components/ui/button';
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { AppSidebar } from './AppSidebar';
+import { navigator } from '@/constants/Navigator';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -10,42 +16,62 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(() => {
-    const saved = localStorage.getItem("sidebar-state");
-    return saved !== "false";
+    const saved = localStorage.getItem('sidebar-state');
+    return saved !== 'false';
   });
 
+  const location = useLocation();
+
   useEffect(() => {
-    localStorage.setItem("sidebar-state", String(sidebarOpen));
+    localStorage.setItem('sidebar-state', String(sidebarOpen));
   }, [sidebarOpen]);
+
+  
+
+  const currentLocation = navigator.find((item) => {
+    if (item.path === location.pathname) return true;
+
+    // Pattern match for dynamic routes (e.g., /patient/:id)
+    const pattern = item.path.replace(/:[^/]+/g, '[^/]+');
+    const regex = new RegExp(`^${pattern}$`);
+    return regex.test(location.pathname);
+  });
 
   return (
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
-      <div className="flex min-h-screen w-full">
+      <div className='flex min-h-screen w-full'>
         <AppSidebar />
-        <SidebarInset className="flex-1">
+        <SidebarInset className='flex-1'>
           {/* Top Header */}
-          <header className="sticky top-0 z-10 bg-card border-b card-shadow">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div className="flex items-center gap-4">
-                <SidebarTrigger className="lg:hidden" />
-                <h1 className="text-xl font-bold hidden md:block">JAYRON MEDSERVIS</h1>
+          <header className='sticky top-0 z-10 bg-card border-b card-shadow'>
+            <div className='flex items-center justify-between px-6 py-4 lg:px-2'>
+              <div className='flex items-center gap-4 md:px-6'>
+                <SidebarTrigger className='md:hidden' />
+                {currentLocation?.to && (
+                  <Link to={currentLocation?.to}>
+                    <ArrowLeft className='w-5 h-5' />
+                  </Link>
+                )}
+                <h1 className='text-xl font-bold'>
+                  {currentLocation?.title || 'JAYRON MEDSERVIS'}
+                </h1>
               </div>
 
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" className="relative">
-                  <MessageSquare className="w-5 h-5" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 gradient-danger rounded-full text-xs flex items-center justify-center text-white">
+              <div className='flex items-center gap-4'>
+                <Button variant='ghost' size='icon' className='relative'>
+                  <MessageSquare className='w-5 h-5' />
+                  <span className='absolute -top-1 -right-1 w-5 h-5 gradient-danger rounded-full text-xs flex items-center justify-center text-white'>
                     3
                   </span>
                 </Button>
 
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
+                <div className='flex items-center gap-3'>
+                  <div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
                     ДА
                   </div>
-                  <div className="hidden md:block text-right">
-                    <p className="text-sm font-medium">Др. Алимов</p>
-                    <p className="text-xs text-muted-foreground">Терапевт</p>
+                  <div className='hidden md:block text-right'>
+                    <p className='text-sm font-medium'>Др. Алимов</p>
+                    <p className='text-xs text-muted-foreground'>Терапевт</p>
                   </div>
                 </div>
               </div>
@@ -53,9 +79,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </header>
 
           {/* Main Content */}
-          <main className="flex-1">
-            {children}
-          </main>
+          <main className='flex-1'>{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>
