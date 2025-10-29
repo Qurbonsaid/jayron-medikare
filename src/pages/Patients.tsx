@@ -25,6 +25,7 @@ const Patients = () => {
       name: 'Алиев Жасур Абдуллаевич',
       age: 35,
       gender: 'Эркак',
+      diagnosis:"Ichterlama",
       phone: '+998 90 123 45 67',
       doctor: 'Др. Алимов',
     },
@@ -33,6 +34,7 @@ const Patients = () => {
       name: 'Каримова Нодира Рахимовна',
       age: 42,
       gender: 'Аёл',
+      diagnosis:"Nam yo'tal",
       phone: '+998 91 234 56 78',
       doctor: 'Др. Алимов',
     },
@@ -41,6 +43,7 @@ const Patients = () => {
       name: 'Усмонов Азиз Шухратович',
       age: 28,
       gender: 'Эркак',
+      diagnosis:"Oq qon",
       phone: '+998 93 345 67 89',
       doctor: 'Др. Нурматова',
     },
@@ -49,6 +52,7 @@ const Patients = () => {
       name: 'Рахимова Малика Ахмедовна',
       age: 55,
       gender: 'Аёл',
+      diagnosis:"Ko'r ichak",
       phone: '+998 94 456 78 90',
       doctor: 'Др. Алимов',
     },
@@ -57,6 +61,7 @@ const Patients = () => {
       name: 'Хасанов Фаррух Баходирович',
       age: 31,
       gender: 'Эркак',
+      diagnosis:"Ich ketishi",
       phone: '+998 95 567 89 01',
       doctor: 'Др. Каримов',
     },
@@ -116,12 +121,16 @@ const Patients = () => {
         {/* Page Header */}
         <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8'>
           <div>
-            <h1 className='text-2xl sm:text-3xl font-bold mb-1 sm:mb-2'>Беморлар Рўйхати</h1>
+            <h1 className='text-2xl sm:text-3xl font-bold mb-1 sm:mb-2'>
+              Беморлар Рўйхати
+            </h1>
             <p className='text-sm sm:text-base text-muted-foreground'>
               Барча беморларни кўриш ва бошқариш
             </p>
           </div>
-          <Button className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'>+ Янги Бемор</Button>
+          <Button className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'>
+            + Янги Бемор
+          </Button>
         </div>
 
         {/* Search and Filters */}
@@ -290,71 +299,80 @@ const Patients = () => {
             <Card className='card-shadow hidden lg:block'>
               <div className='overflow-x-auto'>
                 <table className='w-full'>
-                <thead className='bg-muted/50'>
-                  <tr>
-                    <th className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'>
-                      ID
-                    </th>
-                    <th className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'>
-                      ФИО
-                    </th>
-                    <th className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'>
-                      Ёш/Жинс
-                    </th>
-                    <th className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'>
-                      Телефон
-                    </th>
-                    <th className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'>
-                      Шифокор
-                    </th>
-                    <th className='px-4 xl:px-6 py-3 xl:py-4 text-center text-xs xl:text-sm font-semibold'>
-                      Ҳаракатлар
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className='divide-y'>
-                  {patients.map((patient) => (
-                    <tr
-                      key={patient.id}
-                      className='hover:bg-accent/50 transition-smooth'
-                    >
-                      <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm font-medium text-primary'>
-                        {patient.id}
-                      </td>
-                      <td className='px-4 xl:px-6 py-3 xl:py-4'>
-                        <div className='font-medium text-sm xl:text-base'>{patient.name}</div>
-                      </td>
-                      <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-                        {patient.age} йош / {patient.gender}
-                      </td>
-                      <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>{patient.phone}</td>
-                      <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>{patient.doctor}</td>
-                      <td className='px-4 xl:px-6 py-3 xl:py-4'>
-                        <div className='flex justify-center'>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            onClick={() => navigate(`/patient/${patient.id}`)}
-                            className='hover:bg-primary hover:text-white transition-smooth text-xs xl:text-sm'
-                          >
-                            <Eye className='w-3 h-3 xl:w-4 xl:h-4 mr-1 xl:mr-2' />
-                            Кўриш
-                          </Button>
-                        </div>
-                      </td>
+                  <thead className='bg-muted/50'>
+                    <tr>
+                      {Array(
+                        'ID',
+                        'ФИО',
+                        'Ёш/Жинс',
+                        'Телефон',
+                        'Шифокор',
+                        'Диагноз',
+                        'Ҳаракатлар'
+                      ).map((i) => (
+                        <th className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'>
+                          {i}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className='divide-y'>
+                    {patients.map((patient) => (
+                      <tr
+                        key={patient.id}
+                        className='hover:bg-accent/50 transition-smooth'
+                      >
+                        <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm font-medium text-primary'>
+                          {patient.id}
+                        </td>
+                        <td className='px-4 xl:px-6 py-3 xl:py-4'>
+                          <div className='font-medium text-sm xl:text-base'>
+                            {patient.name}
+                          </div>
+                        </td>
+                        <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+                          {patient.age} йош / {patient.gender}
+                        </td>
+                        <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+                          {patient.phone}
+                        </td>
+                        <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+                          {patient.doctor}
+                        </td>
+                        <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+                          {patient.diagnosis}
+                        </td>
+                        <td className='px-4 xl:px-6 py-3 xl:py-4'>
+                          <div className='flex justify-center'>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              onClick={() => navigate(`/patient/${patient.id}`)}
+                              className='hover:bg-primary hover:text-white transition-smooth text-xs xl:text-sm'
+                            >
+                              <Eye className='w-3 h-3 xl:w-4 xl:h-4 mr-1 xl:mr-2' />
+                              Кўриш
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Pagination */}
               <div className='px-4 xl:px-6 py-3 xl:py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3'>
                 <div className='text-xs xl:text-sm text-muted-foreground'>
-                1-{patients.length} дан {patients.length} та кўрсатилмоқда
-              </div>
+                  1-{patients.length} дан {patients.length} та кўрсатилмоқда
+                </div>
                 <div className='flex gap-2'>
-                  <Button variant='outline' size='sm' disabled className='text-xs xl:text-sm'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    disabled
+                    className='text-xs xl:text-sm'
+                  >
                     Олдинги
                   </Button>
                   <Button
@@ -364,7 +382,12 @@ const Patients = () => {
                   >
                     1
                   </Button>
-                  <Button variant='outline' size='sm' disabled className='text-xs xl:text-sm'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    disabled
+                    className='text-xs xl:text-sm'
+                  >
                     Кейинги
                   </Button>
                 </div>
@@ -379,7 +402,12 @@ const Patients = () => {
                     1-{patients.length} дан {patients.length} та кўрсатилмоқда
                   </div>
                   <div className='flex gap-2 justify-center'>
-                    <Button variant='outline' size='sm' disabled className='flex-1 text-xs sm:text-sm'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      disabled
+                      className='flex-1 text-xs sm:text-sm'
+                    >
                       Олдинги
                     </Button>
                     <Button
@@ -389,7 +417,12 @@ const Patients = () => {
                     >
                       1
                     </Button>
-                    <Button variant='outline' size='sm' disabled className='flex-1 text-xs sm:text-sm'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      disabled
+                      className='flex-1 text-xs sm:text-sm'
+                    >
                       Кейинги
                     </Button>
                   </div>
