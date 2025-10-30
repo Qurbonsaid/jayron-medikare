@@ -4,11 +4,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { navigator } from '@/router';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
-import { navigator } from '@/constants/Navigator';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -25,8 +25,6 @@ export function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     localStorage.setItem('sidebar-state', String(sidebarOpen));
   }, [sidebarOpen]);
-
-  
 
   const currentLocation = navigator.find((item) => {
     if (item.path === location.pathname) return true;

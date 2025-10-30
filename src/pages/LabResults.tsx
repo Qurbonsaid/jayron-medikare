@@ -50,7 +50,6 @@ interface TestParameter {
 
 // Dummy hook replacement for canvas environment
 const useNavigate = () => {
-	// This function simulates navigation in a browser-like environment
 	return (path: string) => console.log(`Navigating to: ${path}`)
 }
 
@@ -189,18 +188,10 @@ const LabResults = () => {
 		<div className='min-h-screen bg-gray-50 dark:bg-gray-900 font-sans'>
 			<Toaster position='top-right' />
 			{/* Header - Responsive design added */}
-			<header className='bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 shadow-sm'>
+			<header className='sticky top-0 z-10'>
 				<div className='container mx-auto px-4 py-3 sm:py-4'>
 					<div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-						<div className='flex items-center gap-2 sm:gap-4'>
-							<Button
-								variant='ghost'
-								size='icon'
-								onClick={() => navigate('/dashboard')}
-								className='flex-shrink-0'
-							>
-								<ArrowLeft className='w-5 h-5' />
-							</Button>
+						<div className='flex items-center pl-6 gap-2 sm:gap-4'>
 							<div>
 								<h1 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white'>
 									Таҳлил натижалари
@@ -217,7 +208,7 @@ const LabResults = () => {
 								onClick={() =>
 									setViewMode(viewMode === 'table' ? 'graph' : 'table')
 								}
-								className='text-sm px-3 py-2 h-auto'
+								className='text-sm px-3 py-2 h-auto bg-white shadow-md'
 							>
 								{viewMode === 'table' ? (
 									<TrendingUp className='w-4 h-4 mr-2' />
@@ -226,7 +217,7 @@ const LabResults = () => {
 								)}
 								{viewMode === 'table' ? 'График' : 'Жадвал'}
 							</Button>
-							<Button variant='outline' className='text-sm px-3 py-2 h-auto'>
+							<Button variant='outline' className='text-sm px-3 py-2 h-auto bg-white shadow-md'>
 								<Download className='w-4 h-4 mr-2' />
 								PDF
 							</Button>
@@ -236,7 +227,7 @@ const LabResults = () => {
 			</header>
 
 			{/* Main Content */}
-			<main className='container mx-auto px-4 py-6'>
+			<main className='container mx-auto p-4'>
 				{/* Filters */}
 				<Card className='p-4 mb-6 shadow-md rounded-xl'>
 					<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>

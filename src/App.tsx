@@ -4,15 +4,15 @@ import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useGlobalShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import Login from '@/pages/Login';
+import NotFound from '@/pages/NotFound';
 import { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import store from './app/store';
 import { AppLayout } from './components/AppLayout';
-import { routers } from './constants/Navigator';
 import { PrivateRoute } from './hooks/Router/PrivateRouter';
-import Login from '@/pages/Login';
-import NotFound from '@/pages/NotFound';
+import { routers } from './router';
 
 function RoutesContent() {
   useGlobalShortcuts();
