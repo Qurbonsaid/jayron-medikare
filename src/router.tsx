@@ -6,8 +6,8 @@ import Inpatient from '@/pages/Inpatient';
 import LabResults from '@/pages/LabResults';
 import NewVisit from '@/pages/NewVisit';
 import PatientPortal from '@/pages/PatientPortal';
-import PatientProfile from '@/pages/PatientProfile';
-import Patients from '@/pages/Patients';
+import PatientProfile from '@/pages/Patients/PatientProfile';
+import Patients from '@/pages/Patients/Patients';
 import Prescription from '@/pages/Prescription';
 import Radiology from '@/pages/Radiology';
 import Reports from '@/pages/Reports';
@@ -16,6 +16,7 @@ import LabOrder from '@/pages/LabOrder';
 
 export const routers = [
   { path: '/dashboard', element: <Dashboard /> },
+
   { path: '/patients', element: <Patients /> },
   { path: '/patient/:id', element: <PatientProfile /> },
   { path: '/new-visit', element: <NewVisit /> },
@@ -36,19 +37,16 @@ export const navigator = [
     path: '/dashboard',
     to: null,
     title: 'Бош саҳифа',
-    icon: <ListIcon />,
   },
   {
     path: '/patients',
     to: null,
     title: 'Беморлар',
-    icon: <ListIcon />,
   },
   {
     path: '/patient/:id',
     to: '/patients',
     title: 'Бемор профили',
-    icon: <ListIcon />,
   },
   {
     path: '/new-visit',
@@ -59,66 +57,55 @@ export const navigator = [
         <p className='text-sm text-muted-foreground'>SOAP Ёзув</p>
       </div>
     ),
-    icon: <ListIcon />,
   },
   {
     path: '/appointments',
     to: null,
     title: 'Учрашувлар',
-    icon: <ListIcon />,
   },
   {
     path: '/prescription',
     to: null,
     title: 'Рецептлар',
-    icon: <ListIcon />,
   },
   {
     path: '/lab-order',
     to: null,
     title: 'Лаборатория буюртмаси',
-    icon: <ListIcon />,
   },
   {
     path: '/inpatient',
     to: null,
     title: 'Стационар',
-    icon: <ListIcon />,
   },
   {
     path: '/lab-results',
     to: null,
     title: 'Таҳлил натижалари',
-    icon: <ListIcon />,
   },
   {
     path: '/billing',
     to: null,
     title: 'Ҳисоб-китоб',
-    icon: <ListIcon />,
   },
   {
     path: '/reports',
     to: null,
     title: 'Ҳисоботлар',
-    icon: <ListIcon />,
   },
   {
     path: '/radiology',
     to: null,
     title: 'Рентген',
-    icon: <ListIcon />,
   },
   {
     path: '/settings',
     to: null,
     title: 'Созламалар',
-    icon: <ListIcon />,
   },
   {
     path: '/patient-portal',
     to: null,
     title: 'Бемор портали',
-    icon: <ListIcon />,
   },
 ];

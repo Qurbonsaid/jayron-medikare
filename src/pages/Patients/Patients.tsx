@@ -13,11 +13,13 @@ import {
 import { Eye, Filter, Phone, Search, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import NewPatient from './components/NewPatient';
 
 const Patients = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showNewPatient, setShowNewPatient] = useState(false);
 
   const allPatients = [
     {
@@ -25,7 +27,7 @@ const Patients = () => {
       name: 'Алиев Жасур Абдуллаевич',
       age: 35,
       gender: 'Эркак',
-      diagnosis:"Ichterlama",
+      diagnosis: 'Ichterlama',
       phone: '+998 90 123 45 67',
       doctor: 'Др. Алимов',
     },
@@ -34,7 +36,7 @@ const Patients = () => {
       name: 'Каримова Нодира Рахимовна',
       age: 42,
       gender: 'Аёл',
-      diagnosis:"Nam yo'tal",
+      diagnosis: "Nam yo'tal",
       phone: '+998 91 234 56 78',
       doctor: 'Др. Алимов',
     },
@@ -43,7 +45,7 @@ const Patients = () => {
       name: 'Усмонов Азиз Шухратович',
       age: 28,
       gender: 'Эркак',
-      diagnosis:"Oq qon",
+      diagnosis: 'Oq qon',
       phone: '+998 93 345 67 89',
       doctor: 'Др. Нурматова',
     },
@@ -52,7 +54,7 @@ const Patients = () => {
       name: 'Рахимова Малика Ахмедовна',
       age: 55,
       gender: 'Аёл',
-      diagnosis:"Ko'r ichak",
+      diagnosis: "Ko'r ichak",
       phone: '+998 94 456 78 90',
       doctor: 'Др. Алимов',
     },
@@ -61,7 +63,7 @@ const Patients = () => {
       name: 'Хасанов Фаррух Баходирович',
       age: 31,
       gender: 'Эркак',
-      diagnosis:"Ich ketishi",
+      diagnosis: 'Ich ketishi',
       phone: '+998 95 567 89 01',
       doctor: 'Др. Каримов',
     },
@@ -76,47 +78,6 @@ const Patients = () => {
 
   return (
     <div className='min-h-screen bg-background'>
-      {/* Header - Commented out as it's handled by AppLayout */}
-      {/* <header className='bg-card border-b sticky top-0 z-10 card-shadow'>
-        <div className='container mx-auto px-6 py-4'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-6'>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className='w-5 h-5' />
-              </Button>
-              <div className='flex items-center gap-3'>
-                <div className='w-12 h-12 gradient-primary rounded-lg flex items-center justify-center'>
-                  <svg
-                    className='w-7 h-7 text-white'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
-                    />
-                  </svg>
-                </div>
-                <span className='text-xl font-bold'>JAYRON MEDSERVIS</span>
-              </div>
-            </div>
-
-            <div className='flex items-center gap-3'>
-              <div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
-                ДА
-              </div>
-            </div>
-          </div>
-        </div>
-      </header> */}
-
       <main className='container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
         {/* Page Header */}
         <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8'>
@@ -128,7 +89,10 @@ const Patients = () => {
               Барча беморларни кўриш ва бошқариш
             </p>
           </div>
-          <Button className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'>
+          <Button
+            className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
+            onClick={() => setShowNewPatient(true)}
+          >
             + Янги Бемор
           </Button>
         </div>
@@ -246,7 +210,7 @@ const Patients = () => {
                 searchQuery ? 'Филтрни тозалаш' : '+ Янги Бемор Қўшиш'
               }
               onAction={() =>
-                searchQuery ? setSearchQuery('') : navigate('/patients/new')
+                searchQuery ? setSearchQuery('') : setShowNewPatient(true)
               }
             />
           </Card>
@@ -310,7 +274,10 @@ const Patients = () => {
                         'Диагноз',
                         'Ҳаракатлар'
                       ).map((i) => (
-                        <th className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'>
+                        <th
+                          key={i}
+                          className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'
+                        >
                           {i}
                         </th>
                       ))}
@@ -432,6 +399,9 @@ const Patients = () => {
           </>
         )}
       </main>
+
+      {/* New Patient Modal */}
+      <NewPatient open={showNewPatient} onOpenChange={setShowNewPatient} />
     </div>
   );
 };

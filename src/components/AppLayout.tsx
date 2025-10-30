@@ -9,6 +9,7 @@ import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
+import getUser from '@/hooks/getUser/getUser';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -35,6 +36,10 @@ export function AppLayout({ children }: AppLayoutProps) {
     return regex.test(location.pathname);
   });
 
+  const me = getUser();
+
+  const nickName = me.fullname.split(' ')[0][0] + me.fullname.split(' ')[1][0];
+
   return (
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
       <div className='flex min-h-screen w-full'>
@@ -51,7 +56,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   </Link>
                 )}
                 <h1 className='text-xl font-bold'>
-                  {currentLocation?.title || 'JAYRON MEDSERVIS'}
+                  {currentLocation?.title}
                 </h1>
               </div>
 
@@ -62,14 +67,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                     3
                   </span>
                 </Button>
-
                 <div className='flex items-center gap-3'>
                   <div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
-                    ДА
+                    {nickName}
                   </div>
                   <div className='hidden md:block text-right'>
-                    <p className='text-sm font-medium'>Др. Алимов</p>
-                    <p className='text-xs text-muted-foreground'>Терапевт</p>
+                    <p className='text-sm font-medium'>{me.fullname}</p>
+                    <p className='text-xs text-muted-foreground'>{me.role}</p>
                   </div>
                 </div>
               </div>

@@ -138,7 +138,7 @@ export function AppSidebar() {
           variant='ghost'
           size='icon'
           onClick={() => setOpen(!open)}
-          className='rounded-full w-7 h-7 hover:bg-accent absolute right-[-22px] top-28 border-2 border-l-0 bg-white  max-md:hidden border-blue-400'
+          className='rounded-full w-7 h-7 hover:bg-accent absolute right-[-22px] top-44 border-2 border-l-0 bg-white  max-md:hidden border-blue-400'
         >
           {open ? (
             <ChevronLeft className='w-7 h-7 scale-150 text-blue-500' />
