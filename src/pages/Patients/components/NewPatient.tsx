@@ -114,6 +114,8 @@ interface NewPatientProps {
 const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
     defaultValues: {
       lastName: '',
       firstName: '',
@@ -148,36 +150,6 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
         data.middleName || ''
       }`.trim(),
     };
-
-    console.log('=== ЯНГИ БЕМОР МАЪЛУМОТЛАРИ ===');
-    console.log('Толиқ исм:', submitData.fullName);
-    console.log('Туғилган сана:', submitData.birthDate);
-    console.log('Жинси:', submitData.gender);
-    console.log('Қон гурухи:', submitData.bloodType || 'Кўрсатилмаган');
-    console.log('Телефон:', submitData.phone);
-    console.log('Email:', submitData.email || 'Кўрсатилмаган');
-    console.log('Манзил:', submitData.address);
-    console.log('Шаҳар:', submitData.city || 'Кўрсатилмаган');
-    console.log('Вилоят:', submitData.region || 'Кўрсатилмаган');
-    console.log('Почта индекси:', submitData.zipCode || 'Кўрсатилмаган');
-    console.log('Фавқулодда алоқа:', {
-      name: submitData.emergencyContactName || 'Кўрсатилмаган',
-      phone: submitData.emergencyContactPhone || 'Кўрсатилмаган',
-      relation: submitData.emergencyContactRelation || 'Кўрсатилмаган',
-    });
-    console.log('Аллергия:', submitData.allergies || 'Йўқ');
-    console.log('Сурункали касалликлар:', submitData.chronicDiseases || 'Йўқ');
-    console.log('Ҳозирги дорилар:', submitData.currentMedications || 'Йўқ');
-    console.log('Суғурта:', {
-      company: submitData.insuranceCompany || 'Кўрсатилмаган',
-      number: submitData.insuranceNumber || 'Кўрсатилмаган',
-    });
-    console.log('Паспорт:', {
-      series: submitData.passportSeries || 'Кўрсатилмаган',
-      number: submitData.passportNumber || 'Кўрсатилмаган',
-    });
-    console.log('Қўшимча эслатмалар:', submitData.notes || 'Йўқ');
-    console.log('===============================');
     console.log('Толиқ JSON:', JSON.stringify(submitData, null, 2));
 
     toast.success('Бемор маълумотлари муваффақиятли сақланди!', {
@@ -393,7 +365,37 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                           <Input
                             className='border-slate-400 border-2'
                             placeholder='+998 90 123 45 67'
-                            {...field}
+                            value={
+                              field.value
+                                ? field.value.replace(
+                                    /(\+998)(\d{2})(\d{3})(\d{2})(\d{2})/,
+                                    '$1 $2 $3 $4 $5'
+                                  )
+                                : ''
+                            }
+                            onFocus={(e) => {
+                              if (!field.value || field.value === '') {
+                                field.onChange('+998');
+                              }
+                            }}
+                            onChange={(e) => {
+                              let value = e.target.value;
+
+                              // Faqat +998 va raqamlarni qoldirish
+                              value = value.replace(/[^\d+]/g, '');
+
+                              // Agar +998 bilan boshlanmasa, uni qo'shish
+                              if (!value.startsWith('+998')) {
+                                value = '+998';
+                              }
+
+                              // Maksimal 9 ta raqam (+998 dan keyin)
+                              if (value.length > 13) {
+                                value = value.slice(0, 13);
+                              }
+
+                              field.onChange(value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -529,7 +531,37 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                           <Input
                             className='border-slate-400 border-2'
                             placeholder='+998 90 123 45 67'
-                            {...field}
+                            value={
+                              field.value
+                                ? field.value.replace(
+                                    /(\+998)(\d{2})(\d{3})(\d{2})(\d{2})/,
+                                    '$1 $2 $3 $4 $5'
+                                  )
+                                : ''
+                            }
+                            onFocus={(e) => {
+                              if (!field.value || field.value === '') {
+                                field.onChange('+998');
+                              }
+                            }}
+                            onChange={(e) => {
+                              let value = e.target.value;
+
+                              // Faqat +998 va raqamlarni qoldirish
+                              value = value.replace(/[^\d+]/g, '');
+
+                              // Agar +998 bilan boshlanmasa, uni qo'shish
+                              if (!value.startsWith('+998')) {
+                                value = '+998';
+                              }
+
+                              // Maksimal 9 ta raqam (+998 dan keyin)
+                              if (value.length > 13) {
+                                value = value.slice(0, 13);
+                              }
+
+                              field.onChange(value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -730,18 +762,19 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
           </Form>
         </ScrollArea>
 
-        <DialogFooter className='p-4 sm:p-6 pt-0'>
+        <DialogFooter className='p-4 sm:p-6 pt-0 flex flex-col sm:flex-row gap-2 sm:gap-0'>
           <Button
             type='button'
             variant='outline'
             onClick={() => onOpenChange(false)}
+            className='w-full sm:w-auto order-2 sm:order-1'
           >
             Бекор қилиш
           </Button>
           <Button
             type='submit'
             onClick={form.handleSubmit(onSubmit)}
-            className='gradient-primary'
+            className='gradient-primary w-full sm:w-auto order-1 sm:order-2'
           >
             <Save className='w-4 h-4 mr-2' />
             Сақлаш

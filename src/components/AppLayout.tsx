@@ -47,7 +47,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <SidebarInset className='flex-1'>
           {/* Top Header */}
           <header className='sticky top-0 z-10 bg-card border-b card-shadow'>
-            <div className='flex items-center justify-between px-6 py-4 lg:px-2'>
+            <div className='flex items-center justify-between px-6 py-4 lg:px-2 max-sm:pr-0'>
               <div className='flex items-center gap-4 md:px-4'>
                 <SidebarTrigger className='md:hidden' />
                 {currentLocation?.to && (
