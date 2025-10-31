@@ -1,5 +1,5 @@
 import ListIcon from '@/icons/ListIcon';
-import Appointments from '@/pages/Appointments';
+import Appointments from '@/pages/Appointments/Appointments';
 import Billing from '@/pages/Billing';
 import Dashboard from '@/pages/Dashboard';
 import Inpatient from '@/pages/Inpatient';
