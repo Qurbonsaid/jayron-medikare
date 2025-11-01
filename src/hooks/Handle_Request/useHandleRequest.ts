@@ -33,11 +33,12 @@ export const useHandleRequest = () => {
       if (onSuccess) {
         await onSuccess(result);
       }
-    } catch (ex) {
+    } catch (ex : any) {
+      const err = ex.data.error;
       if (onError) {
-        await onError(ex.data.error);
+        await onError(err);
       } else {
-        handleError(ex.data.error.msg);
+        handleError(err.msg);
       }
       console.error(ex.data.error.msg);
     } finally {
