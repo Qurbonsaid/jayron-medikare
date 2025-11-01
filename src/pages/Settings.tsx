@@ -272,7 +272,7 @@ const Settings = () => {
                 Автоматик билдиришномалар
               </h2>
               <div className='space-y-4 max-w-2xl'>
-                <div className='flex items-center justify-between'>
+                {/* <div className='flex items-center justify-between'>
                   <div>
                     <Label>Навбатдан 1 кун олдин эслатма</Label>
                     <p className='text-sm text-muted-foreground'>
@@ -289,7 +289,7 @@ const Settings = () => {
                     </p>
                   </div>
                   <Switch defaultChecked />
-                </div>
+                </div> */}
                 <div className='flex items-center justify-between'>
                   <div>
                     <Label>Таҳлил натижалари тайёр</Label>
