@@ -1,75 +1,52 @@
 import { useHandleError } from './useHandleError';
 
-export interface Params {
+export type Params = {
   request: () => Promise<any>;
-  onSuccess?: (data: any) => void | Promise<void>;
-  onError?: (error: any) => void;
-}
+  onSuccess?: (data?: any) => Promise<void> | void;
+  onError?: (error?: any) => Promise<void> | void;
+  onFinally?: () => Promise<void> | void;
+};
 
 export const useHandleRequest = () => {
   const handleError = useHandleError();
 
-  return async ({ request, onSuccess, onError }: Params) => {
+  return async ({ request, onSuccess, onError, onFinally }: Params) => {
     try {
       const result = await request();
-
-      if (result?.error) {
-        const error = result.error?.data || result.error;
-
-        if (onError) {
-          onError(error);
-        } else {
-          handleError(error);
-        }
-        return;
-      }
-
-      // Check if response has success: false (API error response)
-      if (result?.data?.success === false || result?.success === false) {
-        const error =
-          result?.data?.error || result?.error || result?.data || result;
-
-        if (onError) {
-          onError(error);
-        } else {
-          handleError(error);
-        }
-        return;
-      }
-
-      // Check for nested errors in various formats
       const errors =
-        result?.data?.errors ||
-        result?.data?.error ||
+        result?.error?.data?.errors ||
+        result?.error?.data ||
+        result?.error ||
         result?.errors?.data?.errors ||
         result?.errors?.data ||
         result?.errors;
 
       if (errors) {
         if (onError) {
-          onError(errors);
+          await onError(errors);
         } else {
           handleError(errors);
         }
         return;
       }
 
-      // Success case
       if (onSuccess) {
-        await onSuccess(result?.data || result);
+        await onSuccess(result);
       }
     } catch (ex) {
-      const errors =
-        ex?.data?.errors ||
-        ex?.data?.error.msg ||
-        ex?.data?.error ||
-        ex?.errors?.data?.errors ||
-        ex?.errors?.data ||
-        ex?.errors;
       if (onError) {
-        onError(errors);
+        await onError(ex.data.error);
       } else {
-        handleError(errors);
+        handleError(ex.data.error.msg);
+      }
+      console.error(ex.data.error.msg);
+    } finally {
+      if (onFinally) {
+        try {
+          await onFinally();
+        } catch (finallyError) {
+          console.error('Error in onFinally callback:', finallyError);
+        }
       }
     }
   };
