@@ -10,14 +10,19 @@ import {
   Phone,
   Printer,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import EditPatientModal from './components/EditPatientModal';
+import PatientReportModal from './components/PatientReportModal';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Mock patient data
-  const patient = {
+  const [patient, setPatient] = useState({
     id: 'P-001',
     name: 'Алиев Жасур Абдуллаевич',
     age: 35,
@@ -45,6 +50,12 @@ const PatientProfile = () => {
       temp: '36.6',
       weight: '82',
     },
+  });
+
+  const handleSavePatient = (updatedPatient: typeof patient) => {
+    setPatient(updatedPatient);
+    console.log('Patient updated:', updatedPatient);
+    // Here you would normally send the update to your backend
   };
 
   return (
@@ -85,6 +96,7 @@ const PatientProfile = () => {
                       variant='outline'
                       size='sm'
                       className='flex-1 sm:flex-none'
+                      onClick={() => setIsEditModalOpen(true)}
                     >
                       <Edit className='w-4 h-4 sm:mr-2' />
                       <span className='hidden sm:inline'>Таҳрирлаш</span>
@@ -93,6 +105,7 @@ const PatientProfile = () => {
                       variant='outline'
                       size='sm'
                       className='flex-1 sm:flex-none'
+                      onClick={() => setIsReportModalOpen(true)}
                     >
                       <FileText className='w-4 h-4 sm:mr-2' />
                       <span className='hidden sm:inline'>Ҳисобот</span>
@@ -101,6 +114,7 @@ const PatientProfile = () => {
                       variant='outline'
                       size='sm'
                       className='flex-1 sm:flex-none'
+                      onClick={() => window.print()}
                     >
                       <Printer className='w-4 h-4 sm:mr-2' />
                       <span className='hidden sm:inline'>Чоп этиш</span>
@@ -350,6 +364,21 @@ const PatientProfile = () => {
             + Янги Кўрик Яратиш
           </Button>
         </div>
+
+        {/* Modals */}
+        <EditPatientModal
+          open={isEditModalOpen}
+          onOpenChange={setIsEditModalOpen}
+          patient={patient}
+          onSave={handleSavePatient}
+        />
+
+        <PatientReportModal
+          open={isReportModalOpen}
+          onOpenChange={setIsReportModalOpen}
+          patientName={patient.name}
+          patientId={patient.id}
+        />
       </main>
     </div>
   );

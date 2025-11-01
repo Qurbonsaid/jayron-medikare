@@ -30,9 +30,5 @@ export const PrivateRoute = () => {
     clearAuthTokens();
     return <Navigate to='/' replace />;
   }
-
-  console.log('✅ Authenticated user:', userData);
-
-  // Render protected routes
   return <Outlet />;
 };

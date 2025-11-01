@@ -88,13 +88,10 @@ const Radiology = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-10">
+      <header className=" border-border sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
+            <div className="flex items-center gap-4 pl-6">
               <div>
                 <h1 className="text-2xl font-bold">Рентген / МРТ / КТ</h1>
                 <p className="text-sm text-muted-foreground">Тасвирлаш текширувлари</p>
@@ -109,7 +106,7 @@ const Radiology = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto p-4">
         {/* Orders List */}
         <Card>
           <div className="p-6">
