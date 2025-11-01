@@ -34,7 +34,8 @@ const Login = () => {
         navigate('/dashboard');
       },
       onError: (err) => {
-        toast.error(err.msg || "Login error");
+        const msg = err.data.error.msg   
+        toast.error(msg || "Login error");
       }
     });
   };
