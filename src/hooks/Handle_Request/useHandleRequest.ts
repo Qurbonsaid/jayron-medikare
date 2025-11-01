@@ -13,8 +13,6 @@ export const useHandleRequest = () => {
     try {
       const result = await request();
 
-      // Check if the response indicates an error
-      // Handle RTK Query error format
       if (result?.error) {
         const error = result.error?.data || result.error;
 
@@ -61,12 +59,17 @@ export const useHandleRequest = () => {
         await onSuccess(result?.data || result);
       }
     } catch (ex) {
+      const errors =
+        ex?.data?.errors ||
+        ex?.data?.error ||
+        ex?.errors?.data?.errors ||
+        ex?.errors?.data ||
+        ex?.errors;
       if (onError) {
-        onError(ex);
+        onError(errors);
       } else {
-        handleError(ex);
+        handleError(errors);
       }
-      console.error('❌ Request error:', ex);
     }
   };
 };
