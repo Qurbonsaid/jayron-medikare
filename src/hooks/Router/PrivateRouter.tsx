@@ -28,7 +28,7 @@ export const PrivateRoute = () => {
   if (!token || isError || !userData) {
     console.log('🚫 Access denied - redirecting to login');
     clearAuthTokens();
-    return <Navigate to='/' replace />;
+    return <Navigate to='/login' replace />;
   }
   return <Outlet />;
 };
