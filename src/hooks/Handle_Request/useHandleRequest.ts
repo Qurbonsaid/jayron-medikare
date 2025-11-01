@@ -61,6 +61,7 @@ export const useHandleRequest = () => {
     } catch (ex) {
       const errors =
         ex?.data?.errors ||
+        ex?.data?.error.msg ||
         ex?.data?.error ||
         ex?.errors?.data?.errors ||
         ex?.errors?.data ||
