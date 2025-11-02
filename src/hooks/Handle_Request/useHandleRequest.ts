@@ -1,4 +1,5 @@
-import { useHandleError } from './useHandleError'
+import { useHandleError } from './useHandleError';
+
 export type Params = {
   request: () => Promise<any>;
   onSuccess?: (data?: any) => Promise<void> | void;
@@ -21,30 +22,17 @@ export const useHandleRequest = () => {
         result?.errors;
 
       if (errors) {
-        let errorFunc;
-
         if (onError) {
-          errorFunc = onError(errors);
           await onError(errors);
         } else {
           handleError(errors);
         }
-
-        if (typeof errorFunc !== "function") {
-          errorFunc = handleError;
-        }
-
-        errorFunc(errors);
-
         return;
       }
 
       if (onSuccess) {
         await onSuccess(result);
       }
-    } catch (ex) {
-      handleError(ex);
-      console.error(ex);
     } catch (ex: any) {
       if (onError) {
         await onError(ex);
