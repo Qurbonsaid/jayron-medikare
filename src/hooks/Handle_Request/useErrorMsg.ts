@@ -1,62 +1,39 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export const useErrorMsg = () => (error: any) => {
-  // If error is a string, return it directly
-  if (typeof error === 'string') {
-    return error;
+type ApiErrorResponse = {
+  data?: {
+    error?: {
+      statusCode?: number
+      statusMsg?: string
+      msg?: string
+    }
+    msg?: string
   }
+  error?: {
+    statusCode?: number
+    statusMsg?: string
+    msg?: string
+  }
+  statusCode?: number
+  statusMsg?: string
+  message?: string
+}
 
-  // If error is an object, check various possible message locations
-  if (typeof error === 'object' && error !== null) {
-    // Check for your API's error format: {statusCode, statusMsg, msg}
-    if (error.msg) {
-      return error.msg;
-    }
+export const useErrorMsg = () => (error: ApiErrorResponse | string | null | undefined) => {
+  if (!error) return 'Номаълум хатолик юз берди';
 
-    // Check for statusMsg
-    if (error.statusMsg) {
-      return error.statusMsg;
-    }
+  if (typeof error === 'string') return error;
 
-    // Check for message field (common format)
-    if (error.message) {
-      return error.message;
-    }
+  // RTK Query yoki API structure bilan moslash
+  if (error.data?.error?.msg) return error.data.error.msg;
+  if (error.data?.msg) return error.data.msg;
+  if (error.error?.msg) return error.error.msg;
 
-    // Check nested error objects
-    if (error.error?.msg) {
-      return error.error.msg;
-    }
+  if (error.statusMsg) return error.statusMsg;
+  if (error.message) return error.message;
 
-    if (error.error?.message) {
-      return error.error.message;
-    }
-
-    // Check data.msg
-    if (error.data?.msg) {
-      return error.data.msg;
-    }
-
-    if (error.data?.message) {
-      return error.data.message;
-    }
-
-    // Check for array of errors (validation errors)
-    if (Array.isArray(error) && error.length > 0) {
-      return error[0]?.msg || error[0]?.message || error[0];
-    }
-
-    // Check for password validation error
-    if (error[0]?.password) {
-      return error[0].password;
-    }
-
-    // If we have a status code, show a generic message with it
-    if (error.statusCode) {
-      return `Хатолик (${error.statusCode}): ${
-        error.statusMsg || 'Номаълум хатолик'
-      }`;
-    }
+  if (error.statusCode) {
+    return `Хатолик (${error.statusCode}): ${error.statusMsg || 'Номаълум хатолик'}`;
   }
 
   return 'Номаълум хатолик юз берди';
-};
+}
+
