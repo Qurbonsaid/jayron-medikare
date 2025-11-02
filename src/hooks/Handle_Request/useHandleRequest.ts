@@ -1,10 +1,15 @@
-import { useHandleError } from "./useHandleError";
-import { Params } from "./types";
+import { useHandleError } from './useHandleError'
+export type Params = {
+  request: () => Promise<any>;
+  onSuccess?: (data?: any) => Promise<void> | void;
+  onError?: (error?: any) => Promise<void> | void;
+  onFinally?: () => Promise<void> | void;
+};
 
 export const useHandleRequest = () => {
   const handleError = useHandleError();
 
-  return async ({ request, onSuccess, onError }: Params) => {
+  return async ({ request, onSuccess, onError, onFinally }: Params) => {
     try {
       const result = await request();
       const errors =
@@ -20,6 +25,9 @@ export const useHandleRequest = () => {
 
         if (onError) {
           errorFunc = onError(errors);
+          await onError(errors);
+        } else {
+          handleError(errors);
         }
 
         if (typeof errorFunc !== "function") {
@@ -37,6 +45,20 @@ export const useHandleRequest = () => {
     } catch (ex) {
       handleError(ex);
       console.error(ex);
+    } catch (ex: any) {
+      if (onError) {
+        await onError(ex);
+      } else {
+        handleError(ex);
+      }
+    } finally {
+      if (onFinally) {
+        try {
+          await onFinally();
+        } catch (finallyError) {
+          console.error('Error in onFinally callback:', finallyError);
+        }
+      }
     }
   };
 };

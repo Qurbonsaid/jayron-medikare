@@ -176,6 +176,7 @@ const LabResults = () => {
 							<p className='text-xs sm:text-sm text-muted-foreground'>
 								Лаборатория текширувлари натижалари
 							</p>
+
 						</div>
 					</div>
 					<div className='flex flex-col sm:flex-row gap-2 w-full sm:w-auto'>
