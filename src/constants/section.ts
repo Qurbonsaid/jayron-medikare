@@ -1,5 +1,5 @@
 export const SectionConstants = {
-   TERAPIYA: 'terapiya',
-   PEDIATRIYA: 'pediatriya',
-   XIRURGIYA: 'xirurgiya',
+   KARDIOLOGIYA: 'Кардиология',
+   NEVROLOGIYA: 'Неврология',
+   UZI_MUTAHASSISI: 'УЗИ мутахассиси',
 } as const

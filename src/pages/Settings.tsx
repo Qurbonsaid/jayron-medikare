@@ -798,14 +798,14 @@ const Settings = () => {
 										<SelectValue placeholder='Танланг...' />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value={SectionConstants.TERAPIYA}>
-											Терапия
+										<SelectItem value={SectionConstants.KARDIOLOGIYA}>
+											{SectionConstants.KARDIOLOGIYA}
 										</SelectItem>
-										<SelectItem value={SectionConstants.XIRURGIYA}>
-											Хирургия
+										<SelectItem value={SectionConstants.NEVROLOGIYA}>
+											{SectionConstants.NEVROLOGIYA}
 										</SelectItem>
-										<SelectItem value={SectionConstants.PEDIATRIYA}>
-											Педиатрия
+										<SelectItem value={SectionConstants.UZI_MUTAHASSISI}>
+											{SectionConstants.UZI_MUTAHASSISI}
 										</SelectItem>
 									</SelectContent>
 								</Select>
