@@ -1,3 +1,4 @@
+import { useCreatePatientMutation } from '@/app/api/patientApi/patientApi';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -30,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { CalendarIcon, Plus, Save, X } from 'lucide-react';
@@ -52,7 +54,7 @@ const patientSchema = z.object({
     .min(2, 'Исм камида 2 та ҳарфдан иборат бўлиши керак')
     .max(50, 'Исм жуда узун'),
   middleName: z.string().max(50, 'Отасининг исми жуда узун').optional(),
-  birthDate: z.date({ required_error: 'Туғилган санани танланг' }),
+  date_of_birth: z.date({ required_error: 'Туғилган санани танланг' }),
   gender: z.enum(['male', 'female'], { required_error: 'Жинсни танланг' }),
   phone: z
     .string()
@@ -109,31 +111,50 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
       firstName: 'Vali',
       middleName: 'Soliyevich',
       gender: 'male',
-      birthDate: new Date('1990-01-01'),
+      date_of_birth: new Date('1990-01-01'),
       passportSeries: 'AB',
       passportNumber: '1234567',
       phone: '+998912345678',
       email: 'info@artikmuratov.uz',
       address: "Palonchayev Pismadoin ko'chasi 4053-uy",
       allergies: ['Пенициллин', 'Аспирин'],
-      regularMedications: [{medicine:"nimadur",schedule:"qachondir"}],
+      regularMedications: [{ medicine: 'nimadur', schedule: 'qachondir' }],
     },
   });
 
-  const onSubmit = (data: PatientFormData) => {
+  const [createPatient] = useCreatePatientMutation();
+  const handleRequest = useHandleRequest();
+
+  const onSubmit = async (data: PatientFormData) => {
     const submitData = {
-      ...data,
-      birthDate: format(data.birthDate, 'yyyy-MM-dd'),
-      fullName: `${data.lastName} ${data.firstName} ${
+      fullname: `${data.lastName} ${data.firstName} ${
         data.middleName || ''
       }`.trim(),
+      phone: data.phone,
+      gender: data.gender,
+      date_of_birth: format(data.date_of_birth, 'yyyy-MM-dd'),
+      address: data.address,
+      email: data.email,
+      allergies: data.allergies,
+      regular_medications: data.regularMedications,
+      passport: {
+        series: data.passportSeries,
+        number: data.passportNumber,
+      },
     };
-    console.log('Толиқ JSON:', submitData);
 
-    toast.success('Бемор маълумотлари муваффақиятли сақланди!', {
-      description: `${submitData.fullName} тизимга қўшилди`,
+    await handleRequest({
+      request: async () => {
+        const res = await createPatient(submitData);
+        return res;
+      },
+      onSuccess: (data) => {
+        toast.success(`Бемор маълумотлари муваффақиятли сақланди!`);
+      },
+      onError: (err) => {
+        toast.error(err.error.msg);
+      },
     });
-
     form.reset();
     onOpenChange(false);
   };
@@ -219,7 +240,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
 
                   <FormField
                     control={form.control}
-                    name='birthDate'
+                    name='date_of_birth'
                     render={({ field }) => (
                       <FormItem className='space-y-2'>
                         <FormLabel>
