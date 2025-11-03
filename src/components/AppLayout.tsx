@@ -4,12 +4,21 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
+import getUser from '@/hooks/getUser/getUser';
 import { navigator } from '@/router';
-import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { ArrowLeft, MessageSquare, ChevronDown, Globe } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
-import getUser from '@/hooks/getUser/getUser';
+import { Label } from './ui/label';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -38,7 +47,10 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const me = getUser();
 
-  // const nickName = me.fullname.split(' ')[0][0] + me.fullname.split(' ')[1][0];
+  const nickName = me.fullname
+    ?.split(' ')
+    ?.map((i) => i[0])
+    ?.join('');
 
   return (
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -55,11 +67,8 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <ArrowLeft className='w-5 h-5' />
                   </Link>
                 )}
-                <h1 className='text-xl font-bold'>
-                  {currentLocation?.title}
-                </h1>
+                <h1 className='text-xl font-bold'>{currentLocation?.title}</h1>
               </div>
-
               <div className='flex items-center gap-4 px-4'>
                 <Button variant='ghost' size='icon' className='relative'>
                   <MessageSquare className='w-5 h-5' />
@@ -68,13 +77,52 @@ export function AppLayout({ children }: AppLayoutProps) {
                   </span>
                 </Button>
                 <div className='flex items-center gap-3'>
-                  <div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
-                    {/* {nickName} */} D A
-                  </div>
-                  <div className='hidden md:block text-right'>
+                  {/* <div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
+                    {nickName}
+                  </div> */}
+                  {/* <div className='hidden md:block text-right'>
                     <p className='text-sm font-medium'>{me.fullname}</p>
                     <p className='text-xs text-muted-foreground'>{me.role}</p>
-                  </div>
+                    <div className='mt-1'>
+                      <Select defaultValue='uz'>
+                        <SelectTrigger className='h-7 text-xs'>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='uz'>Ўзбек тили</SelectItem>
+                          <SelectItem value='ru'>Русский язык</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div> */}
+
+                  <DropdownMenu>
+                  <DropdownMenuTrigger className='focus-visible:ring-0 focus-visible:ring-offset-0' asChild>
+                    <Button
+                      variant='ghost'
+                      className='flex items-center gap-3 hover:bg-accent'
+                    >
+                      <div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
+                        {nickName}
+                      </div>
+                      <div className='hidden md:block text-right'>
+                        <p className='text-sm font-medium'>{me.fullname}</p>
+                        <p className='text-xs text-muted-foreground'>
+                          {me.role}
+                        </p>
+                      </div>
+                      <ChevronDown className='w-4 h-4 ml-2' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end'>
+                    <DropdownMenuItem>
+                      <span>Ўзбек тили</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <span>Русский язык</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 </div>
               </div>
             </div>
