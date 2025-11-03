@@ -125,9 +125,9 @@ const Login = () => {
                   Эслаб қолиш
                 </Label>
               </div>
-              <a href='#' className='text-sm text-primary hover:underline'>
+              {/* <a href='#' className='text-sm text-primary hover:underline'>
                 Паролни унутдингизми?
-              </a>
+              </a> */}
             </div>
 
             {/* Login Button */}
@@ -141,7 +141,9 @@ const Login = () => {
 
           {/* Language Selector */}
           <div className='mt-6 pt-6 border-t flex justify-center gap-4'>
-            <button className='text-sm font-medium text-primary'>O'zbek</button>
+            <button className='text-sm font-medium text-primary'>
+              Ўзбекча
+            </button>
             <span className='text-muted-foreground'>|</span>
             <button className='text-sm text-muted-foreground hover:text-foreground'>
               Русский

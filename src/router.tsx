@@ -101,7 +101,16 @@ export const navigator = [
   {
     path: '/settings',
     to: null,
-    title: 'Созламалар',
+    title: (
+      <div className='flex items-center gap-4'>
+        <div>
+          <h1 className='text-xl font-bold'>Созламалар</h1>
+          <p className='text-sm text-muted-foreground'>
+            Тизим ва фойдаланувчи созламалари
+          </p>
+        </div>
+      </div>
+    ),
   },
   {
     path: '/patient-portal',
