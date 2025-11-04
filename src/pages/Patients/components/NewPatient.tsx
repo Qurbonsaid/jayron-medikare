@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -29,11 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Save } from 'lucide-react';
+import { CalendarIcon, Plus, Save, X } from 'lucide-react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -53,8 +53,7 @@ const patientSchema = z.object({
     .max(50, 'Исм жуда узун'),
   middleName: z.string().max(50, 'Отасининг исми жуда узун').optional(),
   birthDate: z.date({ required_error: 'Туғилган санани танланг' }),
-  gender: z.enum(['Эркак', 'Аёл'], { required_error: 'Жинсни танланг' }),
-  bloodType: z.string().optional(),
+  gender: z.enum(['male', 'female'], { required_error: 'Жинсни танланг' }),
   phone: z
     .string()
     .regex(phoneRegex, 'Телефон рақами нотўғри форматда (+998 XX XXX XX XX)'),
@@ -64,33 +63,18 @@ const patientSchema = z.object({
     .optional()
     .or(z.literal('')),
   address: z.string().min(5, 'Манзил камида 5 та белгидан иборат бўлиши керак'),
-  city: z
-    .string()
-    .min(2, 'Шаҳар номи камида 2 та ҳарфдан иборат бўлиши керак')
+  allergies: z.array(z.string()).optional().default([]),
+
+  regularMedications: z
+    .array(
+      z.object({
+        medicine: z.string().min(1, 'Дори номи киритилиши керак'),
+        schedule: z.string().min(1, 'Қабул вақти киритилиши керак'),
+      })
+    )
     .optional()
-    .or(z.literal('')),
-  region: z.string().optional(),
-  zipCode: z
-    .string()
-    .regex(/^\d{6}$/, 'Почта индекси 6 та рақамдан иборат бўлиши керак')
-    .optional()
-    .or(z.literal('')),
-  emergencyContactName: z
-    .string()
-    .min(3, 'ФИО камида 3 та белгидан иборат бўлиши керак')
-    .optional()
-    .or(z.literal('')),
-  emergencyContactPhone: z
-    .string()
-    .regex(phoneRegex, 'Телефон рақами нотўғри форматда')
-    .optional()
-    .or(z.literal('')),
-  emergencyContactRelation: z.string().optional(),
-  allergies: z.string().optional(),
-  chronicDiseases: z.string().optional(),
-  currentMedications: z.string().optional(),
-  insuranceCompany: z.string().optional(),
-  insuranceNumber: z.string().optional(),
+    .default([]),
+
   passportSeries: z
     .string()
     .regex(passportSeriesRegex, 'Серия 2 та катта ҳарфдан иборат (AA)')
@@ -101,7 +85,6 @@ const patientSchema = z.object({
     .regex(passportNumberRegex, 'Рақам 7 та рақамдан иборат')
     .optional()
     .or(z.literal('')),
-  notes: z.string().optional(),
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
@@ -112,45 +95,40 @@ interface NewPatientProps {
 }
 
 const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
+  const [medicineInput, setMedicineInput] = useState('');
+  const [scheduleInput, setScheduleInput] = useState('');
+  const [dateInput, setDateInput] = useState('');
+  const [allergyInput, setAllergyInput] = useState('');
+
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     defaultValues: {
-      lastName: '',
-      firstName: '',
-      middleName: '',
-      gender: undefined,
-      bloodType: '',
-      phone: '',
-      email: '',
-      address: '',
-      city: '',
-      region: '',
-      zipCode: '',
-      emergencyContactName: '',
-      emergencyContactPhone: '',
-      emergencyContactRelation: '',
-      allergies: '',
-      chronicDiseases: '',
-      currentMedications: '',
-      insuranceCompany: '',
-      insuranceNumber: '',
-      passportSeries: '',
-      passportNumber: '',
-      notes: '',
+      lastName: 'Aliyev',
+      firstName: 'Vali',
+      middleName: 'Soliyevich',
+      gender: 'male',
+      birthDate: new Date('1990-01-01'),
+      passportSeries: 'AB',
+      passportNumber: '1234567',
+      phone: '+998912345678',
+      email: 'info@artikmuratov.uz',
+      address: "Palonchayev Pismadoin ko'chasi 4053-uy",
+      allergies: ['Пенициллин', 'Аспирин'],
+      regularMedications: [{medicine:"nimadur",schedule:"qachondir"}],
     },
   });
 
   const onSubmit = (data: PatientFormData) => {
     const submitData = {
       ...data,
-      birthDate: format(data.birthDate, 'dd.MM.yyyy'),
+      birthDate: format(data.birthDate, 'yyyy-MM-dd'),
       fullName: `${data.lastName} ${data.firstName} ${
         data.middleName || ''
       }`.trim(),
     };
-    console.log('Толиқ JSON:', JSON.stringify(submitData, null, 2));
+    console.log('Толиқ JSON:', submitData);
 
     toast.success('Бемор маълумотлари муваффақиятли сақланди!', {
       description: `${submitData.fullName} тизимга қўшилди`,
@@ -247,41 +225,118 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                         <FormLabel>
                           Туғилган сана <span className='text-red-500'>*</span>
                         </FormLabel>
-                        <Popover>
-                          <PopoverTrigger
-                            className='border-2 border-slate-400'
-                            asChild
-                          >
-                            <FormControl>
-                              <Button
-                                variant='outline'
-                                className={cn(
-                                  'w-full pl-3 text-left font-normal',
-                                  !field.value && 'text-muted-foreground'
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, 'dd.MM.yyyy')
-                                ) : (
-                                  <span>Санани танланг</span>
-                                )}
-                                <CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className='w-auto p-0' align='start'>
-                            <Calendar
-                              mode='single'
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() ||
-                                date < new Date('1900-01-01')
+                        <div className='flex gap-2'>
+                          <FormControl>
+                            <Input
+                              className='border-slate-400 border-2 flex-1'
+                              placeholder='КК.ОО.ЙЙЙЙ (01.01.1990)'
+                              value={
+                                dateInput ||
+                                (field.value
+                                  ? format(field.value, 'dd.MM.yyyy')
+                                  : '')
                               }
-                              initialFocus
+                              onChange={(e) => {
+                                let value = e.target.value.replace(
+                                  /[^\d.]/g,
+                                  ''
+                                );
+
+                                // If empty, clear the field and date
+                                if (value === '') {
+                                  setDateInput('');
+                                  field.onChange(undefined);
+                                  return;
+                                }
+
+                                // Remove extra dots
+                                const parts = value.split('.');
+                                if (parts.length > 3) {
+                                  value = parts.slice(0, 3).join('.');
+                                }
+
+                                // Auto format: DD.MM.YYYY
+                                const digitsOnly = value.replace(/\./g, '');
+                                let formatted = '';
+
+                                if (digitsOnly.length > 0) {
+                                  formatted = digitsOnly.slice(0, 2);
+                                  if (digitsOnly.length >= 3) {
+                                    formatted += '.' + digitsOnly.slice(2, 4);
+                                  }
+                                  if (digitsOnly.length >= 5) {
+                                    formatted += '.' + digitsOnly.slice(4, 8);
+                                  }
+                                }
+
+                                setDateInput(formatted);
+
+                                // Parse complete date
+                                if (formatted.length === 10) {
+                                  const [day, month, year] =
+                                    formatted.split('.');
+                                  const dayNum = parseInt(day);
+                                  const monthNum = parseInt(month);
+                                  const yearNum = parseInt(year);
+
+                                  if (
+                                    dayNum >= 1 &&
+                                    dayNum <= 31 &&
+                                    monthNum >= 1 &&
+                                    monthNum <= 12 &&
+                                    yearNum >= 1900 &&
+                                    yearNum <= new Date().getFullYear()
+                                  ) {
+                                    const date = new Date(
+                                      yearNum,
+                                      monthNum - 1,
+                                      dayNum
+                                    );
+                                    if (date.getDate() === dayNum) {
+                                      field.onChange(date);
+                                    }
+                                  }
+                                } else {
+                                  // Clear field if not complete date
+                                  field.onChange(undefined);
+                                }
+                              }}
+                              maxLength={10}
                             />
-                          </PopoverContent>
-                        </Popover>
+                          </FormControl>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type='button'
+                                variant='outline'
+                                size='icon'
+                                className='border-2 border-slate-400'
+                              >
+                                <CalendarIcon className='h-4 w-4' />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className='w-auto p-0'
+                              align='start'
+                            >
+                              <Calendar
+                                mode='single'
+                                selected={field.value}
+                                onSelect={(date) => {
+                                  field.onChange(date);
+                                  if (date) {
+                                    setDateInput(format(date, 'dd.MM.yyyy'));
+                                  }
+                                }}
+                                disabled={(date) =>
+                                  date > new Date() ||
+                                  date < new Date('1900-01-01')
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -305,45 +360,53 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value='Эркак'>Эркак</SelectItem>
-                            <SelectItem value='Аёл'>Аёл</SelectItem>
+                            <SelectItem value='male'>Эркак</SelectItem>
+                            <SelectItem value='female'>Аёл</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  <div className='space-y-4'>
+                    <div className='grid grid-cols-1 sm:grid-cols-5 gap-4'>
+                      <FormField
+                        control={form.control}
+                        name='passportSeries'
+                        render={({ field }) => (
+                          <FormItem className='col-span-2'>
+                            <FormLabel>Серияси</FormLabel>
+                            <FormControl>
+                              <Input
+                                className='border-slate-400 border-2'
+                                placeholder='AA'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name='bloodType'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Қон гурухи</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className='border-2 border-slate-400'>
-                              <SelectValue placeholder='Қон гурухини танланг' />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value='O(I)+'>O(I)+</SelectItem>
-                            <SelectItem value='O(I)-'>O(I)-</SelectItem>
-                            <SelectItem value='A(II)+'>A(II)+</SelectItem>
-                            <SelectItem value='A(II)-'>A(II)-</SelectItem>
-                            <SelectItem value='B(III)+'>B(III)+</SelectItem>
-                            <SelectItem value='B(III)-'>B(III)-</SelectItem>
-                            <SelectItem value='AB(IV)+'>AB(IV)+</SelectItem>
-                            <SelectItem value='AB(IV)-'>AB(IV)-</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name='passportNumber'
+                        render={({ field }) => (
+                          <FormItem className='col-span-3'>
+                            <FormLabel>Паспорт рақами</FormLabel>
+                            <FormControl>
+                              <Input
+                                className='border-slate-400 border-2'
+                                placeholder='1234567'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -440,154 +503,10 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name='city'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Шаҳар</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='Тошкент'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name='region'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Вилоят</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='Тошкент вилояти'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name='zipCode'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Почта индекси</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='100000'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
               </div>
 
-              {/* Emergency Contact */}
-              <div className='space-y-4'>
-                <h3 className='text-base sm:text-lg font-semibold'>
-                  Фавқулодда ҳолатлар учун алоқа
-                </h3>
-                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-                  <FormField
-                    control={form.control}
-                    name='emergencyContactName'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ФИО</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='Толиқ исм'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name='emergencyContactPhone'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Телефон</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='+998 90 123 45 67'
-                            value={
-                              field.value
-                                ? field.value.replace(
-                                    /(\+998)(\d{2})(\d{3})(\d{2})(\d{2})/,
-                                    '$1 $2 $3 $4 $5'
-                                  )
-                                : ''
-                            }
-                            onFocus={(e) => {
-                              if (!field.value || field.value === '') {
-                                field.onChange('+998');
-                              }
-                            }}
-                            onChange={(e) => {
-                              let value = e.target.value;
-
-                              // Faqat +998 va raqamlarni qoldirish
-                              value = value.replace(/[^\d+]/g, '');
-
-                              // Agar +998 bilan boshlanmasa, uni qo'shish
-                              if (!value.startsWith('+998')) {
-                                value = '+998';
-                              }
-
-                              // Maksimal 9 ta raqam (+998 dan keyin)
-                              if (value.length > 13) {
-                                value = value.slice(0, 13);
-                              }
-
-                              field.onChange(value);
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name='emergencyContactRelation'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Қариндошлик</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='Ота, она, ака...'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+              {/* Insurance and Documents */}
 
               {/* Medical Information */}
               <div className='space-y-4'>
@@ -602,12 +521,76 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                       <FormItem>
                         <FormLabel>Аллергия</FormLabel>
                         <FormControl>
-                          <Textarea
-                            className='border-slate-400 border-2'
-                            placeholder='Аллергия ҳақида маълумот киритинг...'
-                            rows={2}
-                            {...field}
-                          />
+                          <div className='space-y-3'>
+                            {field.value && field.value.length > 0 && (
+                              <div className='flex flex-wrap gap-2 p-3 border-2 border-slate-400 rounded-md bg-slate-50'>
+                                {field.value.map((allergy, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant='secondary'
+                                    className='px-3 py-1.5 text-sm flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200'
+                                  >
+                                    {allergy}
+                                    <button
+                                      type='button'
+                                      onClick={() => {
+                                        const newAllergies =
+                                          field.value?.filter(
+                                            (_, i) => i !== index
+                                          );
+                                        field.onChange(newAllergies);
+                                      }}
+                                      className='hover:text-red-900 transition-colors'
+                                    >
+                                      <X className='w-3 h-3' />
+                                    </button>
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            <div className='flex gap-2'>
+                              <Input
+                                className='border-slate-400 border-2'
+                                placeholder='Аллергия номи (масалан: Пенициллин)'
+                                value={allergyInput}
+                                onChange={(e) =>
+                                  setAllergyInput(e.target.value)
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (allergyInput.trim()) {
+                                      const currentAllergies =
+                                        field.value || [];
+                                      field.onChange([
+                                        ...currentAllergies,
+                                        allergyInput.trim(),
+                                      ]);
+                                      setAllergyInput('');
+                                    }
+                                  }
+                                }}
+                              />
+                              <Button
+                                type='button'
+                                size='icon'
+                                variant='outline'
+                                className='border-slate-400 border-2'
+                                onClick={() => {
+                                  if (allergyInput.trim()) {
+                                    const currentAllergies = field.value || [];
+                                    field.onChange([
+                                      ...currentAllergies,
+                                      allergyInput.trim(),
+                                    ]);
+                                    setAllergyInput('');
+                                  }
+                                }}
+                              >
+                                <Plus className='w-4 h-4' />
+                              </Button>
+                            </div>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -616,147 +599,114 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
 
                   <FormField
                     control={form.control}
-                    name='chronicDiseases'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Сурункали касалликлар</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            className='border-slate-400 border-2'
-                            placeholder='Сурункали касалликлар ҳақида маълумот...'
-                            rows={2}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name='currentMedications'
+                    name='regularMedications'
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Ҳозирги дорилар</FormLabel>
                         <FormControl>
-                          <Textarea
-                            className='border-slate-400 border-2'
-                            placeholder='Ҳозирда қабул қилаётган дорилар...'
-                            rows={2}
-                            {...field}
-                          />
+                          <div className='space-y-3'>
+                            {field.value && field.value.length > 0 && (
+                              <div className='flex flex-wrap gap-2 p-3 border-2 border-slate-400 rounded-md bg-slate-50'>
+                                {field.value.map((medication, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant='secondary'
+                                    className='px-3 py-2 min-w-28 text-sm flex items-center justify-between gap-2 bg-primary/20 hover:bg-primary/20 text-primary border border-primary/30'
+                                  >
+                                    <div className='flex flex-col items-start'>
+                                      <span className='font-semibold'>
+                                        {medication.medicine}
+                                      </span>
+                                      <span className='text-xs text-muted-foreground'>
+                                        {medication.schedule}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type='button'
+                                      onClick={() => {
+                                        const newMeds = field.value?.filter(
+                                          (_, i) => i !== index
+                                        );
+                                        field.onChange(newMeds);
+                                      }}
+                                      className='hover:text-destructive transition-colors ml-2'
+                                    >
+                                      <X className='w-5 h-5' />
+                                    </button>
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            <div className='grid grid-cols-1 sm:grid-cols-[1fr,1fr,auto] gap-2'>
+                              <Input
+                                className='border-slate-400 border-2'
+                                placeholder='Дори номи (масалан: Аспирин)'
+                                value={medicineInput}
+                                onChange={(e) =>
+                                  setMedicineInput(e.target.value)
+                                }
+                              />
+                              <Input
+                                className='border-slate-400 border-2'
+                                placeholder='Қабул вақти (масалан: Кунига 2 марта)'
+                                value={scheduleInput}
+                                onChange={(e) =>
+                                  setScheduleInput(e.target.value)
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (
+                                      medicineInput.trim() &&
+                                      scheduleInput.trim()
+                                    ) {
+                                      const currentMeds = field.value || [];
+                                      field.onChange([
+                                        ...currentMeds,
+                                        {
+                                          medicine: medicineInput.trim(),
+                                          schedule: scheduleInput.trim(),
+                                        },
+                                      ]);
+                                      setMedicineInput('');
+                                      setScheduleInput('');
+                                    }
+                                  }
+                                }}
+                              />
+                              <Button
+                                type='button'
+                                size='icon'
+                                variant='outline'
+                                className='border-slate-400 border-2'
+                                onClick={() => {
+                                  if (
+                                    medicineInput.trim() &&
+                                    scheduleInput.trim()
+                                  ) {
+                                    const currentMeds = field.value || [];
+                                    field.onChange([
+                                      ...currentMeds,
+                                      {
+                                        medicine: medicineInput.trim(),
+                                        schedule: scheduleInput.trim(),
+                                      },
+                                    ]);
+                                    setMedicineInput('');
+                                    setScheduleInput('');
+                                  }
+                                }}
+                              >
+                                <Plus className='w-4 h-4' />
+                              </Button>
+                            </div>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-              </div>
-
-              {/* Insurance and Documents */}
-              <div className='space-y-4'>
-                <h3 className='text-base sm:text-lg font-semibold'>
-                  Суғурта ва ҳужжатлар
-                </h3>
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                  <FormField
-                    control={form.control}
-                    name='insuranceCompany'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Суғурта компанияси</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='Компания номи'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name='insuranceNumber'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Суғурта рақами</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='1234567890'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name='passportSeries'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Паспорт серияси</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='AA'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name='passportNumber'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Паспорт рақами</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='1234567'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Additional Notes */}
-              <div className='space-y-4'>
-                <h3 className='text-base sm:text-lg font-semibold'>
-                  Қўшимча эслатмалар
-                </h3>
-                <FormField
-                  control={form.control}
-                  name='notes'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Эслатмалар</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          className='border-slate-400 border-2'
-                          placeholder='Қўшимча маълумот ёки эслатмалар...'
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
             </form>
           </Form>

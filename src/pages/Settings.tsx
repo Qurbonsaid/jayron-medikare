@@ -738,6 +738,71 @@ const Settings = () => {
 							)}
 						</Card>
 					</TabsContent>
+          {/* Clinic Tab */}
+          <TabsContent value='clinic' className='space-y-4'>
+            <Card className='p-6'>
+              <h2 className='text-xl font-semibold mb-6'>
+                Клиника маълумотлари
+              </h2>
+              <div className='space-y-4 max-w-2xl'>
+                <div>
+                  <Label>Клиника номи</Label>
+                  <Input defaultValue='JAYRON MEDSERVIS' />
+                </div>
+                <div>
+                  <Label>Манзил</Label>
+                  <Input defaultValue='Тошкент шаҳри, Юнусобод тумани' />
+                </div>
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <Label>Телефон</Label>
+                    <Input defaultValue='+998 71 123 45 67' />
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <Input defaultValue='info@jayron.uz' />
+                  </div>
+                </div>
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <Label>Иш бошланиш вақти</Label>
+                    <Input type='time' defaultValue='08:00' />
+                  </div>
+                  <div>
+                    <Label>Иш тугаш вақти</Label>
+                    <Input type='time' defaultValue='20:00' />
+                  </div>
+                </div>
+                <div>
+                  <Label>Тил</Label>
+                  <Select defaultValue='uz'>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='uz'>Ўзбек тили</SelectItem>
+                      <SelectItem value='ru'>Русский язык</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Логотип</Label>
+                  <div className='flex items-center gap-4 mt-2'>
+                    <div className='w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center'>
+                      <span className='text-sm text-muted-foreground'>
+                        Логотип
+                      </span>
+                    </div>
+                    <Button variant='outline'>
+                      <Upload className='w-4 h-4 mr-2' />
+                      Юклаш
+                    </Button>
+                  </div>
+                </div>
+                <Button>Сақлаш</Button>
+              </div>
+            </Card>
+          </TabsContent>
 
 					{/* Notifications Tab */}
 					<TabsContent value='notifications' className='space-y-4'>

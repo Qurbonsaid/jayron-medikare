@@ -23,7 +23,7 @@ const Patients = () => {
   const [genderFilter, setGenderFilter] = useState('all');
   const [doctorFilter, setDoctorFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const allPatients = [
     {
@@ -953,11 +953,6 @@ const Patients = () => {
   const endIndex = startIndex + itemsPerPage;
   const patients = filteredPatients.slice(startIndex, endIndex);
 
-  // Reset to first page when filters change
-  const handleFilterChange = () => {
-    setCurrentPage(1);
-  };
-
   return (
     <div className='min-h-screen bg-background'>
       <main className='container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
@@ -1131,7 +1126,7 @@ const Patients = () => {
                           {patient.name}
                         </h3>
                         <p className='text-xs sm:text-sm text-muted-foreground'>
-                          {patient.age} йош / {patient.gender}
+                          {patient.age} ёш / {patient.gender}
                         </p>
                       </div>
                     </div>
@@ -1197,7 +1192,7 @@ const Patients = () => {
                           </div>
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-                          {patient.age} йош / {patient.gender}
+                          {patient.age} ёш / {patient.gender}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
                           {patient.phone}
