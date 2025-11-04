@@ -1,16 +1,19 @@
+import {
+	useGetAllSettingsQuery,
+	useUpdateSettingsMutation,
+} from '@/app/api/settingsApi/settingsApi'
+import { useUploadCreateMutation } from '@/app/api/upload/uploadApi'
 import { UserId, User, UserCreateResponse } from '@/app/api/userApi/types'
 import {
 	useCreateUserMutation,
 	useDeleteUserMutation,
 	useGetUserByIdQuery,
 	useGetUsersQuery,
-	userApi,
 	useUpdateUserMutation,
 } from '@/app/api/userApi/userApi'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
 	Dialog,
 	DialogContent,
@@ -30,14 +33,26 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { PermissionConstants } from '@/constants/Permissions'
 import { RoleConstants } from '@/constants/Roles'
 import { SectionConstants } from '@/constants/section'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
+import { settingsSchema } from '@/validation/validationSettings'
+import { userSchema } from '@/validation/validationUser'
 import { ArrowLeft, Plus, Search, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import z from 'zod'
+
+export type Settings = {
+	clinic_name: string
+	address: string
+	phone: string
+	email: string
+	work_start_time: string
+	work_end_time: string
+	logo_path: string
+}
 
 const Settings = () => {
 	const auditLogs = [
@@ -69,6 +84,10 @@ const Settings = () => {
 	const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 	const [selectedUserName, setSelectedUserName] = useState<string>('')
 	const limit = 10
+	const [getAllSettings, setGetAllSettings] = useState<Settings>(null)
+	// --- VALIDATION (Settings ichida) ---
+	const [errors, setErrors] = useState<Record<string, string>>({})
+	const [errorsUser, setErrorsUser] = useState<Record<string, string>>({})
 
 	// --- API HOOKLAR ---
 	const [createUser] = useCreateUserMutation()
@@ -86,6 +105,8 @@ const Settings = () => {
 			skip: !editingUserId, // agar editingUserId bo'lmasa fetch qilmaslik
 		}
 	)
+	const { data: settingsGetAll } = useGetAllSettingsQuery()
+	const [updateSettings] = useUpdateSettingsMutation()
 
 	// --- FORM HOLATI ---
 	const [form, setForm] = useState<UserCreateResponse>({
@@ -96,7 +117,6 @@ const Settings = () => {
 		password: '',
 		role: '',
 		section: '',
-		permissions: [],
 		license_number: '',
 	})
 
@@ -115,7 +135,6 @@ const Settings = () => {
 					password: '',
 					role: '',
 					section: '',
-					permissions: [],
 					license_number: '',
 				})
 			},
@@ -127,24 +146,13 @@ const Settings = () => {
 	}
 
 	// --- FORM HANDLER ---
-	const handleChange = (
-		field: keyof UserCreateResponse,
-		value: string | string[]
-	) => {
+	const handleChange = (field, value) => {
 		setForm(prev => ({ ...prev, [field]: value }))
-	}
 
-	// --- PERMISSIONS HANDLER ---
-	const togglePermission = (perm: string) => {
-		setForm(prev => {
-			const exists = prev.permissions.includes(perm)
-			return {
-				...prev,
-				permissions: exists
-					? prev.permissions.filter(p => p !== perm)
-					: [...prev.permissions, perm],
-			}
-		})
+		// Agar xato shu fieldda bo‘lsa, uni tozalaymiz
+		if (errorsUser[field]) {
+			setErrorsUser(prev => ({ ...prev, [field]: '' }))
+		}
 	}
 
 	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,7 +174,6 @@ const Settings = () => {
 			password: '', // foydalanuvchi o'zgartirsa
 			role: user.role,
 			section: user.section,
-			permissions: user.permissions || [],
 			license_number: user.license_number || '',
 		}
 		setForm(formData)
@@ -222,7 +229,6 @@ const Settings = () => {
 			password: '',
 			role: '',
 			section: '',
-			permissions: [],
 			license_number: '',
 		})
 		setEditingUserId(null)
@@ -235,9 +241,9 @@ const Settings = () => {
 	}
 
 	// Dialogni ochish funksiyasi
-	const handleOpenDeleteDialog = (userId: string, userName: string) => {
+	const handleOpenDeleteDialog = (userId: string, fullname: string) => {
 		setSelectedUserId(userId)
-		setSelectedUserName(userName)
+		setSelectedUserName(fullname)
 		setIsDeleteDialogOpen(true)
 	}
 
@@ -267,6 +273,91 @@ const Settings = () => {
 		setSelectedUserName('')
 	}
 
+	const handleSaveSettings = async () => {
+		if (isUploading) {
+			toast.warning('Илтимос, логотип юкланиб бўлишини кутинг ⏳')
+			return
+		}
+		if (!getAllSettings) return
+		try {
+			await updateSettings(getAllSettings).unwrap()
+			toast.success('Маълумотлар муваффақиятли сақланди ✅')
+		} catch (err) {
+			toast.error('Сақлашда хатолик ❌')
+			console.error(err)
+		}
+	}
+
+	// --- Faylni yuklash (faqat preview va pathni olish)
+	const [uploadCreate] = useUploadCreateMutation()
+	const [isUploading, setIsUploading] = useState(false)
+
+	const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0]
+		if (!file) return
+
+		const formData = new FormData()
+		formData.append('file', file)
+
+		setIsUploading(true)
+		try {
+			const res = await uploadCreate(formData).unwrap()
+			if (res?.file_path) {
+				handleChangee('logo_path', res.file_path)
+				toast.success('Логотип юкланди ✅')
+			} else {
+				toast.error('Файл йўли қайтмади ❌')
+			}
+		} catch (err) {
+			console.error('Upload error:', err)
+			toast.error('Логотип юклашда хатолик ❌')
+		} finally {
+			setIsUploading(false)
+		}
+	}
+
+	const handleChangee = (field, value) => {
+		setGetAllSettings(prev => ({ ...prev, [field]: value }))
+
+		// Agar shu field uchun error bo‘lsa, uni tozalaymiz
+		if (errors[field]) {
+			setErrors(prev => ({ ...prev, [field]: '' }))
+		}
+	}
+
+	const onSaveSettings = () => {
+		const result = settingsSchema.safeParse(getAllSettings)
+		if (!result.success) {
+			const newErrors = {}
+			result.error.errors.forEach(err => {
+				newErrors[err.path[0]] = err.message
+			})
+			setErrors(newErrors)
+			return
+		}
+		handleSaveSettings()
+	}
+
+	const onSaveUser = async () => {
+		const result = userSchema.safeParse(form)
+
+		if (!result.success) {
+			const newErrors = {}
+			result.error.errors.forEach(err => {
+				newErrors[err.path[0]] = err.message
+			})
+			setErrorsUser(newErrors)
+			return
+		}
+
+		// Keyin editing yoki create
+		if (editingUserId) {
+			await handleSaveUser()
+		} else {
+			await handleCreateUser()
+		}
+	}
+
 	useEffect(() => {
 		if (usersData?.data) {
 			setUsers(usersData.data)
@@ -292,34 +383,40 @@ const Settings = () => {
 				password: '', // agar foydalanuvchi o'zgartirmasa bo'sh qoldiramiz
 				role: user.role,
 				section: user.section,
-				permissions: user.permissions,
 				license_number: user.license_number,
 			})
 		}
 	}, [editingUserData])
 
-  return (
-    <div className='min-h-screen bg-background'>
-      {/* Header */}
-      <header className='bg-card border-b border-border sticky top-0 z-10'>
-        <div className='container mx-auto px-4 py-4'>
-          <div className='flex items-center gap-4'>
-            <Button
-              variant='ghost'
-              size='icon'
-              onClick={() => navigate('/dashboard')}
-            >
-              <ArrowLeft className='w-5 h-5' />
-            </Button>
-            <div>
-              <h1 className='text-2xl font-bold'>Созламалар</h1>
-              <p className='text-sm text-muted-foreground'>
-                Тизим ва фойдаланувчи созламалари
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+	// SettingGetAll
+	useEffect(() => {
+		if (settingsGetAll?.data) {
+			setGetAllSettings(settingsGetAll.data)
+		}
+	}, [settingsGetAll])
+
+	return (
+		<div className='min-h-screen bg-background'>
+			{/* Header */}
+			<header className='bg-card border-b border-border sticky top-0 z-10'>
+				<div className='container mx-auto px-4 py-4'>
+					<div className='flex items-center gap-4'>
+						<Button
+							variant='ghost'
+							size='icon'
+							onClick={() => navigate('/dashboard')}
+						>
+							<ArrowLeft className='w-5 h-5' />
+						</Button>
+						<div>
+							<h1 className='text-2xl font-bold'>Созламалар</h1>
+							<p className='text-sm text-muted-foreground'>
+								Тизим ва фойдаланувчи созламалари
+							</p>
+						</div>
+					</div>
+				</div>
+			</header>
 
 			{/* Main Content */}
 			<main className='container mx-auto px-4 py-6'>
@@ -331,8 +428,139 @@ const Settings = () => {
 						<TabsTrigger value='audit'>Тарих</TabsTrigger>
 					</TabsList>
 
-					{/* Users Tab */}
+					{/* Clinic Tab */}
+					<TabsContent value='clinic' className='space-y-4'>
+						<Card className='p-6'>
+							<h2 className='text-xl font-semibold mb-6'>
+								Клиника маълумотлари
+							</h2>
+							<div className='space-y-4 max-w-2xl'>
+								<div>
+									<Label>Клиника номи</Label>
+									<Input
+										value={getAllSettings?.clinic_name || ''}
+										onChange={e => handleChangee('clinic_name', e.target.value)}
+									/>
+									{errors.clinic_name && (
+										<p className='text-red-500 text-sm'>{errors.clinic_name}</p>
+									)}
+								</div>
 
+								<div>
+									<Label>Манзил</Label>
+									<Input
+										value={getAllSettings?.address || ''}
+										onChange={e => handleChangee('address', e.target.value)}
+									/>
+									{errors.address && (
+										<p className='text-red-500 text-sm'>{errors.address}</p>
+									)}
+								</div>
+
+								<div className='grid grid-cols-2 gap-4'>
+									<div>
+										<Label>Телефон</Label>
+										<Input
+											value={getAllSettings?.phone || ''}
+											onChange={e => handleChangee('phone', e.target.value)}
+										/>
+										{errors.phone && (
+											<p className='text-red-500 text-sm'>{errors.phone}</p>
+										)}
+									</div>
+									<div>
+										<Label>Email</Label>
+										<Input
+											value={getAllSettings?.email || ''}
+											onChange={e => handleChangee('email', e.target.value)}
+										/>
+										{errors.email && (
+											<p className='text-red-500 text-sm'>{errors.email}</p>
+										)}
+									</div>
+								</div>
+
+								<div className='grid grid-cols-2 gap-4'>
+									<div>
+										<Label>Иш бошланиш вақти</Label>
+										<Input
+											type='time'
+											value={getAllSettings?.work_start_time || ''}
+											onChange={e =>
+												handleChangee('work_start_time', e.target.value)
+											}
+										/>
+										{errors.work_start_time && (
+											<p className='text-red-500 text-sm'>
+												{errors.work_start_time}
+											</p>
+										)}
+									</div>
+									<div>
+										<Label>Иш тугаш вақти</Label>
+										<Input
+											type='time'
+											value={getAllSettings?.work_end_time || ''}
+											onChange={e =>
+												handleChangee('work_end_time', e.target.value)
+											}
+										/>
+										{errors.work_end_time && (
+											<p className='text-red-500 text-sm'>
+												{errors.work_end_time}
+											</p>
+										)}
+									</div>
+								</div>
+
+								<div>
+									<Label>Логотип</Label>
+									<div className='flex items-center gap-4 mt-2'>
+										<div className='w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden'>
+											{getAllSettings?.logo_path ? (
+												<img
+													src={getAllSettings.logo_path}
+													alt='Logo'
+													className='w-full h-full object-contain'
+												/>
+											) : (
+												<span className='text-sm text-muted-foreground'>
+													Логотип
+												</span>
+											)}
+										</div>
+										<div>
+											<input
+												type='file'
+												accept='image/*'
+												id='logoUpload'
+												style={{ display: 'none' }}
+												onChange={handleUploadFile}
+											/>
+											<Button
+												variant='outline'
+												onClick={() =>
+													document.getElementById('logoUpload')?.click()
+												}
+											>
+												<Upload className='w-4 h-4 mr-2' />
+												Юклаш
+											</Button>
+										</div>
+									</div>
+									{errors.logo_path && (
+										<p className='text-red-500 text-sm'>{errors.logo_path}</p>
+									)}
+								</div>
+
+								<Button onClick={onSaveSettings} disabled={isUploading}>
+									{isUploading ? 'Логотип юкланмоқда...' : 'Сақлаш'}
+								</Button>
+							</div>
+						</Card>
+					</TabsContent>
+
+					{/* Users Tab */}
 					<TabsContent value='users'>
 						<Card className='p-6'>
 							<div className='flex items-center justify-between mb-4'>
@@ -448,7 +676,7 @@ const Settings = () => {
 																onClick={() =>
 																	handleOpenDeleteDialog(
 																		user._id,
-																		user.username
+																		user.fullname
 																	)
 																}
 															>
@@ -510,7 +738,6 @@ const Settings = () => {
 							)}
 						</Card>
 					</TabsContent>
-
           {/* Clinic Tab */}
           <TabsContent value='clinic' className='space-y-4'>
             <Card className='p-6'>
@@ -710,6 +937,7 @@ const Settings = () => {
 						// Modal yopilganda formni tozalash
 						resetForm()
 						setEditingUserId(null)
+						setErrorsUser({})
 						setForm({
 							fullname: '',
 							username: '',
@@ -718,7 +946,6 @@ const Settings = () => {
 							password: '',
 							role: '',
 							section: '',
-							permissions: [],
 							license_number: '',
 						})
 					}
@@ -739,14 +966,22 @@ const Settings = () => {
 								<Input
 									value={form.fullname}
 									onChange={e => handleChange('fullname', e.target.value)}
+									placeholder='Исмингизни киритинг'
 								/>
+								{errorsUser.fullname && (
+									<p className='text-red-500 text-sm'>{errorsUser.fullname}</p>
+								)}
 							</div>
 							<div>
 								<Label>Фойдаланувчи номи</Label>
 								<Input
 									value={form.username}
 									onChange={e => handleChange('username', e.target.value)}
+									placeholder='Фойдаланувчи номини киритинг'
 								/>
+								{errorsUser.username && (
+									<p className='text-red-500 text-sm'>{errorsUser.username}</p>
+								)}
 							</div>
 						</div>
 						<div className='grid grid-cols-2 gap-4'>
@@ -755,14 +990,22 @@ const Settings = () => {
 								<Input
 									value={form.email}
 									onChange={e => handleChange('email', e.target.value)}
+									placeholder='Email манзилингизни киритинг'
 								/>
+								{errorsUser.email && (
+									<p className='text-red-500 text-sm'>{errorsUser.email}</p>
+								)}
 							</div>
 							<div>
 								<Label>Телефон</Label>
 								<Input
 									value={form.phone}
 									onChange={e => handleChange('phone', e.target.value)}
+									placeholder='+998XXXXXXXXX форматда'
 								/>
+								{errorsUser.phone && (
+									<p className='text-red-500 text-sm'>{errorsUser.phone}</p>
+								)}
 							</div>
 						</div>
 						<div className='grid grid-cols-2 gap-4'>
@@ -777,15 +1020,22 @@ const Settings = () => {
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value={RoleConstants.DOCTOR}>
-											Шифокор
+											{RoleConstants.DOCTOR}
 										</SelectItem>
-										<SelectItem value={RoleConstants.NURSE}>Ҳамшира</SelectItem>
+										<SelectItem value={RoleConstants.NURSE}>
+											{RoleConstants.NURSE}
+										</SelectItem>
 										<SelectItem value={RoleConstants.RECEPTIONIST}>
-											Ресепшн
+											{RoleConstants.RECEPTIONIST}
 										</SelectItem>
-										<SelectItem value={RoleConstants.ADMIN}>Админ</SelectItem>
+										<SelectItem value={RoleConstants.ADMIN}>
+											{RoleConstants.ADMIN}
+										</SelectItem>
 									</SelectContent>
 								</Select>
+								{errorsUser.role && (
+									<p className='text-red-500 text-sm'>{errorsUser.role}</p>
+								)}
 							</div>
 
 							<div>
@@ -795,7 +1045,7 @@ const Settings = () => {
 									onValueChange={val => handleChange('section', val)}
 								>
 									<SelectTrigger>
-										<SelectValue placeholder='Танланг...' />
+										<SelectValue placeholder='Бўлимни танланг...' />
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value={SectionConstants.KARDIOLOGIYA}>
@@ -809,6 +1059,9 @@ const Settings = () => {
 										</SelectItem>
 									</SelectContent>
 								</Select>
+								{errorsUser.section && (
+									<p className='text-red-500 text-sm'>{errorsUser.section}</p>
+								)}
 							</div>
 						</div>
 						<div>
@@ -817,7 +1070,13 @@ const Settings = () => {
 								value={form.license_number}
 								onChange={e => handleChange('license_number', e.target.value)}
 								autoComplete='off'
+								placeholder='Лицензия рақамини киритинг'
 							/>
+							{errorsUser.license_number && (
+								<p className='text-red-500 text-sm'>
+									{errorsUser.license_number}
+								</p>
+							)}
 						</div>
 
 						<div>
@@ -827,52 +1086,30 @@ const Settings = () => {
 								value={form.password}
 								onChange={e => handleChange('password', e.target.value)}
 								autoComplete='new-password'
+								placeholder='Парол киритинг'
 							/>
-						</div>
-
-						<div>
-							<Label className='mb-3 block'>Рухсатлар</Label>
-							{[
-								{
-									key: 'patients.view',
-									label: 'Беморларни кўриш',
-									value: PermissionConstants.READ,
-								},
-								{
-									key: 'patients.edit',
-									label: 'Беморларни таҳрирлаш',
-									value: PermissionConstants.WRITE,
-								},
-								{
-									key: 'lab.input',
-									label: 'Таҳлил натижаларини киритиш',
-									value: PermissionConstants.DELETE,
-								},
-							].map(perm => (
-								<div key={perm.key} className='flex items-center space-x-2'>
-									<Checkbox
-										id={perm.key}
-										checked={form.permissions.includes(perm.value)}
-										onCheckedChange={() => togglePermission(perm.value)}
-									/>
-									<label htmlFor={perm.key} className='text-sm'>
-										{perm.label}
-									</label>
-								</div>
-							))}
+							{!editingUserId
+								? errorsUser.password && (
+										<p className='text-red-500 text-sm'>
+											{errorsUser.password}
+										</p>
+								  )
+								: null}
 						</div>
 					</div>
 
 					<DialogFooter>
-						<Button variant='outline' onClick={() => setIsUserModalOpen(false)}>
+						<Button
+							variant='outline'
+							onClick={() => {
+								setIsUserModalOpen(false)
+								setErrorsUser({})
+							}}
+						>
 							Бекор қилиш
 						</Button>
-						<Button
-							onClick={() =>
-								editingUserId ? handleSaveUser() : handleCreateUser()
-							}
-						>
-							{editingUserId ? 'Янгилаш' : 'Қўшиш'}
+						<Button onClick={onSaveUser}>
+							{editingUserId ? 'Сақлаш' : 'Қўшиш'}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

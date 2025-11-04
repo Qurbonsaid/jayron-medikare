@@ -7,7 +7,6 @@ export type UserCreateResponse = {
 	phone: string
 	role: string
 	section: string
-	permissions: string[]
 	license_number: string
 }
 
@@ -31,7 +30,6 @@ export type UserId = {
 	phone: string,
 	role: string,
 	section: string,
-	permissions: string[],
 	status: string,
 	created_at: string,
 	license_number: string
