@@ -67,7 +67,7 @@ const patientSchema = z.object({
   address: z.string().min(5, 'Манзил камида 5 та белгидан иборат бўлиши керак'),
   allergies: z.array(z.string()).optional().default([]),
 
-  regularMedications: z
+  regular_medications: z
     .array(
       z.object({
         medicine: z.string().min(1, 'Дори номи киритилиши керак'),
@@ -111,14 +111,14 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
       firstName: 'Vali',
       middleName: 'Soliyevich',
       gender: 'male',
-      date_of_birth: new Date('1990-01-01'),
+      date_of_birth: new Date('2015-09-20'),
       passportSeries: 'AB',
       passportNumber: '1234567',
       phone: '+998912345678',
       email: 'info@artikmuratov.uz',
       address: "Palonchayev Pismadoin ko'chasi 4053-uy",
       allergies: ['Пенициллин', 'Аспирин'],
-      regularMedications: [{ medicine: 'nimadur', schedule: 'qachondir' }],
+      regular_medications: [{ medicine: 'nimadur', schedule: 'qachondir' }],
     },
   });
 
@@ -136,7 +136,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
       address: data.address,
       email: data.email,
       allergies: data.allergies,
-      regular_medications: data.regularMedications,
+      regular_medications: data.regular_medications,
       passport: {
         series: data.passportSeries,
         number: data.passportNumber,
@@ -144,10 +144,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
     };
 
     await handleRequest({
-      request: async () => {
-        const res = await createPatient(submitData);
-        return res;
-      },
+      request: async () => (await createPatient(submitData)),
       onSuccess: (data) => {
         toast.success(`Бемор маълумотлари муваффақиятли сақланди!`);
       },
@@ -620,7 +617,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
 
                   <FormField
                     control={form.control}
-                    name='regularMedications'
+                    name='regular_medications'
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Ҳозирги дорилар</FormLabel>

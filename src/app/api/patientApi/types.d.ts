@@ -6,9 +6,9 @@ export type CreatePatientReq = {
   address?: string;
   email?: string;
   allergies?: string[];
-  regularMedications?: {
-    medicine: string;
-    schedule: string;
+  regular_medications?: {
+    medicine?: string;
+    schedule?: string;
   }[];
   passport: {
     series: string;
@@ -18,7 +18,12 @@ export type CreatePatientReq = {
 
 export type PatientRes = {
   success: boolean;
-  message: string;
+  message?: string;
+  error?: {
+    statusCode: number;
+    statusMsg: string;
+    msg: string;
+  };
 };
 
 export type AllPatientRes = {
@@ -40,6 +45,41 @@ export type AllPatientReq = {
   search?: string;
   gender?: string;
   doctor_id?: string;
+};
+
+export type UpdateReq = {
+  body: CreatePatientReq;
+  id: string;
+};
+
+export type OnePatientRes = {
+  success: true;
+  data: {
+    _id: string;
+    patient_id: string;
+    diagnosis: {
+      doctor_id: string;
+      description: string;
+    }[];
+    fullname: string;
+    phone: string;
+    gender: 'male' | 'female';
+    date_of_birth: string;
+    address?: string;
+    email?: string;
+    allergies?: string[];
+    regular_medications?: {
+      medicine: string;
+      schedule: string;
+      _id: string;
+    }[];
+    passport: {
+      series: string;
+      number: string;
+    };
+    created_at: Date;
+    updated_at: Date;
+  };
 };
 
 type Pagination = {
