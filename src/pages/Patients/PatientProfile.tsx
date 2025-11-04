@@ -1,3 +1,7 @@
+import {
+  useDeletePatientMutation,
+  useGetPatientByIdQuery,
+} from '@/app/api/patientApi/patientApi';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -5,6 +9,7 @@ import {
   AlertTriangle,
   Edit,
   FileText,
+  FileX,
   Mail,
   MapPin,
   Phone,
@@ -14,6 +19,9 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import EditPatientModal from './components/EditPatientModal';
 import PatientReportModal from './components/PatientReportModal';
+import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { toast } from 'sonner';
+import getUser from '@/hooks/getUser/getUser';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
@@ -21,42 +29,56 @@ const PatientProfile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  // Mock patient data
-  const [patient, setPatient] = useState({
-    id: 'P-001',
-    name: 'Алиев Жасур Абдуллаевич',
-    age: 35,
-    gender: 'Эркак',
-    phone: '+998 90 123 45 67',
-    email: 'j.aliev@example.com',
-    address: 'Тошкент ш., Мирзо Улуғбек т., Буюк Ипак Йўли к., 45-уй',
-    allergies: ['Пенициллин', 'Арахис'],
-    medicalHistory: [
-      { condition: 'Гипертония', year: '2020' },
-      { condition: 'Диабет 2-тури', year: '2018' },
-    ],
-    medications: [
-      { name: 'Метформин', dosage: '500 мг', frequency: 'Кунига 2 марта' },
-      { name: 'Лосартан', dosage: '50 мг', frequency: 'Кунига 1 марта' },
-    ],
-    familyHistory: [
-      { relative: 'Отаси', condition: 'Инфаркт (65 ёшда)' },
-      { relative: 'Онаси', condition: 'Диабет' },
-    ],
-    vitalSigns: {
-      date: '15.01.2025',
-      bp: '130/85',
-      pulse: '78',
-      temp: '36.6',
-      weight: '82',
-    },
+  const {
+    data: patientData,
+    refetch,
+    isError,
+    isLoading,
+  } = useGetPatientByIdQuery(id, {
+    skip: !id,
   });
 
-  const handleSavePatient = (updatedPatient: typeof patient) => {
-    setPatient(updatedPatient);
-    console.log('Patient updated:', updatedPatient);
-    // Here you would normally send the update to your backend
+  if (isError) {
+    navigate('/patients');
+  }
+
+  const [deletePatient] = useDeletePatientMutation();
+  const handleRequest = useHandleRequest();
+  const patient = patientData?.data;
+
+  const handleEditSuccess = () => {
+    refetch();
   };
+
+  const onDelete = async (id: string) => {
+    await handleRequest({
+      request: async () => {
+        const res = await deletePatient(id).unwrap();
+        return res;
+      },
+      onSuccess: (data) => {
+        toast.success(data?.message);
+        navigate('/patients');
+      },
+      onError: (err) => {
+        toast.error(err?.data?.error?.msg);
+      },
+    });
+  };
+
+  const me = getUser();
+  console.log(me.role);
+
+  if (isLoading) {
+    return (
+      <div className='min-h-screen bg-background flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-muted-foreground'>Юкланмоқда...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-background'>
@@ -68,7 +90,7 @@ const PatientProfile = () => {
               {/* Profile Photo */}
               <div className='flex-shrink-0 mx-auto md:mx-0'>
                 <div className='w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 gradient-primary rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl md:text-4xl font-bold'>
-                  {patient.name
+                  {patient.fullname
                     .split(' ')
                     .map((n) => n[0])
                     .join('')}
@@ -80,14 +102,18 @@ const PatientProfile = () => {
                 <div className='flex flex-col md:flex-row justify-between mb-4'>
                   <div>
                     <h1 className='text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-center md:text-left'>
-                      {patient.name}
+                      {patient.fullname}
                     </h1>
                     <div className='flex flex-wrap gap-2 sm:gap-4 text-sm sm:text-base text-muted-foreground justify-center md:justify-start'>
-                      <span>{patient.age} йош</span>
+                      <span>
+                        {new Date(patient.date_of_birth).toLocaleDateString(
+                          'uz-UZ'
+                        )}
+                      </span>
                       <span>•</span>
-                      <span>{patient.gender}</span>
+                      <span>{patient.gender === 'male' ? 'Эркак' : 'Аёл'}</span>
                       <span>•</span>
-                      <span>ID: {patient.id}</span>
+                      <span>ID: {patient.patient_id}</span>
                     </div>
                   </div>
 
@@ -119,11 +145,22 @@ const PatientProfile = () => {
                       <Printer className='w-4 h-4 sm:mr-2' />
                       <span className='hidden sm:inline'>Чоп этиш</span>
                     </Button>
+                    {me?.role === 'ceo' && (
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        className='flex-1 sm:flex-none bg-red-500 text-white'
+                        onClick={() => onDelete(id)}
+                      >
+                        <FileX className='w-4 h-4 sm:mr-2' />
+                        <span className='hidden sm:inline'>Ўчириш</span>
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 px-2 lg:grid-cols-3 gap-3 sm:gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 mt-4 px-2 lg:grid-cols-3 gap-3 sm:gap-4'>
               <div className='flex items-center gap-2 justify-center md:justify-start'>
                 <Phone className='w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0' />
                 <span className='text-sm sm:text-base'>{patient.phone}</span>
@@ -145,7 +182,7 @@ const PatientProfile = () => {
         </Card>
 
         {/* Allergy Warning */}
-        {patient.allergies.length > 0 && (
+        {patient.allergies && patient.allergies.length > 0 && (
           <Card className='bg-gradient-to-r from-danger/10 to-warning/10 border-danger mb-4 sm:mb-6'>
             <div className='p-3 sm:p-4'>
               <div className='flex items-center gap-2 sm:gap-3'>
@@ -154,7 +191,7 @@ const PatientProfile = () => {
                   <h3 className='font-bold text-base sm:text-lg mb-1'>
                     АЛЛЕРГИЯЛАР:
                   </h3>
-                  <p className='text-danger-foreground font-semibold text-sm sm:text-base'>
+                  <p className='text-danger font-semibold text-sm sm:text-base'>
                     {patient.allergies.join(', ')}
                   </p>
                 </div>
@@ -200,27 +237,40 @@ const PatientProfile = () => {
 
           <TabsContent value='general' className='space-y-4 sm:space-y-6'>
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
-              {/* Medical History */}
+              {/* Patient Information */}
               <Card className='card-shadow'>
                 <div className='p-4 sm:p-6'>
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
-                    Тиббий Тарих
+                    Бемор маълумотлари
                   </h3>
-                  <ul className='space-y-2'>
-                    {patient.medicalHistory.map((item, idx) => (
-                      <li
-                        key={idx}
-                        className='flex flex-col sm:flex-row justify-between py-2 border-b last:border-0 gap-1 sm:gap-0'
-                      >
-                        <span className='text-sm sm:text-base'>
-                          {item.condition}
-                        </span>
-                        <span className='text-xs sm:text-sm text-muted-foreground'>
-                          {item.year}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className='space-y-3'>
+                    <div className='flex justify-between py-2 border-b'>
+                      <span className='text-sm text-muted-foreground'>
+                        Паспорт серияси:
+                      </span>
+                      <span className='font-semibold'>
+                        {patient.passport.series}
+                      </span>
+                    </div>
+                    <div className='flex justify-between py-2 border-b'>
+                      <span className='text-sm text-muted-foreground'>
+                        Паспорт рақами:
+                      </span>
+                      <span className='font-semibold'>
+                        {patient.passport.number}
+                      </span>
+                    </div>
+                    <div className='flex justify-between py-2 border-b'>
+                      <span className='text-sm text-muted-foreground'>
+                        Рўйхатдан ўтган сана:
+                      </span>
+                      <span className='font-semibold'>
+                        {new Date(patient.created_at).toLocaleDateString(
+                          'uz-UZ'
+                        )}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </Card>
 
@@ -230,90 +280,87 @@ const PatientProfile = () => {
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
                     Доимий Дорилар
                   </h3>
+                  {patient.regular_medications &&
+                  patient.regular_medications.length > 0 ? (
+                    <div className='space-y-3'>
+                      {patient.regular_medications.map((med, idx) => (
+                        <div
+                          key={med._id || idx}
+                          className='p-3 bg-accent rounded-lg'
+                        >
+                          <h4 className='font-semibold text-sm sm:text-base'>
+                            {med.medicine}
+                          </h4>
+                          <p className='text-xs sm:text-sm text-muted-foreground'>
+                            {med.schedule}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className='text-sm text-muted-foreground text-center py-4'>
+                      Доимий дорилар йўқ
+                    </p>
+                  )}
+                </div>
+              </Card>
+
+              {/* Diagnosis */}
+              <Card className='card-shadow'>
+                <div className='p-4 sm:p-6'>
+                  <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
+                    Диагноз
+                  </h3>
+                  {patient.diagnosis && patient.diagnosis.length > 0 ? (
+                    <ul className='space-y-2'>
+                      {patient.diagnosis.map((item, idx) => (
+                        <li
+                          key={idx}
+                          className='flex items-start gap-2 py-2 border-b last:border-0'
+                        >
+                          <span className='text-primary mt-1'>•</span>
+                          <span className='text-sm sm:text-base flex-1'>
+                            {item.description}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className='text-sm text-muted-foreground text-center py-4'>
+                      Диагноз қўйилмаган
+                    </p>
+                  )}
+                </div>
+              </Card>
+
+              {/* Additional Info */}
+              <Card className='card-shadow'>
+                <div className='p-4 sm:p-6'>
+                  <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
+                    Қўшимча маълумот
+                  </h3>
                   <div className='space-y-3'>
-                    {patient.medications.map((med, idx) => (
-                      <div key={idx} className='p-3 bg-accent rounded-lg'>
-                        <h4 className='font-semibold text-sm sm:text-base'>
-                          {med.name}
-                        </h4>
-                        <p className='text-xs sm:text-sm text-muted-foreground'>
-                          {med.dosage} - {med.frequency}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-
-              {/* Family History */}
-              <Card className='card-shadow'>
-                <div className='p-4 sm:p-6'>
-                  <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
-                    Оилавий Тарих
-                  </h3>
-                  <ul className='space-y-2'>
-                    {patient.familyHistory.map((item, idx) => (
-                      <li
-                        key={idx}
-                        className='flex flex-col sm:flex-row justify-between py-2 border-b last:border-0 gap-1 sm:gap-0'
-                      >
-                        <span className='font-medium text-sm sm:text-base'>
-                          {item.relative}:
-                        </span>
-                        <span className='text-xs sm:text-sm text-muted-foreground'>
-                          {item.condition}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Card>
-
-              {/* Latest Vital Signs */}
-              <Card className='card-shadow'>
-                <div className='p-4 sm:p-6'>
-                  <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
-                    Сўнгги Витал Белгилар
-                  </h3>
-                  <p className='text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4'>
-                    {patient.vitalSigns.date}
-                  </p>
-                  <div className='grid grid-cols-2 gap-2 sm:gap-4'>
-                    <div className='p-2 sm:p-3 bg-accent rounded-lg'>
-                      <p className='text-[10px] sm:text-xs text-muted-foreground mb-1'>
-                        Қон босими
+                    <div className='p-3 bg-accent rounded-lg'>
+                      <p className='text-xs text-muted-foreground mb-1'>
+                        Email
                       </p>
-                      <p className='text-base sm:text-xl font-bold'>
-                        {patient.vitalSigns.bp}
+                      <p className='text-sm font-medium break-all'>
+                        {patient.email || 'Кўрсатилмаган'}
                       </p>
-                      <p className='text-[10px] sm:text-xs'>mmHg</p>
                     </div>
-                    <div className='p-2 sm:p-3 bg-accent rounded-lg'>
-                      <p className='text-[10px] sm:text-xs text-muted-foreground mb-1'>
-                        Пульс
+                    <div className='p-3 bg-accent rounded-lg'>
+                      <p className='text-xs text-muted-foreground mb-1'>
+                        Манзил
                       </p>
-                      <p className='text-base sm:text-xl font-bold'>
-                        {patient.vitalSigns.pulse}
-                      </p>
-                      <p className='text-[10px] sm:text-xs'>/мин</p>
+                      <p className='text-sm font-medium'>{patient.address}</p>
                     </div>
-                    <div className='p-2 sm:p-3 bg-accent rounded-lg'>
-                      <p className='text-[10px] sm:text-xs text-muted-foreground mb-1'>
-                        Температура
+                    <div className='p-3 bg-accent rounded-lg'>
+                      <p className='text-xs text-muted-foreground mb-1'>
+                        Охирги янгиланган сана
                       </p>
-                      <p className='text-base sm:text-xl font-bold'>
-                        {patient.vitalSigns.temp}
+                      <p className='text-sm font-medium'>
+                        {new Date(patient.updated_at).toLocaleString('uz-UZ')}
                       </p>
-                      <p className='text-[10px] sm:text-xs'>°C</p>
-                    </div>
-                    <div className='p-2 sm:p-3 bg-accent rounded-lg'>
-                      <p className='text-[10px] sm:text-xs text-muted-foreground mb-1'>
-                        Вазн
-                      </p>
-                      <p className='text-base sm:text-xl font-bold'>
-                        {patient.vitalSigns.weight}
-                      </p>
-                      <p className='text-[10px] sm:text-xs'>кг</p>
                     </div>
                   </div>
                 </div>
@@ -366,18 +413,20 @@ const PatientProfile = () => {
         </div>
 
         {/* Modals */}
-        <EditPatientModal
-          open={isEditModalOpen}
-          onOpenChange={setIsEditModalOpen}
-          patient={patient}
-          onSave={handleSavePatient}
-        />
+        {patient && (
+          <EditPatientModal
+            open={isEditModalOpen}
+            onOpenChange={setIsEditModalOpen}
+            patient={patient}
+            onSuccess={handleEditSuccess}
+          />
+        )}
 
         <PatientReportModal
           open={isReportModalOpen}
           onOpenChange={setIsReportModalOpen}
-          patientName={patient.name}
-          patientId={patient.id}
+          patientName={patient.fullname}
+          patientId={patient.patient_id}
         />
       </main>
     </div>
