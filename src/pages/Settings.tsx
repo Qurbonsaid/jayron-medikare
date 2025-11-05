@@ -84,10 +84,11 @@ const Settings = () => {
 	const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 	const [selectedUserName, setSelectedUserName] = useState<string>('')
 	const limit = 10
-	const [getAllSettings, setGetAllSettings] = useState<Settings>(null)
+	const [getAllSettings, setGetAllSettings] = useState<Settings | null>(null)
 	// --- VALIDATION (Settings ichida) ---
 	const [errors, setErrors] = useState<Record<string, string>>({})
 	const [errorsUser, setErrorsUser] = useState<Record<string, string>>({})
+	const [isUploading, setIsUploading] = useState(false)
 
 	// --- API HOOKLAR ---
 	const [createUser] = useCreateUserMutation()
@@ -107,6 +108,8 @@ const Settings = () => {
 	)
 	const { data: settingsGetAll } = useGetAllSettingsQuery()
 	const [updateSettings] = useUpdateSettingsMutation()
+	// --- Faylni yuklash (faqat preview va pathni olish)
+	const [uploadCreate] = useUploadCreateMutation()
 
 	// --- FORM HOLATI ---
 	const [form, setForm] = useState<UserCreateResponse>({
@@ -165,21 +168,6 @@ const Settings = () => {
 		if (p >= 1 && p <= totalPages) setPage(p)
 	}
 
-	const handleOpenEditUser = (user: UserId) => {
-		const formData: UserCreateResponse = {
-			fullname: user.fullname,
-			username: user.username,
-			email: user.email,
-			phone: user.phone,
-			password: '', // foydalanuvchi o'zgartirsa
-			role: user.role,
-			section: user.section,
-			license_number: user.license_number || '',
-		}
-		setForm(formData)
-		setIsUserModalOpen(true)
-	}
-
 	const handleSaveUser = async () => {
 		// Agar password bo'sh bo'lsa, payloaddan olib tashlaymiz
 		const payload = { ...form }
@@ -234,12 +222,6 @@ const Settings = () => {
 		setEditingUserId(null)
 	}
 
-	// --- Open edit modal
-	const handleOpenEditUserId = (userId: string) => {
-		setEditingUserId(userId)
-		setIsUserModalOpen(true)
-	}
-
 	// Dialogni ochish funksiyasi
 	const handleOpenDeleteDialog = (userId: string, fullname: string) => {
 		setSelectedUserId(userId)
@@ -288,10 +270,6 @@ const Settings = () => {
 		}
 	}
 
-	// --- Faylni yuklash (faqat preview va pathni olish)
-	const [uploadCreate] = useUploadCreateMutation()
-	const [isUploading, setIsUploading] = useState(false)
-
 	const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0]
 		if (!file) return
@@ -302,6 +280,7 @@ const Settings = () => {
 		setIsUploading(true)
 		try {
 			const res = await uploadCreate(formData).unwrap()
+			console.log(res)
 			if (res?.file_path) {
 				handleChangee('logo_path', res.file_path)
 				toast.success('Логотип юкланди ✅')
@@ -316,7 +295,7 @@ const Settings = () => {
 		}
 	}
 
-	const handleChangee = (field, value) => {
+	const handleChangee = (field: keyof Settings, value: string) => {
 		setGetAllSettings(prev => ({ ...prev, [field]: value }))
 
 		// Agar shu field uchun error bo‘lsa, uni tozalaymiz
@@ -339,10 +318,11 @@ const Settings = () => {
 	}
 
 	const onSaveUser = async () => {
-		const result = userSchema.safeParse(form)
+		const schema = userSchema(!!editingUserId) // tahrirlashda password optional
+		const result = schema.safeParse(form)
 
 		if (!result.success) {
-			const newErrors = {}
+			const newErrors: Record<string, string> = {}
 			result.error.errors.forEach(err => {
 				newErrors[err.path[0]] = err.message
 			})
@@ -350,12 +330,28 @@ const Settings = () => {
 			return
 		}
 
-		// Keyin editing yoki create
+		// Agar editingUserId bo'lsa -> update, yo'q bo'lsa -> create
 		if (editingUserId) {
-			await handleSaveUser()
+			await handleSaveUser() // foydalanuvchini yangilash
 		} else {
-			await handleCreateUser()
+			await handleCreateUser() // yangi foydalanuvchi qo'shish
 		}
+	}
+
+	const handleEditUser = (user: UserId) => {
+		setEditingUserId(user._id)
+		const formData: UserCreateResponse = {
+			fullname: user.fullname,
+			username: user.username,
+			email: user.email,
+			phone: user.phone,
+			password: '',
+			role: user.role,
+			section: user.section,
+			license_number: user.license_number || '',
+		}
+		setForm(formData)
+		setIsUserModalOpen(true)
 	}
 
 	useEffect(() => {
@@ -427,6 +423,182 @@ const Settings = () => {
 						<TabsTrigger value='notifications'>Билдиришномалар</TabsTrigger>
 						<TabsTrigger value='audit'>Тарих</TabsTrigger>
 					</TabsList>
+
+					{/* Users Tab */}
+					<TabsContent value='users'>
+						<Card className='p-6'>
+							<div className='flex items-center justify-between mb-4'>
+								<h2 className='text-xl font-semibold'>
+									Фойдаланувчилар рўйхати
+								</h2>
+								<Button
+									onClick={() => {
+										resetForm() // formani tozalaydi
+										setEditingUserId(null) // eski tahrirlangan ID ni tozalaydi
+										setIsUserModalOpen(true)
+									}}
+								>
+									<Plus className='w-4 h-4 mr-2' />
+									Янги фойдаланувчи
+								</Button>
+							</div>
+
+							{/* Search & Role filter */}
+							<div className='mb-4 flex flex-col sm:flex-row gap-2'>
+								<Input
+									placeholder='Фойдаланувчи исми ёки email бўйича қидириш...'
+									value={search}
+									onChange={handleSearchChange}
+									className='flex-1'
+								/>
+
+								<select
+									className='border border-border rounded-md px-3 py-2 bg-background'
+									value={role}
+									onChange={e => {
+										setRole(e.target.value)
+										setPage(1)
+									}}
+								>
+									<option value=''>Barchasi</option>
+									<option value={RoleConstants.ADMIN}>
+										{RoleConstants.ADMIN}
+									</option>
+									<option value={RoleConstants.DOCTOR}>
+										{RoleConstants.DOCTOR}
+									</option>
+									<option value={RoleConstants.RECEPTIONIST}>
+										{RoleConstants.RECEPTIONIST}
+									</option>
+									<option value={RoleConstants.NURSE}>
+										{RoleConstants.NURSE}
+									</option>
+								</select>
+							</div>
+
+							{/* Users table */}
+							<div className='overflow-x-auto'>
+								<table className='w-full text-sm'>
+									<thead>
+										<tr className='border-b'>
+											<th className='text-left py-2 px-4'>N</th>
+											<th className='text-left py-2 px-4'>ФИО</th>
+											<th className='text-left py-2 px-4'>Рол</th>
+											<th className='text-left py-2 px-4'>Бўлим</th>
+											<th className='text-left py-2 px-4'>Email</th>
+											<th className='text-left py-2 px-4'>Ҳолат</th>
+											<th className='text-left py-2 px-4'>Ҳаракатлар</th>
+										</tr>
+									</thead>
+									<tbody>
+										{users.length > 0 ? (
+											users.map((user, index) => (
+												<tr
+													key={user._id}
+													className='border-b hover:bg-muted/40 transition-colors'
+												>
+													<td className='py-2 px-4 font-medium'>
+														{(page - 1) * limit + (index + 1)}
+													</td>
+													<td className='py-2 px-4 font-medium'>
+														{user.fullname}
+													</td>
+													<td className='py-2 px-4'>
+														<Badge variant='outline'>{user.role}</Badge>
+													</td>
+													<td className='py-2 px-4'>{user.section}</td>
+													<td className='py-2 px-4 text-muted-foreground'>
+														{user.email}
+													</td>
+													<td className='py-2 px-4'>
+														<Badge
+															className={
+																user.status === 'active'
+																	? 'bg-success/10 text-success border-success/20 border'
+																	: 'bg-destructive/10 text-destructive border-destructive/20 border'
+															}
+														>
+															{user.status === 'active' ? 'Фаол' : 'Нофаол'}
+														</Badge>
+													</td>
+													<td className='py-2 px-4'>
+														<div className='flex gap-4'>
+															<Button
+																size='sm'
+																variant='outline'
+																onClick={() => handleEditUser(user as UserId)}
+															>
+																Таҳрирлаш
+															</Button>
+															<Button
+																size='sm'
+																variant='outline'
+																className='text-danger'
+																onClick={() =>
+																	handleOpenDeleteDialog(
+																		user._id,
+																		user.fullname
+																	)
+																}
+															>
+																Ўчириш
+															</Button>
+														</div>
+													</td>
+												</tr>
+											))
+										) : (
+											<tr>
+												<td
+													colSpan={7}
+													className='text-center py-4 text-muted-foreground'
+												>
+													Фойдаланувчилар топилмади
+												</td>
+											</tr>
+										)}
+									</tbody>
+								</table>
+							</div>
+
+							{/* Pagination */}
+							{totalPages > 1 && (
+								<div className='flex items-center justify-between mt-4'>
+									<div className='flex gap-2'>
+										<Button
+											size='sm'
+											onClick={() => goToPage(page - 1)}
+											disabled={page === 1}
+										>
+											&larr; Назад
+										</Button>
+										<Button
+											size='sm'
+											onClick={() => goToPage(page + 1)}
+											disabled={page === totalPages}
+										>
+											След &rarr;
+										</Button>
+									</div>
+									<div className='text-sm text-muted-foreground'>
+										{page} / {totalPages}
+									</div>
+									<div className='hidden sm:flex gap-1'>
+										{Array.from({ length: totalPages }, (_, i) => (
+											<Button
+												key={i}
+												size='sm'
+												variant={page === i + 1 ? 'default' : 'outline'}
+												onClick={() => goToPage(i + 1)}
+											>
+												{i + 1}
+											</Button>
+										))}
+									</div>
+								</div>
+							)}
+						</Card>
+					</TabsContent>
 
 					{/* Clinic Tab */}
 					<TabsContent value='clinic' className='space-y-4'>
@@ -559,250 +731,6 @@ const Settings = () => {
 							</div>
 						</Card>
 					</TabsContent>
-
-					{/* Users Tab */}
-					<TabsContent value='users'>
-						<Card className='p-6'>
-							<div className='flex items-center justify-between mb-4'>
-								<h2 className='text-xl font-semibold'>
-									Фойдаланувчилар рўйхати
-								</h2>
-								<Button
-									onClick={() => {
-										resetForm() // formani tozalaydi
-										setEditingUserId(null) // eski tahrirlangan ID ni tozalaydi
-										setIsUserModalOpen(true)
-									}}
-								>
-									<Plus className='w-4 h-4 mr-2' />
-									Янги фойдаланувчи
-								</Button>
-							</div>
-
-							{/* Search & Role filter */}
-							<div className='mb-4 flex flex-col sm:flex-row gap-2'>
-								<Input
-									placeholder='Фойдаланувчи исми ёки email бўйича қидириш...'
-									value={search}
-									onChange={handleSearchChange}
-									className='flex-1'
-								/>
-
-								<select
-									className='border border-border rounded-md px-3 py-2 bg-background'
-									value={role}
-									onChange={e => {
-										setRole(e.target.value)
-										setPage(1)
-									}}
-								>
-									<option value=''>Barchasi</option>
-									<option value={RoleConstants.ADMIN}>
-										{RoleConstants.ADMIN}
-									</option>
-									<option value={RoleConstants.DOCTOR}>
-										{RoleConstants.DOCTOR}
-									</option>
-									<option value={RoleConstants.RECEPTIONIST}>
-										{RoleConstants.RECEPTIONIST}
-									</option>
-									<option value={RoleConstants.NURSE}>
-										{RoleConstants.NURSE}
-									</option>
-								</select>
-							</div>
-
-							{/* Users table */}
-							<div className='overflow-x-auto'>
-								<table className='w-full text-sm'>
-									<thead>
-										<tr className='border-b'>
-											<th className='text-left py-2 px-4'>N</th>
-											<th className='text-left py-2 px-4'>ФИО</th>
-											<th className='text-left py-2 px-4'>Рол</th>
-											<th className='text-left py-2 px-4'>Бўлим</th>
-											<th className='text-left py-2 px-4'>Email</th>
-											<th className='text-left py-2 px-4'>Ҳолат</th>
-											<th className='text-left py-2 px-4'>Ҳаракатлар</th>
-										</tr>
-									</thead>
-									<tbody>
-										{users.length > 0 ? (
-											users.map((user, index) => (
-												<tr
-													key={user._id}
-													className='border-b hover:bg-muted/40 transition-colors'
-												>
-													<td className='py-2 px-4 font-medium'>
-														{(page - 1) * limit + (index + 1)}
-													</td>
-													<td className='py-2 px-4 font-medium'>
-														{user.fullname}
-													</td>
-													<td className='py-2 px-4'>
-														<Badge variant='outline'>{user.role}</Badge>
-													</td>
-													<td className='py-2 px-4'>{user.section}</td>
-													<td className='py-2 px-4 text-muted-foreground'>
-														{user.email}
-													</td>
-													<td className='py-2 px-4'>
-														<Badge
-															className={
-																user.status === 'active'
-																	? 'bg-success/10 text-success border-success/20 border'
-																	: 'bg-destructive/10 text-destructive border-destructive/20 border'
-															}
-														>
-															{user.status === 'active' ? 'Фаол' : 'Нофаол'}
-														</Badge>
-													</td>
-													<td className='py-2 px-4'>
-														<div className='flex gap-4'>
-															<Button
-																size='sm'
-																variant='outline'
-																onClick={() => {
-																	handleOpenEditUserId(user._id)
-																	handleOpenEditUser(user as UserId)
-																}}
-															>
-																Таҳрирлаш
-															</Button>
-															<Button
-																size='sm'
-																variant='outline'
-																className='text-danger'
-																onClick={() =>
-																	handleOpenDeleteDialog(
-																		user._id,
-																		user.fullname
-																	)
-																}
-															>
-																Ўчириш
-															</Button>
-														</div>
-													</td>
-												</tr>
-											))
-										) : (
-											<tr>
-												<td
-													colSpan={7}
-													className='text-center py-4 text-muted-foreground'
-												>
-													Фойдаланувчилар топилмади
-												</td>
-											</tr>
-										)}
-									</tbody>
-								</table>
-							</div>
-
-							{/* Pagination */}
-							{totalPages > 1 && (
-								<div className='flex items-center justify-between mt-4'>
-									<div className='flex gap-2'>
-										<Button
-											size='sm'
-											onClick={() => goToPage(page - 1)}
-											disabled={page === 1}
-										>
-											&larr; Назад
-										</Button>
-										<Button
-											size='sm'
-											onClick={() => goToPage(page + 1)}
-											disabled={page === totalPages}
-										>
-											След &rarr;
-										</Button>
-									</div>
-									<div className='text-sm text-muted-foreground'>
-										{page} / {totalPages}
-									</div>
-									<div className='hidden sm:flex gap-1'>
-										{Array.from({ length: totalPages }, (_, i) => (
-											<Button
-												key={i}
-												size='sm'
-												variant={page === i + 1 ? 'default' : 'outline'}
-												onClick={() => goToPage(i + 1)}
-											>
-												{i + 1}
-											</Button>
-										))}
-									</div>
-								</div>
-							)}
-						</Card>
-					</TabsContent>
-          {/* Clinic Tab */}
-          <TabsContent value='clinic' className='space-y-4'>
-            <Card className='p-6'>
-              <h2 className='text-xl font-semibold mb-6'>
-                Клиника маълумотлари
-              </h2>
-              <div className='space-y-4 max-w-2xl'>
-                <div>
-                  <Label>Клиника номи</Label>
-                  <Input defaultValue='JAYRON MEDSERVIS' />
-                </div>
-                <div>
-                  <Label>Манзил</Label>
-                  <Input defaultValue='Тошкент шаҳри, Юнусобод тумани' />
-                </div>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <Label>Телефон</Label>
-                    <Input defaultValue='+998 71 123 45 67' />
-                  </div>
-                  <div>
-                    <Label>Email</Label>
-                    <Input defaultValue='info@jayron.uz' />
-                  </div>
-                </div>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <Label>Иш бошланиш вақти</Label>
-                    <Input type='time' defaultValue='08:00' />
-                  </div>
-                  <div>
-                    <Label>Иш тугаш вақти</Label>
-                    <Input type='time' defaultValue='20:00' />
-                  </div>
-                </div>
-                <div>
-                  <Label>Тил</Label>
-                  <Select defaultValue='uz'>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='uz'>Ўзбек тили</SelectItem>
-                      <SelectItem value='ru'>Русский язык</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Логотип</Label>
-                  <div className='flex items-center gap-4 mt-2'>
-                    <div className='w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center'>
-                      <span className='text-sm text-muted-foreground'>
-                        Логотип
-                      </span>
-                    </div>
-                    <Button variant='outline'>
-                      <Upload className='w-4 h-4 mr-2' />
-                      Юклаш
-                    </Button>
-                  </div>
-                </div>
-                <Button>Сақлаш</Button>
-              </div>
-            </Card>
-          </TabsContent>
 
 					{/* Notifications Tab */}
 					<TabsContent value='notifications' className='space-y-4'>
