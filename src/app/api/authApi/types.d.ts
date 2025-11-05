@@ -1,4 +1,4 @@
-import { RoleConstants } from './../../../constants/Roles';
+import { RoleConstants } from '@/constants/Roles';
 export type LoginRequest = {
   username: string;
   password: string;
