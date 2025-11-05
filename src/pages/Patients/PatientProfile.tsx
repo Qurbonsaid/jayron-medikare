@@ -22,6 +22,7 @@ import PatientReportModal from './components/PatientReportModal';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { toast } from 'sonner';
 import getUser from '@/hooks/getUser/getUser';
+import RBS from '@/hooks/RBS/Role_Based_Security';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
@@ -67,7 +68,6 @@ const PatientProfile = () => {
   };
 
   const me = getUser();
-  console.log(me.role);
 
   if (isLoading) {
     return (
@@ -145,7 +145,7 @@ const PatientProfile = () => {
                       <Printer className='w-4 h-4 sm:mr-2' />
                       <span className='hidden sm:inline'>Чоп этиш</span>
                     </Button>
-                    {me?.role === 'ceo' && (
+                    <RBS role={me.role} allowed={['ceo']}>
                       <Button
                         variant='outline'
                         size='sm'
@@ -155,7 +155,7 @@ const PatientProfile = () => {
                         <FileX className='w-4 h-4 sm:mr-2' />
                         <span className='hidden sm:inline'>Ўчириш</span>
                       </Button>
-                    )}
+                    </RBS>
                   </div>
                 </div>
               </div>
