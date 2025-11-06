@@ -222,7 +222,7 @@ const Patients = () => {
                       {patient.diagnosis && patient.diagnosis.length > 0 && (
                         <div className='flex items-center gap-2 text-xs sm:text-sm'>
                           <Users className='w-4 h-4 text-muted-foreground' />
-                          <span>{patient.diagnosis[0]}</span>
+                          <span>Диагноз мавжуд</span>
                         </div>
                       )}
                     </div>
@@ -288,7 +288,7 @@ const Patients = () => {
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
                           {patient.diagnosis && patient.diagnosis.length > 0
-                            ? patient.diagnosis.join(', ')
+                            ? `${patient.diagnosis.length} та`
                             : 'Йўқ'}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4'>

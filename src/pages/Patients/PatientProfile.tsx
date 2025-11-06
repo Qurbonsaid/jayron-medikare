@@ -5,6 +5,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import getUser from '@/hooks/getUser/getUser';
+import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import RBS from '@/hooks/RBS/Role_Based_Security';
 import {
   AlertTriangle,
   Edit,
@@ -13,16 +16,14 @@ import {
   Mail,
   MapPin,
   Phone,
+  Plus,
   Printer,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import EditPatientModal from './components/EditPatientModal';
 import PatientReportModal from './components/PatientReportModal';
-import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { toast } from 'sonner';
-import getUser from '@/hooks/getUser/getUser';
-import RBS from '@/hooks/RBS/Role_Based_Security';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
@@ -117,7 +118,7 @@ const PatientProfile = () => {
                     </div>
                   </div>
 
-                  <div className='flex flex-wrap gap-2 mt-4 md:mt-0 justify-center md:justify-end'>
+                  <div className='flex flex-wrap gap-2 mt-4 md:mt-0 justify-center md:justify-end lg:max-w-md'>
                     <Button
                       variant='outline'
                       size='sm'
@@ -156,9 +157,22 @@ const PatientProfile = () => {
                         <span className='hidden sm:inline'>Ўчириш</span>
                       </Button>
                     </RBS>
+                    <Button
+                      size='sm'
+                      className='gradient-primary px-6 text-md'
+                      onClick={() =>
+                        navigate('/new-visit', { state: { patientId: id } })
+                      }
+                    >
+                      <Plus className='w-4 h-4 sm:mr-2' />
+                      <span className='hidden sm:inline'>Янги Кўрик Яратиш</span>
+                      
+                    </Button>
                   </div>
                 </div>
               </div>
+
+              <div className='mt-4 sm:mt-6 flex justify-center'></div>
             </div>
             <div className='grid grid-cols-1 sm:grid-cols-2 mt-4 px-2 lg:grid-cols-3 gap-3 sm:gap-4'>
               <div className='flex items-center gap-2 justify-center md:justify-start'>
@@ -202,7 +216,7 @@ const PatientProfile = () => {
 
         {/* Tabs */}
         <Tabs defaultValue='general' className='space-y-4 sm:space-y-6'>
-          <TabsList className='grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto gap-1'>
+          <TabsList className='grid w-full grid-cols-2 h-auto gap-1'>
             <TabsTrigger
               value='general'
               className='py-2 sm:py-3 text-xs sm:text-sm'
@@ -214,24 +228,6 @@ const PatientProfile = () => {
               className='py-2 sm:py-3 text-xs sm:text-sm'
             >
               Ташрифлар
-            </TabsTrigger>
-            <TabsTrigger
-              value='tests'
-              className='py-2 sm:py-3 text-xs sm:text-sm'
-            >
-              Таҳлиллар
-            </TabsTrigger>
-            <TabsTrigger
-              value='images'
-              className='py-2 sm:py-3 text-xs sm:text-sm'
-            >
-              Тасвирлар
-            </TabsTrigger>
-            <TabsTrigger
-              value='prescriptions'
-              className='py-2 sm:py-3 text-xs sm:text-sm'
-            >
-              Рецептлар
             </TabsTrigger>
           </TabsList>
 
@@ -375,42 +371,7 @@ const PatientProfile = () => {
               </div>
             </Card>
           </TabsContent>
-
-          <TabsContent value='tests'>
-            <Card className='card-shadow'>
-              <div className='p-4 sm:p-6 text-center text-sm sm:text-base text-muted-foreground'>
-                Таҳлиллар натижалари...
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value='images'>
-            <Card className='card-shadow'>
-              <div className='p-4 sm:p-6 text-center text-sm sm:text-base text-muted-foreground'>
-                Тиббий тасвирлар...
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value='prescriptions'>
-            <Card className='card-shadow'>
-              <div className='p-4 sm:p-6 text-center text-sm sm:text-base text-muted-foreground'>
-                Рецептлар тарихи...
-              </div>
-            </Card>
-          </TabsContent>
         </Tabs>
-
-        {/* Quick Action */}
-        <div className='mt-4 sm:mt-6 flex justify-center'>
-          <Button
-            size='lg'
-            className='gradient-primary h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto'
-            onClick={() => navigate('/new-visit')}
-          >
-            + Янги Кўрик Яратиш
-          </Button>
-        </div>
 
         {/* Modals */}
         {patient && (

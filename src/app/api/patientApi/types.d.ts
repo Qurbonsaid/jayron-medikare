@@ -82,7 +82,7 @@ export type OnePatientRes = {
   };
 };
 
-type Pagination = {
+export type Pagination = {
   limit: number;
   page: number;
   prev_page: number | null;

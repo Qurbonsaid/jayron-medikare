@@ -4,15 +4,16 @@ import Billing from '@/pages/Billing';
 import Dashboard from '@/pages/Dashboard';
 import Inpatient from '@/pages/Inpatient';
 import LabResults from '@/pages/LabResults';
-import NewVisit from '@/pages/NewVisit';
+import NewVisit from '@/pages/Examination/NewVisit';
 import PatientPortal from '@/pages/PatientPortal';
 import PatientProfile from '@/pages/Patients/PatientProfile';
 import Patients from '@/pages/Patients/Patients';
-import Prescription from '@/pages/Prescription';
+import Prescription from '@/pages/Examination/Prescription';
 import Radiology from '@/pages/Radiology';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 import LabOrder from '@/pages/LabOrder';
+import Visits from './pages/Examination/Visits';
 
 export const routers = [
   { path: '/dashboard', element: <Dashboard /> },
@@ -21,6 +22,7 @@ export const routers = [
   { path: '/patient/:id', element: <PatientProfile /> },
   { path: '/new-visit', element: <NewVisit /> },
   { path: '/appointments', element: <Appointments /> },
+  { path: '/visits', element: <Visits /> },
   { path: '/prescription', element: <Prescription /> },
   { path: '/lab-order', element: <LabOrder /> },
   { path: '/inpatient', element: <Inpatient /> },
@@ -62,6 +64,11 @@ export const navigator = [
     path: '/appointments',
     to: null,
     title: 'Учрашувлар',
+  },
+  {
+    path: '/visits',
+    to: null,
+    title: null,
   },
   {
     path: '/prescription',
@@ -118,3 +125,75 @@ export const navigator = [
     title: 'Бемор портали',
   },
 ];
+import {
+  BarChart3,
+  BedDouble,
+  Calendar,
+  ClipboardCheck,
+  FileEdit,
+  List,
+  Microscope,
+  Pill,
+  ScanLine,
+  Settings as SettingIcon,
+  Stethoscope,
+  TestTube,
+  Users,
+  Wallet,
+} from 'lucide-react';
+export const menuCategories = [
+  {
+    id: 'patients',
+    title: 'БЕМОРЛАР',
+    icon: Users,
+    items: [{ title: 'Беморлар рўйхати', url: '/patients', icon: List }],
+  },
+  {
+    id: 'clinical',
+    title: 'КЎРИКЛАР',
+    icon: Stethoscope,
+    items: [
+      { title: 'Янги кўрик SOAP', url: '/new-visit', icon: FileEdit },
+      { title: 'Навбатлар', url: '/appointments', icon: Calendar },
+      { title: 'Кўриклар', url: '/visits', icon: Calendar },
+      { title: 'Рецепт ёзиш', url: '/prescription', icon: Pill },
+    ],
+  },
+  {
+    id: 'diagnostics',
+    title: 'ДИАГНОСТИКА',
+    icon: Microscope,
+    items: [
+      { title: 'Таҳлил буюртмаси', url: '/lab-order', icon: TestTube },
+      { title: 'Таҳлил натижалари', url: '/lab-results', icon: ClipboardCheck },
+      { title: 'Рентген/МРТ/КТ', url: '/radiology', icon: ScanLine },
+    ],
+  },
+  {
+    id: 'inpatient',
+    title: 'СТАЦИОНАР',
+    icon: BedDouble,
+    items: [
+      { title: 'Стационар бошқаруви', url: '/inpatient', icon: BedDouble },
+    ],
+  },
+  {
+    id: 'finance',
+    title: 'МОЛИЯ',
+    icon: Wallet,
+    items: [{ title: 'Ҳисоб-китоб', url: '/billing', icon: Wallet }],
+  },
+  {
+    id: 'reports',
+    title: 'ҲИСОБОТЛАР',
+    icon: BarChart3,
+    items: [{ title: 'Ҳисоботлар', url: '/reports', icon: BarChart3 }],
+  },
+];
+
+export const systemMenu = {
+  id: 'system',
+  title: 'ТИЗИМ',
+  icon: SettingIcon,
+  items: [{ title: 'Созламалар', url: '/settings', icon: SettingIcon }],
+};
