@@ -13,6 +13,7 @@ import Radiology from '@/pages/Radiology';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 import LabOrder from '@/pages/LabOrder';
+import Visits from './pages/Examination/Visits';
 
 export const routers = [
 	{ path: '/dashboard', element: <Dashboard /> },
@@ -20,6 +21,7 @@ export const routers = [
   { path: '/patients', element: <Patients /> },
   { path: '/patient/:id', element: <PatientProfile /> },
   { path: '/new-visit', element: <NewVisit /> },
+  { path: '/visits', element: <Visits /> },
   { path: '/appointments', element: <Appointments /> },
   { path: '/prescription', element: <Prescription /> },
   { path: '/lab-order', element: <LabOrder /> },
@@ -62,6 +64,11 @@ export const navigator = [
     path: '/appointments',
     to: null,
     title: 'Учрашувлар',
+  },
+  {
+    path: '/visits',
+    to: null,
+    title: 'Кўриклар',
   },
   {
     path: '/prescription',
