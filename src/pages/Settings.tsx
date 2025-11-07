@@ -394,7 +394,7 @@ const Settings = () => {
 	return (
 		<div className='min-h-screen bg-background'>
 			{/* Header */}
-			<header className='bg-card border-b border-border sticky top-0 z-10'>
+			{/* <header className='bg-card border-b border-border sticky top-0 z-10'>
 				<div className='container mx-auto px-4 py-4'>
 					<div className='flex items-center gap-4'>
 						<Button
@@ -412,7 +412,7 @@ const Settings = () => {
 						</div>
 					</div>
 				</div>
-			</header>
+			</header> */}
 
 			{/* Main Content */}
 			<main className='container mx-auto px-4 py-6'>

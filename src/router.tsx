@@ -14,6 +14,7 @@ import Reports from '@/pages/Reports'
 import Settings from '@/pages/Settings'
 import LabOrder from '@/pages/LabOrder'
 import Profil from './pages/Profil'
+import AddDiagnostika from './pages/AddDiagnostika'
 
 export const routers = [
 	{ path: '/dashboard', element: <Dashboard /> },
@@ -23,6 +24,7 @@ export const routers = [
 	{ path: '/new-visit', element: <NewVisit /> },
 	{ path: '/appointments', element: <Appointments /> },
 	{ path: '/prescription', element: <Prescription /> },
+	{path:'/add-diagnostika' , element : <AddDiagnostika/>},
 	{ path: '/lab-order', element: <LabOrder /> },
 	{ path: '/inpatient', element: <Inpatient /> },
 	{ path: '/lab-results', element: <LabResults /> },
@@ -69,6 +71,11 @@ export const navigator = [
 		path: '/prescription',
 		to: null,
 		title: 'Рецептлар',
+	},
+	{
+		path: '/add-diagnostika',
+		to: null,
+		title: 'Диагностика қўшиш',
 	},
 	{
 		path: '/lab-order',

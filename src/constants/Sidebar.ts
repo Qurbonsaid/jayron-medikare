@@ -7,10 +7,12 @@ import {
 	List,
 	Microscope,
 	Pill,
+	PlusCircle,
 	ScanLine,
 	Settings,
 	Stethoscope,
 	TestTube,
+	User,
 	Users,
 	Wallet,
 } from 'lucide-react'
@@ -36,6 +38,7 @@ export const menuCategories = [
 		title: 'ДИАГНОСТИКА',
 		icon: Microscope,
 		items: [
+			{ title: 'Диагностика қўшиш', url: '/add-diagnostika', icon: PlusCircle },
 			{ title: 'Таҳлил буюртмаси', url: '/lab-order', icon: TestTube },
 			{ title: 'Таҳлил натижалари', url: '/lab-results', icon: ClipboardCheck },
 			{ title: 'Рентген/МРТ/КТ', url: '/radiology', icon: ScanLine },
@@ -69,6 +72,6 @@ export const systemMenu = {
 	icon: Settings,
 	items: [
 		{ title: 'Созламалар', url: '/settings', icon: Settings },
-		{ title: 'Профил', url: '/profil', icon: Settings },
+		{ title: 'Профил', url: '/profil', icon: User },
 	],
 }
