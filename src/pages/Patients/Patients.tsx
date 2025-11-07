@@ -284,7 +284,9 @@ const Patients = () => {
                           {patient.phone}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-                          -
+                          {patient.diagnosis && patient.diagnosis.length > 0
+                            ? `${patient.diagnosis[0].doctor_id.fullname}`
+                            : '-'}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
                           {patient.diagnosis && patient.diagnosis.length > 0

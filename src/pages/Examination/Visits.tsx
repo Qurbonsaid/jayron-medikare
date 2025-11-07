@@ -37,6 +37,7 @@ import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import {
   AlertTriangle,
   Edit,
+  FilePlus,
   FileText,
   Plus,
   Search,
@@ -45,6 +46,8 @@ import {
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { getStatusBadge } from './components/StatusBadge';
+import ExamFilter from './components/ExamFilter';
 
 const Visits = () => {
   const navigate = useNavigate();
@@ -59,9 +62,11 @@ const Visits = () => {
   const [selectedExam, setSelectedExam] = useState<any>(null);
 
   // Edit form state
-  const [editComplaints, setEditComplaints] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-  const [editDiagnosis, setEditDiagnosis] = useState('');
+  const [editForm, setEditForm] = useState({
+    complaints : '',
+    description : '',
+    diagnosis : ''
+  });
 
   // Fetch exams
   const {
@@ -83,15 +88,17 @@ const Visits = () => {
   // Open edit modal
   const handleEditClick = (exam: any) => {
     setSelectedExam(exam);
-    setEditComplaints(exam.complaints);
-    setEditDescription(exam.description);
-    setEditDiagnosis('');
+    setEditForm({
+    complaints : exam.complaints,
+    description : exam.description,
+    diagnosis : exam.diagnosis
+  })
     setIsEditModalOpen(true);
   };
 
   // Handle update
   const handleUpdate = async () => {
-    if (!editComplaints.trim()) {
+    if (!editForm.complaints.trim()) {
       toast.error('Илтимос, шикоятни киритинг');
       return;
     }
@@ -102,9 +109,9 @@ const Visits = () => {
           id: selectedExam._id,
           body: {
             patient_id: selectedExam.patient_id._id,
-            diagnosis: editDiagnosis,
-            complaints: editComplaints,
-            description: editDescription,
+            diagnosis: editForm.diagnosis,
+            complaints: editForm.complaints,
+            description: editForm.description,
           },
         }).unwrap();
         return res;
@@ -144,40 +151,8 @@ const Visits = () => {
     });
   };
 
-  // Filter exams by search
-  const filteredExams = exams.filter((exam: any) => {
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return true;
 
-    return (
-      exam.patient_id.fullname.toLowerCase().includes(query) ||
-      exam.doctor_id.fullname.toLowerCase().includes(query) ||
-      exam.patient_id.phone.includes(query)
-    );
-  });
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      active: { text: 'Фаол', class: 'bg-blue-500/10 text-blue-600' },
-      completed: {
-        text: 'Тугалланган',
-        class: 'bg-green-500/10 text-green-600',
-      },
-      inactive: { text: 'Фаол эмас', class: 'bg-gray-500/10 text-gray-600' },
-      deleted: { text: 'Ўчирилган', class: 'bg-red-500/10 text-red-600' },
-    };
-
-    const config =
-      statusConfig[status as keyof typeof statusConfig] || statusConfig.active;
-
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${config.class}`}
-      >
-        {config.text}
-      </span>
-    );
-  };
+  
 
   return (
     <div className='min-h-screen bg-background'>
@@ -243,7 +218,7 @@ const Visits = () => {
               className='justify-center'
             />
           </Card>
-        ) : filteredExams.length === 0 ? (
+        ) : ExamFilter({exams,searchQuery}).length === 0 ? (
           <Card className='card-shadow p-4 sm:p-0'>
             <EmptyState
               icon={FileText}
@@ -276,15 +251,15 @@ const Visits = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredExams.map((exam: any) => (
+                  {ExamFilter({exams,searchQuery}).map((exam: any) => (
                     <TableRow key={exam._id}>
                       <TableCell>
                         <div className='flex flex-col'>
                           <span className='font-medium'>
-                            {exam.patient_id.fullname}
+                            {exam?.patient_id?.fullname}
                           </span>
                           <span className='text-xs text-muted-foreground'>
-                            {exam.patient_id.phone}
+                            {exam?.patient_id?.phone}
                           </span>
                         </div>
                       </TableCell>
@@ -307,7 +282,21 @@ const Visits = () => {
                           <Button
                             size='sm'
                             variant='outline'
+                            className='text-primary hover:text-primary/80'
+                            onClick={() =>
+                              navigate('/prescription', {
+                                state: { examinationId: exam._id },
+                              })
+                            }
+                            title='Рецепт ёзиш'
+                          >
+                            <FilePlus className='w-4 h-4' />
+                          </Button>
+                          <Button
+                            size='sm'
+                            variant='outline'
                             onClick={() => handleEditClick(exam)}
+                            title='Таҳрирлаш'
                           >
                             <Edit className='w-4 h-4' />
                           </Button>
@@ -316,6 +305,7 @@ const Visits = () => {
                             variant='outline'
                             className='text-red-600 hover:text-red-700'
                             onClick={() => handleDeleteClick(exam)}
+                            title='Ўчириш'
                           >
                             <Trash2 className='w-4 h-4' />
                           </Button>
@@ -446,8 +436,8 @@ const Visits = () => {
                 <Label>Шикоят</Label>
                 <Textarea
                   placeholder='Бемор шикоятини киритинг...'
-                  value={editComplaints}
-                  onChange={(e) => setEditComplaints(e.target.value)}
+                  value={editForm.complaints}
+                  onChange={(e) => setEditForm({...editForm,complaints:e.target.value})}
                   className='min-h-24'
                 />
               </div>
@@ -457,8 +447,8 @@ const Visits = () => {
                 <Label>Ташхис</Label>
                 <Input
                   placeholder='Ташхисни киритинг...'
-                  value={editDiagnosis}
-                  onChange={(e) => setEditDiagnosis(e.target.value)}
+                  value={editForm.diagnosis}
+                  onChange={(e) => setEditForm({...editForm,diagnosis:e.target.value})}
                 />
               </div>
 
@@ -467,8 +457,8 @@ const Visits = () => {
                 <Label>Тавсия</Label>
                 <Textarea
                   placeholder='Кўрик натижаси ва тавсияларни киритинг...'
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({...editForm,description:e.target.value})}
                   className='min-h-24'
                 />
               </div>
