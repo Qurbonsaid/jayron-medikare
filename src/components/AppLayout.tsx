@@ -77,25 +77,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                   </span>
                 </Button>
                 <div className='flex items-center gap-3'>
-                  {/* <div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
-                    {nickName}
-                  </div> */}
-                  {/* <div className='hidden md:block text-right'>
-                    <p className='text-sm font-medium'>{me.fullname}</p>
-                    <p className='text-xs text-muted-foreground'>{me.role}</p>
-                    <div className='mt-1'>
-                      <Select defaultValue='uz'>
-                        <SelectTrigger className='h-7 text-xs'>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='uz'>Ўзбек тили</SelectItem>
-                          <SelectItem value='ru'>Русский язык</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div> */}
-
                   <DropdownMenu>
                   <DropdownMenuTrigger className='focus-visible:ring-0 focus-visible:ring-offset-0' asChild>
                     <Button
