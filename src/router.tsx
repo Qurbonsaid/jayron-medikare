@@ -4,20 +4,22 @@ import Billing from '@/pages/Billing'
 import Dashboard from '@/pages/Dashboard'
 import Inpatient from '@/pages/Inpatient'
 import LabResults from '@/pages/LabResults'
-import NewVisit from '@/pages/NewVisit'
 import PatientPortal from '@/pages/PatientPortal'
 import PatientProfile from '@/pages/Patients/PatientProfile'
 import Patients from '@/pages/Patients/Patients'
-import Prescription from '@/pages/Prescription'
 import Radiology from '@/pages/Radiology'
 import Reports from '@/pages/Reports'
 import Settings from '@/pages/Settings'
 import LabOrder from '@/pages/LabOrder'
 import Profil from './pages/Profil'
 import AddDiagnostika from './pages/AddDiagnostika'
+import NewVisit from './pages/Examination/NewVisit'
+import Prescription from './pages/Examination/Prescription'
+
 
 export const routers = [
 	{ path: '/dashboard', element: <Dashboard /> },
+
 
 	{ path: '/patients', element: <Patients /> },
 	{ path: '/patient/:id', element: <PatientProfile /> },

@@ -75,3 +75,4 @@ export const systemMenu = {
 		{ title: 'Профил', url: '/profil', icon: User },
 	],
 }
+
