@@ -35,6 +35,8 @@ export type UpdateExamReq = {
 type status = 'active' | 'inactive' | 'completed' | 'deleted';
 
 export type ExamRes = {
+  success:boolean;
+  data:{
   _id: string;
   patient_id: {
     _id: string;
@@ -63,6 +65,7 @@ export type ExamRes = {
   rooms: Array;
   created_at: Date;
   updated_at: Date;
+}
 };
 export type AllExamReq = {
   page?: number;
