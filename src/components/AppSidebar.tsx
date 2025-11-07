@@ -16,7 +16,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { menuCategories, systemMenu } from '@/router';
+import { menuCategories, systemMenu } from '@/constants/Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   ChevronDown,
