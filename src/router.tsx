@@ -15,6 +15,7 @@ import Profil from './pages/Profil'
 import AddDiagnostika from './pages/AddDiagnostika'
 import NewVisit from './pages/Examination/NewVisit'
 import Prescription from './pages/Examination/Prescription'
+import Visits from './pages/Examination/Visits'
 
 
 export const routers = [
@@ -26,6 +27,7 @@ export const routers = [
 	{ path: '/new-visit', element: <NewVisit /> },
 	{ path: '/appointments', element: <Appointments /> },
 	{ path: '/prescription', element: <Prescription /> },
+	{ path: '/visits', element: <Visits /> },
 	{path:'/add-diagnostika' , element : <AddDiagnostika/>},
 	{ path: '/lab-order', element: <LabOrder /> },
 	{ path: '/inpatient', element: <Inpatient /> },
