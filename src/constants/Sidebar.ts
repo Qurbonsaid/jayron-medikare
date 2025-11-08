@@ -72,7 +72,7 @@ export const systemMenu = {
 	icon: Settings,
 	items: [
 		{ title: 'Созламалар', url: '/settings', icon: Settings },
-		{ title: 'Профил', url: '/profil', icon: User },
+		{ title: 'Профил', url: '/profile', icon: User },
 	],
 }
 
