@@ -97,7 +97,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   </DropdownMenu>
 
                   {/* Profile Button */}
-                  <Link to='/profile' className='border-2 rounded-lg py-0.5 border-slate-400'>
+                  <Link to='/profil' className='border-2 rounded-lg py-0.5 border-slate-400'>
                     <Button
                       variant='ghost'
                       className='flex items-center gap-3 hover:bg-accent  border-slate-400'

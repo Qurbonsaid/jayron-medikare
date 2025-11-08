@@ -34,7 +34,13 @@ export type AllPatientRes = {
     gender: 'male' | 'female';
     patient_id: string;
     phone: string;
-    diagnosis: string[];
+    diagnosis: {
+      doctor_id: {
+        _id: string;
+        fullname: string;
+      };
+      description: string | null;
+    }[];
   }[];
   pagination: Pagination;
 };
@@ -58,8 +64,15 @@ export type OnePatientRes = {
     _id: string;
     patient_id: string;
     diagnosis: {
-      doctor_id: string;
-      description: string;
+      doctor_id: {
+        _id: string;
+        fullname: string;
+        email: string;
+        phone: string;
+      };
+      examination_id: string;
+      description: string | null;
+      _id: string;
     }[];
     fullname: string;
     phone: string;

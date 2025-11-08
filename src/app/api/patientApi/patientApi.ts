@@ -1,3 +1,4 @@
+import { API_TAGS } from '@/constants/apiTags';
 import { baseApi } from '../baseApi';
 import { PATHS } from './path';
 import {
@@ -17,17 +18,20 @@ export const patientApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
+      invalidatesTags: [API_TAGS.PATIENTS],
     }),
     getAllPatient: builder.query<AllPatientRes, AllPatientReq>({
       query: (param) => ({
         url: PATHS.GET_ALL,
         params: param,
       }),
+      providesTags: [API_TAGS.PATIENTS],
     }),
     getPatientById: builder.query<OnePatientRes, string>({
       query: (id) => ({
         url: PATHS.GET_ONE + id,
       }),
+      providesTags: [API_TAGS.PATIENTS],
     }),
     updatePatient: builder.mutation<PatientRes, UpdateReq>({
       query: ({ body, id }) => ({
@@ -35,12 +39,14 @@ export const patientApi = baseApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
+      invalidatesTags: [API_TAGS.PATIENTS],
     }),
-    deletePatient: builder.mutation<PatientRes,string>({
+    deletePatient: builder.mutation<PatientRes, string>({
       query: (id) => ({
         url: PATHS.DELETE + id,
         method: 'DELETE',
       }),
+      invalidatesTags: [API_TAGS.PATIENTS],
     }),
   }),
 });

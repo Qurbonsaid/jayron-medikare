@@ -40,6 +40,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { calculateAge } from './components/calculateAge';
 
 const NewVisit = () => {
   const navigate = useNavigate();
@@ -51,6 +52,7 @@ const NewVisit = () => {
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showErrors, setShowErrors] = useState(false);
 
   // Get patient ID from navigation state
   const patientIdFromState = location.state?.patientId;
@@ -104,21 +106,8 @@ const NewVisit = () => {
     setPatient(null);
     setSelectedPatientId('');
     setSearchQuery('');
+    setShowErrors(false);
     setOpen(true);
-  };
-
-  const calculateAge = (dateOfBirth: string) => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age;
   };
 
   const filteredPatients = patients.filter((p) => {
@@ -133,6 +122,8 @@ const NewVisit = () => {
   });
 
   const handleSave = async () => {
+    setShowErrors(true);
+
     if (!selectedPatientId) {
       toast.error('Илтимос, беморни танланг');
       return;
@@ -148,18 +139,21 @@ const NewVisit = () => {
 
     await handleRequest({
       request: async () => {
-        const res = await createExam({
+        const request = {
           patient_id: selectedPatientId,
           doctor_id: selectedDoctorId,
           complaints: subjective,
-          description: description,
-        }).unwrap();
+        };
+        if (description.trim()) {
+          request['description'] = description;
+        }
+        const res = await createExam(request).unwrap();
         console.log({
           patient_id: selectedPatientId,
           doctor_id: selectedDoctorId,
           complaints: subjective,
           description: description,
-        })
+        });
         return res;
       },
       onSuccess: () => {
@@ -180,8 +174,10 @@ const NewVisit = () => {
           <Card className='card-shadow mb-4 sm:mb-6'>
             <div className='p-4 sm:p-6'>
               <div className='flex items-center gap-3 mb-4'>
-                <User className='w-6 h-6 text-primary' />
-                <h3 className='text-lg font-bold'>Беморни танланг</h3>
+                <User className='w-5 h-5 sm:w-6 sm:h-6 text-primary' />
+                <h3 className='text-base sm:text-lg font-bold'>
+                  Беморни танланг
+                </h3>
               </div>
               <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
@@ -189,36 +185,43 @@ const NewVisit = () => {
                     variant='outline'
                     role='combobox'
                     aria-expanded={open}
-                    className='w-full justify-between h-12'
+                    className='w-full justify-between h-10 sm:h-12 text-sm sm:text-base'
                   >
                     <span className='flex items-center gap-2'>
-                      <Search className='w-4 h-4' />
-                      {'Беморни қидириш...'}
+                      <Search className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
+                      <span className='truncate'>Беморни қидириш...</span>
                     </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className='w-[910px] p-0 relative -top-14'
+                  className='w-[calc(100vw-2rem)] sm:w-[600px] md:w-[700px] lg:w-[910px] p-0'
                   align='start'
+                  side='bottom'
                 >
                   <Command shouldFilter={false}>
                     <CommandInput
                       placeholder='Исм, ID ёки телефон орқали қидириш...'
                       value={searchQuery}
                       onValueChange={setSearchQuery}
+                      className='text-sm sm:text-base'
                     />
                     <CommandList>
-                      <CommandEmpty>Бемор топилмади</CommandEmpty>
+                      <CommandEmpty className='py-6 text-sm sm:text-base'>
+                        Бемор топилмади
+                      </CommandEmpty>
                       <CommandGroup>
                         {filteredPatients.map((p) => (
                           <CommandItem
                             key={p._id}
                             value={p._id}
                             onSelect={() => selectPatient(p._id)}
+                            className='py-3'
                           >
-                            <div className='flex flex-col'>
-                              <span className='font-medium'>{p.fullname}</span>
-                              <span className='text-xs text-muted-foreground'>
+                            <div className='flex flex-col w-full'>
+                              <span className='font-medium text-sm sm:text-base'>
+                                {p.fullname}
+                              </span>
+                              <span className='text-xs sm:text-sm text-muted-foreground'>
                                 ID: {p.patient_id} • {p.phone}
                               </span>
                             </div>
@@ -279,7 +282,13 @@ const NewVisit = () => {
                         value={selectedDoctorId}
                         onValueChange={setSelectedDoctorId}
                       >
-                        <SelectTrigger className='h-10 sm:h-12'>
+                        <SelectTrigger
+                          className={`h-10 sm:h-12 ${
+                            showErrors && !selectedDoctorId
+                              ? 'border-red-500'
+                              : ''
+                          }`}
+                        >
                           <SelectValue placeholder='Шифокорни танланг...' />
                         </SelectTrigger>
                         <SelectContent>
@@ -327,7 +336,9 @@ const NewVisit = () => {
                   </div>
                   <Textarea
                     placeholder='Беморнинг шикоятларини, симптомларини ва касаллик тарихини ёзинг...'
-                    className='min-h-24 sm:min-h-32 text-sm sm:text-base'
+                    className={`min-h-24 sm:min-h-32 text-sm sm:text-base ${
+                      showErrors && !subjective.trim() ? 'border-red-500' : ''
+                    }`}
                     value={subjective}
                     onChange={(e) => setSubjective(e.target.value)}
                   />
@@ -346,12 +357,12 @@ const NewVisit = () => {
                         O - Objective
                       </h3>
                       <p className='text-xs sm:text-sm text-muted-foreground'>
-                        Кўрик натижаси ва таvsия
+                        Изоҳ
                       </p>
                     </div>
                   </div>
                   <Textarea
-                    placeholder='Кўрик натижаларини, диагноз ва таvsияларни ёзинг...'
+                    placeholder='Изоҳни ёзинг...'
                     className='min-h-24 sm:min-h-32 text-sm sm:text-base'
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -376,12 +387,7 @@ const NewVisit = () => {
                 size='lg'
                 className='gradient-success w-full sm:w-auto text-sm sm:text-base'
                 onClick={handleSave}
-                disabled={
-                  isCreating ||
-                  !selectedPatientId ||
-                  !selectedDoctorId ||
-                  !subjective.trim()
-                }
+                disabled={isCreating}
               >
                 <Save className='w-4 h-4 sm:w-5 sm:h-5 mr-2' />
                 {isCreating ? 'Сақланмоқда...' : 'Сақлаш'}

@@ -1,15 +1,34 @@
+import { useGetAllExamsQuery } from '@/app/api/examinationApi/examinationApi';
 import {
   useDeletePatientMutation,
   useGetPatientByIdQuery,
 } from '@/app/api/patientApi/patientApi';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import getUser from '@/hooks/getUser/getUser';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import RBS from '@/hooks/RBS/Role_Based_Security';
 import {
   AlertTriangle,
+  Calendar,
   Edit,
   FileText,
   FileX,
@@ -18,6 +37,7 @@ import {
   Phone,
   Plus,
   Printer,
+  User,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -30,6 +50,7 @@ const PatientProfile = () => {
   const { id } = useParams();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const {
     data: patientData,
@@ -40,6 +61,18 @@ const PatientProfile = () => {
     skip: !id,
   });
 
+  // Fetch patient exams
+  const { data: examsData, isLoading: examsLoading } = useGetAllExamsQuery(
+    {
+      patient_id: id,
+      page: 1,
+      limit: 100,
+    },
+    {
+      skip: !id,
+    }
+  );
+
   if (isError) {
     navigate('/patients');
   }
@@ -47,12 +80,13 @@ const PatientProfile = () => {
   const [deletePatient] = useDeletePatientMutation();
   const handleRequest = useHandleRequest();
   const patient = patientData?.data;
+  const exams = examsData?.data || [];
 
   const handleEditSuccess = () => {
     refetch();
   };
 
-  const onDelete = async (id: string) => {
+  const onDelete = async () => {
     await handleRequest({
       request: async () => {
         const res = await deletePatient(id).unwrap();
@@ -60,6 +94,7 @@ const PatientProfile = () => {
       },
       onSuccess: (data) => {
         toast.success(data?.message);
+        setIsDeleteModalOpen(false);
         navigate('/patients');
       },
       onError: (err) => {
@@ -151,7 +186,7 @@ const PatientProfile = () => {
                         variant='outline'
                         size='sm'
                         className='flex-1 sm:flex-none bg-red-500 text-white'
-                        onClick={() => onDelete(id)}
+                        onClick={() => setIsDeleteModalOpen(true)}
                       >
                         <FileX className='w-4 h-4 sm:mr-2' />
                         <span className='hidden sm:inline'>Ўчириш</span>
@@ -165,8 +200,9 @@ const PatientProfile = () => {
                       }
                     >
                       <Plus className='w-4 h-4 sm:mr-2' />
-                      <span className='hidden sm:inline'>Янги Кўрик Яратиш</span>
-                      
+                      <span className='hidden sm:inline'>
+                        Янги Кўрик Яратиш
+                      </span>
                     </Button>
                   </div>
                 </div>
@@ -227,7 +263,7 @@ const PatientProfile = () => {
               value='visits'
               className='py-2 sm:py-3 text-xs sm:text-sm'
             >
-              Ташрифлар
+              Кўриклар
             </TabsTrigger>
           </TabsList>
 
@@ -308,22 +344,43 @@ const PatientProfile = () => {
                     Диагноз
                   </h3>
                   {patient.diagnosis && patient.diagnosis.length > 0 ? (
-                    <ul className='space-y-2'>
-                      {patient.diagnosis.map((item, idx) => (
-                        <li
-                          key={idx}
-                          className='flex items-start gap-2 py-2 border-b last:border-0'
-                        >
-                          <span className='text-primary mt-1'>•</span>
-                          <span className='text-sm sm:text-base flex-1'>
-                            {item.description}
-                          </span>
-                        </li>
-                      ))}
+                    <ul className='space-y-3'>
+                      {patient.diagnosis.map((item, idx) =>
+                        item.description ? (
+                          <li
+                            key={idx}
+                            className='p-3 bg-accent rounded-lg border-l-4 border-primary'
+                          >
+                            <div className='flex items-start gap-2'>
+                              <span className='text-primary mt-1'>•</span>
+                              <div className='flex-1'>
+                                <p className='text-sm sm:text-base font-medium mb-1'>
+                                  {item.description}
+                                </p>
+                                {item.doctor_id?.fullname && (
+                                  <p className='text-xs sm:text-sm text-muted-foreground flex items-center gap-1'>
+                                    <User className='w-3 h-3' />
+                                    {item.doctor_id.fullname}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </li>
+                        ) : (
+                          <li
+                            key={idx}
+                            className='p-3 bg-muted/50 rounded-lg text-center'
+                          >
+                            <p className='text-sm text-muted-foreground italic'>
+                              Ҳали диагноз белгиланмаган
+                            </p>
+                          </li>
+                        )
+                      )}
                     </ul>
                   ) : (
                     <p className='text-sm text-muted-foreground text-center py-4'>
-                      Диагноз қўйилмаган
+                      Ҳали диагноз белгиланмаган
                     </p>
                   )}
                 </div>
@@ -366,29 +423,252 @@ const PatientProfile = () => {
 
           <TabsContent value='visits'>
             <Card className='card-shadow'>
-              <div className='p-4 sm:p-6 text-center text-sm sm:text-base text-muted-foreground'>
-                Ташрифлар тарихи...
-              </div>
+              {examsLoading ? (
+                <div className='p-8 text-center'>
+                  <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
+                  <p className='text-muted-foreground'>Юкланмоқда...</p>
+                </div>
+              ) : exams.length === 0 ? (
+                <div className='p-8 text-center'>
+                  <FileText className='w-12 h-12 text-muted-foreground mx-auto mb-4' />
+                  <h3 className='text-lg font-semibold mb-2'>
+                    Ташрифлар топилмади
+                  </h3>
+                  <p className='text-sm text-muted-foreground mb-4'>
+                    Бу бемор учун ҳали ташрифлар қайд қилинмаган
+                  </p>
+                  <Button
+                    onClick={() =>
+                      navigate('/new-visit', { state: { patientId: id } })
+                    }
+                    className='gradient-primary'
+                  >
+                    <Plus className='w-4 h-4 mr-2' />
+                    Янги Кўрик Яратиш
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table View */}
+                  <div className='hidden md:block overflow-x-auto'>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Шифокор</TableHead>
+                          <TableHead>Шикоят</TableHead>
+                          <TableHead>Статус</TableHead>
+                          <TableHead>Сана</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {exams.map((exam: any) => (
+                          <TableRow
+                            key={exam._id}
+                            className='cursor-pointer hover:bg-accent/50'
+                            onClick={() => navigate(`/visits/${exam._id}`)}
+                          >
+                            <TableCell>
+                              <div className='flex items-center gap-2'>
+                                <User className='w-4 h-4 text-muted-foreground' />
+                                <span className='font-medium'>
+                                  {exam.doctor_id.fullname}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className='text-sm line-clamp-2'>
+                                {exam.complaints}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              {(() => {
+                                const statusConfig = {
+                                  active: {
+                                    text: 'Фаол',
+                                    variant: 'default' as const,
+                                  },
+                                  completed: {
+                                    text: 'Тугалланган',
+                                    variant: 'secondary' as const,
+                                  },
+                                  inactive: {
+                                    text: 'Фаол эмас',
+                                    variant: 'outline' as const,
+                                  },
+                                  deleted: {
+                                    text: 'Ўчирилган',
+                                    variant: 'destructive' as const,
+                                  },
+                                };
+                                const config =
+                                  statusConfig[
+                                    exam.status as keyof typeof statusConfig
+                                  ] || statusConfig.active;
+                                return (
+                                  <Badge variant={config.variant}>
+                                    {config.text}
+                                  </Badge>
+                                );
+                              })()}
+                            </TableCell>
+                            <TableCell>
+                              <div className='flex items-center gap-2 text-sm'>
+                                <Calendar className='w-4 h-4 text-muted-foreground' />
+                                {new Date(exam.created_at).toLocaleDateString(
+                                  'uz-UZ'
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className='md:hidden space-y-3 p-4'>
+                    {exams.map((exam: any) => (
+                      <Card
+                        key={exam._id}
+                        className='cursor-pointer hover:shadow-md transition-shadow'
+                        onClick={() => navigate(`/visits/${exam._id}`)}
+                      >
+                        <div className='p-4 space-y-3'>
+                          {/* Doctor */}
+                          <div className='flex items-center justify-between'>
+                            <div className='flex items-center gap-2'>
+                              <User className='w-4 h-4 text-muted-foreground' />
+                              <span className='font-medium text-sm'>
+                                {exam.doctor_id.fullname}
+                              </span>
+                            </div>
+                            {(() => {
+                              const statusConfig = {
+                                active: {
+                                  text: 'Фаол',
+                                  variant: 'default' as const,
+                                },
+                                completed: {
+                                  text: 'Тугалланган',
+                                  variant: 'secondary' as const,
+                                },
+                                inactive: {
+                                  text: 'Фаол эмас',
+                                  variant: 'outline' as const,
+                                },
+                                deleted: {
+                                  text: 'Ўчирилган',
+                                  variant: 'destructive' as const,
+                                },
+                              };
+                              const config =
+                                statusConfig[
+                                  exam.status as keyof typeof statusConfig
+                                ] || statusConfig.active;
+                              return (
+                                <Badge
+                                  variant={config.variant}
+                                  className='text-xs'
+                                >
+                                  {config.text}
+                                </Badge>
+                              );
+                            })()}
+                          </div>
+
+                          {/* Complaint */}
+                          <div>
+                            <p className='text-xs text-muted-foreground mb-1'>
+                              Шикоят:
+                            </p>
+                            <p className='text-sm line-clamp-2'>
+                              {exam.complaints}
+                            </p>
+                          </div>
+
+                          {/* Date */}
+                          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+                            <Calendar className='w-3 h-3' />
+                            {new Date(exam.created_at).toLocaleDateString(
+                              'uz-UZ'
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              )}
             </Card>
           </TabsContent>
         </Tabs>
 
         {/* Modals */}
         {patient && (
-          <EditPatientModal
-            open={isEditModalOpen}
-            onOpenChange={setIsEditModalOpen}
-            patient={patient}
-            onSuccess={handleEditSuccess}
-          />
-        )}
+          <>
+            <EditPatientModal
+              open={isEditModalOpen}
+              onOpenChange={setIsEditModalOpen}
+              patient={patient}
+              onSuccess={handleEditSuccess}
+            />
 
-        <PatientReportModal
-          open={isReportModalOpen}
-          onOpenChange={setIsReportModalOpen}
-          patientName={patient.fullname}
-          patientId={patient.patient_id}
-        />
+            <PatientReportModal
+              open={isReportModalOpen}
+              onOpenChange={setIsReportModalOpen}
+              patientName={patient.fullname}
+              patientId={patient.patient_id}
+            />
+
+            {/* Delete Confirmation Modal */}
+            <Dialog
+              open={isDeleteModalOpen}
+              onOpenChange={setIsDeleteModalOpen}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className='flex items-center gap-2'>
+                    <AlertTriangle className='w-5 h-5 text-red-600' />
+                    Беморни ўчириш
+                  </DialogTitle>
+                  <DialogDescription>
+                    Сиз ҳақиқатан ҳам бу беморни ўчирмоқчимисиз? Бу амал
+                    қайтарилмайди ва барча маълумотлар ўчирилади.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className='py-4'>
+                  <div className='p-4 bg-muted rounded-lg space-y-2'>
+                    <p className='text-sm'>
+                      <span className='font-semibold'>Бемор:</span>{' '}
+                      {patient.fullname}
+                    </p>
+                    <p className='text-sm'>
+                      <span className='font-semibold'>ID:</span>{' '}
+                      {patient.patient_id}
+                    </p>
+                    <p className='text-sm'>
+                      <span className='font-semibold'>Телефон:</span>{' '}
+                      {patient.phone}
+                    </p>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant='outline'
+                    onClick={() => setIsDeleteModalOpen(false)}
+                  >
+                    Бекор қилиш
+                  </Button>
+                  <Button variant='destructive' onClick={onDelete}>
+                    Ўчириш
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
       </main>
     </div>
   );

@@ -11,6 +11,6 @@ export type ExamResponse = {
 export type CreateExamReq = {
   patient_id: string;
   doctor_id: string;
-  description: string;
+  description?: string;
   complaints: string;
 };
