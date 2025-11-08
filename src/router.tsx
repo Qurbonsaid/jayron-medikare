@@ -15,6 +15,8 @@ import Profil from './pages/Profil'
 import AddDiagnostika from './pages/AddDiagnostika'
 import NewVisit from './pages/Examination/NewVisit'
 import Prescription from './pages/Examination/Prescription'
+import Visits from './pages/Examination/Visits'
+import AnalysisParamsModal from './pages/AnalysisParamsModal'
 
 
 export const routers = [
