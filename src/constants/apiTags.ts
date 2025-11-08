@@ -3,4 +3,6 @@ export enum API_TAGS {
   SETTINGS = "Settings",
   CORPUS = "CORPUS",
   ROOM = "ROOM",
+  ANALYSIS = "Analysis",
+  PATIENTS = "patient",
 }

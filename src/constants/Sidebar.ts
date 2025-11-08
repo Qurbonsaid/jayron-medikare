@@ -1,19 +1,21 @@
 import {
-  BarChart3,
-  BedDouble,
-  Calendar,
-  ClipboardCheck,
-  FileEdit,
-  List,
-  Microscope,
-  Pill,
-  ScanLine,
-  Settings,
-  Stethoscope,
-  TestTube,
-  Users,
-  Wallet,
-} from 'lucide-react';
+	BarChart3,
+	BedDouble,
+	Calendar,
+	ClipboardCheck,
+	FileEdit,
+	List,
+	Microscope,
+	Pill,
+	PlusCircle,
+	ScanLine,
+	Settings,
+	Stethoscope,
+	TestTube,
+	User,
+	Users,
+	Wallet,
+} from 'lucide-react'
 export const menuCategories = [
   {
     id: 'patients',
@@ -29,6 +31,7 @@ export const menuCategories = [
       { title: 'Янги кўрик SOAP', url: '/new-visit', icon: FileEdit },
       { title: 'Навбатлар', url: '/appointments', icon: Calendar },
       { title: 'Рецепт ёзиш', url: '/prescription', icon: Pill },
+      { title: 'Кўриклар', url: '/visits', icon: Calendar },
     ],
   },
   {
@@ -64,8 +67,12 @@ export const menuCategories = [
 ];
 
 export const systemMenu = {
-  id: 'system',
-  title: 'ТИЗИМ',
-  icon: Settings,
-  items: [{ title: 'Созламалар', url: '/settings', icon: Settings }],
-};
+	id: 'system',
+	title: 'ТИЗИМ',
+	icon: Settings,
+	items: [
+		{ title: 'Созламалар', url: '/settings', icon: Settings },
+		{ title: 'Профил', url: '/profile', icon: User },
+	],
+}
+

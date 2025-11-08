@@ -1,1 +1,1 @@
-export const SERVER_URL = 'http://ravshanbek.uz/';
+export const SERVER_URL = 'https://jayron.edumir.uz/';

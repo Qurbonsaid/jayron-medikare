@@ -1,5 +1,7 @@
+import { useUpdatePatientMutation } from '@/app/api/patientApi/patientApi';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +13,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -19,53 +26,107 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { format } from 'date-fns';
+import { CalendarIcon, Plus, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Patient {
-  id: string;
-  name: string;
-  age: number;
-  gender: string;
+  _id: string;
+  patient_id: string;
+  fullname: string;
   phone: string;
-  email: string;
-  address: string;
-  allergies: string[];
-  medicalHistory: Array<{ condition: string; year: string }>;
-  medications: Array<{ name: string; dosage: string; frequency: string }>;
-  familyHistory: Array<{ relative: string; condition: string }>;
+  gender: 'male' | 'female';
+  date_of_birth: string;
+  address?: string;
+  email?: string;
+  allergies?: string[];
+  regular_medications?: {
+    medicine: string;
+    schedule: string;
+    _id: string;
+  }[];
+  passport: {
+    series: string;
+    number: string;
+  };
 }
 
 interface EditPatientModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   patient: Patient;
-  onSave: (updatedPatient: Patient) => void;
+  onSuccess?: () => void;
 }
 
 const EditPatientModal = ({
   open,
   onOpenChange,
   patient,
-  onSave,
+  onSuccess,
 }: EditPatientModalProps) => {
-  const [formData, setFormData] = useState<Patient>(patient);
-  const [newAllergy, setNewAllergy] = useState('');
-  const [newMedication, setNewMedication] = useState({
-    name: '',
-    dosage: '',
-    frequency: '',
-  });
-  const [newMedicalHistory, setNewMedicalHistory] = useState({
-    condition: '',
-    year: '',
-  });
-  const [newFamilyHistory, setNewFamilyHistory] = useState({
-    relative: '',
-    condition: '',
+  const [updatePatient, { isLoading }] = useUpdatePatientMutation();
+
+  const [formData, setFormData] = useState<{
+    fullname: string;
+    phone: string;
+    gender: 'male' | 'female';
+    date_of_birth: Date;
+    address: string;
+    email: string;
+    allergies: string[];
+    regular_medications: Array<{ medicine: string; schedule: string }>;
+    passport: { series: string; number: string };
+  }>({
+    fullname: patient.fullname,
+    phone: patient.phone,
+    gender: patient.gender,
+    date_of_birth: new Date(patient.date_of_birth),
+    address: patient.address || '',
+    email: patient.email || '',
+    allergies: patient.allergies || [],
+    regular_medications:
+      patient.regular_medications?.map((med) => ({
+        medicine: med.medicine,
+        schedule: med.schedule,
+      })) || [],
+    passport: {
+      series: patient.passport.series,
+      number: patient.passport.number,
+    },
   });
 
-  const handleChange = (field: keyof Patient, value: any) => {
+  const [newAllergy, setNewAllergy] = useState('');
+  const [medicineInput, setMedicineInput] = useState('');
+  const [scheduleInput, setScheduleInput] = useState('');
+  const [dateInput, setDateInput] = useState('');
+
+  useEffect(() => {
+    if (open && patient) {
+      setFormData({
+        fullname: patient.fullname,
+        phone: patient.phone,
+        gender: patient.gender,
+        date_of_birth: new Date(patient.date_of_birth),
+        address: patient.address || '',
+        email: patient.email || '',
+        allergies: patient.allergies || [],
+        regular_medications:
+          patient.regular_medications?.map((med) => ({
+            medicine: med.medicine,
+            schedule: med.schedule,
+          })) || [],
+        passport: {
+          series: patient.passport.series,
+          number: patient.passport.number,
+        },
+      });
+      setDateInput('');
+    }
+  }, [patient, open]);
+
+  const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -76,7 +137,7 @@ const EditPatientModal = ({
     if (newAllergy.trim()) {
       setFormData((prev) => ({
         ...prev,
-        allergies: [...prev.allergies, newAllergy.trim()],
+        allergies: [...(prev.allergies || []), newAllergy.trim()],
       }));
       setNewAllergy('');
     }
@@ -85,65 +146,63 @@ const EditPatientModal = ({
   const handleRemoveAllergy = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      allergies: prev.allergies.filter((_, i) => i !== index),
+      allergies: prev.allergies?.filter((_, i) => i !== index) || [],
     }));
   };
 
   const handleAddMedication = () => {
-    if (newMedication.name.trim() && newMedication.dosage.trim()) {
+    if (medicineInput.trim() && scheduleInput.trim()) {
       setFormData((prev) => ({
         ...prev,
-        medications: [...prev.medications, newMedication],
+        regular_medications: [
+          ...(prev.regular_medications || []),
+          {
+            medicine: medicineInput.trim(),
+            schedule: scheduleInput.trim(),
+          },
+        ],
       }));
-      setNewMedication({ name: '', dosage: '', frequency: '' });
+      setMedicineInput('');
+      setScheduleInput('');
     }
   };
 
   const handleRemoveMedication = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      medications: prev.medications.filter((_, i) => i !== index),
+      regular_medications:
+        prev.regular_medications?.filter((_, i) => i !== index) || [],
     }));
   };
 
-  const handleAddMedicalHistory = () => {
-    if (newMedicalHistory.condition.trim() && newMedicalHistory.year.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        medicalHistory: [...prev.medicalHistory, newMedicalHistory],
-      }));
-      setNewMedicalHistory({ condition: '', year: '' });
-    }
-  };
+  const handleRequest = useHandleRequest();
 
-  const handleRemoveMedicalHistory = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      medicalHistory: prev.medicalHistory.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleAddFamilyHistory = () => {
-    if (newFamilyHistory.relative.trim() && newFamilyHistory.condition.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        familyHistory: [...prev.familyHistory, newFamilyHistory],
-      }));
-      setNewFamilyHistory({ relative: '', condition: '' });
-    }
-  };
-
-  const handleRemoveFamilyHistory = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      familyHistory: prev.familyHistory.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    onOpenChange(false);
+
+    await handleRequest({
+      request: async () => {
+        const result = await updatePatient({
+          id: patient._id,
+          body: {
+            ...formData,
+            date_of_birth: format(formData.date_of_birth, 'yyyy-MM-dd'),
+            regular_medications: formData.regular_medications?.map((med) => ({
+              medicine: med.medicine,
+              schedule: med.schedule,
+            })),
+          },
+        }).unwrap();
+        return result;
+      },
+      onSuccess: (data) => {
+        toast.success(data?.message);
+        onOpenChange(false);
+      },
+      onError: (err) => {
+        toast.error(err?.data?.error?.msg);
+      },
+    });
   };
 
   return (
@@ -166,51 +225,124 @@ const EditPatientModal = ({
             defaultValue='basic'
             className='flex-1 overflow-hidden flex flex-col'
           >
-            <TabsList className='grid w-full grid-cols-4 mb-4'>
+            <TabsList className='grid w-full grid-cols-2 mb-4'>
               <TabsTrigger value='basic' className='text-xs sm:text-sm'>
-                Асосий
+                Асосий маълумотлар
               </TabsTrigger>
               <TabsTrigger value='medical' className='text-xs sm:text-sm'>
-                Тиббий
-              </TabsTrigger>
-              <TabsTrigger value='medications' className='text-xs sm:text-sm'>
-                Дорилар
-              </TabsTrigger>
-              <TabsTrigger value='family' className='text-xs sm:text-sm'>
-                Оилавий
+                Доимий дорилар
               </TabsTrigger>
             </TabsList>
 
-            <div className='flex-1 overflow-y-auto pr-2'>
+            <div className='flex-1 overflow-y-auto px-2'>
               {/* Basic Information */}
               <TabsContent value='basic' className='space-y-4 mt-0'>
                 <div className='grid gap-4'>
                   <div className='grid gap-2'>
-                    <Label htmlFor='name'>
+                    <Label htmlFor='fullname'>
                       Исм фамилия <span className='text-danger'>*</span>
                     </Label>
                     <Input
-                      id='name'
-                      value={formData.name}
-                      onChange={(e) => handleChange('name', e.target.value)}
+                      id='fullname'
+                      value={formData.fullname}
+                      onChange={(e) => handleChange('fullname', e.target.value)}
                       required
                     />
                   </div>
 
                   <div className='grid grid-cols-2 gap-4'>
                     <div className='grid gap-2'>
-                      <Label htmlFor='age'>
-                        Ёш <span className='text-danger'>*</span>
+                      <Label htmlFor='date_of_birth'>
+                        Туғилган сана <span className='text-danger'>*</span>
                       </Label>
-                      <Input
-                        id='age'
-                        type='number'
-                        value={formData.age}
-                        onChange={(e) =>
-                          handleChange('age', parseInt(e.target.value))
-                        }
-                        required
-                      />
+                      <div className='flex gap-2'>
+                        <Input
+                          className='border-slate-400 border-2 flex-1'
+                          placeholder='КК.ОО.ЙЙЙЙ (01.01.1990)'
+                          value={
+                            dateInput ||
+                            (formData.date_of_birth
+                              ? format(formData.date_of_birth, 'dd.MM.yyyy')
+                              : '')
+                          }
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/[^\d.]/g, '');
+                            if (value === '') {
+                              setDateInput('');
+                              return;
+                            }
+                            const parts = value.split('.');
+                            if (parts.length > 3) {
+                              value = parts.slice(0, 3).join('.');
+                            }
+                            const digitsOnly = value.replace(/\./g, '');
+                            let formatted = '';
+                            if (digitsOnly.length > 0) {
+                              formatted = digitsOnly.slice(0, 2);
+                              if (digitsOnly.length >= 3) {
+                                formatted += '.' + digitsOnly.slice(2, 4);
+                              }
+                              if (digitsOnly.length >= 5) {
+                                formatted += '.' + digitsOnly.slice(4, 8);
+                              }
+                            }
+                            setDateInput(formatted);
+                            if (formatted.length === 10) {
+                              const [day, month, year] = formatted.split('.');
+                              const dayNum = parseInt(day);
+                              const monthNum = parseInt(month);
+                              const yearNum = parseInt(year);
+                              if (
+                                dayNum >= 1 &&
+                                dayNum <= 31 &&
+                                monthNum >= 1 &&
+                                monthNum <= 12 &&
+                                yearNum >= 1900 &&
+                                yearNum <= new Date().getFullYear()
+                              ) {
+                                const date = new Date(
+                                  yearNum,
+                                  monthNum - 1,
+                                  dayNum
+                                );
+                                if (date.getDate() === dayNum) {
+                                  handleChange('date_of_birth', date);
+                                }
+                              }
+                            }
+                          }}
+                          maxLength={10}
+                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              type='button'
+                              variant='outline'
+                              size='icon'
+                              className='border-2 border-slate-400'
+                            >
+                              <CalendarIcon className='h-4 w-4' />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className='w-auto p-0' align='start'>
+                            <Calendar
+                              mode='single'
+                              selected={formData.date_of_birth}
+                              onSelect={(date) => {
+                                if (date) {
+                                  handleChange('date_of_birth', date);
+                                  setDateInput(format(date, 'dd.MM.yyyy'));
+                                }
+                              }}
+                              disabled={(date) =>
+                                date > new Date() ||
+                                date < new Date('1900-01-01')
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
 
                     <div className='grid gap-2'>
@@ -219,16 +351,57 @@ const EditPatientModal = ({
                       </Label>
                       <Select
                         value={formData.gender}
-                        onValueChange={(value) => handleChange('gender', value)}
+                        onValueChange={(value: 'male' | 'female') =>
+                          handleChange('gender', value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value='Эркак'>Эркак</SelectItem>
-                          <SelectItem value='Аёл'>Аёл</SelectItem>
+                          <SelectItem value='male'>Эркак</SelectItem>
+                          <SelectItem value='female'>Аёл</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+
+                  <div className='grid grid-cols-2 gap-4'>
+                    <div className='grid gap-2'>
+                      <Label htmlFor='passport_series'>
+                        Паспорт серияси <span className='text-danger'>*</span>
+                      </Label>
+                      <Input
+                        id='passport_series'
+                        value={formData.passport.series}
+                        onChange={(e) =>
+                          handleChange('passport', {
+                            ...formData.passport,
+                            series: e.target.value.toUpperCase(),
+                          })
+                        }
+                        maxLength={2}
+                        placeholder='AA'
+                        required
+                      />
+                    </div>
+                    <div className='grid gap-2'>
+                      <Label htmlFor='passport_number'>
+                        Паспорт рақами <span className='text-danger'>*</span>
+                      </Label>
+                      <Input
+                        id='passport_number'
+                        value={formData.passport.number}
+                        onChange={(e) =>
+                          handleChange('passport', {
+                            ...formData.passport,
+                            number: e.target.value.replace(/\D/g, ''),
+                          })
+                        }
+                        maxLength={7}
+                        placeholder='1234567'
+                        required
+                      />
                     </div>
                   </div>
 
@@ -284,219 +457,85 @@ const EditPatientModal = ({
                         Қўшиш
                       </Button>
                     </div>
-                    <div className='flex flex-wrap gap-2 mt-2'>
-                      {formData.allergies.map((allergy, index) => (
-                        <Badge
-                          key={index}
-                          variant='destructive'
-                          className='gap-1'
-                        >
-                          {allergy}
-                          <X
-                            className='w-3 h-3 cursor-pointer'
-                            onClick={() => handleRemoveAllergy(index)}
-                          />
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Medical History */}
-              <TabsContent value='medical' className='space-y-4 mt-0'>
-                <div className='space-y-4'>
-                  <div className='grid gap-2'>
-                    <Label>Тиббий тарих қўшиш</Label>
-                    <div className='grid grid-cols-2 gap-2'>
-                      <Input
-                        placeholder='Касаллик'
-                        value={newMedicalHistory.condition}
-                        onChange={(e) =>
-                          setNewMedicalHistory({
-                            ...newMedicalHistory,
-                            condition: e.target.value,
-                          })
-                        }
-                      />
-                      <Input
-                        placeholder='Йил'
-                        value={newMedicalHistory.year}
-                        onChange={(e) =>
-                          setNewMedicalHistory({
-                            ...newMedicalHistory,
-                            year: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <Button
-                      type='button'
-                      onClick={handleAddMedicalHistory}
-                      className='w-full'
-                    >
-                      Тиббий тарих қўшиш
-                    </Button>
-                  </div>
-
-                  <div className='space-y-2'>
-                    {formData.medicalHistory.map((item, index) => (
-                      <div
-                        key={index}
-                        className='flex items-center justify-between p-3 bg-accent rounded-lg'
-                      >
-                        <div>
-                          <p className='font-semibold'>{item.condition}</p>
-                          <p className='text-sm text-muted-foreground'>
-                            {item.year}
-                          </p>
-                        </div>
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => handleRemoveMedicalHistory(index)}
-                        >
-                          <X className='w-4 h-4' />
-                        </Button>
+                    {formData.allergies && formData.allergies.length > 0 && (
+                      <div className='flex flex-wrap gap-2 mt-2'>
+                        {formData.allergies.map((allergy, index) => (
+                          <Badge
+                            key={index}
+                            variant='destructive'
+                            className='gap-1'
+                          >
+                            {allergy}
+                            <X
+                              className='w-3 h-3 cursor-pointer'
+                              onClick={() => handleRemoveAllergy(index)}
+                            />
+                          </Badge>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </TabsContent>
 
               {/* Medications */}
-              <TabsContent value='medications' className='space-y-4 mt-0'>
-                <div className='space-y-4'>
+              <TabsContent value='medical' className='space-y-4 mt-0'>
+                <div className='space-y-4 px-2'>
                   <div className='grid gap-2'>
                     <Label>Дори қўшиш</Label>
-                    <Input
-                      placeholder='Дори номи'
-                      value={newMedication.name}
-                      onChange={(e) =>
-                        setNewMedication({
-                          ...newMedication,
-                          name: e.target.value,
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder='Дозаси'
-                      value={newMedication.dosage}
-                      onChange={(e) =>
-                        setNewMedication({
-                          ...newMedication,
-                          dosage: e.target.value,
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder='Қабул қилиш тартиби'
-                      value={newMedication.frequency}
-                      onChange={(e) =>
-                        setNewMedication({
-                          ...newMedication,
-                          frequency: e.target.value,
-                        })
-                      }
-                    />
-                    <Button
-                      type='button'
-                      onClick={handleAddMedication}
-                      className='w-full'
-                    >
-                      Дори қўшиш
-                    </Button>
-                  </div>
-
-                  <div className='space-y-2'>
-                    {formData.medications.map((med, index) => (
-                      <div
-                        key={index}
-                        className='flex items-start justify-between p-3 bg-accent rounded-lg'
+                    <div className='grid grid-cols-1 sm:grid-cols-[1fr,1fr,auto] gap-2'>
+                      <Input
+                        placeholder='Дори номи'
+                        value={medicineInput}
+                        onChange={(e) => setMedicineInput(e.target.value)}
+                      />
+                      <Input
+                        placeholder='Қабул вақти'
+                        value={scheduleInput}
+                        onChange={(e) => setScheduleInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddMedication();
+                          }
+                        }}
+                      />
+                      <Button
+                        type='button'
+                        size='icon'
+                        onClick={handleAddMedication}
                       >
-                        <div>
-                          <p className='font-semibold'>{med.name}</p>
-                          <p className='text-sm text-muted-foreground'>
-                            {med.dosage}
-                          </p>
-                          <p className='text-sm text-muted-foreground'>
-                            {med.frequency}
-                          </p>
-                        </div>
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => handleRemoveMedication(index)}
-                        >
-                          <X className='w-4 h-4' />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Family History */}
-              <TabsContent value='family' className='space-y-4 mt-0'>
-                <div className='space-y-4'>
-                  <div className='grid gap-2'>
-                    <Label>Оилавий тарих қўшиш</Label>
-                    <div className='grid grid-cols-2 gap-2'>
-                      <Input
-                        placeholder='Қариндош'
-                        value={newFamilyHistory.relative}
-                        onChange={(e) =>
-                          setNewFamilyHistory({
-                            ...newFamilyHistory,
-                            relative: e.target.value,
-                          })
-                        }
-                      />
-                      <Input
-                        placeholder='Касаллик'
-                        value={newFamilyHistory.condition}
-                        onChange={(e) =>
-                          setNewFamilyHistory({
-                            ...newFamilyHistory,
-                            condition: e.target.value,
-                          })
-                        }
-                      />
+                        <Plus className='w-4 h-4' />
+                      </Button>
                     </div>
-                    <Button
-                      type='button'
-                      onClick={handleAddFamilyHistory}
-                      className='w-full'
-                    >
-                      Оилавий тарих қўшиш
-                    </Button>
                   </div>
 
-                  <div className='space-y-2'>
-                    {formData.familyHistory.map((item, index) => (
-                      <div
-                        key={index}
-                        className='flex items-center justify-between p-3 bg-accent rounded-lg'
-                      >
-                        <div>
-                          <p className='font-semibold'>{item.relative}</p>
-                          <p className='text-sm text-muted-foreground'>
-                            {item.condition}
-                          </p>
-                        </div>
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => handleRemoveFamilyHistory(index)}
-                        >
-                          <X className='w-4 h-4' />
-                        </Button>
+                  {formData.regular_medications &&
+                    formData.regular_medications.length > 0 && (
+                      <div className='space-y-2'>
+                        {formData.regular_medications.map((med, index) => (
+                          <div
+                            key={index}
+                            className='flex items-start justify-between p-3 bg-accent rounded-lg'
+                          >
+                            <div>
+                              <p className='font-semibold'>{med.medicine}</p>
+                              <p className='text-sm text-muted-foreground'>
+                                {med.schedule}
+                              </p>
+                            </div>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => handleRemoveMedication(index)}
+                            >
+                              <X className='w-4 h-4' />
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    )}
                 </div>
               </TabsContent>
             </div>
@@ -507,11 +546,16 @@ const EditPatientModal = ({
               type='button'
               variant='outline'
               onClick={() => onOpenChange(false)}
+              disabled={isLoading}
             >
               Бекор қилиш
             </Button>
-            <Button type='submit' className='gradient-primary'>
-              Сақлаш
+            <Button
+              type='submit'
+              className='gradient-primary'
+              disabled={isLoading}
+            >
+              {isLoading ? 'Сақланмоқда...' : 'Сақлаш'}
             </Button>
           </DialogFooter>
         </form>
