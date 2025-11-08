@@ -36,7 +36,7 @@ const updateCache = (url: string, data: any) => {
       data?.data?.access_token;
 
     if (token && typeof token === 'string') {
-      cache[TOKEN_KEY] = token;
+      localStorage.setItem(TOKEN_KEY,token)
     } else {
       console.warn('⚠️ No token found in response data');
     }
@@ -49,17 +49,15 @@ const updateCache = (url: string, data: any) => {
 
 const clearAuthTokens = () => {
   try {
-    const cache = loadCache();
-    delete cache[TOKEN_KEY];
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+    localStorage.removeItem(TOKEN_KEY);
   } catch (error) {
     console.error('❌ Auth tokenni tozalashda xatolik:', error);
   }
 }
 
 export const getTokenFromCache = (): string | null => {
-  const cache = loadCache();
-  return cache[TOKEN_KEY] ?? null;
+  const token = localStorage.getItem(TOKEN_KEY);
+  return token ?? null;
 };
 
 const customBaseQuery: BaseQueryFn<
