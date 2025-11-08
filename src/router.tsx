@@ -15,6 +15,7 @@ import Profil from './pages/Profil'
 import AddDiagnostika from './pages/AddDiagnostika'
 import NewVisit from './pages/Examination/NewVisit'
 import Prescription from './pages/Examination/Prescription'
+import AnalysisParamsModal from './pages/AnalysisParamsModal'
 
 
 export const routers = [
@@ -27,6 +28,7 @@ export const routers = [
 	{ path: '/appointments', element: <Appointments /> },
 	{ path: '/prescription', element: <Prescription /> },
 	{path:'/add-diagnostika' , element : <AddDiagnostika/>},
+	{path:'/analysisById/:id' , element : <AnalysisParamsModal/>},
 	{ path: '/lab-order', element: <LabOrder /> },
 	{ path: '/inpatient', element: <Inpatient /> },
 	{ path: '/lab-results', element: <LabResults /> },
@@ -34,7 +36,7 @@ export const routers = [
 	{ path: '/reports', element: <Reports /> },
 	{ path: '/radiology', element: <Radiology /> },
 	{ path: '/settings', element: <Settings /> },
-	{ path: '/profil', element: <Profil /> },
+	{ path: '/profile', element: <Profil /> },
 	{ path: '/patient-portal', element: <PatientPortal /> },
 ]
 
@@ -78,6 +80,11 @@ export const navigator = [
 		path: '/add-diagnostika',
 		to: null,
 		title: 'Диагностика қўшиш',
+	},
+	{
+		path: '/analysisById/:id',
+		to: null,
+		title: 'Tahlil parametrlari',
 	},
 	{
 		path: '/lab-order',
@@ -124,7 +131,7 @@ export const navigator = [
 		),
 	},
 	{
-		path: '/profil',
+		path: '/profile',
 		to: null,
 		title: 'Профил'
 	},
