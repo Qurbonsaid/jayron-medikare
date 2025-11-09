@@ -1,5 +1,9 @@
-import { useCreateRoomMutation } from "@/app/api/roomApi";
-import { CreatedRoomRequest } from "@/app/api/roomApi/types";
+import { useUpdateRoomMutation } from "@/app/api/roomApi";
+import {
+  CreatedRoomRequest,
+  Room,
+  UpdatedRoomRequest,
+} from "@/app/api/roomApi/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Save } from "lucide-react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -42,14 +47,15 @@ const RoomSchema = z.object({
 
 type RoomFormData = z.infer<typeof RoomSchema>;
 
-interface NewRoomProps {
+interface UpdateRoomProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  room: Room;
 }
 
-export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
-  const [createdRooms, { isLoading: isCreatedLoading }] =
-    useCreateRoomMutation();
+export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
+  const [updatedRooms, { isLoading: isCreatedLoading }] =
+    useUpdateRoomMutation();
   const handleRequest = useHandleRequest();
   const { id: corpusId } = useParams<{ id: string }>();
   const form = useForm<RoomFormData>({
@@ -57,30 +63,37 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
     mode: "onSubmit",
     reValidateMode: "onChange",
     defaultValues: {
-      room_name: "101-xona",
-      room_price: 150000,
+      room_name: room?.room_name,
+      room_price: room?.room_price,
       corpus_id: corpusId,
-      patient_capacity: 4,
-      floor_number: 1,
-      description: "VIP хона, балкон билан",
+      patient_capacity: room?.patient_capacity,
+      floor_number: room?.floor_number,
+      description: room?.description,
     },
   });
 
+  useEffect(() => {
+    form.reset();
+  }, [room]);
+
   const onSubmit = async (data: RoomFormData) => {
     const submitData = {
-      ...data,
+      body: {
+        ...data,
+      },
+      id: room?._id,
     };
 
     await handleRequest({
       request: async () =>
-        await createdRooms(submitData as CreatedRoomRequest).unwrap(),
+        await updatedRooms(submitData as UpdatedRoomRequest).unwrap(),
       onSuccess: () => {
-        toast.success("Xona муваффақиятли қўшилди");
+        toast.success("Xona муваффақиятли янгиланди");
         form.reset();
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Қўшишда хатолик");
+        toast.error(data?.error?.msg || "Янгилашда хатолик");
       },
     });
   };
@@ -90,7 +103,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
-            Янги Xona Қўшиш
+            Хона маълумотларини янгилаш
           </DialogTitle>
         </DialogHeader>
 
@@ -104,6 +117,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                 <FormField
                   control={form.control}
                   name="room_name"
+                  defaultValue={room?.room_name}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
@@ -123,6 +137,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                 <FormField
                   control={form.control}
                   name="room_price"
+                  defaultValue={room?.room_price}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
@@ -148,6 +163,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                 <FormField
                   control={form.control}
                   name="patient_capacity"
+                  defaultValue={room?.patient_capacity}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
@@ -173,6 +189,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                 <FormField
                   control={form.control}
                   name="floor_number"
+                  defaultValue={room?.floor_number}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
@@ -198,6 +215,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                 <FormField
                   control={form.control}
                   name="description"
+                  defaultValue={room?.description}
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
                       <FormLabel>Izoh</FormLabel>
