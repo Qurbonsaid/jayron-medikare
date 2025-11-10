@@ -2,5 +2,8 @@ export enum API_TAGS {
   USER = 'User',
   SETTINGS='Settings',
   ANALYSIS= 'Analysis',
-  PATIENTS='patient'
+  PATIENTS='Patient',
+  EXAMS='Exams',
+  PRESCRIPTION='Prescription',
+  IMAGES='images'
 }
