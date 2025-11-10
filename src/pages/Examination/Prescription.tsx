@@ -48,10 +48,8 @@ interface FormValidationErrors {
 const Prescription = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchTerm, setSearchTerm] = useState('');
   const [medications, setMedications] = useState<Medication[]>([]);
   const [allergyWarning, setAllergyWarning] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [formErrors, setFormErrors] = useState<FormValidationErrors>({
     medications: {},
@@ -60,7 +58,6 @@ const Prescription = () => {
 
   // Patient selection states
   const [patient, setPatient] = useState<any>(null);
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const [selectedExaminationId, setSelectedExaminationId] =
     useState<string>('');
 
@@ -101,22 +98,23 @@ const Prescription = () => {
 
   // Auto-select examination if coming from another page
   useEffect(() => {
-    if (examinationIdFromState && !selectedExaminationId) {
+    if (examinationIdFromState) {
       setSelectedExaminationId(examinationIdFromState);
     }
-  }, [examinationIdFromState, selectedExaminationId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examinationIdFromState]);
 
   // Update patient state when examination and patient data are loaded
   useEffect(() => {
-    if (examinationData && patientData?.data) {
+    if (selectedExaminationId && examinationData && patientData?.data) {
       setPatient(patientData.data);
-      setSelectedPatientId(patientData.data._id);
+      // setSelectedPatientId(patientData.data._id);
       // Check for allergies
       if (patientData.data.allergies && patientData.data.allergies.length > 0) {
         setAllergyWarning(true);
       }
     }
-  }, [examinationData, patientData]);
+  }, [selectedExaminationId, examinationData, patientData]);
 
   // Mock drug database
   // const drugDatabase = [
@@ -138,11 +136,16 @@ const Prescription = () => {
 
   const clearSelection = () => {
     setPatient(null);
-    setSelectedPatientId('');
     setSelectedExaminationId('');
     setAllergyWarning(false);
     setMedications([]);
     setAdditionalInstructions('');
+    setFormErrors({
+      medications: {},
+      instructions: false,
+    });
+    // Clear navigation state
+    navigate(location.pathname, { replace: true, state: {} });
   };
 
   const calculateAge = (dateOfBirth: string | undefined) => {
@@ -169,20 +172,6 @@ const Prescription = () => {
       duration: '',
     };
     setMedications([...medications, newMed]);
-  };
-
-  const addDrugFromSearch = (drugName: string) => {
-    const newMed: Medication = {
-      id: Date.now().toString(),
-      drug: drugName,
-      dosage: '',
-      frequency: '',
-      duration: '',
-    };
-    setMedications([...medications, newMed]);
-    setSearchTerm('');
-    setShowSuggestions(false);
-    toast.success(`${drugName} рўйхатга қўшилди`);
   };
 
   const updateMedication = (

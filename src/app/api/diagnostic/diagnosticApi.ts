@@ -3,6 +3,7 @@ import { baseApi } from '../baseApi'
 import {
 	AnalysisByIdResponse,
 	AnalysisParamCreateRequest,
+	AnalysisParameter,
 	AnalysisResponse,
 	CreateAnalysisRequest,
 	CreateAnalysisResponse,
@@ -77,6 +78,27 @@ export const analysisApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [API_TAGS.ANALYSIS],
     }),
+		updateAnalysisParameter: builder.mutation<
+		{ success: boolean; message: string; data: AnalysisParameter },
+		{ id: string; data: AnalysisParamCreateRequest }
+	>({
+		query: ({ id, data }) => ({
+			url: `${PATHS.PARAMETER_UPDATE}/${id}`,
+			method: 'PUT',
+			body: data,
+		}),
+		invalidatesTags: [API_TAGS.ANALYSIS],
+	}),
+	deleteParameter: builder.mutation<
+			{ success: boolean; message: string },
+			string
+		>({
+			query: id => ({
+				url: `${PATHS.PARAMETER_DELETE}/${id}`, 
+				method: 'DELETE',
+			}),
+			invalidatesTags: [API_TAGS.ANALYSIS],
+		}),
 	}),
 })
 
@@ -86,5 +108,7 @@ export const {
 	useUpdateDiagnosticMutation,
 	useDeleteDiagnosticMutation,
 	useGetDiagnosticByIdQuery , 
-	useCreateAnalysisParameterMutation
+	useCreateAnalysisParameterMutation ,
+	useUpdateAnalysisParameterMutation,
+	useDeleteParameterMutation
 } = analysisApi

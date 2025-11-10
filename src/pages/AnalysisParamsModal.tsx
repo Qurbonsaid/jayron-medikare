@@ -2,27 +2,39 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '@/components/ui/table'
-import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 	DialogFooter,
+	DialogTrigger,
+	DialogDescription,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import { Edit, Trash2, ArrowLeft } from 'lucide-react'
-import { useGetDiagnosticByIdQuery } from '@/app/api/diagnostic/diagnosticApi'
-import { useCreateAnalysisParameterMutation } from '@/app/api/diagnostic/diagnosticApi'
+import { Edit, Trash2, ArrowLeft, Phone, Eye } from 'lucide-react'
+import {
+	useGetDiagnosticByIdQuery,
+	useCreateAnalysisParameterMutation,
+	useUpdateAnalysisParameterMutation,
+} from '@/app/api/diagnostic/diagnosticApi'
 import { toast } from 'sonner'
-import { AnalysisParameter } from '@/app/api/diagnostic/types'
+import {
+	AnalysisParamCreateRequest,
+	AnalysisParameter,
+} from '@/app/api/diagnostic/types'
+import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
+import { Label } from '@/components/ui/label'
+
+interface FormState {
+	parameter_code: string
+	parameter_name: string
+	unit: string
+	description: string
+	male: { min: string; max: string; value: string }
+	female: { min: string; max: string; value: string }
+	general: { min: string; max: string; value: string }
+}
 
 export default function AnalysisParamsModal() {
 	const navigate = useNavigate()
@@ -30,14 +42,15 @@ export default function AnalysisParamsModal() {
 	const { data, isLoading, isError } = useGetDiagnosticByIdQuery(id!)
 	const [params, setParams] = useState<AnalysisParameter[]>([])
 	const [open, setOpen] = useState(false)
-
-	// 🧩 Qo‘shish form holati
-	const [form, setForm] = useState({
+	const [editingParam, setEditingParam] = useState<AnalysisParameter | null>(
+		null
+	)
+	const [deleteId, setDeleteId] = useState<string | null>(null)
+	const [form, setForm] = useState<FormState>({
 		parameter_code: '',
 		parameter_name: '',
 		unit: '',
 		description: '',
-		genderType: 'general', // 'general' yoki 'gendered'
 		male: { min: '', max: '', value: '' },
 		female: { min: '', max: '', value: '' },
 		general: { min: '', max: '', value: '' },
@@ -45,6 +58,9 @@ export default function AnalysisParamsModal() {
 
 	const [createParameter, { isLoading: creating }] =
 		useCreateAnalysisParameterMutation()
+	const [updateParameter, { isLoading: updating }] =
+		useUpdateAnalysisParameterMutation()
+	const handleRequest = useHandleRequest()
 
 	useEffect(() => {
 		if (data?.data?.analysis_parameters) {
@@ -52,11 +68,10 @@ export default function AnalysisParamsModal() {
 		}
 	}, [data])
 
-	const handleDelete = (_id: string) => {
-		if (window.confirm('Rostan o‘chirmoqchimisiz?')) {
-			setParams(prev => prev.filter(p => p._id !== _id))
-			toast.success('Parametr o‘chirildi')
-		}
+	const handleDelete = (id: string) => {
+		setParams(prev => prev.filter(p => p._id !== id))
+		toast.success('Parametr o‘chirildi')
+		setDeleteId(null)
 	}
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,67 +81,132 @@ export default function AnalysisParamsModal() {
 
 	const handleNormalChange = (
 		type: 'male' | 'female' | 'general',
-		key: string,
+		key: 'min' | 'max' | 'value',
 		value: string
 	) => {
-		setForm(prev => ({
-			...prev,
-			[type]: { ...prev[type], [key]: value },
-		}))
+		setForm(prev => {
+			const updated = { ...prev[type], [key]: value }
+			if (key === 'value') {
+				if (value.trim() !== '') {
+					updated.min = ''
+					updated.max = ''
+				}
+			} else {
+				if (value.trim() !== '') {
+					updated.value = ''
+				}
+			}
+			return { ...prev, [type]: updated }
+		})
+	}
+
+	const buildRange = (range: { min: string; max: string; value: string }) => {
+		if (range.value.trim() !== '') return { min: 0, max: 0, value: range.value }
+		const min = Number(range.min) || 0
+		const max = Number(range.max) || 0
+		return { min, max, value: '' }
+	}
+
+	const openEdit = (param: AnalysisParameter) => {
+		setEditingParam(null) // eski paramni tozalaymiz
+		setForm({
+			parameter_code: param.parameter_code,
+			parameter_name: param.parameter_name,
+			unit: param.unit,
+			description: param.description,
+			male: {
+				min: String(param.normal_range.male.min),
+				max: String(param.normal_range.male.max),
+				value: param.normal_range.male.value,
+			},
+			female: {
+				min: String(param.normal_range.female.min),
+				max: String(param.normal_range.female.max),
+				value: param.normal_range.female.value,
+			},
+			general: {
+				min: String(param.normal_range.general.min),
+				max: String(param.normal_range.general.max),
+				value: param.normal_range.general.value,
+			},
+		})
+		setEditingParam(param) // keyin yangi paramni set qilamiz
+		setOpen(true)
 	}
 
 	const handleSubmit = async () => {
 		if (!id) return
 
-		const payload = {
+		// Check if male/female values are identical → assign to general
+		let generalRange = buildRange(form.general)
+		if (
+			form.male.value === form.female.value &&
+			form.male.value.trim() !== ''
+		) {
+			generalRange = { min: 0, max: 0, value: form.male.value }
+		} else if (
+			form.male.min === form.female.min &&
+			form.male.max === form.female.max &&
+			(form.male.min !== '' || form.male.max !== '')
+		) {
+			generalRange = {
+				min: Number(form.male.min),
+				max: Number(form.male.max),
+				value: '',
+			}
+		}
+
+		const payload: AnalysisParamCreateRequest = {
 			analysis_id: id,
 			parameter_code: form.parameter_code,
 			parameter_name: form.parameter_name,
 			unit: form.unit,
 			description: form.description,
-			normal_range:
-				form.genderType === 'general'
-					? {
-							male: { min: 0, max: 0, value: '' },
-							female: { min: 0, max: 0, value: '' },
-							general: {
-								min: Number(form.general.min) || 0,
-								max: Number(form.general.max) || 0,
-								value: form.general.value,
-							},
-					  }
-					: {
-							male: {
-								min: Number(form.male.min) || 0,
-								max: Number(form.male.max) || 0,
-								value: form.male.value,
-							},
-							female: {
-								min: Number(form.female.min) || 0,
-								max: Number(form.female.max) || 0,
-								value: form.female.value,
-							},
-							general: { min: 0, max: 0, value: '' },
-					  },
+			normal_range: {
+				male: buildRange(form.male),
+				female: buildRange(form.female),
+				general: generalRange,
+			},
 		}
 
-		try {
-			await createParameter(payload).unwrap()
-			toast.success('Parametr muvaffaqiyatli qo‘shildi 🎉')
-			setOpen(false)
-			setForm({
-				parameter_code: '',
-				parameter_name: '',
-				unit: '',
-				description: '',
-				genderType: 'general',
-				male: { min: '', max: '', value: '' },
-				female: { min: '', max: '', value: '' },
-				general: { min: '', max: '', value: '' },
-			})
-		} catch (err) {
-			toast.error('Xatolik: parametr qo‘shilmadi!')
-		}
+		await handleRequest({
+			request: () =>
+				editingParam
+					? updateParameter({ id: editingParam._id, data: payload })
+					: createParameter(payload),
+			onSuccess: () => {
+				if (editingParam) {
+					setParams(prev =>
+						prev.map(p =>
+							p._id === editingParam._id
+								? { ...p, ...payload, normal_range: payload.normal_range }
+								: p
+						)
+					)
+					toast.success('Parametr muvaffaqiyatli yangilandi 🎉')
+				} else {
+					setParams(prev => [
+						...prev,
+						{ ...payload, _id: Date.now().toString() } as AnalysisParameter,
+					])
+					toast.success('Parametr muvaffaqiyatli qo‘shildi 🎉')
+				}
+				setOpen(false)
+				setEditingParam(null)
+				setForm({
+					parameter_code: '',
+					parameter_name: '',
+					unit: '',
+					description: '',
+					male: { min: '', max: '', value: '' },
+					female: { min: '', max: '', value: '' },
+					general: { min: '', max: '', value: '' },
+				})
+			},
+			onError: () => {
+				toast.error('Xatolik: parametr saqlanmadi!')
+			},
+		})
 	}
 
 	if (isLoading) return <p className='p-4'>Yuklanmoqda...</p>
@@ -135,7 +215,6 @@ export default function AnalysisParamsModal() {
 
 	return (
 		<div className='min-h-screen bg-background flex flex-col'>
-			{/* HEADER */}
 			<header className='bg-card border-b sticky top-0 z-10'>
 				<div className='w-full px-4 sm:px-6 py-4 flex flex-row flex-wrap items-center justify-between gap-3'>
 					<div className='flex items-center gap-3 min-w-0'>
@@ -151,279 +230,530 @@ export default function AnalysisParamsModal() {
 							</p>
 						</div>
 					</div>
-
 					<Button
 						className='bg-blue-600 hover:bg-blue-700 text-white'
-						onClick={() => setOpen(true)}
+						onClick={() => {
+							setEditingParam(null) // dialog ochilishidan oldin reset qilamiz
+							setForm({
+								parameter_code: '',
+								parameter_name: '',
+								unit: '',
+								description: '',
+								male: { min: '', max: '', value: '' },
+								female: { min: '', max: '', value: '' },
+								general: { min: '', max: '', value: '' },
+							})
+							setOpen(true)
+						}}
 					>
 						+ Parametr qo‘shish
 					</Button>
 				</div>
 			</header>
 
-			{/* TABLE */}
-			<div className='p-4 sm:p-6'>
-				<Card className='overflow-x-auto'>
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead className='w-[50px]'>#</TableHead>
-								<TableHead>Parametr codi</TableHead>
-								<TableHead>Parametr nomi</TableHead>
-								<TableHead>Jinsi</TableHead>
-								<TableHead>Qiymatlari</TableHead>
-								<TableHead>Birligi</TableHead>
-								<TableHead className='text-right'>Harakatlar</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{params.map((param, index) => {
-								const { normal_range } = param
-								const { general, male, female } = normal_range || {}
+			{/* Mobile Card View */}
+			<div className='p-4 sm:p-6 block lg:hidden space-y-4'>
+				{params.map((param, index) => {
+					const { general, male, female } = param.normal_range
+					const isGeneral =
+						general && (general.value || general.min !== 0 || general.max !== 0)
+					const display = isGeneral
+						? general.value
+							? general.value
+							: `${general.min}-${general.max}`
+						: `${male.value || `${male.min}-${male.max}`} / ${
+								female.value || `${female.min}-${female.max}`
+						  }`
 
-								// 1️⃣ General qiymatlar 0 yoki bo‘sh bo‘lmasa — umumiy deb hisoblanadi
-								const isGeneral =
-									general &&
-									((typeof general.min === 'number' && general.min !== 0) ||
-										(typeof general.max === 'number' && general.max !== 0) ||
-										(general.value &&
-											general.value.trim() !== '' &&
-											general.value !== 'Negative'))
-
-								// 2️⃣ Erkak/ayol qiymatlar mavjudligini tekshirish
-								const hasMale =
-									male &&
-									((typeof male.min === 'number' && male.min !== 0) ||
-										(typeof male.max === 'number' && male.max !== 0) ||
-										(male.value && male.value.trim() !== ''))
-
-								const hasFemale =
-									female &&
-									((typeof female.min === 'number' && female.min !== 0) ||
-										(typeof female.max === 'number' && female.max !== 0) ||
-										(female.value && female.value.trim() !== ''))
-
-								// 3️⃣ Chiqariladigan UI qismi
-								let rangeDisplay
-
-								if (isGeneral) {
-									rangeDisplay = (
-										<div className='flex flex-col items-start'>
-											<span className='text-sm font-medium text-gray-700 mb-1'>
-												🌍 Umumiy
+					return (
+						<Card
+							key={param._id}
+							className='rounded-2xl shadow-md border border-gray-100 overflow-hidden'
+						>
+							<div className='p-4 space-y-3'>
+								{/* Header */}
+								<div className='flex items-start justify-between'>
+									<div>
+										<h3 className='font-semibold text-base text-gray-900'>
+											{param.parameter_code}
+										</h3>
+										<p className='text-xs text-muted-foreground'>
+											Nomi:{' '}
+											<span className='font-medium'>
+												{param.parameter_name}
 											</span>
-											<span className='px-2 py-1 rounded-lg bg-blue-50 text-blue-600 text-sm font-medium'>
-												{general.value && general.value.trim() !== ''
-													? general.value
-													: `${general.min ?? '-'} - ${general.max ?? '-'}`}
-											</span>
-										</div>
-									)
-								} else if (hasMale || hasFemale) {
-									rangeDisplay = (
-										<div className='flex flex-col gap-1'>
-											{hasMale && (
-												<span className='px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-sm'>
-													👨 :{' '}
-													{male.value && male.value.trim() !== ''
-														? male.value
-														: `${male.min ?? '-'} - ${male.max ?? '-'}`}
-												</span>
-											)}
-											{hasFemale && (
-												<span className='px-2 py-1 rounded-lg bg-pink-50 text-pink-700 text-sm'>
-													👩 :{' '}
-													{female.value && female.value.trim() !== ''
-														? female.value
-														: `${female.min ?? '-'} - ${female.max ?? '-'}`}
-												</span>
-											)}
-										</div>
-									)
-								} else {
-									rangeDisplay = (
-										<span className='text-gray-400 text-sm italic'>
-											Ma’lumot yo‘q
+										</p>
+									</div>
+									<span className='text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium'>
+										#{index + 1}
+									</span>
+								</div>
+
+								{/* Body info */}
+								<div className='space-y-2 text-sm'>
+									<div className='flex  gap-3'>
+										<span className='text-muted-foreground'>Jinsi:</span>
+										<span className='font-medium'>
+											{isGeneral ? 'Umumiy' : 'Erkak / Ayol'}
 										</span>
-									)
-								}
+									</div>
+									<div className='flex  gap-3'>
+										<span className='text-muted-foreground'>Qiymat:</span>
+										<span className='font-medium text-blue-600'>{display}</span>
+									</div>
+									<div className='flex  gap-3'>
+										<span className='text-muted-foreground'>Birligi:</span>
+										<span className='font-medium'>{param.unit}</span>
+									</div>
+								</div>
 
-								return (
-									<TableRow key={param._id}>
-										<TableCell>{index + 1}</TableCell>
-										<TableCell>{param.parameter_code}</TableCell>
-										<TableCell>{param.parameter_name}</TableCell>
-										<TableCell>
-											{isGeneral
-												? 'Umumiy'
-												: hasMale || hasFemale
-												? 'Erkak / Ayol'
-												: '-'}
-										</TableCell>
-										<TableCell>{rangeDisplay}</TableCell>
-										<TableCell>{param.unit}</TableCell>
-										<TableCell className='text-right space-x-2'>
-											<Button size='icon' variant='outline' className='h-8 w-8'>
-												<Edit size={16} />
-											</Button>
+								{/* Actions */}
+								<div className='flex gap-2 pt-2'>
+									<Button
+										variant='outline'
+										className='flex-1 flex items-center justify-center gap-2 text-sm'
+										onClick={() => openEdit(param)}
+									>
+										<Edit size={16} />
+										Tahrirlash
+									</Button>
+
+									<Dialog
+										open={deleteId === param._id}
+										onOpenChange={isOpen => {
+											if (!isOpen) setDeleteId(null)
+										}}
+									>
+										<DialogTrigger asChild>
 											<Button
-												size='icon'
 												variant='outline'
-												className='h-8 w-8 text-red-500 border-red-300 hover:bg-red-50'
-												onClick={() => handleDelete(param._id)}
+												className='flex-1 flex items-center justify-center gap-2 text-red-600 border-red-300 hover:bg-red-50 text-sm'
+												onClick={() => setDeleteId(param._id)}
 											>
 												<Trash2 size={16} />
+												O‘chirish
 											</Button>
-										</TableCell>
-									</TableRow>
-								)
-							})}
-						</TableBody>
-					</Table>
+										</DialogTrigger>
+										<DialogContent className='max-w-xs rounded-xl'>
+											<DialogTitle>Parametr o‘chirish</DialogTitle>
+											<p className='text-sm text-muted-foreground'>
+												Rostan ham ushbu parameterni o‘chirmoqchimisiz?
+											</p>
+											<DialogFooter className='flex justify-end gap-2'>
+												<Button
+													variant='outline'
+													onClick={() => setDeleteId(null)}
+												>
+													Yo‘q
+												</Button>
+												<Button
+													className='bg-red-600 text-white'
+													onClick={() => handleDelete(param._id)}
+												>
+													Ha
+												</Button>
+											</DialogFooter>
+										</DialogContent>
+									</Dialog>
+								</div>
+							</div>
+						</Card>
+					)
+				})}
+			</div>
+
+			{/* Desktop Table View */}
+			<div className='p-4 sm:p-6'>
+				<Card className='card-shadow hidden lg:block'>
+					<div className='overflow-x-auto'>
+						<table className='w-full'>
+							<thead className='bg-muted/50'>
+								<tr>
+									{[
+										'ID',
+										'Parametr kodi',
+										'Parametr nomi',
+										'Jinsi',
+										'Qiymatlari',
+										'Birligi',
+										'Harakatlar',
+									].map(i => (
+										<th
+											key={i}
+											className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'
+										>
+											{i}
+										</th>
+									))}
+								</tr>
+							</thead>
+							<tbody className='divide-y'>
+								{params.map((param, index) => {
+									const { general, male, female } = param.normal_range
+									const isGeneral =
+										general &&
+										(general.value || general.min !== 0 || general.max !== 0)
+									const display = isGeneral
+										? general.value
+											? general.value
+											: `${general.min}-${general.max}`
+										: `${male.value || `${male.min}-${male.max}`} / ${
+												female.value || `${female.min}-${female.max}`
+										  }`
+
+									return (
+										<tr
+											key={param._id}
+											className='hover:bg-accent/50 transition-smooth'
+										>
+											<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm font-medium text-primary'>
+												{index + 1}
+											</td>
+											<td className='px-4 xl:px-6 py-3 xl:py-4'>
+												<div className='font-medium text-sm xl:text-base'>
+													{param.parameter_code}
+												</div>
+											</td>
+											<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+												{param.parameter_name}
+											</td>
+											<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+												{isGeneral ? 'Umumiy' : 'Erkak / Ayol'}
+											</td>
+											<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+												{display}
+											</td>
+											<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+												{param.unit}
+											</td>
+											<td className='px-4 xl:px-6 py-3 xl:py-4'>
+												<div className='flex justify-center gap-3'>
+													<Button
+														size='icon'
+														variant='outline'
+														className='h-8 w-8'
+														onClick={() => openEdit(param)}
+													>
+														<Edit size={16} />
+													</Button>
+
+													{/* Delete dialog */}
+													<Dialog
+														open={deleteId === param._id}
+														onOpenChange={isOpen => {
+															if (!isOpen) setDeleteId(null)
+														}}
+													>
+														<DialogTrigger asChild>
+															<Button
+																size='icon'
+																variant='outline'
+																className='h-8 w-8 text-red-500 border-red-300 hover:bg-red-50'
+																onClick={() => setDeleteId(param._id)}
+															>
+																<Trash2 size={16} />
+															</Button>
+														</DialogTrigger>
+														<DialogContent className='max-w-xs rounded-xl'>
+															<DialogTitle>Parametr o‘chirish</DialogTitle>
+															<p className='text-sm text-muted-foreground'>
+																Rostan ham ushbu parameterni o‘chirmoqchimisiz?
+															</p>
+															<DialogFooter className='flex justify-end gap-2'>
+																<Button
+																	variant='outline'
+																	onClick={() => setDeleteId(null)}
+																>
+																	Yo‘q
+																</Button>
+																<Button
+																	className='bg-red-600 text-white'
+																	onClick={() => handleDelete(param._id)}
+																>
+																	Ha
+																</Button>
+															</DialogFooter>
+														</DialogContent>
+													</Dialog>
+												</div>
+											</td>
+										</tr>
+									)
+								})}
+							</tbody>
+						</table>
+					</div>
+
+					{/* Pagination */}
+					{/* <div className='px-4 xl:px-6 py-3 xl:py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3'>
+											<div className='text-xs xl:text-sm text-muted-foreground'>
+												{patientdata.pagination.prev_page
+													? (patientdata.pagination.page - 1) *
+															patientdata.pagination.limit +
+														1
+													: 1}{' '}
+												- {patientdata.pagination.total_items} дан{' '}
+												{patientdata.pagination.limit} та кўрсатилмоқда
+											</div>
+											<div className='flex gap-2'>
+												<Button
+													variant='outline'
+													size='sm'
+													disabled={currentPage === 1}
+													onClick={() => setCurrentPage(currentPage - 1)}
+													className='text-xs xl:text-sm'
+												>
+													Олдинги
+												</Button>
+												{(() => {
+													const pages = [];
+													const showPages = new Set<number>();
+			
+													// Har doim 1-sahifani ko'rsat
+													showPages.add(1);
+			
+													// Har doim oxirgi sahifani ko'rsat
+													if (patientdata.pagination.total_pages > 1) {
+														showPages.add(patientdata.pagination.total_pages);
+													}
+			
+													// Joriy sahifa va uning atrofidagi sahifalarni ko'rsat
+													for (
+														let i = Math.max(2, currentPage - 1);
+														i <=
+														Math.min(
+															patientdata.pagination.total_pages - 1,
+															currentPage + 1
+														);
+														i++
+													) {
+														showPages.add(i);
+													}
+			
+													const sortedPages = Array.from(showPages).sort(
+														(a, b) => a - b
+													);
+			
+													sortedPages.forEach((page, index) => {
+														// Ellipsis qo'shish agar sahifalar orasida bo'sh joy bo'lsa
+														if (index > 0 && sortedPages[index - 1] !== page - 1) {
+															pages.push(
+																<span
+																	key={`ellipsis-${page}`}
+																	className='px-2 flex items-center text-xs xl:text-sm'
+																>
+																	...
+																</span>
+															);
+														}
+			
+														// Sahifa tugmasi
+														pages.push(
+															<Button
+																key={page}
+																variant='outline'
+																size='sm'
+																onClick={() => setCurrentPage(page)}
+																className={`text-xs xl:text-sm ${
+																	page === currentPage
+																		? 'bg-primary text-white hover:bg-primary/60 hover:text-white'
+																		: ''
+																}`}
+															>
+																{page}
+															</Button>
+														);
+													});
+			
+													return pages;
+												})()}
+												<Button
+													variant='outline'
+													size='sm'
+													disabled={
+														currentPage === patientdata.pagination.total_pages
+													}
+													onClick={() => setCurrentPage(currentPage + 1)}
+													className='text-xs xl:text-sm'
+												>
+													Кейинги
+												</Button>
+											</div>
+										</div> */}
 				</Card>
 			</div>
 
-			{/* ADD PARAM DIALOG */}
+			{/* Create / Update Dialog */}
 			<Dialog open={open} onOpenChange={setOpen}>
-				<DialogContent className='max-w-lg'>
+				<DialogContent className='w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'>
 					<DialogHeader>
-						<DialogTitle>Yangi parametr qo‘shish</DialogTitle>
+						<DialogTitle>
+							{editingParam
+								? 'Parametrni tahrirlash'
+								: 'Yangi parametr qo‘shish'}
+						</DialogTitle>
 					</DialogHeader>
-
 					<div className='space-y-3'>
+						<Label>Parametr kodi</Label>
 						<Input
 							name='parameter_code'
 							value={form.parameter_code}
 							onChange={handleChange}
-							placeholder='Parametr kodi (masalan: WRT)'
+							placeholder='Cod kiriting'
 						/>
+						<Label>Parametr nomi</Label>
 						<Input
 							name='parameter_name'
 							value={form.parameter_name}
 							onChange={handleChange}
-							placeholder='Parametr nomi'
+							placeholder='Nomini kiriting'
 						/>
+						<Label>Parametr birligi</Label>
 						<Input
 							name='unit'
 							value={form.unit}
 							onChange={handleChange}
-							placeholder='Birlik (masalan: g/L)'
+							placeholder='Birlikni kiriting'
 						/>
+						<Label>Parametrga tavsif bering</Label>
 						<Input
 							name='description'
 							value={form.description}
 							onChange={handleChange}
-							placeholder='Izoh (ixtiyoriy)'
+							placeholder='Izoh qoldiring'
 						/>
 
-						<div className='flex gap-12 mt-3'>
-							<label className='flex items-center gap-2'>
-								<input
-									type='radio'
-									name='genderType'
-									value='general'
-									checked={form.genderType === 'general'}
-									onChange={e =>
-										setForm(prev => ({ ...prev, genderType: e.target.value }))
-									}
-								/>
-								<span>🌍 Umumiy</span>
-							</label>
-							<label className='flex items-center gap-2'>
-								<input
-									type='radio'
-									name='genderType'
-									value='gendered'
-									checked={form.genderType === 'gendered'}
-									onChange={e =>
-										setForm(prev => ({ ...prev, genderType: e.target.value }))
-									}
-								/>
-								<span>👨 / 👩 </span>
-							</label>
+						{/* <p className='font-medium text-sm mt-2'>Erkak:</p>
+						<div className='grid grid-cols-3 gap-2'>
+							<Input
+								placeholder='Min'
+								value={form.male.min}
+								onChange={e =>
+									handleNormalChange('male', 'min', e.target.value)
+								}
+								disabled={form.male.value.trim() !== ''}
+							/>
+							<Input
+								placeholder='Max'
+								value={form.male.max}
+								onChange={e =>
+									handleNormalChange('male', 'max', e.target.value)
+								}
+								disabled={form.male.value.trim() !== ''}
+							/>
+							<Input
+								placeholder='Qiymat'
+								value={form.male.value}
+								onChange={e =>
+									handleNormalChange('male', 'value', e.target.value)
+								}
+								disabled={
+									form.male.min.trim() !== '' || form.male.max.trim() !== ''
+								}
+							/>
 						</div>
 
-						{/* Umumiy bo‘lsa */}
-						{form.genderType === 'general' && (
-							<div className='grid grid-cols-3 gap-2'>
-								<Input
-									placeholder='Min'
-									value={form.general.min}
-									onChange={e =>
-										handleNormalChange('general', 'min', e.target.value)
-									}
-								/>
-								<Input
-									placeholder='Max'
-									value={form.general.max}
-									onChange={e =>
-										handleNormalChange('general', 'max', e.target.value)
-									}
-								/>
-								<Input
-									placeholder='Qiymat (matn bo‘lishi mumkin)'
-									value={form.general.value}
-									onChange={e =>
-										handleNormalChange('general', 'value', e.target.value)
-									}
-								/>
-							</div>
-						)}
+						<p className='font-medium text-sm mt-2'>Ayol:</p>
+						<div className='grid grid-cols-3 gap-2'>
+							<Input
+								placeholder='Min'
+								value={form.female.min}
+								onChange={e =>
+									handleNormalChange('female', 'min', e.target.value)
+								}
+								disabled={form.female.value.trim() !== ''}
+							/>
+							<Input
+								placeholder='Max'
+								value={form.female.max}
+								onChange={e =>
+									handleNormalChange('female', 'max', e.target.value)
+								}
+								disabled={form.female.value.trim() !== ''}
+							/>
+							<Input
+								placeholder='Qiymat'
+								value={form.female.value}
+								onChange={e =>
+									handleNormalChange('female', 'value', e.target.value)
+								}
+								disabled={
+									form.female.min.trim() !== '' || form.female.max.trim() !== ''
+								}
+							/>
+						</div> */}
 
-						{/* Erkak / Ayol bo‘lsa */}
-						{form.genderType === 'gendered' && (
-							<div className='space-y-2'>
-								<p className='font-medium text-sm'>👨 Erkak:</p>
-								<div className='grid grid-cols-3 gap-2'>
-									<Input
-										placeholder='Min'
-										value={form.male.min}
-										onChange={e =>
-											handleNormalChange('male', 'min', e.target.value)
-										}
-									/>
-									<Input
-										placeholder='Max'
-										value={form.male.max}
-										onChange={e =>
-											handleNormalChange('male', 'max', e.target.value)
-										}
-									/>
-									<Input
-										placeholder='Qiymat (matn bo‘lishi mumkin)'
-										value={form.male.value}
-										onChange={e =>
-											handleNormalChange('male', 'value', e.target.value)
-										}
-									/>
-								</div>
+						<p className='font-medium text-sm mt-2'>Erkak:</p>
+						<div className='grid grid-cols-3 gap-2'>
+							{/* MIN */}
+							<Input
+								placeholder='Min'
+								value={form.male.min}
+								onChange={e =>
+									handleNormalChange('male', 'min', e.target.value)
+								}
+								disabled={form.male.value.trim() !== ''}
+							/>
 
-								<p className='font-medium text-sm mt-2'>👩 Ayol:</p>
-								<div className='grid grid-cols-3 gap-2'>
-									<Input
-										placeholder='Min'
-										value={form.female.min}
-										onChange={e =>
-											handleNormalChange('female', 'min', e.target.value)
-										}
-									/>
-									<Input
-										placeholder='Max'
-										value={form.female.max}
-										onChange={e =>
-											handleNormalChange('female', 'max', e.target.value)
-										}
-									/>
-									<Input
-										placeholder='Qiymat (matn bo‘lishi mumkin)'
-										value={form.female.value}
-										onChange={e =>
-											handleNormalChange('female', 'value', e.target.value)
-										}
-									/>
-								</div>
-							</div>
-						)}
+							{/* MAX */}
+							<Input
+								placeholder='Max'
+								value={form.male.max}
+								onChange={e =>
+									handleNormalChange('male', 'max', e.target.value)
+								}
+								disabled={form.male.value.trim() !== ''}
+							/>
+
+							{/* VALUE */}
+							<Input
+								placeholder='Qiymat'
+								value={form.male.value}
+								onChange={e =>
+									handleNormalChange('male', 'value', e.target.value)
+								}
+								disabled={
+									(form.male.min && form.male.min !== '0') ||
+									(form.male.max && form.male.max !== '0')
+								}
+							/>
+						</div>
+
+						<p className='font-medium text-sm mt-2'>Ayol:</p>
+						<div className='grid grid-cols-3 gap-2'>
+							{/* MIN */}
+							<Input
+								placeholder='Min'
+								value={form.female.min}
+								onChange={e =>
+									handleNormalChange('female', 'min', e.target.value)
+								}
+								disabled={form.female.value.trim() !== ''}
+							/>
+
+							{/* MAX */}
+							<Input
+								placeholder='Max'
+								value={form.female.max}
+								onChange={e =>
+									handleNormalChange('female', 'max', e.target.value)
+								}
+								disabled={form.female.value.trim() !== ''}
+							/>
+
+							{/* VALUE */}
+							<Input
+								placeholder='Qiymat'
+								value={form.female.value}
+								onChange={e =>
+									handleNormalChange('female', 'value', e.target.value)
+								}
+								disabled={
+									(form.female.min && form.female.min !== '0') ||
+									(form.female.max && form.female.max !== '0')
+								}
+							/>
+						</div>
 					</div>
 
 					<DialogFooter>
@@ -432,10 +762,10 @@ export default function AnalysisParamsModal() {
 						</Button>
 						<Button
 							onClick={handleSubmit}
-							disabled={creating}
+							disabled={creating || updating}
 							className='bg-blue-600 text-white'
 						>
-							{creating ? 'Saqlanmoqda...' : 'Saqlash'}
+							{creating || updating ? 'Saqlanmoqda...' : 'Saqlash'}
 						</Button>
 					</DialogFooter>
 				</DialogContent>
