@@ -1,3 +1,4 @@
+import { API_TAGS } from '@/constants/apiTags';
 import { CreateExamReq, ExamResponse } from '.';
 import { baseApi } from '../baseApi';
 import { PATHS } from './path';
@@ -24,23 +25,27 @@ export const examinationApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
+      invalidatesTags: [API_TAGS.EXAMS],
     }),
     getAllExams: builder.query<AllExamRes, AllExamReq>({
       query: (params) => ({
         url: PATHS.ALL_EXAMS,
         params,
       }),
+      providesTags: [API_TAGS.EXAMS, API_TAGS.PRESCRIPTION, API_TAGS.IMAGES],
     }),
     getOneExam: builder.query<ExamRes, string>({
       query: (id) => ({
         url: PATHS.GET_EXAM + id,
       }),
+      providesTags: [API_TAGS.EXAMS, API_TAGS.PRESCRIPTION, API_TAGS.IMAGES],
     }),
     deleteExam: builder.mutation<MutationRes, string>({
       query: (id) => ({
         url: PATHS.DELETE_EXAM + id,
         method: 'DELETE',
       }),
+      invalidatesTags: [API_TAGS.EXAMS],
     }),
     updateExam: builder.mutation<MutationRes, UpdateExamReq>({
       query: ({ id, body }) => ({
@@ -48,8 +53,15 @@ export const examinationApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body,
       }),
+      invalidatesTags: [API_TAGS.EXAMS],
     }),
-
+    completeExams: builder.mutation<MutationRes, string>({
+      query: (id) => ({
+        url: 'examination/complete/' + id,
+        method: 'PATCH',
+      }),
+      invalidatesTags: [API_TAGS.EXAMS],
+    }),
     // prescriptions
 
     createPrescription: builder.mutation<MutationRes, createPrescriptionReq>({
@@ -58,6 +70,7 @@ export const examinationApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
+      invalidatesTags: [API_TAGS.PRESCRIPTION],
     }),
     updatePrescription: builder.mutation<MutationRes, updatePrescriptionReq>({
       query: ({ id, prescription_id, body }) => ({
@@ -66,6 +79,7 @@ export const examinationApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body,
       }),
+      invalidatesTags: [API_TAGS.PRESCRIPTION],
     }),
     deletePrescription: builder.mutation<MutationRes, deletePrescriptionReq>({
       query: ({ id, prescription_id }) => ({
@@ -73,6 +87,7 @@ export const examinationApi = baseApi.injectEndpoints({
           PATHS.CREATE_PRESCRIPTION + id + PATHS.PRESCRIPTION + prescription_id,
         method: 'DELETE',
       }),
+      invalidatesTags: [API_TAGS.PRESCRIPTION],
     }),
 
     // images
@@ -83,6 +98,7 @@ export const examinationApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
+      invalidatesTags: [API_TAGS.IMAGES],
     }),
     removeImages: builder.mutation<reomveimagesRes, imageReq>({
       query: ({ id, body }) => ({
@@ -90,16 +106,10 @@ export const examinationApi = baseApi.injectEndpoints({
         method: 'DELETE',
         body,
       }),
+      invalidatesTags: [API_TAGS.IMAGES],
     }),
 
     //complete exams
-
-    completeExams: builder.mutation<MutationRes, string>({
-      query: (id) => ({
-        url: 'examination/complete/' + id,
-        method: 'PATCH',
-      }),
-    }),
   }),
 });
 
