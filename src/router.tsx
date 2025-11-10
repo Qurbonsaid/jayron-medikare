@@ -2,7 +2,7 @@ import ListIcon from '@/icons/ListIcon'
 import Appointments from '@/pages/Appointments/Appointments'
 import Billing from '@/pages/Billing'
 import Dashboard from '@/pages/Dashboard'
-import Inpatient from '@/pages/Inpatient'
+import Inpatient from '@/pages/Inpatient/Inpatient'
 import LabResults from '@/pages/LabResults'
 import PatientPortal from '@/pages/PatientPortal'
 import PatientProfile from '@/pages/Patients/PatientProfile'
@@ -17,22 +17,21 @@ import NewVisit from './pages/Examination/NewVisit'
 import Prescription from './pages/Examination/Prescription'
 import Visits from './pages/Examination/Visits'
 import AnalysisParamsModal from './pages/AnalysisParamsModal'
-
+import InpatientDetails from "./pages/Rooms/Rooms"
 
 export const routers = [
 	{ path: '/dashboard', element: <Dashboard /> },
-
-
 	{ path: '/patients', element: <Patients /> },
 	{ path: '/patient/:id', element: <PatientProfile /> },
 	{ path: '/new-visit', element: <NewVisit /> },
 	{ path: '/appointments', element: <Appointments /> },
 	{ path: '/prescription', element: <Prescription /> },
 	{ path: '/visits', element: <Visits /> },
-	{path:'/add-diagnostika' , element : <AddDiagnostika/>},
-	{path:'/analysisById/:id' , element : <AnalysisParamsModal/>},
+	{ path: '/add-diagnostika', element: <AddDiagnostika /> },
+	{ path: '/analysisById/:id', element: <AnalysisParamsModal /> },
 	{ path: '/lab-order', element: <LabOrder /> },
 	{ path: '/inpatient', element: <Inpatient /> },
+	{ path: '/inpatient/:id', element: <InpatientDetails /> },
 	{ path: '/lab-results', element: <LabResults /> },
 	{ path: '/billing', element: <Billing /> },
 	{ path: '/reports', element: <Reports /> },
@@ -79,6 +78,11 @@ export const navigator = [
 		title: 'Рецептлар',
 	},
 	{
+		path: '/visits',
+		to: null,
+		title: 'Кўриклар',
+	},
+	{
 		path: '/add-diagnostika',
 		to: null,
 		title: 'Диагностика қўшиш',
@@ -96,6 +100,11 @@ export const navigator = [
 	{
 		path: '/inpatient',
 		to: null,
+		title: 'Стационар',
+	},
+	{
+		path: '/inpatient/:id',
+		to: '/inpatient',
 		title: 'Стационар',
 	},
 	{
