@@ -3,41 +3,23 @@ import {
   Building,
   Building2,
   Edit,
-  Eye,
-  Filter,
   MoreHorizontal,
   Plus,
-  Search,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { useGetCorpusesQuery } from "@/app/api/corpusApi";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Corpuses } from "@/app/api/corpusApi/types";
 import { DeleteWarnBuilding, NewBuilding, UpdatedBuilding } from "./components";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconLeft, IconRight } from "react-day-picker";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
@@ -47,7 +29,7 @@ const Inpatient = () => {
   const [showUpdateBuilding, setShowUpdateBuilding] = useState(false);
   const [oneCorpus, setOneCorpus] = useState({});
   const navigate = useNavigate();
-  const [tableHead, setTableHead] = useState<string[]>([
+  const [tableHead] = useState<string[]>([
     "N/#",
     "Korpus raqami",
     "Xonalar soni",
@@ -57,7 +39,7 @@ const Inpatient = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [corpusNumber, setCorpusNumber] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(10);
   const { data: getCorpuses, isLoading } = useGetCorpusesQuery({
     page: currentPage,
     limit: itemsPerPage,

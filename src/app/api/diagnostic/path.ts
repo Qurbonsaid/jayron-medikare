@@ -4,5 +4,8 @@ export enum PATHS {
 	ANALYSIS_BY_ID="analysis/get-one",
 	ANALYSIS_UPDATE="analysis/update",
 	ANALYSIS_DELETE="analysis/delete",
-	PARAMETER_CREATE="analysis-parameter/create"
+	PARAMETER_CREATE="analysis-parameter/create",
+	PARAMETER_UPDATE="analysis-parameter/update",
+	PARAMETER_DELETE="analysis-parameter/delete"
+
 }
