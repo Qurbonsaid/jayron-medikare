@@ -5,5 +5,5 @@ export enum API_TAGS {
   PATIENTS='Patient',
   EXAMS='Exams',
   PRESCRIPTION='Prescription',
-  IMAGES='images'
+  IMAGES='Images'
 }
