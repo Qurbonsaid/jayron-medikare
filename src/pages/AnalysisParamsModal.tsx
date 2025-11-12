@@ -8,11 +8,10 @@ import {
 	DialogTitle,
 	DialogFooter,
 	DialogTrigger,
-	DialogDescription,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import { Edit, Trash2, ArrowLeft, Phone, Eye } from 'lucide-react'
+import { Edit, Trash2, ArrowLeft } from 'lucide-react'
 import {
 	useGetDiagnosticByIdQuery,
 	useCreateAnalysisParameterMutation,
@@ -25,6 +24,7 @@ import {
 } from '@/app/api/diagnostic/types'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
 import { Label } from '@/components/ui/label'
+import { addParameterSchema } from '@/validation/validationAddDiagnostic'
 
 interface FormState {
 	parameter_code: string
@@ -34,6 +34,8 @@ interface FormState {
 	male: { min: string; max: string; value: string }
 	female: { min: string; max: string; value: string }
 	general: { min: string; max: string; value: string }
+	value_type: 'NUMBER' | 'STRING'
+	gender_type: 'GENERAL' | 'MALE_FEMALE'
 }
 
 export default function AnalysisParamsModal() {
@@ -42,6 +44,7 @@ export default function AnalysisParamsModal() {
 	const { data, isLoading, isError } = useGetDiagnosticByIdQuery(id!)
 	const [params, setParams] = useState<AnalysisParameter[]>([])
 	const [open, setOpen] = useState(false)
+	const [errors, setErrors] = useState<Record<string, string>>({})
 	const [editingParam, setEditingParam] = useState<AnalysisParameter | null>(
 		null
 	)
@@ -54,6 +57,8 @@ export default function AnalysisParamsModal() {
 		male: { min: '', max: '', value: '' },
 		female: { min: '', max: '', value: '' },
 		general: { min: '', max: '', value: '' },
+		value_type: 'NUMBER',
+		gender_type: 'MALE_FEMALE',
 	})
 
 	const [createParameter, { isLoading: creating }] =
@@ -86,34 +91,44 @@ export default function AnalysisParamsModal() {
 	) => {
 		setForm(prev => {
 			const updated = { ...prev[type], [key]: value }
-			if (key === 'value') {
-				if (value.trim() !== '') {
-					updated.min = ''
-					updated.max = ''
-				}
-			} else {
-				if (value.trim() !== '') {
-					updated.value = ''
-				}
+
+			let newValueType = prev.value_type
+
+			if (key === 'value' && value.trim() !== '') {
+				updated.min = ''
+				updated.max = ''
+				newValueType = 'STRING' // value kiritilgan, STRING
+			} else if ((key === 'min' || key === 'max') && value.trim() !== '') {
+				updated.value = ''
+				newValueType = 'NUMBER' // min/max kiritilgan, NUMBER
 			}
-			return { ...prev, [type]: updated }
+
+			return { ...prev, [type]: updated, value_type: newValueType }
 		})
+	}
+
+	const handleGenderTypeChange = (type: 'GENERAL' | 'MALE_FEMALE') => {
+		setForm(prev => ({ ...prev, gender_type: type }))
 	}
 
 	const buildRange = (range: { min: string; max: string; value: string }) => {
 		if (range.value.trim() !== '') return { min: 0, max: 0, value: range.value }
-		const min = Number(range.min) || 0
-		const max = Number(range.max) || 0
-		return { min, max, value: '' }
+		return {
+			min: Number(range.min) || 0,
+			max: Number(range.max) || 0,
+			value: '',
+		}
 	}
 
 	const openEdit = (param: AnalysisParameter) => {
-		setEditingParam(null) // eski paramni tozalaymiz
+		setEditingParam(null)
 		setForm({
 			parameter_code: param.parameter_code,
 			parameter_name: param.parameter_name,
 			unit: param.unit,
 			description: param.description,
+			value_type: param.value_type as 'NUMBER' | 'STRING',
+			gender_type: param.gender_type as 'GENERAL' | 'MALE_FEMALE',
 			male: {
 				min: String(param.normal_range.male.min),
 				max: String(param.normal_range.male.max),
@@ -130,30 +145,18 @@ export default function AnalysisParamsModal() {
 				value: param.normal_range.general.value,
 			},
 		})
-		setEditingParam(param) // keyin yangi paramni set qilamiz
+		setEditingParam(param)
 		setOpen(true)
 	}
 
 	const handleSubmit = async () => {
 		if (!id) return
+		setErrors({})
 
-		// Check if male/female values are identical → assign to general
-		let generalRange = buildRange(form.general)
-		if (
-			form.male.value === form.female.value &&
-			form.male.value.trim() !== ''
-		) {
-			generalRange = { min: 0, max: 0, value: form.male.value }
-		} else if (
-			form.male.min === form.female.min &&
-			form.male.max === form.female.max &&
-			(form.male.min !== '' || form.male.max !== '')
-		) {
-			generalRange = {
-				min: Number(form.male.min),
-				max: Number(form.male.max),
-				value: '',
-			}
+		let generalRange = { min: 0, max: 0, value: '' }
+
+		if (form.gender_type === 'GENERAL') {
+			generalRange = buildRange(form.general)
 		}
 
 		const payload: AnalysisParamCreateRequest = {
@@ -167,6 +170,8 @@ export default function AnalysisParamsModal() {
 				female: buildRange(form.female),
 				general: generalRange,
 			},
+			value_type: form.value_type,
+			gender_type: form.gender_type,
 		}
 
 		await handleRequest({
@@ -191,6 +196,7 @@ export default function AnalysisParamsModal() {
 					])
 					toast.success('Parametr muvaffaqiyatli qo‘shildi 🎉')
 				}
+
 				setOpen(false)
 				setEditingParam(null)
 				setForm({
@@ -201,6 +207,8 @@ export default function AnalysisParamsModal() {
 					male: { min: '', max: '', value: '' },
 					female: { min: '', max: '', value: '' },
 					general: { min: '', max: '', value: '' },
+					value_type: 'NUMBER',
+					gender_type: 'MALE_FEMALE',
 				})
 			},
 			onError: () => {
@@ -209,6 +217,49 @@ export default function AnalysisParamsModal() {
 		})
 	}
 
+	// Min va Max inputlari uchun
+	const isMinMaxDisabled = (range: {
+		min: string
+		max: string
+		value: string
+	}) => {
+		return range.value.trim() !== '' // value mavjud bo'lsa min/max disabled
+	}
+
+	// Value inputi uchun
+	const isValueDisabled = (range: {
+		min: string
+		max: string
+		value: string
+	}) => {
+		// min va max faqat 0 yoki bo'sh bo'lsa value ochiq bo'lsin
+		const min = Number(range.min) !== 0
+		const max = Number(range.max) !== 0
+		return min || max
+	}
+
+	const onSaveParameter = () => {
+		const result = addParameterSchema().safeParse(form)
+		if (!result.success) {
+			const newErrors = {}
+			result.error.errors.forEach(err => {
+				newErrors[err.path[0]] = err.message
+			})
+			setErrors(newErrors)
+			console.log('onSaveParameter da xatolik bor')
+			return
+		}
+		console.log('onSaveParameter ishladi')
+		handleSubmit()
+	}
+
+	useEffect(() => {
+		if (data?.data) {
+			console.log('getById data:', data.data)
+			setParams(data.data.analysis_parameters)
+		}
+	}, [data])
+
 	if (isLoading) return <p className='p-4'>Yuklanmoqda...</p>
 	if (isError || !data)
 		return <p className='p-4 text-red-500'>Xatolik yuz berdi!</p>
@@ -216,7 +267,7 @@ export default function AnalysisParamsModal() {
 	return (
 		<div className='min-h-screen bg-background flex flex-col'>
 			<header className='bg-card border-b sticky top-0 z-10'>
-				<div className='w-full px-4 sm:px-6 py-4 flex flex-row flex-wrap items-center justify-between gap-3'>
+				<div className='w-full px-4 sm:px-6 py-4 flex items-center justify-between gap-3'>
 					<div className='flex items-center gap-3 min-w-0'>
 						<Button variant='ghost' size='icon' onClick={() => navigate(-1)}>
 							<ArrowLeft className='w-5 h-5' />
@@ -233,7 +284,7 @@ export default function AnalysisParamsModal() {
 					<Button
 						className='bg-blue-600 hover:bg-blue-700 text-white'
 						onClick={() => {
-							setEditingParam(null) // dialog ochilishidan oldin reset qilamiz
+							setEditingParam(null)
 							setForm({
 								parameter_code: '',
 								parameter_name: '',
@@ -242,6 +293,8 @@ export default function AnalysisParamsModal() {
 								male: { min: '', max: '', value: '' },
 								female: { min: '', max: '', value: '' },
 								general: { min: '', max: '', value: '' },
+								value_type: 'NUMBER',
+								gender_type: 'MALE_FEMALE',
 							})
 							setOpen(true)
 						}}
@@ -270,7 +323,7 @@ export default function AnalysisParamsModal() {
 							key={param._id}
 							className='rounded-2xl shadow-md border border-gray-100 overflow-hidden'
 						>
-							<div className='p-4 space-y-3'>
+							<div className='p-3 space-y-2'>
 								{/* Header */}
 								<div className='flex items-start justify-between'>
 									<div>
@@ -308,13 +361,13 @@ export default function AnalysisParamsModal() {
 								</div>
 
 								{/* Actions */}
-								<div className='flex gap-2 pt-2'>
+								{/* <div className='flex gap-2 pt-1'>
 									<Button
 										variant='outline'
-										className='flex-1 flex items-center justify-center gap-2 text-sm'
+										className='flex-1 flex items-center justify-center gap-1 text-xs'
 										onClick={() => openEdit(param)}
 									>
-										<Edit size={16} />
+										<Edit size={14} />
 										Tahrirlash
 									</Button>
 
@@ -327,10 +380,10 @@ export default function AnalysisParamsModal() {
 										<DialogTrigger asChild>
 											<Button
 												variant='outline'
-												className='flex-1 flex items-center justify-center gap-2 text-red-600 border-red-300 hover:bg-red-50 text-sm'
+												className='flex-1 flex items-center justify-center gap-1 text-red-600 border-red-300 hover:bg-red-50 text-xs'
 												onClick={() => setDeleteId(param._id)}
 											>
-												<Trash2 size={16} />
+												<Trash2 size={14} />
 												O‘chirish
 											</Button>
 										</DialogTrigger>
@@ -348,6 +401,62 @@ export default function AnalysisParamsModal() {
 												</Button>
 												<Button
 													className='bg-red-600 text-white'
+													onClick={() => handleDelete(param._id)}
+												>
+													Ha
+												</Button>
+											</DialogFooter>
+										</DialogContent>
+									</Dialog>
+								</div> */}
+								{/* Actions */}
+								<div className='flex gap-1.5 pt-1'>
+									<Button
+										variant='outline'
+										size='sm'
+										className='flex-1 flex items-center justify-center gap-1 text-[11px] py-1.5 h-7'
+										onClick={() => openEdit(param)}
+									>
+										<Edit size={12} />
+										Tahrirlash
+									</Button>
+
+									<Dialog
+										open={deleteId === param._id}
+										onOpenChange={isOpen => {
+											if (!isOpen) setDeleteId(null)
+										}}
+									>
+										<DialogTrigger asChild>
+											<Button
+												variant='outline'
+												size='sm'
+												className='flex-1 flex items-center justify-center gap-1 text-red-600 border-red-300 hover:bg-red-50 text-[11px] py-1.5 h-7'
+												onClick={() => setDeleteId(param._id)}
+											>
+												<Trash2 size={12} />
+												O‘chirish
+											</Button>
+										</DialogTrigger>
+
+										<DialogContent className='max-w-xs rounded-xl'>
+											<DialogTitle className='text-sm'>
+												Parametr o‘chirish
+											</DialogTitle>
+											<p className='text-xs text-muted-foreground'>
+												Rostan ham ushbu parameterni o‘chirmoqchimisiz?
+											</p>
+											<DialogFooter className='flex justify-end gap-2 pt-2'>
+												<Button
+													variant='outline'
+													size='sm'
+													className='h-7 text-xs'
+												>
+													Yo‘q
+												</Button>
+												<Button
+													size='sm'
+													className='bg-red-600 text-white h-7 text-xs'
 													onClick={() => handleDelete(param._id)}
 												>
 													Ha
@@ -431,7 +540,7 @@ export default function AnalysisParamsModal() {
 													<Button
 														size='icon'
 														variant='outline'
-														className='h-8 w-8'
+														className='h-7 w-7'
 														onClick={() => openEdit(param)}
 													>
 														<Edit size={16} />
@@ -448,7 +557,7 @@ export default function AnalysisParamsModal() {
 															<Button
 																size='icon'
 																variant='outline'
-																className='h-8 w-8 text-red-500 border-red-300 hover:bg-red-50'
+																className='h-7 w-7 text-red-500 border-red-300 hover:bg-red-50'
 																onClick={() => setDeleteId(param._id)}
 															>
 																<Trash2 size={16} />
@@ -483,108 +592,19 @@ export default function AnalysisParamsModal() {
 							</tbody>
 						</table>
 					</div>
-
-					{/* Pagination */}
-					{/* <div className='px-4 xl:px-6 py-3 xl:py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3'>
-											<div className='text-xs xl:text-sm text-muted-foreground'>
-												{patientdata.pagination.prev_page
-													? (patientdata.pagination.page - 1) *
-															patientdata.pagination.limit +
-														1
-													: 1}{' '}
-												- {patientdata.pagination.total_items} дан{' '}
-												{patientdata.pagination.limit} та кўрсатилмоқда
-											</div>
-											<div className='flex gap-2'>
-												<Button
-													variant='outline'
-													size='sm'
-													disabled={currentPage === 1}
-													onClick={() => setCurrentPage(currentPage - 1)}
-													className='text-xs xl:text-sm'
-												>
-													Олдинги
-												</Button>
-												{(() => {
-													const pages = [];
-													const showPages = new Set<number>();
-			
-													// Har doim 1-sahifani ko'rsat
-													showPages.add(1);
-			
-													// Har doim oxirgi sahifani ko'rsat
-													if (patientdata.pagination.total_pages > 1) {
-														showPages.add(patientdata.pagination.total_pages);
-													}
-			
-													// Joriy sahifa va uning atrofidagi sahifalarni ko'rsat
-													for (
-														let i = Math.max(2, currentPage - 1);
-														i <=
-														Math.min(
-															patientdata.pagination.total_pages - 1,
-															currentPage + 1
-														);
-														i++
-													) {
-														showPages.add(i);
-													}
-			
-													const sortedPages = Array.from(showPages).sort(
-														(a, b) => a - b
-													);
-			
-													sortedPages.forEach((page, index) => {
-														// Ellipsis qo'shish agar sahifalar orasida bo'sh joy bo'lsa
-														if (index > 0 && sortedPages[index - 1] !== page - 1) {
-															pages.push(
-																<span
-																	key={`ellipsis-${page}`}
-																	className='px-2 flex items-center text-xs xl:text-sm'
-																>
-																	...
-																</span>
-															);
-														}
-			
-														// Sahifa tugmasi
-														pages.push(
-															<Button
-																key={page}
-																variant='outline'
-																size='sm'
-																onClick={() => setCurrentPage(page)}
-																className={`text-xs xl:text-sm ${
-																	page === currentPage
-																		? 'bg-primary text-white hover:bg-primary/60 hover:text-white'
-																		: ''
-																}`}
-															>
-																{page}
-															</Button>
-														);
-													});
-			
-													return pages;
-												})()}
-												<Button
-													variant='outline'
-													size='sm'
-													disabled={
-														currentPage === patientdata.pagination.total_pages
-													}
-													onClick={() => setCurrentPage(currentPage + 1)}
-													className='text-xs xl:text-sm'
-												>
-													Кейинги
-												</Button>
-											</div>
-										</div> */}
 				</Card>
 			</div>
 
-			{/* Create / Update Dialog */}
-			<Dialog open={open} onOpenChange={setOpen}>
+			{/* Dialog */}
+			<Dialog
+				open={open}
+				onOpenChange={open => {
+					setOpen(open)
+					if (!open) {
+						setErrors({})
+					}
+				}}
+			>
 				<DialogContent className='w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'>
 					<DialogHeader>
 						<DialogTitle>
@@ -593,6 +613,7 @@ export default function AnalysisParamsModal() {
 								: 'Yangi parametr qo‘shish'}
 						</DialogTitle>
 					</DialogHeader>
+
 					<div className='space-y-3'>
 						<Label>Parametr kodi</Label>
 						<Input
@@ -601,6 +622,9 @@ export default function AnalysisParamsModal() {
 							onChange={handleChange}
 							placeholder='Cod kiriting'
 						/>
+						{errors.parameter_code && (
+							<p className='text-red-500 text-sm'>{errors.parameter_code}</p>
+						)}
 						<Label>Parametr nomi</Label>
 						<Input
 							name='parameter_name'
@@ -608,6 +632,9 @@ export default function AnalysisParamsModal() {
 							onChange={handleChange}
 							placeholder='Nomini kiriting'
 						/>
+						{errors.parameter_name && (
+							<p className='text-red-500 text-sm'>{errors.parameter_name}</p>
+						)}
 						<Label>Parametr birligi</Label>
 						<Input
 							name='unit'
@@ -615,6 +642,9 @@ export default function AnalysisParamsModal() {
 							onChange={handleChange}
 							placeholder='Birlikni kiriting'
 						/>
+						{errors.unit && (
+							<p className='text-red-500 text-sm'>{errors.unit}</p>
+						)}
 						<Label>Parametrga tavsif bering</Label>
 						<Input
 							name='description'
@@ -622,146 +652,147 @@ export default function AnalysisParamsModal() {
 							onChange={handleChange}
 							placeholder='Izoh qoldiring'
 						/>
+						{errors.description && (
+							<p className='text-red-500 text-sm'>{errors.description}</p>
+						)}
 
-						{/* <p className='font-medium text-sm mt-2'>Erkak:</p>
-						<div className='grid grid-cols-3 gap-2'>
-							<Input
-								placeholder='Min'
-								value={form.male.min}
-								onChange={e =>
-									handleNormalChange('male', 'min', e.target.value)
-								}
-								disabled={form.male.value.trim() !== ''}
-							/>
-							<Input
-								placeholder='Max'
-								value={form.male.max}
-								onChange={e =>
-									handleNormalChange('male', 'max', e.target.value)
-								}
-								disabled={form.male.value.trim() !== ''}
-							/>
-							<Input
-								placeholder='Qiymat'
-								value={form.male.value}
-								onChange={e =>
-									handleNormalChange('male', 'value', e.target.value)
-								}
-								disabled={
-									form.male.min.trim() !== '' || form.male.max.trim() !== ''
-								}
-							/>
-						</div>
+						{/* Gender type radios — faqat create holatida */}
+						{!editingParam && (
+							<div className='flex gap-4'>
+								<label className='flex items-center gap-1'>
+									<input
+										type='radio'
+										checked={form.gender_type === 'MALE_FEMALE'}
+										onChange={() => handleGenderTypeChange('MALE_FEMALE')}
+									/>
+									Erkak/Ayol
+								</label>
+								<label className='flex items-center gap-1'>
+									<input
+										type='radio'
+										checked={form.gender_type === 'GENERAL'}
+										onChange={() => handleGenderTypeChange('GENERAL')}
+									/>
+									Umumiy
+								</label>
+							</div>
+						)}
 
-						<p className='font-medium text-sm mt-2'>Ayol:</p>
-						<div className='grid grid-cols-3 gap-2'>
-							<Input
-								placeholder='Min'
-								value={form.female.min}
-								onChange={e =>
-									handleNormalChange('female', 'min', e.target.value)
-								}
-								disabled={form.female.value.trim() !== ''}
-							/>
-							<Input
-								placeholder='Max'
-								value={form.female.max}
-								onChange={e =>
-									handleNormalChange('female', 'max', e.target.value)
-								}
-								disabled={form.female.value.trim() !== ''}
-							/>
-							<Input
-								placeholder='Qiymat'
-								value={form.female.value}
-								onChange={e =>
-									handleNormalChange('female', 'value', e.target.value)
-								}
-								disabled={
-									form.female.min.trim() !== '' || form.female.max.trim() !== ''
-								}
-							/>
-						</div> */}
+						{/* Inputs */}
+						{form.gender_type === 'MALE_FEMALE' && (
+							<>
+								<Label>Erkak</Label>
+								<div className='grid grid-cols-3 gap-2'>
+									<Input
+										placeholder='Min'
+										value={form.male.min}
+										type='number'
+										onChange={e =>
+											handleNormalChange('male', 'min', e.target.value)
+										}
+										disabled={isMinMaxDisabled(form.male)}
+									/>
+									<Input
+										placeholder='Max'
+										value={form.male.max}
+										type='number'
+										onChange={e =>
+											handleNormalChange('male', 'max', e.target.value)
+										}
+										disabled={isMinMaxDisabled(form.male)}
+									/>
+									<Input
+										placeholder='Qiymat'
+										value={form.male.value}
+										type='string'
+										onChange={e =>
+											handleNormalChange('male', 'value', e.target.value)
+										}
+										disabled={isValueDisabled(form.male)}
+									/>
+								</div>
 
-						<p className='font-medium text-sm mt-2'>Erkak:</p>
-						<div className='grid grid-cols-3 gap-2'>
-							{/* MIN */}
-							<Input
-								placeholder='Min'
-								value={form.male.min}
-								onChange={e =>
-									handleNormalChange('male', 'min', e.target.value)
-								}
-								disabled={form.male.value.trim() !== ''}
-							/>
+								<Label>Ayol</Label>
+								<div className='grid grid-cols-3 gap-2'>
+									<Input
+										placeholder='Min'
+										value={form.female.min}
+										type='number'
+										onChange={e =>
+											handleNormalChange('female', 'min', e.target.value)
+										}
+										disabled={isMinMaxDisabled(form.female)}
+									/>
+									<Input
+										placeholder='Max'
+										value={form.female.max}
+										type='number'
+										onChange={e =>
+											handleNormalChange('female', 'max', e.target.value)
+										}
+										disabled={isMinMaxDisabled(form.female)}
+									/>
+									<Input
+										placeholder='Qiymat'
+										value={form.female.value}
+										type='string'
+										onChange={e =>
+											handleNormalChange('female', 'value', e.target.value)
+										}
+										disabled={isValueDisabled(form.female)}
+									/>
+								</div>
+							</>
+						)}
 
-							{/* MAX */}
-							<Input
-								placeholder='Max'
-								value={form.male.max}
-								onChange={e =>
-									handleNormalChange('male', 'max', e.target.value)
-								}
-								disabled={form.male.value.trim() !== ''}
-							/>
-
-							{/* VALUE */}
-							<Input
-								placeholder='Qiymat'
-								value={form.male.value}
-								onChange={e =>
-									handleNormalChange('male', 'value', e.target.value)
-								}
-								disabled={
-									(form.male.min && form.male.min !== '0') ||
-									(form.male.max && form.male.max !== '0')
-								}
-							/>
-						</div>
-
-						<p className='font-medium text-sm mt-2'>Ayol:</p>
-						<div className='grid grid-cols-3 gap-2'>
-							{/* MIN */}
-							<Input
-								placeholder='Min'
-								value={form.female.min}
-								onChange={e =>
-									handleNormalChange('female', 'min', e.target.value)
-								}
-								disabled={form.female.value.trim() !== ''}
-							/>
-
-							{/* MAX */}
-							<Input
-								placeholder='Max'
-								value={form.female.max}
-								onChange={e =>
-									handleNormalChange('female', 'max', e.target.value)
-								}
-								disabled={form.female.value.trim() !== ''}
-							/>
-
-							{/* VALUE */}
-							<Input
-								placeholder='Qiymat'
-								value={form.female.value}
-								onChange={e =>
-									handleNormalChange('female', 'value', e.target.value)
-								}
-								disabled={
-									(form.female.min && form.female.min !== '0') ||
-									(form.female.max && form.female.max !== '0')
-								}
-							/>
-						</div>
+						{form.gender_type === 'GENERAL' && (
+							<>
+								<Label>Umumiy</Label>
+								<div className='grid grid-cols-3 gap-2'>
+									<Input
+										placeholder='Min'
+										value={form.general.min}
+										type='number'
+										onChange={e =>
+											handleNormalChange('general', 'min', e.target.value)
+										}
+										disabled={isMinMaxDisabled(form.general)}
+									/>
+									<Input
+										placeholder='Max'
+										value={form.general.max}
+										type='number'
+										onChange={e =>
+											handleNormalChange('general', 'max', e.target.value)
+										}
+										disabled={isMinMaxDisabled(form.general)}
+									/>
+									<Input
+										placeholder='Qiymat'
+										value={form.general.value}
+										type='string'
+										onChange={e =>
+											handleNormalChange('general', 'value', e.target.value)
+										}
+										disabled={isValueDisabled(form.general)}
+									/>
+								</div>
+							</>
+						)}
 					</div>
 
 					<DialogFooter>
-						<Button variant='outline' onClick={() => setOpen(false)}>
+						<Button
+							variant='outline'
+							onClick={() => {
+								setOpen(false)
+								setErrors({})
+							}}
+						>
 							Bekor qilish
 						</Button>
 						<Button
-							onClick={handleSubmit}
+							onClick={onSaveParameter}
 							disabled={creating || updating}
 							className='bg-blue-600 text-white'
 						>

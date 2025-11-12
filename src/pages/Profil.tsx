@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, User, Mail, Phone, Shield } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Shield, Edit, Trash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMeQuery, useUpdateMeMutation } from '@/app/api/authApi';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
@@ -161,22 +161,24 @@ export default function ProfilePage() {
             {menuOpen && (
               <div className='absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-20'>
                 <button
-                  className='w-full text-left px-4 py-2 hover:bg-gray-100'
+                  className='flex gap-2 items-center w-full text-left px-3 py-2 hover:bg-gray-100'
                   onClick={() => {
                     setEditOpen(true);
                     setMenuOpen(false);
                   }}
                 >
-                  Tahrirlash
+                  <span><Edit size={12} /></span>
+                 <span> Tahrirlash</span>
                 </button>
                 <button
-                  className='w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600'
+                  className='flex gap-2 items-center w-full text-left px-3 py-2 hover:bg-gray-100 text-red-600'
                   onClick={() => {
                     setLogoutOpen(true);
                     setMenuOpen(false);
                   }}
                 >
-                  Logout
+                  <span><Trash size={13}/></span>
+                  <span>Logout</span>
                 </button>
               </div>
             )}
