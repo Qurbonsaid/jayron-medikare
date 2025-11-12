@@ -22,6 +22,9 @@ import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
 import { toast } from 'sonner'
 import { Label } from '@/components/ui/label'
 
+import { addDiagnosticSchema } from '@/validation/validationAddDiagnostic/validationAddDiagnostic'
+import { CreateAnalysisRequest } from '@/app/api/diagnostic/types'
+
 export default function DiagnosticsPage() {
 	const navigate = useNavigate()
 	const [searchCode, setSearchCode] = useState('')
@@ -33,6 +36,7 @@ export default function DiagnosticsPage() {
 	const [newDescription, setNewDescription] = useState('')
 	const [editingId, setEditingId] = useState<string | null>(null)
 	const [deleteId, setDeleteId] = useState<string | null>(null)
+	const [errors, setErrors] = useState<Record<string, string>>({})
 
 	const { data, isLoading, isError } = useGetAllDiagnosticsQuery()
 	const [createDiagnostic, { isLoading: isCreating }] =
@@ -43,24 +47,41 @@ export default function DiagnosticsPage() {
 		useDeleteDiagnosticMutation()
 	const handleRequest = useHandleRequest()
 
-	// Search filter
+	// 🔍 Search filter
 	const filtered = data?.data.filter(
 		item =>
 			item.code.toLowerCase().includes(searchCode.toLowerCase()) &&
 			item.name.toLowerCase().includes(searchName.toLowerCase())
 	)
 
-	// Qo‘shish yoki Tahrirlash handler
+	// 💾 Qo‘shish yoki Tahrirlash handler
 	const handleSave = async () => {
-		if (!newCode || !newName)
-			return toast.error('Code va Name kiritilishi shart!')
+		setErrors({}) // avvalgi xatolarni tozalaymiz
+
+		const schema = addDiagnosticSchema()
+		const result = schema.safeParse({
+			code: newCode,
+			name: newName,
+			description: newDescription,
+		})
+
+		if (!result.success) {
+			const newErrors: Record<string, string> = {}
+			result.error.errors.forEach(err => {
+				newErrors[err.path[0]] = err.message
+			})
+			setErrors(newErrors)
+			return
+		}
+
+		const data = result.data // ✅ faqat valid bo‘lgan holatda bu obyekt ishlatiladi
 
 		if (editingId) {
 			await handleRequest({
 				request: async () =>
 					updateDiagnostic({
 						id: editingId,
-						body: { code: newCode, name: newName, description: newDescription },
+						body: data as CreateAnalysisRequest, // ✅ result emas, data yuboramiz
 					}).unwrap(),
 				onSuccess: res => {
 					toast.success(res.message)
@@ -68,25 +89,21 @@ export default function DiagnosticsPage() {
 					clearForm()
 				},
 				onError: error => {
-					toast.error('Tahrirlashda xatolik')
+					toast.error('Tahrirlashда хатолик')
 					console.error(error)
 				},
 			})
 		} else {
 			await handleRequest({
 				request: async () =>
-					createDiagnostic({
-						code: newCode,
-						name: newName,
-						description: newDescription,
-					}).unwrap(),
+					createDiagnostic(data as CreateAnalysisRequest).unwrap(), // ✅ data yuboramiz
 				onSuccess: res => {
 					toast.success(res.message)
 					setIsDialogOpen(false)
 					clearForm()
 				},
 				onError: error => {
-					toast.error('Qo‘shishda xatolik')
+					toast.error('Қўшишда хатолик')
 					console.error(error)
 				},
 			})
@@ -143,7 +160,7 @@ export default function DiagnosticsPage() {
 						onChange={e => setSearchCode(e.target.value)}
 						className='w-full sm:w-64'
 					/>
-          
+
 					<Input
 						placeholder='Tahlil nomi bo‘yicha qidirish...'
 						value={searchName}
@@ -154,16 +171,24 @@ export default function DiagnosticsPage() {
 				<Button
 					className='bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2'
 					onClick={() => {
-            setIsDialogOpen(true)
-            clearForm()
-          }}
+						setIsDialogOpen(true)
+						clearForm()
+					}}
 				>
 					<Plus size={18} /> Qo‘shish
 				</Button>
 			</div>
 
 			{/* CREATE / EDIT DIALOG */}
-			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+			<Dialog
+				open={isDialogOpen}
+				onOpenChange={open => {
+					setIsDialogOpen(open)
+					if (!open) {
+						setErrors({})
+					}
+				}}
+			>
 				<DialogContent className='w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'>
 					<DialogHeader>
 						<DialogTitle>
@@ -171,27 +196,41 @@ export default function DiagnosticsPage() {
 						</DialogTitle>
 					</DialogHeader>
 					<div className='flex flex-col gap-3 mt-2'>
-						<Label>Tahlil kodi</Label>
+						<Label>Таҳлил коди</Label>
 						<Input
-							placeholder='Codi kiriting'
+							placeholder='Кодни киритинг'
 							value={newCode}
 							onChange={e => setNewCode(e.target.value)}
 						/>
-						<Label>Tahlil nomi</Label>
+						{errors.code && (
+							<p className='text-red-500 text-sm'>{errors.code}</p>
+						)}
+
+						<Label>Таҳлил номи</Label>
 						<Input
-							placeholder='Nomini kiriting'
+							placeholder='Номини киритинг'
 							value={newName}
 							onChange={e => setNewName(e.target.value)}
 						/>
-						<Label>Tahlil ta'rifi</Label>
+						{errors.name && (
+							<p className='text-red-500 text-sm'>{errors.name}</p>
+						)}
+
+						<Label>Таҳлил тавсифи</Label>
 						<Input
-							placeholder='Tarif bering ...'
+							placeholder='Тавсиф киритинг (ихтиёрий)'
 							value={newDescription}
 							onChange={e => setNewDescription(e.target.value)}
 						/>
+						{errors.description && (
+							<p className='text-red-500 text-sm'>{errors.description}</p>
+						)}
 					</div>
 					<DialogFooter className='mt-4'>
-						<Button variant='outline' onClick={() => setIsDialogOpen(false)}>
+						<Button variant='outline' onClick={() => {
+							setIsDialogOpen(false)
+							setErrors({})
+							}}>
 							Bekor qilish
 						</Button>
 						<Button
@@ -209,11 +248,15 @@ export default function DiagnosticsPage() {
 			<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
 				<DialogContent className='w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'>
 					<DialogTitle>Tahlilni o‘chirish</DialogTitle>
-					<DialogDescription>Rostan ham ushbu tahlil o‘chirilsinmi?</DialogDescription>
+					<DialogDescription>
+						Rostan ham ushbu tahlil o‘chirilsinmi?
+					</DialogDescription>
 					<DialogFooter className='flex justify-end gap-2'>
 						<Button
 							variant='outline'
-							onClick={() => setIsDeleteDialogOpen(false)}
+							onClick={() => {
+								setIsDeleteDialogOpen(false)
+							}}
 						>
 							Yo‘q
 						</Button>

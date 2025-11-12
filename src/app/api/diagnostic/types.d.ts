@@ -13,6 +13,8 @@ export type AnalysisParameter = {
 	unit: string
 	normal_range: NormalRange
 	description: string
+	value_type: number | string,
+  gender_type: GENERAL | MALE_FEMALE,
 }
 
 // 🔹 Asosiy tahlil obyekt
@@ -88,4 +90,6 @@ export type AnalysisParamCreateRequest = {
   unit: string
   normal_range: NormalRange
   description?: string
+  value_type: 'NUMBER' | 'STRING'
+  gender_type: 'GENERAL' | 'MALE_FEMALE'
 }
