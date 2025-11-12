@@ -82,16 +82,11 @@ const customBaseQuery: BaseQueryFn<
   // Check for token expiration or authentication errors
   if ('error' in result) {
     const error = result.error as any;
-    const errorMessage = error?.data?.message || error?.data?.error || '';
     const statusCode = error?.status;
 
     // Check if token is expired or invalid
     if (
-      statusCode === 401 ||
-      errorMessage.toLowerCase().includes('token') ||
-      errorMessage.toLowerCase().includes('expired') ||
-      errorMessage.toLowerCase().includes('unauthorized') ||
-      errorMessage.toLowerCase().includes('invalid token')
+      statusCode === 401
     ) {
       // Clear authentication tokens
       clearAuthTokens();
