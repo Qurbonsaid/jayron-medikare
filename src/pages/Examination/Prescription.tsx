@@ -1,5 +1,6 @@
 import {
   useCreatePrescriptionMutation,
+  useDeletePrescriptionMutation,
   useGetAllExamsQuery,
   useGetOneExamQuery,
 } from '@/app/api/examinationApi/examinationApi';
@@ -29,6 +30,7 @@ interface Medication {
   dosage: string;
   frequency: string;
   duration: string;
+  instructions: string;
 }
 
 interface ValidationErrors {
@@ -37,12 +39,12 @@ interface ValidationErrors {
     dosage?: boolean;
     frequency?: boolean;
     duration?: boolean;
+    instructions?: boolean;
   };
 }
 
 interface FormValidationErrors {
   medications: ValidationErrors;
-  instructions?: boolean;
 }
 
 const Prescription = () => {
@@ -50,10 +52,8 @@ const Prescription = () => {
   const location = useLocation();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [allergyWarning, setAllergyWarning] = useState(false);
-  const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [formErrors, setFormErrors] = useState<FormValidationErrors>({
     medications: {},
-    instructions: false,
   });
 
   // Patient selection states
@@ -88,6 +88,8 @@ const Prescription = () => {
 
   const [createPrescription, { isLoading: isCreating }] =
     useCreatePrescriptionMutation();
+  const [deletePrescription, { isLoading: isDeleting }] =
+    useDeletePrescriptionMutation();
   const handleRequest = useHandleRequest();
 
   const examinations = examinationsData?.data || [];
@@ -116,33 +118,13 @@ const Prescription = () => {
     }
   }, [selectedExaminationId, examinationData, patientData]);
 
-  // Mock drug database
-  // const drugDatabase = [
-  //   'Парацетамол 500мг',
-  //   'Ибупрофен 400мг',
-  //   'Амоксициллин 500мг',
-  //   'Азитромицин 250мг',
-  //   'Омепразол 20мг',
-  //   'Метформин 500мг',
-  //   'Аспирин 100мг',
-  //   'Диклофенак 50мг',
-  //   'Цефтриаксон 1г',
-  //   'Дексаметазон 4мг',
-  // ];
-
-  // const filteredDrugs = drugDatabase.filter((drug) =>
-  //   drug.toLowerCase().includes(searchTerm.toLowerCase())
-  // );
-
   const clearSelection = () => {
     setPatient(null);
     setSelectedExaminationId('');
     setAllergyWarning(false);
     setMedications([]);
-    setAdditionalInstructions('');
     setFormErrors({
       medications: {},
-      instructions: false,
     });
     // Clear navigation state
     navigate(location.pathname, { replace: true, state: {} });
@@ -170,6 +152,7 @@ const Prescription = () => {
       dosage: '',
       frequency: '',
       duration: '',
+      instructions: '',
     };
     setMedications([...medications, newMed]);
   };
@@ -198,22 +181,6 @@ const Prescription = () => {
         },
       }));
     }
-
-    // Check allergy with patient's allergies
-    if (
-      field === 'drug' &&
-      patient?.allergies &&
-      patient.allergies.length > 0
-    ) {
-      const hasAllergy = patient.allergies.some((allergy: string) =>
-        value.toLowerCase().includes(allergy.toLowerCase())
-      );
-      if (hasAllergy) {
-        toast.warning(
-          `ОГОҲЛАНТИРИШ: Беморда ${value} га аллергия бўлиши мумкин!`
-        );
-      }
-    }
   };
 
   const removeMedication = (id: string) => {
@@ -236,9 +203,6 @@ const Prescription = () => {
       toast.error('Илтимос, камида битта дори қўшинг');
       return;
     }
-
-    // Validate additional instructions (optional but show warning if too short)
-    const instructionsError = additionalInstructions.trim() === '';
 
     // Validate each medication and collect errors
     const errors: ValidationErrors = {};
@@ -282,12 +246,17 @@ const Prescription = () => {
           hasErrors = true;
         }
       }
+
+      // Check if instructions are filled
+      if (!med.instructions || med.instructions.trim() === '') {
+        errors[med.id].instructions = true;
+        hasErrors = true;
+      }
     }
 
-    if (hasErrors || instructionsError) {
+    if (hasErrors) {
       setFormErrors({
         medications: errors,
-        instructions: instructionsError,
       });
       toast.error('Илтимос, барча майдонларни тўлдиринг');
       return;
@@ -336,7 +305,7 @@ const Prescription = () => {
               dosage: parseInt(med.dosage),
               frequency: parseInt(med.frequency.replace(/\D/g, '')),
               duration: parseInt(med.duration.replace(/\D/g, '')),
-              instructions: additionalInstructions,
+              instructions: med.instructions,
             },
           }).unwrap();
           return res;
@@ -358,6 +327,28 @@ const Prescription = () => {
     } else if (successCount > 0) {
       toast.warning(`${successCount}/${medications.length} та дори сақланди`);
     }
+  };
+
+  const handleDeletePrescription = async (prescriptionId: string) => {
+    if (!window.confirm('Бу рецептни ўчиришни хоҳлайсизми?')) {
+      return;
+    }
+
+    await handleRequest({
+      request: async () => {
+        const res = await deletePrescription({
+          id: selectedExaminationId,
+          prescription_id: prescriptionId,
+        }).unwrap();
+        return res;
+      },
+      onSuccess: () => {
+        toast.success('Рецепт муваффақиятли ўчирилди');
+      },
+      onError: (error) => {
+        toast.error(error?.data?.error?.msg || 'Рецептни ўчиришда хатолик');
+      },
+    });
   };
 
   return (
@@ -556,6 +547,98 @@ const Prescription = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Existing Prescriptions */}
+                {examinationData.data.prescriptions &&
+                  examinationData.data.prescriptions.length > 0 && (
+                    <Card className='mb-4 sm:mb-6 border-primary/20'>
+                      <CardHeader>
+                        <CardTitle className='text-base sm:text-lg md:text-xl flex items-center gap-2'>
+                          <span>Мавжуд Рецептлар</span>
+                          <span className='text-sm font-normal text-muted-foreground'>
+                            ({examinationData.data.prescriptions.length} та)
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className='space-y-3 sm:space-y-4'>
+                          {examinationData.data.prescriptions.map(
+                            (prescription, index) => (
+                              <Card
+                                key={prescription._id}
+                                className='border border-primary/10 bg-primary/5'
+                              >
+                                <CardContent className='pt-3 sm:pt-4'>
+                                  <div className='flex items-center justify-between mb-3'>
+                                    <span className='text-xs sm:text-sm font-medium text-primary'>
+                                      Рецепт #{index + 1}
+                                    </span>
+                                    <Button
+                                      variant='ghost'
+                                      size='sm'
+                                      onClick={() =>
+                                        handleDeletePrescription(
+                                          prescription._id
+                                        )
+                                      }
+                                      disabled={isDeleting}
+                                      className='h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10'
+                                    >
+                                      <Trash2 className='h-4 w-4' />
+                                    </Button>
+                                  </div>
+                                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
+                                    <div>
+                                      <Label className='text-xs sm:text-sm text-muted-foreground'>
+                                        Дори Номи
+                                      </Label>
+                                      <p className='font-semibold text-sm sm:text-base mt-1'>
+                                        {prescription.medication}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Label className='text-xs sm:text-sm text-muted-foreground'>
+                                        Дозаси
+                                      </Label>
+                                      <p className='font-semibold text-sm sm:text-base mt-1'>
+                                        {prescription.dosage} мг
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Label className='text-xs sm:text-sm text-muted-foreground'>
+                                        Қабул Қилиш
+                                      </Label>
+                                      <p className='font-semibold text-sm sm:text-base mt-1'>
+                                        Кунига {prescription.frequency} марта
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Label className='text-xs sm:text-sm text-muted-foreground'>
+                                        Муддати
+                                      </Label>
+                                      <p className='font-semibold text-sm sm:text-base mt-1'>
+                                        {prescription.duration} кун
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {prescription.instructions && (
+                                    <div className='mt-3 sm:mt-4 p-3 bg-background rounded-md'>
+                                      <Label className='text-xs sm:text-sm text-muted-foreground'>
+                                        Қўшимча Кўрсатмалар
+                                      </Label>
+                                      <p className='text-sm sm:text-base mt-1 whitespace-pre-wrap'>
+                                        {prescription.instructions}
+                                      </p>
+                                    </div>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            )
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
               </>
             )}
           </>
@@ -776,44 +859,32 @@ const Prescription = () => {
                             />
                           </div>
                         </div>
+                        <div className='mt-3 sm:mt-4'>
+                          <Label className='text-xs sm:text-sm'>
+                            Қўшимча Кўрсатмалар{' '}
+                            <span className='text-red-500'>*</span>
+                          </Label>
+                          <Textarea
+                            value={med.instructions}
+                            onChange={(e) =>
+                              updateMedication(
+                                med.id,
+                                'instructions',
+                                e.target.value
+                              )
+                            }
+                            placeholder='Ушбу дори учун махсус кўрсатмалар...'
+                            rows={2}
+                            className={`text-sm mt-1 resize-none ${
+                              formErrors.medications[med.id]?.instructions
+                                ? 'border-red-500 focus-visible:ring-red-500'
+                                : ''
+                            }`}
+                          />
+                        </div>
                       </CardContent>
                     </Card>
                   ))
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Additional Instructions */}
-            <Card className='mb-4 sm:mb-6'>
-              <CardHeader>
-                <CardTitle className='text-base sm:text-lg md:text-xl'>
-                  Қўшимча Кўрсатмалар
-                  <span className='text-red-500 ml-1'>*</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder='Бемор учун махсус кўрсатмалар ёки огоҳлантиришлар...'
-                  rows={4}
-                  value={additionalInstructions}
-                  onChange={(e) => {
-                    setAdditionalInstructions(e.target.value);
-                    // Clear error when user types
-                    if (e.target.value.trim() !== '') {
-                      setFormErrors((prev) => ({
-                        ...prev,
-                        instructions: false,
-                      }));
-                    }
-                  }}
-                  className={`text-sm sm:text-base resize-none ${
-                    formErrors.instructions ? 'border-red-500' : ''
-                  }`}
-                />
-                {formErrors.instructions && (
-                  <p className='text-red-500 text-xs sm:text-sm mt-2'>
-                    Қўшимча кўрсатмалар киритиш шарт
-                  </p>
                 )}
               </CardContent>
             </Card>
