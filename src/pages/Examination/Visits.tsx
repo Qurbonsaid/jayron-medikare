@@ -51,6 +51,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ExamFilter from './components/ExamFilter';
+import NewVisitDialog from './components/NewVisitDialog';
 import { getStatusBadge } from './components/StatusBadge';
 
 const Visits = () => {
@@ -61,6 +62,7 @@ const Visits = () => {
   const [itemsPerPage] = useState(10);
 
   // Modals
+  const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -218,7 +220,7 @@ const Visits = () => {
           </div>
           <Button
             className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
-            onClick={() => navigate('/new-visit')}
+            onClick={() => setIsNewVisitOpen(true)}
           >
             <Plus className='w-4 h-4 mr-2' />
             Янги Кўрик
@@ -281,7 +283,7 @@ const Visits = () => {
                 searchQuery ? 'Қидирувни тозалаш' : '+ Янги Кўрик Яратиш'
               }
               onAction={() =>
-                searchQuery ? setSearchQuery('') : navigate('/new-visit')
+                searchQuery ? setSearchQuery('') : setIsNewVisitOpen(true)
               }
             />
           </Card>
@@ -738,6 +740,13 @@ const Visits = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* New Visit Dialog */}
+        <NewVisitDialog
+          open={isNewVisitOpen}
+          onOpenChange={setIsNewVisitOpen}
+          onSuccess={refetch}
+        />
       </main>
     </div>
   );
