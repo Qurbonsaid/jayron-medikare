@@ -1,4 +1,6 @@
+import { useGetAllDiagnosisQuery } from '@/app/api/diagnosisApi/diagnosisApi';
 import {
+  useCompleteExamsMutation,
   useDeleteExamMutation,
   useGetAllExamsQuery,
   useUpdateExamMutation,
@@ -36,7 +38,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import {
   AlertTriangle,
+  CheckCircle2,
   Edit,
+  Eye,
   FilePlus,
   FileText,
   Plus,
@@ -46,8 +50,8 @@ import {
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { getStatusBadge } from './components/StatusBadge';
 import ExamFilter from './components/ExamFilter';
+import { getStatusBadge } from './components/StatusBadge';
 
 const Visits = () => {
   const navigate = useNavigate();
@@ -57,15 +61,16 @@ const Visits = () => {
   const [itemsPerPage] = useState(10);
 
   // Modals
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState<any>(null);
 
   // Edit form state
   const [editForm, setEditForm] = useState({
-    complaints : '',
-    description : '',
-    diagnosis : ''
+    complaints: '',
+    description: '',
+    diagnosis: '',
   });
 
   // Fetch exams
@@ -79,20 +84,67 @@ const Visits = () => {
     status: statusFilter !== 'all' ? (statusFilter as any) : undefined,
   });
 
+  // Fetch all diagnosis
+  const { data: diagnosisData } = useGetAllDiagnosisQuery({});
+
   const [updateExam, { isLoading: isUpdating }] = useUpdateExamMutation();
   const [deleteExam, { isLoading: isDeleting }] = useDeleteExamMutation();
+  const [completeExam, { isLoading: isCompleting }] =
+    useCompleteExamsMutation();
   const handleRequest = useHandleRequest();
 
   const exams = examsData?.data || [];
+  const diagnoses = diagnosisData?.data || [];
+
+  // Open detail modal
+  const handleDetailClick = (exam: any) => {
+    setSelectedExam(exam);
+    setIsDetailModalOpen(true);
+  };
+
+  // Open edit modal from detail
+  const handleEditFromDetail = () => {
+    setEditForm({
+      complaints: selectedExam.complaints || '',
+      description: selectedExam.description || '',
+      diagnosis: selectedExam.diagnosis?._id || selectedExam.diagnosis || '',
+    });
+    setIsDetailModalOpen(false);
+    setIsEditModalOpen(true);
+  };
+
+  // Open delete modal from detail
+  const handleDeleteFromDetail = () => {
+    setIsDetailModalOpen(false);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Handle complete exam
+  const handleCompleteExam = async () => {
+    await handleRequest({
+      request: async () => {
+        const res = await completeExam(selectedExam._id).unwrap();
+        return res;
+      },
+      onSuccess: () => {
+        toast.success('Кўрик муваффақиятли якунланди');
+        setIsDetailModalOpen(false);
+        refetch();
+      },
+      onError: (error) => {
+        toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+      },
+    });
+  };
 
   // Open edit modal
   const handleEditClick = (exam: any) => {
     setSelectedExam(exam);
     setEditForm({
-    complaints : exam.complaints,
-    description : exam.description,
-    diagnosis : exam.diagnosis
-  })
+      complaints: exam.complaints || '',
+      description: exam.description || '',
+      diagnosis: exam.diagnosis?._id || exam.diagnosis || '',
+    });
     setIsEditModalOpen(true);
   };
 
@@ -113,7 +165,7 @@ const Visits = () => {
             complaints: editForm.complaints,
             description: editForm.description,
           },
-        }).unwrap();
+        });
         return res;
       },
       onSuccess: () => {
@@ -121,8 +173,8 @@ const Visits = () => {
         setIsEditModalOpen(false);
         refetch();
       },
-      onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+      onError: (err) => {
+        toast.error(err?.error?.msg || 'Хатолик юз берди');
       },
     });
   };
@@ -215,7 +267,7 @@ const Visits = () => {
               className='justify-center'
             />
           </Card>
-        ) : ExamFilter({exams,searchQuery}).length === 0 ? (
+        ) : ExamFilter({ exams, searchQuery }).length === 0 ? (
           <Card className='card-shadow p-4 sm:p-0'>
             <EmptyState
               icon={FileText}
@@ -248,7 +300,7 @@ const Visits = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {ExamFilter({exams,searchQuery}).map((exam: any) => (
+                  {ExamFilter({ exams, searchQuery }).map((exam: any) => (
                     <TableRow key={exam._id}>
                       <TableCell>
                         <div className='flex flex-col'>
@@ -280,31 +332,11 @@ const Visits = () => {
                             size='sm'
                             variant='outline'
                             className='text-primary hover:text-primary/80'
-                            onClick={() =>
-                              navigate('/prescription', {
-                                state: { examinationId: exam._id },
-                              })
-                            }
-                            title='Рецепт ёзиш'
+                            onClick={() => handleDetailClick(exam)}
+                            title='Батафсил'
                           >
-                            <FilePlus className='w-4 h-4' />
-                          </Button>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            onClick={() => handleEditClick(exam)}
-                            title='Таҳрирлаш'
-                          >
-                            <Edit className='w-4 h-4' />
-                          </Button>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            className='text-red-600 hover:text-red-700'
-                            onClick={() => handleDeleteClick(exam)}
-                            title='Ўчириш'
-                          >
-                            <Trash2 className='w-4 h-4' />
+                            <Eye className='w-4 h-4 mr-1' />
+                            Батафсил
                           </Button>
                         </div>
                       </TableCell>
@@ -417,6 +449,167 @@ const Visits = () => {
           </Card>
         )}
 
+        {/* Detail Modal */}
+        <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+          <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
+            <DialogHeader>
+              <DialogTitle className='text-xl'>Кўрик Тафсилотлари</DialogTitle>
+              <DialogDescription>
+                Кўрик ва бемор ҳақида тўлиқ маълумот
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedExam && (
+              <div className='space-y-6 py-4'>
+                {/* Patient Information */}
+                <div className='space-y-3'>
+                  <h3 className='text-lg font-semibold border-b pb-2'>
+                    Бемор Маълумотлари
+                  </h3>
+                  <div className='grid grid-cols-2 gap-4 text-sm'>
+                    <div>
+                      <span className='text-muted-foreground'>Исм:</span>
+                      <p className='font-medium'>
+                        {selectedExam.patient_id?.fullname}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-muted-foreground'>Телефон:</span>
+                      <p className='font-medium'>
+                        {selectedExam.patient_id?.phone}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-muted-foreground'>Шифокор:</span>
+                      <p className='font-medium'>
+                        {selectedExam.doctor_id?.fullname}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-muted-foreground'>Статус:</span>
+                      <div className='mt-1'>
+                        {getStatusBadge(selectedExam.status)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Examination Details */}
+                <div className='space-y-3'>
+                  <h3 className='text-lg font-semibold border-b pb-2'>
+                    Кўрик Маълумотлари
+                  </h3>
+                  <div className='space-y-3 text-sm'>
+                    <div>
+                      <span className='text-muted-foreground block mb-1'>
+                        Шикоят:
+                      </span>
+                      <p className='font-medium bg-muted p-3 rounded-md'>
+                        {selectedExam.complaints || 'Киритилмаган'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-muted-foreground block mb-1'>
+                        Ташхис:
+                      </span>
+                      <p className='font-medium bg-muted p-3 rounded-md'>
+                        {selectedExam.diagnosis?.name ||
+                          selectedExam.diagnosis ||
+                          'Киритилмаган'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-muted-foreground block mb-1'>
+                        Тавсия:
+                      </span>
+                      <p className='font-medium bg-muted p-3 rounded-md'>
+                        {selectedExam.description || 'Киритилмаган'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-muted-foreground block mb-1'>
+                        Сана:
+                      </span>
+                      <p className='font-medium'>
+                        {new Date(selectedExam.created_at).toLocaleString(
+                          'uz-UZ',
+                          {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          }
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className='space-y-2 pt-4 border-t'>
+                  <h3 className='text-lg font-semibold mb-3'>Ҳаракатлар</h3>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <Button
+                      variant='outline'
+                      className='w-full'
+                      onClick={() => {
+                        setIsDetailModalOpen(false);
+                        navigate('/prescription', {
+                          state: { examinationId: selectedExam._id },
+                        });
+                      }}
+                    >
+                      <FilePlus className='w-4 h-4 mr-2' />
+                      Рецепт Ёзиш
+                    </Button>
+                    <Button
+                      variant='outline'
+                      className='w-full text-red-600 hover:text-red-700'
+                      onClick={handleDeleteFromDetail}
+                    >
+                      <Trash2 className='w-4 h-4 mr-2' />
+                      Ўчириш
+                    </Button>
+                    <Button
+                      variant='outline'
+                      className='w-full'
+                      onClick={handleEditFromDetail}
+                    >
+                      <Edit className='w-4 h-4 mr-2' />
+                      Таҳрирлаш
+                    </Button>
+                    <Button
+                      variant='default'
+                      className='w-full bg-green-600 hover:bg-green-700'
+                      onClick={handleCompleteExam}
+                      disabled={
+                        isCompleting || selectedExam.status === 'completed'
+                      }
+                    >
+                      <CheckCircle2 className='w-4 h-4 mr-2' />
+                      {isCompleting
+                        ? 'Якунланмоқда...'
+                        : selectedExam.status === 'completed'
+                        ? 'Якунланган'
+                        : 'Кўрикни Якунлаш'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                variant='outline'
+                onClick={() => setIsDetailModalOpen(false)}
+              >
+                Ёпиш
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Edit Modal */}
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
           <DialogContent className='max-w-2xl'>
@@ -434,7 +627,9 @@ const Visits = () => {
                 <Textarea
                   placeholder='Бемор шикоятини киритинг...'
                   value={editForm.complaints}
-                  onChange={(e) => setEditForm({...editForm,complaints:e.target.value})}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, complaints: e.target.value })
+                  }
                   className='min-h-24'
                 />
               </div>
@@ -442,11 +637,23 @@ const Visits = () => {
               {/* Diagnosis */}
               <div className='space-y-2'>
                 <Label>Ташхис</Label>
-                <Input
-                  placeholder='Ташхисни киритинг...'
+                <Select
                   value={editForm.diagnosis}
-                  onChange={(e) => setEditForm({...editForm,diagnosis:e.target.value})}
-                />
+                  onValueChange={(value) =>
+                    setEditForm({ ...editForm, diagnosis: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Ташхисни танланг...' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {diagnoses.map((diagnosis: any) => (
+                      <SelectItem key={diagnosis._id} value={diagnosis._id}>
+                        {diagnosis.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Description */}
@@ -455,7 +662,9 @@ const Visits = () => {
                 <Textarea
                   placeholder='Кўрик натижаси ва тавсияларни киритинг...'
                   value={editForm.description}
-                  onChange={(e) => setEditForm({...editForm,description:e.target.value})}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, description: e.target.value })
+                  }
                   className='min-h-24'
                 />
               </div>

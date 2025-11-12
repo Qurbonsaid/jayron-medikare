@@ -20,6 +20,7 @@ type ApiErrorResponse = {
 export const useErrorMsg = () => (error: ApiErrorResponse | string | null | undefined) => {
   if (!error) return 'Номаълум хатолик юз берди';
 
+
   if (typeof error === 'string') return error;
 
   // RTK Query yoki API structure bilan moslash

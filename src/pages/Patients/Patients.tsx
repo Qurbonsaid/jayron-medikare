@@ -1,4 +1,5 @@
 import { useGetAllPatientQuery } from '@/app/api/patientApi/patientApi';
+import { useGetUsersQuery } from '@/app/api/userApi/userApi';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -32,8 +33,16 @@ const Patients = () => {
     limit: itemsPerPage,
     gender: genderFilter !== 'all' ? genderFilter : undefined,
     doctor_id: doctorFilter !== 'all' ? doctorFilter : undefined,
-    search:searchQuery || undefined
+    search: searchQuery || undefined,
   });
+
+  // Fetch doctors
+  const { data: doctorsData } = useGetUsersQuery({
+    role: 'doctor',
+    limit: 100,
+  });
+
+  const doctors = doctorsData?.data || [];
 
   console.log(patientdata);
 
@@ -109,9 +118,11 @@ const Patients = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='all'>Барчаси</SelectItem>
-                    <SelectItem value='Др. Алимов'>Др. Алимов</SelectItem>
-                    <SelectItem value='Др. Нурматова'>Др. Нурматова</SelectItem>
-                    <SelectItem value='Др. Каримов'>Др. Каримов</SelectItem>
+                    {doctors.map((doctor: any) => (
+                      <SelectItem key={doctor._id} value={doctor._id}>
+                        {doctor.fullname}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -219,7 +230,7 @@ const Patients = () => {
                         <Phone className='w-4 h-4 text-muted-foreground' />
                         <span>{patient.phone}</span>
                       </div>
-                      {patient.diagnosis && patient.diagnosis.length > 0 && (
+                      {patient.diagnosis && (
                         <div className='flex items-center gap-2 text-xs sm:text-sm'>
                           <Users className='w-4 h-4 text-muted-foreground' />
                           <span>Диагноз мавжуд</span>
@@ -284,14 +295,12 @@ const Patients = () => {
                           {patient.phone}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-                          {patient.diagnosis && patient.diagnosis.length > 0
-                            ? `${patient.diagnosis[0].doctor_id.fullname}`
+                          {patient.diagnosis
+                            ? `${patient.diagnosis.doctor_id.fullname}`
                             : '-'}
                         </td>
-                        <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-                          {patient.diagnosis && patient.diagnosis.length > 0
-                            ? `${patient.diagnosis.length} та`
-                            : 'Йўқ'}
+                        <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm '>
+                          {patient.diagnosis?.description || 'Йўқ'}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4'>
                           <div className='flex justify-center'>
