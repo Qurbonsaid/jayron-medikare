@@ -2,20 +2,20 @@ import Appointments from "@/pages/Appointments/Appointments";
 import Billing from "@/pages/Billing";
 import Dashboard from "@/pages/Dashboard";
 import Inpatient from "@/pages/Inpatient/Inpatient";
-import LabResults from "@/pages/LabResults";
+import LabResults from "@/pages/Diagnostika/LabResults";
 import PatientPortal from "@/pages/PatientPortal";
 import PatientProfile from "@/pages/Patients/PatientProfile";
 import Patients from "@/pages/Patients/Patients";
 import Radiology from "@/pages/Radiology";
 import Reports from "@/pages/Reports";
-import Settings from "@/pages/Settings";
-import LabOrder from "@/pages/LabOrder";
-import Profil from "./pages/Profil";
-import AddDiagnostika from "./pages/AddDiagnostika";
+import Settings from "@/pages/Tizim/Settings";
+import LabOrder from "@/pages/Diagnostika/LabOrder";
+import Profil from "./pages/Tizim/Profil";
+import AddDiagnostika from "./pages/Diagnostika/AddDiagnostika";
 import NewVisit from "./pages/Examination/NewVisit";
 import Prescription from "./pages/Examination/Prescription";
 import Visits from "./pages/Examination/Visits";
-import AnalysisParamsModal from "./pages/AnalysisParamsModal";
+import AnalysisParamsModal from "./pages/Diagnostika/AnalysisParamsModal";
 import Rooms from "./pages/Rooms/Rooms";
 
 export const routers = [

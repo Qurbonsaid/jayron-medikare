@@ -690,6 +690,17 @@ export default function AnalysisParamsModal() {
 										onChange={e =>
 											handleNormalChange('male', 'min', e.target.value)
 										}
+										onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
 										disabled={isMinMaxDisabled(form.male)}
 									/>
 									<Input
@@ -699,6 +710,17 @@ export default function AnalysisParamsModal() {
 										onChange={e =>
 											handleNormalChange('male', 'max', e.target.value)
 										}
+										onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
 										disabled={isMinMaxDisabled(form.male)}
 									/>
 									<Input
@@ -721,6 +743,17 @@ export default function AnalysisParamsModal() {
 										onChange={e =>
 											handleNormalChange('female', 'min', e.target.value)
 										}
+										onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
 										disabled={isMinMaxDisabled(form.female)}
 									/>
 									<Input
@@ -730,6 +763,17 @@ export default function AnalysisParamsModal() {
 										onChange={e =>
 											handleNormalChange('female', 'max', e.target.value)
 										}
+										onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
 										disabled={isMinMaxDisabled(form.female)}
 									/>
 									<Input
@@ -756,8 +800,20 @@ export default function AnalysisParamsModal() {
 										onChange={e =>
 											handleNormalChange('general', 'min', e.target.value)
 										}
+										onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
 										disabled={isMinMaxDisabled(form.general)}
 									/>
+
 									<Input
 										placeholder='Max'
 										value={form.general.max}
@@ -765,6 +821,17 @@ export default function AnalysisParamsModal() {
 										onChange={e =>
 											handleNormalChange('general', 'max', e.target.value)
 										}
+										onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
 										disabled={isMinMaxDisabled(form.general)}
 									/>
 									<Input

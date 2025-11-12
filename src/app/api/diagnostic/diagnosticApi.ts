@@ -70,7 +70,7 @@ export const analysisApi = baseApi.injectEndpoints({
 				query: data => ({
 					url: PATHS.PARAMETER_CREATE,
 					method: 'POST',
-					body:data, // endi whole payload yuboriladi: value_type va gender_type ham bor bo'lsa o'tadi
+					body: data, // endi whole payload yuboriladi: value_type va gender_type ham bor bo'lsa o'tadi
 				}),
 				invalidatesTags: [API_TAGS.ANALYSIS],
 			}
