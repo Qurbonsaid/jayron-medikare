@@ -367,6 +367,76 @@ const ExamDetailDialog = ({
             </div>
           </div>
 
+          {/* Prescriptions List */}
+          {exam.prescriptions && exam.prescriptions.length > 0 && (
+            <div className='space-y-3'>
+              <h3 className='text-lg font-semibold border-b pb-2 flex items-center justify-between'>
+                <span>Рецептлар</span>
+                <span className='text-sm font-normal text-muted-foreground'>
+                  ({exam.prescriptions.length} та)
+                </span>
+              </h3>
+              <div className='space-y-3'>
+                {exam.prescriptions.map((prescription: any, index: number) => (
+                  <div
+                    key={prescription._id}
+                    className='p-4 bg-primary/5 border border-primary/10 rounded-lg space-y-3'
+                  >
+                    <div className='flex items-center justify-between'>
+                      <span className='text-xs font-medium text-primary'>
+                        Рецепт #{index + 1}
+                      </span>
+                    </div>
+                    <div className='grid grid-cols-2 gap-3 text-sm'>
+                      <div>
+                        <span className='text-muted-foreground block mb-1'>
+                          Дори Номи:
+                        </span>
+                        <p className='font-semibold'>
+                          {prescription.medication}
+                        </p>
+                      </div>
+                      <div>
+                        <span className='text-muted-foreground block mb-1'>
+                          Дозаси:
+                        </span>
+                        <p className='font-semibold'>
+                          {prescription.dosage} мг
+                        </p>
+                      </div>
+                      <div>
+                        <span className='text-muted-foreground block mb-1'>
+                          Қабул Қилиш:
+                        </span>
+                        <p className='font-semibold'>
+                          Кунига {prescription.frequency} марта
+                        </p>
+                      </div>
+                      <div>
+                        <span className='text-muted-foreground block mb-1'>
+                          Муддати:
+                        </span>
+                        <p className='font-semibold'>
+                          {prescription.duration} кун
+                        </p>
+                      </div>
+                    </div>
+                    {prescription.instructions && (
+                      <div className='pt-2 border-t border-primary/10'>
+                        <span className='text-muted-foreground text-xs block mb-1'>
+                          Қўшимча Кўрсатмалар:
+                        </span>
+                        <p className='text-sm font-medium'>
+                          {prescription.instructions}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className='space-y-2 pt-4 border-t'>
             <h3 className='text-lg font-semibold mb-3'>Ҳаракатлар</h3>
@@ -412,12 +482,6 @@ const ExamDetailDialog = ({
             </div>
           </div>
         </div>
-
-        <DialogFooter>
-          <Button variant='outline' onClick={() => onOpenChange(false)}>
-            Ёпиш
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
