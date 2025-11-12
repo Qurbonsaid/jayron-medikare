@@ -51,6 +51,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ExamFilter from './components/ExamFilter';
+import NewVisitDialog from './components/NewVisitDialog';
 import { getStatusBadge } from './components/StatusBadge';
 
 const Visits = () => {
@@ -61,6 +62,7 @@ const Visits = () => {
   const [itemsPerPage] = useState(10);
 
   // Modals
+  const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -218,7 +220,7 @@ const Visits = () => {
           </div>
           <Button
             className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
-            onClick={() => navigate('/new-visit')}
+            onClick={() => setIsNewVisitOpen(true)}
           >
             <Plus className='w-4 h-4 mr-2' />
             Янги Кўрик
@@ -281,7 +283,7 @@ const Visits = () => {
                 searchQuery ? 'Қидирувни тозалаш' : '+ Янги Кўрик Яратиш'
               }
               onAction={() =>
-                searchQuery ? setSearchQuery('') : navigate('/new-visit')
+                searchQuery ? setSearchQuery('') : setIsNewVisitOpen(true)
               }
             />
           </Card>
@@ -546,6 +548,79 @@ const Visits = () => {
                   </div>
                 </div>
 
+                {/* Prescriptions List */}
+                {selectedExam.prescriptions &&
+                  selectedExam.prescriptions.length > 0 && (
+                    <div className='space-y-3'>
+                      <h3 className='text-lg font-semibold border-b pb-2 flex items-center justify-between'>
+                        <span>Рецептлар</span>
+                        <span className='text-sm font-normal text-muted-foreground'>
+                          ({selectedExam.prescriptions.length} та)
+                        </span>
+                      </h3>
+                      <div className='space-y-3'>
+                        {selectedExam.prescriptions.map(
+                          (prescription: any, index: number) => (
+                            <div
+                              key={prescription._id}
+                              className='p-4 bg-primary/5 border border-primary/10 rounded-lg space-y-3'
+                            >
+                              <div className='flex items-center justify-between'>
+                                <span className='text-xs font-medium text-primary'>
+                                  Рецепт #{index + 1}
+                                </span>
+                              </div>
+                              <div className='grid grid-cols-2 gap-3 text-sm'>
+                                <div>
+                                  <span className='text-muted-foreground block mb-1'>
+                                    Дори Номи:
+                                  </span>
+                                  <p className='font-semibold'>
+                                    {prescription.medication}
+                                  </p>
+                                </div>
+                                <div>
+                                  <span className='text-muted-foreground block mb-1'>
+                                    Дозаси:
+                                  </span>
+                                  <p className='font-semibold'>
+                                    {prescription.dosage} мг
+                                  </p>
+                                </div>
+                                <div>
+                                  <span className='text-muted-foreground block mb-1'>
+                                    Қабул Қилиш:
+                                  </span>
+                                  <p className='font-semibold'>
+                                    Кунига {prescription.frequency} марта
+                                  </p>
+                                </div>
+                                <div>
+                                  <span className='text-muted-foreground block mb-1'>
+                                    Муддати:
+                                  </span>
+                                  <p className='font-semibold'>
+                                    {prescription.duration} кун
+                                  </p>
+                                </div>
+                              </div>
+                              {prescription.instructions && (
+                                <div className='pt-2 border-t border-primary/10'>
+                                  <span className='text-muted-foreground text-xs block mb-1'>
+                                    Қўшимча Кўрсатмалар:
+                                  </span>
+                                  <p className='text-sm font-medium'>
+                                    {prescription.instructions}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                 {/* Action Buttons */}
                 <div className='space-y-2 pt-4 border-t'>
                   <h3 className='text-lg font-semibold mb-3'>Ҳаракатлар</h3>
@@ -598,15 +673,6 @@ const Visits = () => {
                 </div>
               </div>
             )}
-
-            <DialogFooter>
-              <Button
-                variant='outline'
-                onClick={() => setIsDetailModalOpen(false)}
-              >
-                Ёпиш
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
 
@@ -738,6 +804,13 @@ const Visits = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* New Visit Dialog */}
+        <NewVisitDialog
+          open={isNewVisitOpen}
+          onOpenChange={setIsNewVisitOpen}
+          onSuccess={refetch}
+        />
       </main>
     </div>
   );

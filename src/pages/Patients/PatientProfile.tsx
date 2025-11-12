@@ -30,6 +30,7 @@ import {
   AlertTriangle,
   Calendar,
   Edit,
+  Eye,
   FileText,
   FileX,
   Mail,
@@ -42,6 +43,8 @@ import {
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import ExamDetailDialog from '../Examination/components/ExamDetailDialog';
+import NewVisitDialog from '../Examination/components/NewVisitDialog';
 import EditPatientModal from './components/EditPatientModal';
 import PatientReportModal from './components/PatientReportModal';
 
@@ -51,6 +54,9 @@ const PatientProfile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
+  const [isExamDetailOpen, setIsExamDetailOpen] = useState(false);
+  const [selectedExam, setSelectedExam] = useState<any>(null);
 
   const {
     data: patientData,
@@ -62,7 +68,11 @@ const PatientProfile = () => {
   });
 
   // Fetch patient exams
-  const { data: examsData, isLoading: examsLoading } = useGetAllExamsQuery(
+  const {
+    data: examsData,
+    isLoading: examsLoading,
+    refetch: refetchExams,
+  } = useGetAllExamsQuery(
     {
       patient_id: id,
       page: 1,
@@ -195,9 +205,7 @@ const PatientProfile = () => {
                     <Button
                       size='sm'
                       className='gradient-primary px-6 text-md'
-                      onClick={() =>
-                        navigate('/new-visit', { state: { patientId: id } })
-                      }
+                      onClick={() => setIsNewVisitOpen(true)}
                     >
                       <Plus className='w-4 h-4 sm:mr-2' />
                       <span className='hidden sm:inline'>
@@ -343,41 +351,23 @@ const PatientProfile = () => {
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
                     Диагноз
                   </h3>
-                  {patient.diagnosis && patient.diagnosis.length > 0 ? (
-                    <ul className='space-y-3'>
-                      {patient.diagnosis.map((item, idx) =>
-                        item.description ? (
-                          <li
-                            key={idx}
-                            className='p-3 bg-accent rounded-lg border-l-4 border-primary'
-                          >
-                            <div className='flex items-start gap-2'>
-                              <span className='text-primary mt-1'>•</span>
-                              <div className='flex-1'>
-                                <p className='text-sm sm:text-base font-medium mb-1'>
-                                  {item.description}
-                                </p>
-                                {item.doctor_id?.fullname && (
-                                  <p className='text-xs sm:text-sm text-muted-foreground flex items-center gap-1'>
-                                    <User className='w-3 h-3' />
-                                    {item.doctor_id.fullname}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </li>
-                        ) : (
-                          <li
-                            key={idx}
-                            className='p-3 bg-muted/50 rounded-lg text-center'
-                          >
-                            <p className='text-sm text-muted-foreground italic'>
-                              Ҳали диагноз белгиланмаган
+                  {patient.diagnosis.description ? (
+                    <p className='p-3 bg-accent rounded-lg border-l-4 border-primary'>
+                      <div className='flex items-start gap-2'>
+                        <span className='text-primary mt-1'>•</span>
+                        <div className='flex-1'>
+                          <p className='text-sm sm:text-base font-medium mb-1'>
+                            {patient.diagnosis.description}
+                          </p>
+                          {patient.diagnosis.doctor_id?.fullname && (
+                            <p className='text-xs sm:text-sm text-muted-foreground flex items-center gap-1'>
+                              <User className='w-3 h-3' />
+                              {patient.diagnosis.doctor_id.fullname}
                             </p>
-                          </li>
-                        )
-                      )}
-                    </ul>
+                          )}
+                        </div>
+                      </div>
+                    </p>
                   ) : (
                     <p className='text-sm text-muted-foreground text-center py-4'>
                       Ҳали диагноз белгиланмаган
@@ -438,9 +428,7 @@ const PatientProfile = () => {
                     Бу бемор учун ҳали ташрифлар қайд қилинмаган
                   </p>
                   <Button
-                    onClick={() =>
-                      navigate('/new-visit', { state: { patientId: id } })
-                    }
+                    onClick={() => setIsNewVisitOpen(true)}
                     className='gradient-primary'
                   >
                     <Plus className='w-4 h-4 mr-2' />
@@ -458,15 +446,14 @@ const PatientProfile = () => {
                           <TableHead>Шикоят</TableHead>
                           <TableHead>Статус</TableHead>
                           <TableHead>Сана</TableHead>
+                          <TableHead className='text-right'>
+                            Ҳаракатлар
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {exams.map((exam: any) => (
-                          <TableRow
-                            key={exam._id}
-                            className='cursor-pointer hover:bg-accent/50'
-                            onClick={() => navigate(`/visits/${exam._id}`)}
-                          >
+                          <TableRow key={exam._id}>
                             <TableCell>
                               <div className='flex items-center gap-2'>
                                 <User className='w-4 h-4 text-muted-foreground' />
@@ -519,6 +506,21 @@ const PatientProfile = () => {
                                 )}
                               </div>
                             </TableCell>
+                            <TableCell>
+                              <div className='flex justify-end'>
+                                <Button
+                                  size='sm'
+                                  variant='outline'
+                                  onClick={() => {
+                                    setSelectedExam(exam);
+                                    setIsExamDetailOpen(true);
+                                  }}
+                                >
+                                  <Eye className='w-4 h-4 mr-2' />
+                                  Батафсил
+                                </Button>
+                              </div>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -530,8 +532,7 @@ const PatientProfile = () => {
                     {exams.map((exam: any) => (
                       <Card
                         key={exam._id}
-                        className='cursor-pointer hover:shadow-md transition-shadow'
-                        onClick={() => navigate(`/visits/${exam._id}`)}
+                        className='hover:shadow-md transition-shadow'
                       >
                         <div className='p-4 space-y-3'>
                           {/* Doctor */}
@@ -593,6 +594,20 @@ const PatientProfile = () => {
                               'uz-UZ'
                             )}
                           </div>
+
+                          {/* Action Button */}
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            className='w-full'
+                            onClick={() => {
+                              setSelectedExam(exam);
+                              setIsExamDetailOpen(true);
+                            }}
+                          >
+                            <Eye className='w-4 h-4 mr-2' />
+                            Батафсил
+                          </Button>
                         </div>
                       </Card>
                     ))}
@@ -667,6 +682,24 @@ const PatientProfile = () => {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+
+            {/* New Visit Dialog */}
+            <NewVisitDialog
+              open={isNewVisitOpen}
+              onOpenChange={setIsNewVisitOpen}
+              preSelectedPatientId={id}
+              onSuccess={refetchExams}
+            />
+
+            {/* Exam Detail Dialog */}
+            {selectedExam && (
+              <ExamDetailDialog
+                open={isExamDetailOpen}
+                onOpenChange={setIsExamDetailOpen}
+                exam={selectedExam}
+                onSuccess={refetchExams}
+              />
+            )}
           </>
         )}
       </main>
