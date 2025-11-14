@@ -131,6 +131,42 @@ const LabOrder = () => {
 		)
 	}
 
+	// const handleSave = async () => {
+	// 	setShowErrors(true)
+
+	// 	if (!selectedPatientId) {
+	// 		toast.error('Илтимос, беморни танланг')
+	// 		return
+	// 	}
+	// 	if (!selectedTests.length) {
+	// 		toast.error('Илтимос, камида битта таҳлилни танланг')
+	// 		return
+	// 	}
+
+	// 	await handleRequest({
+	// 		request: async () => {
+	// 			const reqBody: CreateReq = {
+	// 				analysis: selectedTests.map(t => t.id),
+	// 				patient: selectedPatientId,
+	// 				level: priority,
+	// 				clinical_indications: clinicalIndications,
+	// 				comment: '',
+	// 			}
+	// 			return await createPatientAnalysis(reqBody).unwrap()
+	// 		},
+	// 		onSuccess: () => {
+	// 			toast.success('Кўрик муваффақиятли яратилди')
+	// 			setTests(prev => prev.map(t => ({ ...t, selected: false })))
+	// 			setClinicalIndications('')
+	// 			setPriority(ExamLevel.ODDIY)
+	// 			setShowErrors(false)
+	// 		},
+	// 		onError: err => {
+	// 			toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
+	// 		},
+	// 	})
+	// }
+
 	const handleSave = async () => {
 		setShowErrors(true)
 
@@ -140,6 +176,10 @@ const LabOrder = () => {
 		}
 		if (!selectedTests.length) {
 			toast.error('Илтимос, камида битта таҳлилни танланг')
+			return
+		}
+		if (!clinicalIndications.trim()) {
+			toast.error('Илтимос, клиник кўрсатмани киритинг')
 			return
 		}
 
@@ -160,6 +200,8 @@ const LabOrder = () => {
 				setClinicalIndications('')
 				setPriority(ExamLevel.ODDIY)
 				setShowErrors(false)
+				setPatient(null)
+				setSelectedPatientId('')
 			},
 			onError: err => {
 				toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
@@ -324,11 +366,38 @@ const LabOrder = () => {
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+									{/* <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
 										{tests.map(test => (
 											<div
 												key={test.id}
 												className='flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors'
+											>
+												<Checkbox
+													id={test.id}
+													checked={test.selected}
+													onCheckedChange={() => toggleTest(test.id)}
+												/>
+												<Label
+													htmlFor={test.id}
+													className='flex-1 cursor-pointer text-sm'
+												>
+													{test.name}
+													<Badge variant='secondary' className='ml-2 text-xs'>
+														{test.code}
+													</Badge>
+												</Label>
+											</div>
+										))}
+									</div> */}
+									<div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+										{tests.map(test => (
+											<div
+												key={test.id}
+												className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+													showErrors && !selectedTests.length
+														? 'border-red-500'
+														: 'hover:bg-accent/50'
+												}`}
 											>
 												<Checkbox
 													id={test.id}
@@ -447,9 +516,13 @@ const LabOrder = () => {
 									<Label>Таҳлил сабаби ва клиник ахвол</Label>
 									<Textarea
 										rows={5}
-										className='mt-2 w-full'
+										className={`mt-2 w-full ${
+											showErrors && !clinicalIndications.trim()
+												? 'border-red-500'
+												: ''
+										}`}
 										placeholder='Мисол: Беморда қондаги қанд миқдори ошган...'
-										value={clinicalIndications} // qiymatni state bilan bog'lash
+										value={clinicalIndications}
 										onChange={e => setClinicalIndications(e.target.value)}
 									/>
 								</CardContent>
