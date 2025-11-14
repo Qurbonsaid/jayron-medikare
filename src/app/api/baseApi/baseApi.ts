@@ -79,6 +79,26 @@ const customBaseQuery: BaseQueryFn<
 
   const result = await baseQuery(args, api, extraOptions);
 
+  // Check for token expiration or authentication errors
+  if ('error' in result) {
+    const error = result.error as any;
+    const statusCode = error?.status;
+
+    // Check if token is expired or invalid
+    if (
+      statusCode === 401
+    ) {
+      // Clear authentication tokens
+      clearAuthTokens();
+      localStorage.removeItem(CACHE_KEY);
+      
+      // Redirect to login page
+      window.location.href = '/login';
+      
+      return result;
+    }
+  }
+
   if (!('error' in result) && result.data) {
     const responseData = result.data as any;
     const isSuccessResponse = responseData?.success !== false;
@@ -100,5 +120,5 @@ export const baseApi = createApi({
   endpoints: () => ({}),
 });
 
-export { updateCache , clearAuthTokens};
+export { clearAuthTokens, updateCache };
 export default baseApi;

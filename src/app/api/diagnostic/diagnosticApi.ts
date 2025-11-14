@@ -58,43 +58,41 @@ export const analysisApi = baseApi.injectEndpoints({
 		}),
 
 		// 🔹 GET BY ID
-    getDiagnosticById: builder.query<AnalysisByIdResponse, string>({
-      query: (id) => `${PATHS.ANALYSIS_BY_ID}/${id}`,
-      providesTags: [API_TAGS.ANALYSIS],
-    }),
-
-		createAnalysisParameter: builder.mutation<void , AnalysisParamCreateRequest>({
-      query: ({ analysis_id, parameter_code, parameter_name, unit, normal_range, description }) => ({
-        url: PATHS.PARAMETER_CREATE,
-        method: 'POST',
-        body: {
-          analysis_id,
-          parameter_code,
-          parameter_name,
-          unit,
-          normal_range,
-          description,
-        },
-      }),
-      invalidatesTags: [API_TAGS.ANALYSIS],
-    }),
-		updateAnalysisParameter: builder.mutation<
-		{ success: boolean; message: string; data: AnalysisParameter },
-		{ id: string; data: AnalysisParamCreateRequest }
-	>({
-		query: ({ id, data }) => ({
-			url: `${PATHS.PARAMETER_UPDATE}/${id}`,
-			method: 'PUT',
-			body: data,
+		getDiagnosticById: builder.query<AnalysisByIdResponse, string>({
+			query: id => `${PATHS.ANALYSIS_BY_ID}/${id}`,
+			providesTags: [API_TAGS.ANALYSIS],
 		}),
-		invalidatesTags: [API_TAGS.ANALYSIS],
-	}),
-	deleteParameter: builder.mutation<
+
+		// avvalgi (muammo): query: ({ analysis_id, parameter_code, parameter_name, unit, normal_range, description }) => ({ body: { ... } })
+
+		createAnalysisParameter: builder.mutation<void, AnalysisParamCreateRequest>(
+			{
+				query: data => ({
+					url: PATHS.PARAMETER_CREATE,
+					method: 'POST',
+					body: data, // endi whole payload yuboriladi: value_type va gender_type ham bor bo'lsa o'tadi
+				}),
+				invalidatesTags: [API_TAGS.ANALYSIS],
+			}
+		),
+
+		updateAnalysisParameter: builder.mutation<
+			{ success: boolean; message: string; data: AnalysisParameter },
+			{ id: string; data: AnalysisParamCreateRequest }
+		>({
+			query: ({ id, data }) => ({
+				url: `${PATHS.PARAMETER_UPDATE}/${id}`,
+				method: 'PUT',
+				body: data,
+			}),
+			invalidatesTags: [API_TAGS.ANALYSIS],
+		}),
+		deleteParameter: builder.mutation<
 			{ success: boolean; message: string },
 			string
 		>({
 			query: id => ({
-				url: `${PATHS.PARAMETER_DELETE}/${id}`, 
+				url: `${PATHS.PARAMETER_DELETE}/${id}`,
 				method: 'DELETE',
 			}),
 			invalidatesTags: [API_TAGS.ANALYSIS],
@@ -107,8 +105,8 @@ export const {
 	useCreateDiagnosticMutation,
 	useUpdateDiagnosticMutation,
 	useDeleteDiagnosticMutation,
-	useGetDiagnosticByIdQuery , 
-	useCreateAnalysisParameterMutation ,
+	useGetDiagnosticByIdQuery,
+	useCreateAnalysisParameterMutation,
 	useUpdateAnalysisParameterMutation,
-	useDeleteParameterMutation
+	useDeleteParameterMutation,
 } = analysisApi

@@ -40,7 +40,7 @@ export type AllPatientRes = {
         fullname: string;
       };
       description: string | null;
-    }[];
+    };
   }[];
   pagination: Pagination;
 };
@@ -73,7 +73,7 @@ export type OnePatientRes = {
       examination_id: string;
       description: string | null;
       _id: string;
-    }[];
+    };
     fullname: string;
     phone: string;
     gender: 'male' | 'female';
