@@ -1,5 +1,5 @@
 import Appointments from '@/pages/Appointments/Appointments';
-import Billing from '@/pages/Billing';
+import Billing from '@/pages/Billing/Billing';
 import Dashboard from '@/pages/Dashboard';
 import Inpatient from '@/pages/Inpatient/Inpatient';
 import LabOrder from '@/pages/LabOrder';

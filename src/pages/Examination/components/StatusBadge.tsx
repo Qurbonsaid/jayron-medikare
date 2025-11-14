@@ -1,10 +1,13 @@
 export const getStatusBadge = (status: string) => {
+
+  console.log(status)
     const statusConfig = {
       active: { text: 'Фаол', class: 'bg-blue-500/10 text-blue-600' },
       completed: {
         text: 'Тугалланган',
         class: 'bg-green-500/10 text-green-600',
       },
+      pending:{text:"Тугалланмаган",class:'bg-yellow-500/10 text-yellow-600'},
       inactive: { text: 'Фаол эмас', class: 'bg-gray-500/10 text-gray-600' },
       deleted: { text: 'Ўчирилган', class: 'bg-red-500/10 text-red-600' },
     };

@@ -6,9 +6,48 @@ export type examCreateReq = {
   description: string;
   complaints: string;
 };
+
+export type ExamDataItem = {
+  _id: string;
+  patient_id: {
+    _id: string;
+    fullname: string;
+    phone: string;
+    patient_id: string;
+  };
+  doctor_id: {
+    _id: string;
+    fullname: string;
+    phone: string;
+  };
+  description: string;
+  complaints: string;
+  analyses: Array<any> | null;
+  billing_id: string | null;
+  images: Array<string>;
+  status: 'active' | 'inactive' | 'completed' | 'deleted';
+  diagnosis?:
+    | {
+        _id: string;
+        name: string;
+      }
+    | string;
+  prescriptions: Array<{
+    medication: string;
+    dosage: number;
+    frequency: number;
+    duration: number;
+    instructions: string;
+    _id: string;
+  }>;
+  rooms: Array<any>;
+  created_at: Date;
+  updated_at: Date;
+};
+
 export type AllExamRes = {
   success: boolean;
-  data: Array<ExamRes>;
+  data: Array<ExamDataItem>;
   pagination: Pagination;
 };
 
@@ -36,42 +75,7 @@ type status = 'active' | 'inactive' | 'completed' | 'deleted';
 
 export type ExamRes = {
   success: boolean;
-  data: {
-    _id: string;
-    patient_id: {
-      _id: string;
-      fullname: string;
-      phone: string;
-    };
-    doctor_id: {
-      _id: string;
-      fullname: string;
-      phone: string;
-    };
-    description: string;
-    complaints: string;
-    analyses: Array | null;
-    billing_id: string | null;
-    images: Array<string>;
-    status: status;
-    diagnosis?:
-      | {
-          _id: string;
-          name: string;
-        }
-      | string;
-    prescriptions: Array<{
-      medication: string;
-      dosage: number;
-      frequency: number;
-      duration: number;
-      instructions: string;
-      _id: string;
-    }>;
-    rooms: Array;
-    created_at: Date;
-    updated_at: Date;
-  };
+  data: ExamDataItem;
 };
 export type AllExamReq = {
   page?: number;
