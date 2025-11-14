@@ -1,0 +1,232 @@
+import { useGetOneRoomQuery } from "@/app/api/roomApi";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Edit, MoreHorizontal, Plus, Trash2, User } from "lucide-react";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { RoomNewPatient } from "./components/RoomNewPatient";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { RemovePatient } from "./components/RemovePatient";
+
+const RoomDetail = () => {
+  const [showRoomNewPatient, setShowRoomNewPatient] = useState(false);
+  const [showRemovePatient, setShowRemovePatient] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
+    null
+  );
+
+  const { id: roomId } = useParams();
+  const { data: room, isLoading } = useGetOneRoomQuery(
+    { id: roomId },
+    { skip: !roomId }
+  );
+
+  return (
+    <div className="min-h-screen bg-background p-4 sm:p-8 lg:p-12">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">
+              Xona Tafsilotlari
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Беморлар хонаси ҳақидаги маълумотларни кўриш ва бошқариш
+            </p>
+          </div>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={() => setShowRoomNewPatient(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Янги бемор қўшиш
+          </Button>
+        </div>
+
+        {isLoading ? (
+          <Card className="card-shadow p-8 sm:p-12">
+            <LoadingSpinner
+              size="lg"
+              text="Юкланмоқда..."
+              className="justify-center"
+            />
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            <Card className="card-shadow p-4 lg:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 xl:gap-6">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Xona nomi
+                  </h3>
+                  <p className="mt-1 text-lg font-semibold">
+                    {room?.data.room_name || "бeлгиланмаган"}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Xona Narxi
+                  </h3>
+
+                  <p className="mt-1 text-lg font-semibold">
+                    {room?.data.room_price.toLocaleString() || "бeлгиланмаган"}{" "}
+                    so'm
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Sig'im
+                  </h3>
+
+                  <p className="mt-1 text-lg font-semibold">
+                    {room?.data.patient_capacity || "бeлгиланмаган"} kishilik
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Bandlik
+                  </h3>
+
+                  <p className="mt-1 text-lg font-semibold">
+                    {room?.data.patient_occupied
+                      ? room.data.patient_occupied ===
+                        room.data.patient_capacity
+                        ? "To'liq band"
+                        : `${room.data.patient_occupied} ta band`
+                      : "Bo'sh"}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Xona qavati
+                  </h3>
+
+                  <p className="mt-1 text-lg font-semibold">
+                    {room?.data.floor_number
+                      ? room.data.floor_number + " - qavat"
+                      : "бeлгиланмаган"}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Tavsif
+                  </h3>
+
+                  <p className="mt-1 text-md font-semibold">
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <span>
+                          {room?.data.description
+                            ? room?.data.description.length > 15
+                              ? room?.data.description.slice(0, 15) + "..."
+                              : room?.data.description
+                            : "Berilmagan"}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {room?.data.description || "Berilmagan"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="card-shadow p-4 lg:p-6">
+              {room?.data.patients && room?.data.patients.length > 0 ? (
+                <div className="w-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 xl:gap-6">
+                  {room?.data.patients.map((patient) => {
+                    const patientData =
+                      typeof patient.patient === "string"
+                        ? null
+                        : patient.patient;
+
+                    return (
+                      <Card
+                        key={patient._id}
+                        className={`p-4 bg-green-100 border-green-500/50 hover:bg-green-200 transition-smooth relative`}
+                      >
+                        <div className="absolute top-4 right-4">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger>
+                              <Button
+                                variant="default"
+                                className="w-8 h-6 border-green-500/50 bg-transparent hover:bg-green-500/20"
+                              >
+                                <MoreHorizontal className="w-8 h-6 text-black" />
+                              </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent>
+                              <DropdownMenuItem>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setShowRemovePatient(true);
+                                    setSelectedPatientId(
+                                      patientData?._id || null
+                                    );
+                                  }}
+                                  className="w-32 hover:bg-red-600 hover:text-white transition-smooth text-xs xl:text-sm"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Ўчириш
+                                </Button>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div className="flex flex-col items-center text-center space-y-2">
+                          <User className="h-8 w-8" />
+                          <div className="font-bold">
+                            <span>{patientData?.fullname}</span>
+                          </div>
+                          <span>
+                            Telefon raqam: <strong>{patientData?.phone}</strong>
+                          </span>
+
+                          <p className="text-sm font-medium">
+                            Email: {patientData?.email}
+                          </p>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <h3>Беморлар топилмади</h3>
+                </div>
+              )}
+            </Card>
+          </div>
+        )}
+
+        <RoomNewPatient
+          open={showRoomNewPatient}
+          onOpenChange={setShowRoomNewPatient}
+        />
+
+        <RemovePatient
+          open={showRemovePatient}
+          onOpenChange={setShowRemovePatient}
+          patient_id={selectedPatientId}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default RoomDetail;

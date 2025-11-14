@@ -17,6 +17,8 @@ import Prescription from "./pages/Examination/Prescription";
 import Visits from "./pages/Examination/Visits";
 import AnalysisParamsModal from "./pages/AnalysisParamsModal";
 import Rooms from "./pages/Rooms/Rooms";
+import Medicine from "./pages/Medicine/Medicine";
+import RoomDetail from "./pages/RoomDetail/RoomDetail";
 
 export const routers = [
   { path: "/dashboard", element: <Dashboard /> },
@@ -31,6 +33,8 @@ export const routers = [
   { path: "/lab-order", element: <LabOrder /> },
   { path: "/inpatient", element: <Inpatient /> },
   { path: "/inpatient/:id", element: <Rooms /> },
+  { path: "/room/:id", element: <RoomDetail /> },
+  { path: "/medicine", element: <Medicine /> },
   { path: "/lab-results", element: <LabResults /> },
   { path: "/billing", element: <Billing /> },
   { path: "/reports", element: <Reports /> },
@@ -102,8 +106,18 @@ export const navigator = [
     title: "Стационар",
   },
   {
+    path: "/medicine",
+    to: null,
+    title: "Дори-дармон",
+  },
+  {
     path: "/inpatient/:id",
     to: "/inpatient",
+    title: "Стационар",
+  },
+  {
+    path: "/room/:id",
+    to: -1,
     title: "Стационар",
   },
   {

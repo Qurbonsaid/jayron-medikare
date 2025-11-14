@@ -69,6 +69,30 @@ export const roomApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM],
     }),
+
+    addPatientRoom: builder.mutation<
+      CreatedRoomResponse,
+      { id: string; patient_id: string }
+    >({
+      query: ({ id, patient_id }) => ({
+        url: PATHS.ADD_PATIENT + id,
+        method: "POST",
+        body: { patient_id },
+      }),
+      invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM],
+    }),
+
+    removePatientRoom: builder.mutation<
+      CreatedRoomResponse,
+      { id: string; patient_id: string }
+    >({
+      query: ({ id, patient_id }) => ({
+        url: PATHS.REMOVE_PATIENT + id,
+        method: "POST",
+        body: { patient_id },
+      }),
+      invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM],
+    }),
   }),
 });
 
@@ -78,4 +102,6 @@ export const {
   useGetOneRoomQuery,
   useUpdateRoomMutation,
   useDeleteRoomMutation,
+  useAddPatientRoomMutation,
+  useRemovePatientRoomMutation,
 } = roomApi;

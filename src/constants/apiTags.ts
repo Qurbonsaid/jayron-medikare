@@ -1,9 +1,11 @@
 export enum API_TAGS {
-  USER = 'User',
-  SETTINGS='Settings',
-  ANALYSIS= 'Analysis',
-  PATIENTS='Patient',
-  EXAMS='Exams',
-  PRESCRIPTION='Prescription',
-  IMAGES='images'
+  USER = "User",
+  SETTINGS = "Settings",
+  ANALYSIS = "Analysis",
+  PATIENTS = "Patient",
+  EXAMS = "Exams",
+  PRESCRIPTION = "Prescription",
+  IMAGES = "images",
+  CORPUS = "CORPUS",
+  ROOM = "ROOM",
 }
