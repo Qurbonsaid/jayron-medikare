@@ -43,7 +43,6 @@ import {
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import ExamDetailDialog from '../Examination/components/ExamDetailDialog';
 import NewVisitDialog from '../Examination/components/NewVisitDialog';
 import EditPatientModal from './components/EditPatientModal';
 import PatientReportModal from './components/PatientReportModal';
@@ -55,8 +54,6 @@ const PatientProfile = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
-  const [isExamDetailOpen, setIsExamDetailOpen] = useState(false);
-  const [selectedExam, setSelectedExam] = useState<any>(null);
 
   const {
     data: patientData,
@@ -512,8 +509,7 @@ const PatientProfile = () => {
                                   size='sm'
                                   variant='outline'
                                   onClick={() => {
-                                    setSelectedExam(exam);
-                                    setIsExamDetailOpen(true);
+                                    navigate(`/examination/${exam._id}`);
                                   }}
                                 >
                                   <Eye className='w-4 h-4 mr-2' />
@@ -601,8 +597,7 @@ const PatientProfile = () => {
                             variant='outline'
                             className='w-full'
                             onClick={() => {
-                              setSelectedExam(exam);
-                              setIsExamDetailOpen(true);
+                              navigate(`/examination/${exam._id}`);
                             }}
                           >
                             <Eye className='w-4 h-4 mr-2' />
@@ -690,16 +685,6 @@ const PatientProfile = () => {
               preSelectedPatientId={id}
               onSuccess={refetchExams}
             />
-
-            {/* Exam Detail Dialog */}
-            {selectedExam && (
-              <ExamDetailDialog
-                open={isExamDetailOpen}
-                onOpenChange={setIsExamDetailOpen}
-                exam={selectedExam}
-                onSuccess={refetchExams}
-              />
-            )}
           </>
         )}
       </main>

@@ -334,7 +334,7 @@ const Visits = () => {
                             size='sm'
                             variant='outline'
                             className='text-primary hover:text-primary/80'
-                            onClick={() => handleDetailClick(exam)}
+                            onClick={() => navigate(`/examination/${exam._id}`)}
                             title='Батафсил'
                           >
                             <Eye className='w-4 h-4 mr-1' />
