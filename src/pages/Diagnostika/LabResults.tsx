@@ -724,6 +724,13 @@ const LabResults = () => {
 																		? 'number'
 																		: 'text'
 																}
+																onKeyDown={e => {
+																	if (param.analysis_parameter_type.value_type === 'NUMBER') {
+																		if (e.key === ',' || e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') {
+																			e.preventDefault()
+																		}
+																	}
+																}}
 																value={param.analysis_parameter_value ?? ''}
 																onChange={e => {
 																	let value: string | number = e.target.value
@@ -805,6 +812,13 @@ const LabResults = () => {
 															? 'number'
 															: 'text'
 													}
+													onKeyDown={e => {
+														if (param.analysis_parameter_type.value_type === 'NUMBER') {
+															if (e.key === ',' || e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') {
+																e.preventDefault()
+															}
+														}
+													}}
 													value={param.analysis_parameter_value ?? ''}
 													onChange={e => {
 														let value: string | number = e.target.value
