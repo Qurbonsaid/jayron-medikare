@@ -239,13 +239,13 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                     {billingData.data._id}
                   </div>
                 </div>
-                <div>
+                <div className='sm:px-4 sm:text-center'>
                   <Label className='text-xs text-muted-foreground'>Сана</Label>
                   <div className='font-semibold text-sm sm:text-base'>
                     {format(billingData.data.created_at, 'dd.MM.yyyy')}
                   </div>
                 </div>
-                <div>
+                <div className='sm:px-4 sm:text-center'>
                   <Label className='text-xs text-muted-foreground'>Ҳолат</Label>
                   <div>{getStatusBadge(billingData.data.status)}</div>
                 </div>
