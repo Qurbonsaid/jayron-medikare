@@ -63,7 +63,7 @@ const LabOrder = () => {
 	const handleRequest = useHandleRequest()
 
 	const patientIdFromState = location.state?.patientId
-	const { data: patientsData } = useGetAllPatientQuery({ page: 1, limit: 100 })
+	const { data: patientsData } = useGetAllPatientQuery({ page: 1, limit: 100 , is_diagnosis:true })
 	const { data: patientData } = useGetPatientByIdQuery(selectedPatientId, {
 		skip: !selectedPatientId,
 	})
@@ -130,42 +130,6 @@ const LabOrder = () => {
 			)
 		)
 	}
-
-	// const handleSave = async () => {
-	// 	setShowErrors(true)
-
-	// 	if (!selectedPatientId) {
-	// 		toast.error('Илтимос, беморни танланг')
-	// 		return
-	// 	}
-	// 	if (!selectedTests.length) {
-	// 		toast.error('Илтимос, камида битта таҳлилни танланг')
-	// 		return
-	// 	}
-
-	// 	await handleRequest({
-	// 		request: async () => {
-	// 			const reqBody: CreateReq = {
-	// 				analysis: selectedTests.map(t => t.id),
-	// 				patient: selectedPatientId,
-	// 				level: priority,
-	// 				clinical_indications: clinicalIndications,
-	// 				comment: '',
-	// 			}
-	// 			return await createPatientAnalysis(reqBody).unwrap()
-	// 		},
-	// 		onSuccess: () => {
-	// 			toast.success('Кўрик муваффақиятли яратилди')
-	// 			setTests(prev => prev.map(t => ({ ...t, selected: false })))
-	// 			setClinicalIndications('')
-	// 			setPriority(ExamLevel.ODDIY)
-	// 			setShowErrors(false)
-	// 		},
-	// 		onError: err => {
-	// 			toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
-	// 		},
-	// 	})
-	// }
 
 	const handleSave = async () => {
 		setShowErrors(true)
@@ -340,9 +304,9 @@ const LabOrder = () => {
 									</div>
 									<div>
 										<Label className='font-normal'>Diagnostika</Label>
-										{/* <p className='font-medium'>
-											{patient.diagnosis[0].doctor_id.fullname}
-										</p> */}
+										<p className='font-medium'>
+											{patient.diagnosis.diagnosis_id.name}
+										</p>
 									</div>
 									<div>
 										<Label className='font-normal'>Телефон</Label>

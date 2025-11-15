@@ -654,6 +654,7 @@ const LabResults = () => {
 										<div className='flex justify-end mt-2'>
 											<Button
 												size='sm'
+												className='text-xs py-1 px-2'
 												onClick={() => openResultModal(p._id)}
 												disabled={p.status === 'CANCELLED'}
 											>
@@ -725,8 +726,17 @@ const LabResults = () => {
 																		: 'text'
 																}
 																onKeyDown={e => {
-																	if (param.analysis_parameter_type.value_type === 'NUMBER') {
-																		if (e.key === ',' || e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') {
+																	if (
+																		param.analysis_parameter_type.value_type ===
+																		'NUMBER'
+																	) {
+																		if (
+																			e.key === ',' ||
+																			e.key === 'e' ||
+																			e.key === 'E' ||
+																			e.key === '+' ||
+																			e.key === '-'
+																		) {
 																			e.preventDefault()
 																		}
 																	}
@@ -813,8 +823,17 @@ const LabResults = () => {
 															: 'text'
 													}
 													onKeyDown={e => {
-														if (param.analysis_parameter_type.value_type === 'NUMBER') {
-															if (e.key === ',' || e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') {
+														if (
+															param.analysis_parameter_type.value_type ===
+															'NUMBER'
+														) {
+															if (
+																e.key === ',' ||
+																e.key === 'e' ||
+																e.key === 'E' ||
+																e.key === '+' ||
+																e.key === '-'
+															) {
 																e.preventDefault()
 															}
 														}
