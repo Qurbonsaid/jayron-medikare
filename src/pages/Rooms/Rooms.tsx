@@ -192,7 +192,7 @@ const Rooms = () => {
                     <TableHead className="text-center">Xona narxi</TableHead>
                     <TableHead className="text-center">Sig'im</TableHead>
                     <TableHead className="text-center">Bandlik</TableHead>
-                    <TableHead className="text-center">Xona qavatı</TableHead>
+                    <TableHead className="text-center">Xona qavati</TableHead>
                     <TableHead className="text-center">Tavsif</TableHead>
                     <TableHead className="text-center">Harakatlar</TableHead>
                   </TableRow>
@@ -250,7 +250,7 @@ const Rooms = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            // onClick={() => navigate(`/rooms/${room._id}`)}
+                            onClick={() => navigate(`/room/${room._id}`)}
                             className="hover:bg-primary hover:text-white transition-smooth"
                           >
                             <Eye className="w-4 h-4" />
@@ -381,7 +381,7 @@ const Rooms = () => {
                     <Button
                       size="sm"
                       className="w-full gradient-primary"
-                      // onClick={() => navigate(`/inpatient/${corpus._id}`)}
+                      onClick={() => navigate(`/room/${room._id}`)}
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       Кўриш

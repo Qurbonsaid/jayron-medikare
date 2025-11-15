@@ -5,13 +5,26 @@ export type CorpusId = {
   total_rooms: number;
 };
 
+export type Patient = {
+  patient:
+    | {
+        _id: string;
+        fullname: string;
+        phone: string;
+        email: string;
+      }
+    | string;
+  start_date: string;
+  _id: string;
+};
+
 export type Room = {
   room_name: string;
   room_price: number;
   corpus_id: string | CorpusId;
   patient_capacity: number;
   patient_occupied: number;
-  patients: [];
+  patients: Patient[];
   floor_number: number;
   description: string;
   status: string;

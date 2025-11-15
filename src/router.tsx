@@ -1,45 +1,47 @@
-import Appointments from '@/pages/Appointments/Appointments';
-import Billing from '@/pages/Billing/Billing';
-import Dashboard from '@/pages/Dashboard';
-import Inpatient from '@/pages/Inpatient/Inpatient';
-import LabOrder from '@/pages/LabOrder';
-import LabResults from '@/pages/LabResults';
-import PatientPortal from '@/pages/PatientPortal';
-import PatientProfile from '@/pages/Patients/PatientProfile';
-import Patients from '@/pages/Patients/Patients';
-import Radiology from '@/pages/Radiology';
-import Reports from '@/pages/Reports';
-import Settings from '@/pages/Settings';
-import AddDiagnostika from './pages/AddDiagnostika';
-import AnalysisParamsModal from './pages/AnalysisParamsModal';
-import ExaminationDetail from './pages/Examination/ExaminationDetail';
-import NewVisit from './pages/Examination/NewVisit';
-import Prescription from './pages/Examination/Prescription';
-import Visits from './pages/Examination/Visits';
-import Profil from './pages/Profil';
-import Rooms from './pages/Rooms/Rooms';
+import Appointments from "@/pages/Appointments/Appointments";
+import Billing from "@/pages/Billing/Billing";
+import Dashboard from "@/pages/Dashboard";
+import Inpatient from "@/pages/Inpatient/Inpatient";
+import LabResults from "@/pages/Diagnostika/LabResults";
+import PatientPortal from "@/pages/PatientPortal";
+import PatientProfile from "@/pages/Patients/PatientProfile";
+import Patients from "@/pages/Patients/Patients";
+import Radiology from "@/pages/Radiology";
+import Reports from "@/pages/Reports";
+import Settings from "@/pages/Tizim/Settings";
+import LabOrder from "@/pages/Diagnostika/LabOrder";
+import Profil from "./pages/Tizim/Profil";
+import AddDiagnostika from "./pages/Diagnostika/AddDiagnostika";
+import NewVisit from "./pages/Examination/NewVisit";
+import Prescription from "./pages/Examination/Prescription";
+import Visits from "./pages/Examination/Visits";
+import AnalysisParamsModal from "./pages/Diagnostika/AnalysisParamsModal";
+import Rooms from "./pages/Rooms/Rooms";
+import Medicine from "./pages/Medicine/Medicine";
+import RoomDetail from "./pages/RoomDetail/RoomDetail";
 
 export const routers = [
-  { path: '/dashboard', element: <Dashboard /> },
-  { path: '/patients', element: <Patients /> },
-  { path: '/patient/:id', element: <PatientProfile /> },
-  { path: '/new-visit', element: <NewVisit /> },
-  { path: '/appointments', element: <Appointments /> },
-  { path: '/prescription', element: <Prescription /> },
-  { path: '/visits', element: <Visits /> },
-  { path: '/examination/:id', element: <ExaminationDetail /> },
-  { path: '/add-diagnostika', element: <AddDiagnostika /> },
-  { path: '/analysisById/:id', element: <AnalysisParamsModal /> },
-  { path: '/lab-order', element: <LabOrder /> },
-  { path: '/inpatient', element: <Inpatient /> },
-  { path: '/inpatient/:id', element: <Rooms /> },
-  { path: '/lab-results', element: <LabResults /> },
-  { path: '/billing', element: <Billing /> },
-  { path: '/reports', element: <Reports /> },
-  { path: '/radiology', element: <Radiology /> },
-  { path: '/settings', element: <Settings /> },
-  { path: '/profile', element: <Profil /> },
-  { path: '/patient-portal', element: <PatientPortal /> },
+  { path: "/dashboard", element: <Dashboard /> },
+  { path: "/patients", element: <Patients /> },
+  { path: "/patient/:id", element: <PatientProfile /> },
+  { path: "/new-visit", element: <NewVisit /> },
+  { path: "/appointments", element: <Appointments /> },
+  { path: "/prescription", element: <Prescription /> },
+  { path: "/visits", element: <Visits /> },
+  { path: "/add-diagnostika", element: <AddDiagnostika /> },
+  { path: "/analysisById/:id", element: <AnalysisParamsModal /> },
+  { path: "/lab-order", element: <LabOrder /> },
+  { path: "/inpatient", element: <Inpatient /> },
+  { path: "/inpatient/:id", element: <Rooms /> },
+  { path: "/room/:id", element: <RoomDetail /> },
+  { path: "/medicine", element: <Medicine /> },
+  { path: "/lab-results", element: <LabResults /> },
+  { path: "/billing", element: <Billing /> },
+  { path: "/reports", element: <Reports /> },
+  { path: "/radiology", element: <Radiology /> },
+  { path: "/settings", element: <Settings /> },
+  { path: "/profile", element: <Profil /> },
+  { path: "/patient-portal", element: <PatientPortal /> },
 ];
 
 export const navigator = [
