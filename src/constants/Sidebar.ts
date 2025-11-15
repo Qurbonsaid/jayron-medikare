@@ -28,7 +28,7 @@ export const menuCategories = [
     title: 'КЎРИКЛАР',
     icon: Stethoscope,
     items: [
-      { title: 'Янги кўрик SOAP', url: '/new-visit', icon: FileEdit },
+      { title: 'Янги кўрик', url: '/new-visit', icon: FileEdit },
       { title: 'Кўриклар', url: '/visits', icon: Calendar },
       // { title: 'Навбатлар', url: '/appointments', icon: Calendar },
       { title: 'Рецепт ёзиш', url: '/prescription', icon: Pill },

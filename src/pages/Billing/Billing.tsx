@@ -1,5 +1,4 @@
 import { useGetAllBillingQuery } from '@/app/api/billingApi/billingApi';
-import { getStatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -26,6 +25,31 @@ export interface Service {
   unitPrice: number;
   total: number;
 }
+
+// Custom Billing Status Badge
+const getBillingStatusBadge = (status: string) => {
+  const statusConfig: Record<string, { text: string; class: string }> = {
+    completed: { text: 'Тўланган', class: 'bg-green-500/10 text-green-600' },
+    incompleted: { text: 'Тўланмаган', class: 'bg-red-500/10 text-red-600' },
+    pending: {
+      text: 'Қисман тўланған',
+      class: 'bg-yellow-500/10 text-yellow-600',
+    },
+  };
+
+  const config = statusConfig[status] || {
+    text: status,
+    class: 'bg-gray-500/10 text-gray-600',
+  };
+
+  return (
+    <span
+      className={`px-2 py-1 rounded-full text-xs font-medium ${config.class}`}
+    >
+      {config.text}
+    </span>
+  );
+};
 
 const Billing = () => {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -184,11 +208,9 @@ const Billing = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='all'>Барчаси</SelectItem>
-                  <SelectItem value='Тўланмаган'>Тўланмаган</SelectItem>
-                  <SelectItem value='Қисман тўланган'>
-                    Қисман тўланган
-                  </SelectItem>
-                  <SelectItem value='Тўланган'>Тўланган</SelectItem>
+                  <SelectItem value='incompleted'>Тўланмаган</SelectItem>
+                  <SelectItem value='pending'>Қисман тўланган</SelectItem>
+                  <SelectItem value='completed'>Тўланган</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -271,7 +293,7 @@ const Billing = () => {
                           {formatCurrency(invoice.debt_amount)}
                         </td>
                         <td className='py-3 px-4'>
-                          {getStatusBadge(invoice.status)}
+                          {getBillingStatusBadge(invoice.status)}
                         </td>
                         <td className='py-3 px-4'>
                           <div className='flex gap-2'>
@@ -332,7 +354,7 @@ const Billing = () => {
                         {invoice._id}
                       </div>
                     </div>
-                    {getStatusBadge(invoice.status)}
+                    {getBillingStatusBadge(invoice.status)}
                   </div>
 
                   <div className='grid grid-cols-2 gap-3 text-sm'>
@@ -399,7 +421,19 @@ const Billing = () => {
               Бугунги даромад
             </div>
             <div className='text-xl sm:text-2xl font-bold text-success'>
-              {formatCurrency(1270000)}
+              {formatCurrency(
+                invoices
+                  .filter((inv) => {
+                    const today = new Date();
+                    const invDate = new Date(inv.created_at);
+                    return (
+                      invDate.getDate() === today.getDate() &&
+                      invDate.getMonth() === today.getMonth() &&
+                      invDate.getFullYear() === today.getFullYear()
+                    );
+                  })
+                  .reduce((sum, inv) => sum + inv.paid_amount, 0)
+              )}
             </div>
           </Card>
           <Card className='p-4 sm:p-5 lg:p-6'>
@@ -407,7 +441,18 @@ const Billing = () => {
               Бу ҳафта
             </div>
             <div className='text-xl sm:text-2xl font-bold'>
-              {formatCurrency(5840000)}
+              {formatCurrency(
+                invoices
+                  .filter((inv) => {
+                    const today = new Date();
+                    const invDate = new Date(inv.created_at);
+                    const weekStart = new Date(today);
+                    weekStart.setDate(today.getDate() - today.getDay());
+                    weekStart.setHours(0, 0, 0, 0);
+                    return invDate >= weekStart;
+                  })
+                  .reduce((sum, inv) => sum + inv.paid_amount, 0)
+              )}
             </div>
           </Card>
           <Card className='p-4 sm:p-5 lg:p-6 sm:col-span-2 lg:col-span-1'>
@@ -415,7 +460,9 @@ const Billing = () => {
               Қарзлар жами
             </div>
             <div className='text-xl sm:text-2xl font-bold text-danger'>
-              {formatCurrency(770000)}
+              {formatCurrency(
+                invoices.reduce((sum, inv) => sum + inv.debt_amount, 0)
+              )}
             </div>
           </Card>
         </div>

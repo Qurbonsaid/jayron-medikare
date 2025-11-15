@@ -1,6 +1,5 @@
 export const getStatusBadge = (status: string) => {
 
-  console.log(status)
     const statusConfig = {
       active: { text: 'Фаол', class: 'bg-blue-500/10 text-blue-600' },
       completed: {

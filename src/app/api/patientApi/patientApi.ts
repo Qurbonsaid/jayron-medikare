@@ -25,13 +25,13 @@ export const patientApi = baseApi.injectEndpoints({
         url: PATHS.GET_ALL,
         params: param,
       }),
-      providesTags: [API_TAGS.PATIENTS],
+      providesTags: [API_TAGS.PATIENTS, API_TAGS.EXAMS],
     }),
     getPatientById: builder.query<OnePatientRes, string>({
       query: (id) => ({
         url: PATHS.GET_ONE + id,
       }),
-      providesTags: [API_TAGS.PATIENTS],
+      providesTags: [API_TAGS.PATIENTS, API_TAGS.EXAMS],
     }),
     updatePatient: builder.mutation<PatientRes, UpdateReq>({
       query: ({ body, id }) => ({

@@ -61,12 +61,7 @@ export const navigator = [
   {
     path: '/new-visit',
     to: null,
-    title: (
-      <div>
-        <h1 className='text-xl font-bold'>Янги Кўрик</h1>
-        <p className='text-sm text-muted-foreground'>SOAP Ёзув</p>
-      </div>
-    ),
+    title: 'Янги Кўрик',
   },
   {
     path: '/appointments',
