@@ -50,9 +50,9 @@ import {
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { getStatusBadge } from '../../components/common/StatusBadge';
 import ExamFilter from './components/ExamFilter';
 import NewVisitDialog from './components/NewVisitDialog';
-import { getStatusBadge } from './components/StatusBadge';
 
 const Visits = () => {
   const navigate = useNavigate();

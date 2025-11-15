@@ -1,8 +1,10 @@
-import { Badge } from '@/components/ui/badge';
+import { useGetAllBillingQuery } from '@/app/api/billingApi/billingApi';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import {
   Select,
   SelectContent,
@@ -10,9 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search } from 'lucide-react';
+import { format } from 'date-fns';
+import { FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { getStatusBadge } from '@/components/common/StatusBadge';
 import NewBilling from './components/NewBilling';
 
 interface Invoice {
@@ -42,36 +45,41 @@ const Billing = () => {
   const [discount, setDiscount] = useState(0);
   const [selectedExaminationId, setSelectedExaminationId] = useState('');
 
+  const { data, isLoading } = useGetAllBillingQuery({});
+
+  console.log(data);
+
+  const invoices = data?.data || [];
   // Mock data
-  const invoices: Invoice[] = [
-    {
-      invoiceNumber: 'INV-2025-001',
-      patientName: 'Алиев Анвар Рашидович',
-      date: '07.10.2025',
-      totalAmount: 500000,
-      paidAmount: 500000,
-      balance: 0,
-      status: 'Тўланган',
-    },
-    {
-      invoiceNumber: 'INV-2025-002',
-      patientName: 'Каримова Нилуфар Азизовна',
-      date: '07.10.2025',
-      totalAmount: 850000,
-      paidAmount: 400000,
-      balance: 450000,
-      status: 'Қисман тўланган',
-    },
-    {
-      invoiceNumber: 'INV-2025-003',
-      patientName: 'Усмонов Жахонгир Баходирович',
-      date: '06.10.2025',
-      totalAmount: 320000,
-      paidAmount: 0,
-      balance: 320000,
-      status: 'Тўланмаган',
-    },
-  ];
+  // const invoices: Invoice[] = [
+  //   {
+  //     invoiceNumber: 'INV-2025-001',
+  //     patientName: 'Алиев Анвар Рашидович',
+  //     date: '07.10.2025',
+  //     totalAmount: 500000,
+  //     paidAmount: 500000,
+  //     balance: 0,
+  //     status: 'Тўланган',
+  //   },
+  //   {
+  //     invoiceNumber: 'INV-2025-002',
+  //     patientName: 'Каримова Нилуфар Азизовна',
+  //     date: '07.10.2025',
+  //     totalAmount: 850000,
+  //     paidAmount: 400000,
+  //     balance: 450000,
+  //     status: 'Қисман тўланган',
+  //   },
+  //   {
+  //     invoiceNumber: 'INV-2025-003',
+  //     patientName: 'Усмонов Жахонгир Баходирович',
+  //     date: '06.10.2025',
+  //     totalAmount: 320000,
+  //     paidAmount: 0,
+  //     balance: 320000,
+  //     status: 'Тўланмаган',
+  //   },
+  // ];
 
   const [services, setServices] = useState<Service[]>([
     {
@@ -89,15 +97,6 @@ const Billing = () => {
       total: 80000,
     },
   ]);
-
-  const getStatusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      Тўланмаган: 'bg-danger/10 text-danger border-danger/20 border',
-      'Қисман тўланган': 'bg-warning/10 text-warning border-warning/20 border',
-      Тўланган: 'bg-success/10 text-success border-success/20 border',
-    };
-    return <Badge className={colors[status] || ''}>{status}</Badge>;
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
@@ -142,24 +141,12 @@ const Billing = () => {
     setServices(services.filter((service) => service.id !== id));
   };
 
-  const handleRecordPayment = () => {
-    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast.error('Илтимос, тўлов миқдорини киритинг');
-      return;
-    }
-
-    toast.success('Тўлов қайд қилинди', {
-      description: `${formatCurrency(parseFloat(paymentAmount))} - ${
-        paymentMethod === 'cash' ? 'Нақд' : 'Карта'
-      }`,
-    });
-    setPaymentAmount('');
-  };
-
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
-      invoice.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      invoice.patient_id.fullname
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      invoice._id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus =
       statusFilter === 'all' || invoice.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -219,82 +206,98 @@ const Billing = () => {
             <h2 className='text-lg lg:text-xl font-semibold mb-4'>
               Ҳисоб-фактуралар рўйхати
             </h2>
-            <div className='overflow-x-auto'>
-              <table className='w-full'>
-                <thead>
-                  <tr className='border-b'>
-                    <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
-                      Ҳисоб №
-                    </th>
-                    <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
-                      Бемор
-                    </th>
-                    <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
-                      Сана
-                    </th>
-                    <th className='text-right py-3 px-4 font-medium text-muted-foreground text-sm'>
-                      Жами
-                    </th>
-                    <th className='text-right py-3 px-4 font-medium text-muted-foreground text-sm'>
-                      Тўланган
-                    </th>
-                    <th className='text-right py-3 px-4 font-medium text-muted-foreground text-sm'>
-                      Қолдиқ
-                    </th>
-                    <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
-                      Ҳолат
-                    </th>
-                    <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
-                      Ҳаракатлар
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredInvoices.map((invoice) => (
-                    <tr
-                      key={invoice.invoiceNumber}
-                      className='border-b hover:bg-muted/50 transition-colors'
-                    >
-                      <td className='py-3 px-4 font-medium text-sm'>
-                        {invoice.invoiceNumber}
-                      </td>
-                      <td className='py-3 px-4 text-sm'>
-                        {invoice.patientName}
-                      </td>
-                      <td className='py-3 px-4 text-sm text-muted-foreground'>
-                        {invoice.date}
-                      </td>
-                      <td className='py-3 px-4 text-right font-semibold text-sm'>
-                        {formatCurrency(invoice.totalAmount)}
-                      </td>
-                      <td className='py-3 px-4 text-right text-success text-sm'>
-                        {formatCurrency(invoice.paidAmount)}
-                      </td>
-                      <td className='py-3 px-4 text-right text-danger font-semibold text-sm'>
-                        {formatCurrency(invoice.balance)}
-                      </td>
-                      <td className='py-3 px-4'>
-                        {getStatusBadge(invoice.status)}
-                      </td>
-                      <td className='py-3 px-4'>
-                        <div className='flex gap-2'>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            onClick={() => setIsInvoiceModalOpen(true)}
-                          >
-                            Кўриш
-                          </Button>
-                          {invoice.status !== 'Тўланган' && (
-                            <Button size='sm'>Тўлаш</Button>
-                          )}
-                        </div>
-                      </td>
+            {isLoading ? (
+              <div className='flex justify-center py-8'>
+                <LoadingSpinner />
+              </div>
+            ) : filteredInvoices.length === 0 ? (
+              <EmptyState
+                icon={FileText}
+                title='Ҳисоб-фактуралар топилмади'
+                description={
+                  searchQuery || statusFilter !== 'all'
+                    ? 'Филтр шартларига мос маълумот топилмади'
+                    : 'Ҳали ҳисоб-фактуралар яратилмаган'
+                }
+              />
+            ) : (
+              <div className='overflow-x-auto'>
+                <table className='w-full'>
+                  <thead>
+                    <tr className='border-b'>
+                      <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
+                        Ҳисоб №
+                      </th>
+                      <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
+                        Бемор
+                      </th>
+                      <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
+                        Сана
+                      </th>
+                      <th className='text-right py-3 px-4 font-medium text-muted-foreground text-sm'>
+                        Жами
+                      </th>
+                      <th className='text-right py-3 px-4 font-medium text-muted-foreground text-sm'>
+                        Тўланган
+                      </th>
+                      <th className='text-right py-3 px-4 font-medium text-muted-foreground text-sm'>
+                        Қолдиқ
+                      </th>
+                      <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
+                        Ҳолат
+                      </th>
+                      <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
+                        Ҳаракатлар
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredInvoices.map((invoice) => (
+                      <tr
+                        key={invoice._id}
+                        className='border-b hover:bg-muted/50 transition-colors'
+                      >
+                        <td className='py-3 px-4 font-medium text-sm'>
+                          {invoice._id}
+                        </td>
+                        <td className='py-3 px-4 text-sm'>
+                          {invoice.patient_id.fullname}
+                        </td>
+                        <td className='py-3 px-4 text-sm text-muted-foreground'>
+                          {format(invoice.created_at, 'dd-MM-yyy')}
+                        </td>
+                        <td className='py-3 px-4 text-right font-semibold text-sm'>
+                          {formatCurrency(invoice.total_amount)}
+                        </td>
+                        <td className='py-3 px-4 text-right text-success text-sm'>
+                          {formatCurrency(invoice.paid_amount)}
+                        </td>
+                        <td className='py-3 px-4 text-right text-danger font-semibold text-sm'>
+                          {formatCurrency(invoice.debt_amount)}
+                        </td>
+                        <td className='py-3 px-4'>
+                          {getStatusBadge(invoice.status)}
+                        </td>
+                        <td className='py-3 px-4'>
+                          <div className='flex gap-2'>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              onClick={() => setIsInvoiceModalOpen(true)}
+                            >
+                              Кўриш
+                            </Button>
+                            {invoice.status !== 'Тўланган' && (
+                              <Button size='sm'>Тўлаш</Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -303,75 +306,97 @@ const Billing = () => {
           <h2 className='text-lg font-semibold px-1 mb-2'>
             Ҳисоб-фактуралар рўйхати
           </h2>
-          {filteredInvoices.map((invoice) => (
-            <Card key={invoice.invoiceNumber} className='p-4'>
-              <div className='space-y-3'>
-                <div className='flex items-start justify-between gap-2'>
-                  <div className='flex-1 min-w-0'>
-                    <div className='font-semibold text-sm truncate'>
-                      {invoice.patientName}
-                    </div>
-                    <div className='text-xs text-muted-foreground mt-0.5'>
-                      {invoice.invoiceNumber}
-                    </div>
-                  </div>
-                  {getStatusBadge(invoice.status)}
-                </div>
-
-                <div className='grid grid-cols-2 gap-3 text-sm'>
-                  <div>
-                    <div className='text-xs text-muted-foreground mb-1'>
-                      Сана
-                    </div>
-                    <div className='font-medium'>{invoice.date}</div>
-                  </div>
-                  <div className='text-right'>
-                    <div className='text-xs text-muted-foreground mb-1'>
-                      Жами
-                    </div>
-                    <div className='font-semibold'>
-                      {formatCurrency(invoice.totalAmount)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className='grid grid-cols-2 gap-3 text-sm'>
-                  <div>
-                    <div className='text-xs text-muted-foreground mb-1'>
-                      Тўланган
-                    </div>
-                    <div className='font-medium text-success'>
-                      {formatCurrency(invoice.paidAmount)}
-                    </div>
-                  </div>
-                  <div className='text-right'>
-                    <div className='text-xs text-muted-foreground mb-1'>
-                      Қолдиқ
-                    </div>
-                    <div className='font-semibold text-danger'>
-                      {formatCurrency(invoice.balance)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className='flex gap-2 pt-2 border-t'>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    onClick={() => setIsInvoiceModalOpen(true)}
-                    className='flex-1 text-xs'
-                  >
-                    Кўриш
-                  </Button>
-                  {invoice.status !== 'Тўланган' && (
-                    <Button size='sm' className='flex-1 text-xs'>
-                      Тўлаш
-                    </Button>
-                  )}
-                </div>
+          {isLoading ? (
+            <Card className='p-8'>
+              <div className='flex justify-center'>
+                <LoadingSpinner />
               </div>
             </Card>
-          ))}
+          ) : filteredInvoices.length === 0 ? (
+            <Card className='p-6'>
+              <EmptyState
+                icon={FileText}
+                title='Ҳисоб-фактуралар топилмади'
+                description={
+                  searchQuery || statusFilter !== 'all'
+                    ? 'Филтр шартларига мос маълумот топилмади'
+                    : 'Ҳали ҳисоб-фактуралар яратилмаган'
+                }
+              />
+            </Card>
+          ) : (
+            filteredInvoices.map((invoice) => (
+              <Card key={invoice._id} className='p-4'>
+                <div className='space-y-3'>
+                  <div className='flex items-start justify-between gap-2'>
+                    <div className='flex-1 min-w-0'>
+                      <div className='font-semibold text-sm truncate'>
+                        {invoice.patient_id.fullname}
+                      </div>
+                      <div className='text-xs text-muted-foreground mt-0.5'>
+                        {invoice._id}
+                      </div>
+                    </div>
+                    {getStatusBadge(invoice.status)}
+                  </div>
+
+                  <div className='grid grid-cols-2 gap-3 text-sm'>
+                    <div>
+                      <div className='text-xs text-muted-foreground mb-1'>
+                        Сана
+                      </div>
+                      <div className='font-medium'>
+                        {format(invoice.created_at, 'dd-MM-yyy')}
+                      </div>
+                    </div>
+                    <div className='text-right'>
+                      <div className='text-xs text-muted-foreground mb-1'>
+                        Жами
+                      </div>
+                      <div className='font-semibold'>
+                        {formatCurrency(invoice.total_amount)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className='grid grid-cols-2 gap-3 text-sm'>
+                    <div>
+                      <div className='text-xs text-muted-foreground mb-1'>
+                        Тўланган
+                      </div>
+                      <div className='font-medium text-success'>
+                        {formatCurrency(invoice.paid_amount)}
+                      </div>
+                    </div>
+                    <div className='text-right'>
+                      <div className='text-xs text-muted-foreground mb-1'>
+                        Қолдиқ
+                      </div>
+                      <div className='font-semibold text-danger'>
+                        {formatCurrency(invoice.debt_amount)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className='flex gap-2 pt-2 border-t'>
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      onClick={() => setIsInvoiceModalOpen(true)}
+                      className='flex-1 text-xs'
+                    >
+                      Кўриш
+                    </Button>
+                    {invoice.status !== 'Тўланган' && (
+                      <Button size='sm' className='flex-1 text-xs'>
+                        Тўлаш
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
 
         {/* Payment History Summary */}
