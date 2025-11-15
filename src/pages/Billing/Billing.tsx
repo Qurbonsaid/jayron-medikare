@@ -1,13 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -17,9 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CreditCard, Plus, Printer, Search, Send } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import NewBilling from './components/NewBilling';
 
 interface Invoice {
   invoiceNumber: string;
@@ -31,7 +25,7 @@ interface Invoice {
   status: 'Тўланмаган' | 'Қисман тўланган' | 'Тўланган';
 }
 
-interface Service {
+export interface Service {
   id: string;
   name: string;
   quantity: number;
@@ -46,6 +40,7 @@ const Billing = () => {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [discount, setDiscount] = useState(0);
+  const [selectedExaminationId, setSelectedExaminationId] = useState('');
 
   // Mock data
   const invoices: Invoice[] = [
@@ -409,322 +404,25 @@ const Billing = () => {
       </main>
 
       {/* Invoice Modal */}
-      <Dialog open={isInvoiceModalOpen} onOpenChange={setIsInvoiceModalOpen}>
-        <DialogContent className='max-w-[95vw] sm:max-w-[90vw] lg:max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6'>
-          <DialogHeader>
-            <DialogTitle className='text-xl sm:text-2xl'>
-              Янги ҳисоб-фактура
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className='space-y-4 sm:space-y-6'>
-            {/* Patient Info */}
-            <Card className='p-3 sm:p-4 bg-muted/50'>
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'>
-                <div>
-                  <Label className='text-xs text-muted-foreground'>Бемор</Label>
-                  <div className='font-semibold text-sm sm:text-base'>
-                    Каримова Нилуфар Азизовна
-                  </div>
-                </div>
-                <div>
-                  <Label className='text-xs text-muted-foreground'>ID</Label>
-                  <div className='font-semibold text-sm sm:text-base'>
-                    PAT-2025-0042
-                  </div>
-                </div>
-                <div className='sm:col-span-2 lg:col-span-1'>
-                  <Label className='text-xs text-muted-foreground'>
-                    Телефон
-                  </Label>
-                  <div className='font-semibold text-sm sm:text-base'>
-                    +998 90 123 45 67
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Services Table */}
-            <div>
-              <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3'>
-                <Label className='text-base sm:text-lg font-semibold'>
-                  Хизматлар
-                </Label>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={addService}
-                  className='w-full sm:w-auto text-xs sm:text-sm'
-                >
-                  <Plus className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
-                  Хизмат қўшиш
-                </Button>
-              </div>
-
-              {/* Desktop Table View */}
-              <div className='hidden md:block border rounded-lg overflow-hidden'>
-                <table className='w-full'>
-                  <thead className='bg-muted'>
-                    <tr>
-                      <th className='text-left py-3 px-4 font-medium text-sm'>
-                        Хизмат номи
-                      </th>
-                      <th className='text-center py-3 px-4 font-medium text-sm'>
-                        Сони
-                      </th>
-                      <th className='text-right py-3 px-4 font-medium text-sm'>
-                        Нархи
-                      </th>
-                      <th className='text-right py-3 px-4 font-medium text-sm'>
-                        Жами
-                      </th>
-                      <th className='w-16'></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {services.map((service) => (
-                      <tr key={service.id} className='border-b'>
-                        <td className='py-2 px-4'>
-                          <Input
-                            value={service.name}
-                            onChange={(e) =>
-                              updateService(service.id, 'name', e.target.value)
-                            }
-                            placeholder='Хизмат номи...'
-                            className='text-sm'
-                          />
-                        </td>
-                        <td className='py-2 px-4'>
-                          <Input
-                            type='number'
-                            min='1'
-                            value={service.quantity}
-                            onChange={(e) =>
-                              updateService(
-                                service.id,
-                                'quantity',
-                                parseInt(e.target.value) || 1
-                              )
-                            }
-                            className='w-20 mx-auto text-center text-sm'
-                          />
-                        </td>
-                        <td className='py-2 px-4'>
-                          <Input
-                            type='number'
-                            value={service.unitPrice}
-                            onChange={(e) =>
-                              updateService(
-                                service.id,
-                                'unitPrice',
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className='text-right text-sm'
-                          />
-                        </td>
-                        <td className='py-2 px-4 text-right font-semibold text-sm'>
-                          {formatCurrency(service.total)}
-                        </td>
-                        <td className='py-2 px-4'>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() => removeService(service.id)}
-                            className='text-danger hover:text-danger'
-                          >
-                            ×
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Card View */}
-              <div className='md:hidden space-y-3'>
-                {services.map((service) => (
-                  <Card key={service.id} className='p-3'>
-                    <div className='space-y-3'>
-                      <div className='flex items-start justify-between gap-2'>
-                        <Label className='text-xs text-muted-foreground'>
-                          Хизмат номи
-                        </Label>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => removeService(service.id)}
-                          className='text-danger hover:text-danger h-6 w-6 p-0 -mt-1'
-                        >
-                          ×
-                        </Button>
-                      </div>
-                      <Input
-                        value={service.name}
-                        onChange={(e) =>
-                          updateService(service.id, 'name', e.target.value)
-                        }
-                        placeholder='Хизмат номи...'
-                        className='text-sm'
-                      />
-
-                      <div className='grid grid-cols-2 gap-3'>
-                        <div>
-                          <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                            Сони
-                          </Label>
-                          <Input
-                            type='number'
-                            min='1'
-                            value={service.quantity}
-                            onChange={(e) =>
-                              updateService(
-                                service.id,
-                                'quantity',
-                                parseInt(e.target.value) || 1
-                              )
-                            }
-                            className='text-sm'
-                          />
-                        </div>
-                        <div>
-                          <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                            Нархи
-                          </Label>
-                          <Input
-                            type='number'
-                            value={service.unitPrice}
-                            onChange={(e) =>
-                              updateService(
-                                service.id,
-                                'unitPrice',
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className='text-sm'
-                          />
-                        </div>
-                      </div>
-
-                      <div className='pt-2 border-t flex justify-between items-center'>
-                        <span className='text-xs text-muted-foreground'>
-                          Жами:
-                        </span>
-                        <span className='font-semibold text-sm'>
-                          {formatCurrency(service.total)}
-                        </span>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* Payment Section */}
-            <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
-              <div className='space-y-3 sm:space-y-4'>
-                <div>
-                  <Label className='text-sm'>Чегирма (сўм)</Label>
-                  <Input
-                    type='number'
-                    value={discount}
-                    onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}
-                    placeholder='0'
-                    className='text-sm'
-                  />
-                </div>
-
-                <Card className='p-3 sm:p-4 bg-primary/5'>
-                  <div className='flex justify-between items-center mb-2 text-sm'>
-                    <span className='text-muted-foreground'>Оралиқ жами:</span>
-                    <span className='font-semibold'>
-                      {formatCurrency(calculateSubtotal())}
-                    </span>
-                  </div>
-                  <div className='flex justify-between items-center mb-2 text-sm'>
-                    <span className='text-muted-foreground'>Чегирма:</span>
-                    <span className='text-danger'>
-                      -{formatCurrency(discount)}
-                    </span>
-                  </div>
-                  <div className='border-t pt-2 flex justify-between items-center'>
-                    <span className='text-base sm:text-lg font-semibold'>
-                      Жами тўлов:
-                    </span>
-                    <span className='text-lg sm:text-2xl font-bold text-primary'>
-                      {formatCurrency(calculateGrandTotal())}
-                    </span>
-                  </div>
-                </Card>
-              </div>
-
-              <div className='space-y-3 sm:space-y-4'>
-                <div>
-                  <Label className='text-sm'>Тўлов миқдори</Label>
-                  <Input
-                    type='number'
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                    placeholder='0'
-                    className='text-sm'
-                  />
-                </div>
-
-                <div>
-                  <Label className='text-sm'>Тўлов усули</Label>
-                  <Select
-                    value={paymentMethod}
-                    onValueChange={setPaymentMethod}
-                  >
-                    <SelectTrigger className='text-sm'>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='cash'>
-                        <div className='flex items-center'>
-                          <CreditCard className='w-4 h-4 mr-2' />
-                          Нақд
-                        </div>
-                      </SelectItem>
-                      <SelectItem value='card'>Карта</SelectItem>
-                      <SelectItem value='click'>Click</SelectItem>
-                      <SelectItem value='payme'>Payme</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button
-                  className='w-full text-sm'
-                  onClick={handleRecordPayment}
-                >
-                  <CreditCard className='w-4 h-4 mr-2' />
-                  Тўловни қайд қилиш
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className='gap-2 flex-col sm:flex-row'>
-            <Button
-              variant='outline'
-              onClick={() => setIsInvoiceModalOpen(false)}
-              className='w-full sm:w-auto text-sm'
-            >
-              Бекор қилиш
-            </Button>
-            <Button variant='outline' className='w-full sm:w-auto text-sm'>
-              <Send className='w-4 h-4 mr-2' />
-              Беморга юбориш
-            </Button>
-            <Button variant='outline' className='w-full sm:w-auto text-sm'>
-              <Printer className='w-4 h-4 mr-2' />
-              Чоп этиш
-            </Button>
-            <Button className='w-full sm:w-auto text-sm'>Сақлаш</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NewBilling
+        isInvoiceModalOpen={isInvoiceModalOpen}
+        setIsInvoiceModalOpen={setIsInvoiceModalOpen}
+        addService={addService}
+        services={services}
+        updateService={updateService}
+        formatCurrency={formatCurrency}
+        removeService={removeService}
+        discount={discount}
+        setDiscount={setDiscount}
+        paymentAmount={paymentAmount}
+        setPaymentAmount={setPaymentAmount}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        selectedExaminationId={selectedExaminationId}
+        setSelectedExaminationId={setSelectedExaminationId}
+        calculateSubtotal={calculateSubtotal}
+        calculateGrandTotal={calculateGrandTotal}
+      />
     </div>
   );
 };

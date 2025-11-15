@@ -13,7 +13,6 @@ export type ExamDataItem = {
     _id: string;
     fullname: string;
     phone: string;
-    patient_id: string;
   };
   doctor_id: {
     _id: string;
