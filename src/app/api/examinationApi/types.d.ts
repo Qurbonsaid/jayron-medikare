@@ -6,37 +6,8 @@ export type examCreateReq = {
   description: string;
   complaints: string;
 };
-export type AllExamRes = {
-  success: boolean;
-  data: Array<ExamRes>;
-  pagination: Pagination;
-};
 
-export interface MutationRes {
-  success: boolean;
-  message?: string;
-  error?: {
-    statusCode: number;
-    statusMsg: string;
-    msg: string;
-  };
-};
-
-export type UpdateExamReq = {
-  id: string;
-  body: {
-  patient_id: string;
-  diagnosis: string;
-  description: string;
-  complaints: string;
-};
-};
-
-type status = 'active' | 'inactive' | 'completed' | 'deleted';
-
-export type ExamRes = {
-  success:boolean;
-  data:{
+export type ExamDataItem = {
   _id: string;
   patient_id: {
     _id: string;
@@ -50,10 +21,16 @@ export type ExamRes = {
   };
   description: string;
   complaints: string;
-  analyses: Array | null;
+  analyses: Array<any> | null;
   billing_id: string | null;
   images: Array<string>;
-  status: status;
+  status: 'active' | 'inactive' | 'completed' | 'deleted';
+  diagnosis?:
+    | {
+        _id: string;
+        name: string;
+      }
+    | string;
   prescriptions: Array<{
     medication: string;
     dosage: number;
@@ -62,10 +39,42 @@ export type ExamRes = {
     instructions: string;
     _id: string;
   }>;
-  rooms: Array;
+  rooms: Array<any>;
   created_at: Date;
   updated_at: Date;
+};
+
+export type AllExamRes = {
+  success: boolean;
+  data: Array<ExamDataItem>;
+  pagination: Pagination;
+};
+
+export interface MutationRes {
+  success: boolean;
+  message?: string;
+  error?: {
+    statusCode: number;
+    statusMsg: string;
+    msg: string;
+  };
 }
+
+export type UpdateExamReq = {
+  id: string;
+  body: {
+    patient_id: string;
+    diagnosis: string;
+    description: string;
+    complaints: string;
+  };
+};
+
+type status = 'active' | 'inactive' | 'completed' | 'deleted';
+
+export type ExamRes = {
+  success: boolean;
+  data: ExamDataItem;
 };
 export type AllExamReq = {
   page?: number;
@@ -88,28 +97,28 @@ export type Prescription = {
 export interface createPrescriptionReq {
   id: string;
   body: Prescription;
-};
+}
 
-export interface updatePrescriptionReq extends createPrescriptionReq{
-  prescription_id:string
+export interface updatePrescriptionReq extends createPrescriptionReq {
+  prescription_id: string;
 }
 export interface deletePrescriptionReq {
-  id:string;
-  prescription_id:string
+  id: string;
+  prescription_id: string;
 }
 
 // images
 
 export interface imageReq {
   id: string;
-  body:{
-    images: Array<string>
-  }
+  body: {
+    images: Array<string>;
+  };
 }
 
 export interface addImagesRes extends MutationRes {
-  addedImages : Array<string>
+  addedImages: Array<string>;
 }
 export interface reomveimagesRes extends MutationRes {
-  removedImages : Array<string>
+  removedImages: Array<string>;
 }

@@ -50,9 +50,9 @@ import {
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { getStatusBadge } from '../../components/common/StatusBadge';
 import ExamFilter from './components/ExamFilter';
 import NewVisitDialog from './components/NewVisitDialog';
-import { getStatusBadge } from './components/StatusBadge';
 
 const Visits = () => {
   const navigate = useNavigate();
@@ -334,7 +334,7 @@ const Visits = () => {
                             size='sm'
                             variant='outline'
                             className='text-primary hover:text-primary/80'
-                            onClick={() => handleDetailClick(exam)}
+                            onClick={() => navigate(`/examination/${exam._id}`)}
                             title='Батафсил'
                           >
                             <Eye className='w-4 h-4 mr-1' />
