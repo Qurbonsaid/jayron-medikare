@@ -28,23 +28,43 @@ export interface Service {
 
 // Custom Billing Status Badge
 const getBillingStatusBadge = (status: string) => {
+  console.log('Billing status:', status);
+
   const statusConfig: Record<string, { text: string; class: string }> = {
-    completed: { text: 'Тўланган', class: 'bg-green-500/10 text-green-600' },
-    incompleted: { text: 'Тўланмаган', class: 'bg-red-500/10 text-red-600' },
+    paid: {
+      text: 'Тўланған',
+      class: 'bg-green-100 text-green-700 border border-green-300',
+    },
+    unpaid: {
+      text: 'Тўланмаган',
+      class: 'bg-red-100 text-red-700 border border-red-300',
+    },
+    partially_paid: {
+      text: 'Қисман тўланған',
+      class: 'bg-yellow-100 text-yellow-700 border border-yellow-300',
+    },
+    completed: {
+      text: 'Тўланған',
+      class: 'bg-green-100 text-green-700 border border-green-300',
+    },
+    incompleted: {
+      text: 'Тўланмаган',
+      class: 'bg-red-100 text-red-700 border border-red-300',
+    },
     pending: {
       text: 'Қисман тўланған',
-      class: 'bg-yellow-500/10 text-yellow-600',
+      class: 'bg-yellow-100 text-yellow-700 border border-yellow-300',
     },
   };
 
   const config = statusConfig[status] || {
     text: status,
-    class: 'bg-gray-500/10 text-gray-600',
+    class: 'bg-gray-100 text-gray-700 border border-gray-300',
   };
 
   return (
     <span
-      className={`px-2 py-1 rounded-full text-xs font-medium ${config.class}`}
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${config.class}`}
     >
       {config.text}
     </span>
@@ -63,6 +83,8 @@ const Billing = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [discount, setDiscount] = useState(0);
   const [selectedExaminationId, setSelectedExaminationId] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { data, isLoading } = useGetAllBillingQuery({});
 
@@ -171,6 +193,23 @@ const Billing = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  const handleFilterChange = (filter: string) => {
+    setStatusFilter(filter);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
   return (
     <div className='min-h-screen bg-background'>
       {/* Main Content */}
@@ -195,14 +234,14 @@ const Billing = () => {
                 <Input
                   placeholder='Бемор номи ёки ҳисоб-фактура рақами...'
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className='pl-9 sm:pl-10 text-sm'
                 />
               </div>
             </div>
             <div>
               <Label>Ҳолат</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={handleFilterChange}>
                 <SelectTrigger>
                   <SelectValue placeholder='Барчаси' />
                 </SelectTrigger>
@@ -269,7 +308,7 @@ const Billing = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredInvoices.map((invoice) => (
+                    {paginatedInvoices.map((invoice) => (
                       <tr
                         key={invoice._id}
                         className='border-b hover:bg-muted/50 transition-colors'
@@ -315,6 +354,86 @@ const Billing = () => {
                 </table>
               </div>
             )}
+
+            {/* Pagination Controls - Desktop */}
+            {!isLoading && filteredInvoices.length > 0 && (
+              <div className='flex items-center justify-between px-4 py-4 border-t'>
+                <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                  <span>
+                    {startIndex + 1}-
+                    {Math.min(endIndex, filteredInvoices.length)} /{' '}
+                    {filteredInvoices.length}
+                  </span>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger className='w-20 h-8'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='5'>5</SelectItem>
+                      <SelectItem value='10'>10</SelectItem>
+                      <SelectItem value='20'>20</SelectItem>
+                      <SelectItem value='50'>50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className='flex items-center gap-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={currentPage === 1}
+                  >
+                    Олдинги
+                  </Button>
+                  <div className='flex items-center gap-1'>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={
+                            currentPage === pageNum ? 'default' : 'outline'
+                          }
+                          size='sm'
+                          className='w-8 h-8'
+                          onClick={() => setCurrentPage(pageNum)}
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                  >
+                    Кейинги
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -342,7 +461,7 @@ const Billing = () => {
               />
             </Card>
           ) : (
-            filteredInvoices.map((invoice) => (
+            paginatedInvoices.map((invoice) => (
               <Card key={invoice._id} className='p-4'>
                 <div className='space-y-3'>
                   <div className='flex items-start justify-between gap-2'>
@@ -411,6 +530,64 @@ const Billing = () => {
                 </div>
               </Card>
             ))
+          )}
+
+          {/* Pagination Controls - Mobile */}
+          {!isLoading && filteredInvoices.length > 0 && (
+            <Card className='p-3'>
+              <div className='space-y-3'>
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='text-muted-foreground'>
+                    {startIndex + 1}-
+                    {Math.min(endIndex, filteredInvoices.length)} /{' '}
+                    {filteredInvoices.length}
+                  </span>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger className='w-20 h-8'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='5'>5</SelectItem>
+                      <SelectItem value='10'>10</SelectItem>
+                      <SelectItem value='20'>20</SelectItem>
+                      <SelectItem value='50'>50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className='flex items-center justify-center gap-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={currentPage === 1}
+                  >
+                    Олдинги
+                  </Button>
+                  <span className='text-sm font-medium px-3'>
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                  >
+                    Кейинги
+                  </Button>
+                </div>
+              </div>
+            </Card>
           )}
         </div>
 
