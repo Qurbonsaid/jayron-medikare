@@ -19,12 +19,14 @@ import AnalysisParamsModal from "./pages/Diagnostika/AnalysisParamsModal";
 import Rooms from "./pages/Rooms/Rooms";
 import Medicine from "./pages/Medicine/Medicine";
 import RoomDetail from "./pages/RoomDetail/RoomDetail";
+import ExaminationDetail from "./pages/Examination/ExaminationDetail";
 
 export const routers = [
   { path: "/dashboard", element: <Dashboard /> },
   { path: "/patients", element: <Patients /> },
   { path: "/patient/:id", element: <PatientProfile /> },
   { path: "/new-visit", element: <NewVisit /> },
+  { path: "/examination/:id", element: <ExaminationDetail /> },
   { path: "/appointments", element: <Appointments /> },
   { path: "/prescription", element: <Prescription /> },
   { path: "/visits", element: <Visits /> },

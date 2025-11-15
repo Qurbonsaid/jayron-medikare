@@ -483,8 +483,7 @@ const NewBilling = ({
                       </div>
                     </SelectItem>
                     <SelectItem value='card'>Карта</SelectItem>
-                    <SelectItem value='click'>Click</SelectItem>
-                    <SelectItem value='payme'>Payme</SelectItem>
+                    <SelectItem value='online'>Online</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
