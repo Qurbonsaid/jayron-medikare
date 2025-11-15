@@ -1,4 +1,5 @@
 import { useGetAllBillingQuery } from '@/app/api/billingApi/billingApi';
+import { getStatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -15,18 +16,8 @@ import {
 import { format } from 'date-fns';
 import { FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
-import { getStatusBadge } from '@/components/common/StatusBadge';
 import NewBilling from './components/NewBilling';
-
-interface Invoice {
-  invoiceNumber: string;
-  patientName: string;
-  date: string;
-  totalAmount: number;
-  paidAmount: number;
-  balance: number;
-  status: 'Тўланмаган' | 'Қисман тўланган' | 'Тўланган';
-}
+import ViewBillingDialog from './components/ViewBillingDialog';
 
 export interface Service {
   id: string;
@@ -38,6 +29,10 @@ export interface Service {
 
 const Billing = () => {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedBillingId, setSelectedBillingId] = useState<string | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -283,13 +278,13 @@ const Billing = () => {
                             <Button
                               size='sm'
                               variant='outline'
-                              onClick={() => setIsInvoiceModalOpen(true)}
+                              onClick={() => {
+                                setSelectedBillingId(invoice._id);
+                                setIsViewDialogOpen(true);
+                              }}
                             >
                               Кўриш
                             </Button>
-                            {invoice.status !== 'Тўланган' && (
-                              <Button size='sm'>Тўлаш</Button>
-                            )}
                           </div>
                         </td>
                       </tr>
@@ -382,16 +377,14 @@ const Billing = () => {
                     <Button
                       size='sm'
                       variant='outline'
-                      onClick={() => setIsInvoiceModalOpen(true)}
+                      onClick={() => {
+                        setSelectedBillingId(invoice._id);
+                        setIsViewDialogOpen(true);
+                      }}
                       className='flex-1 text-xs'
                     >
                       Кўриш
                     </Button>
-                    {invoice.status !== 'Тўланган' && (
-                      <Button size='sm' className='flex-1 text-xs'>
-                        Тўлаш
-                      </Button>
-                    )}
                   </div>
                 </div>
               </Card>
@@ -447,6 +440,16 @@ const Billing = () => {
         setSelectedExaminationId={setSelectedExaminationId}
         calculateSubtotal={calculateSubtotal}
         calculateGrandTotal={calculateGrandTotal}
+      />
+
+      {/* View Billing Dialog */}
+      <ViewBillingDialog
+        isOpen={isViewDialogOpen}
+        onClose={() => {
+          setIsViewDialogOpen(false);
+          setSelectedBillingId(null);
+        }}
+        billingId={selectedBillingId}
       />
     </div>
   );
