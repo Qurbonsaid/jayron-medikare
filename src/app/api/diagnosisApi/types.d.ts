@@ -32,3 +32,37 @@ interface getAllDiagnosisRes extends AllResponse {
     updated_at: Date;
   }>;
 }
+
+export interface Disease {
+  _id: string
+  code: string
+  name: string
+  description: string
+  symptoms: Array<string>
+  causes: Array<string>
+  treatments: Array<string>
+  is_chronic: boolean
+  is_contagious: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DiseaseCreateRequest {
+  code: string
+  name: string
+  description: string
+  symptoms: Array<string>
+  causes: Array<string>
+  treatments: Array<string>
+  is_chronic: boolean
+  is_contagious: boolean
+}
+
+export interface DiseaseUpdateRequest extends Partial<DiseaseCreateRequest> {}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+}

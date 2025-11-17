@@ -5,6 +5,7 @@ import {
   CirclePlus,
   ClipboardCheck,
   FileEdit,
+  HeartPulse,
   List,
   Microscope,
   Pill,
@@ -32,6 +33,7 @@ export const menuCategories = [
       { title: 'Кўриклар', url: '/visits', icon: Calendar },
       // { title: 'Навбатлар', url: '/appointments', icon: Calendar },
       { title: "Рецепт ёзиш", url: "/prescription", icon: Pill },
+      { title: "Касалликлар", url: "/disease", icon: HeartPulse },
     ],
   },
   {
