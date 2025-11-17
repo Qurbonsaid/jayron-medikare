@@ -21,6 +21,7 @@ import { CreditCard, Plus, Printer, Send } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
 import { Service } from '../Billing';
+import { PAYMENT } from '@/constants/payment';
 
 interface Props {
   isInvoiceModalOpen: boolean;
@@ -476,14 +477,14 @@ const NewBilling = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='cash'>
+                    <SelectItem value={PAYMENT.CASH}>
                       <div className='flex items-center'>
                         <CreditCard className='w-4 h-4 mr-2' />
                         Нақд
                       </div>
                     </SelectItem>
-                    <SelectItem value='card'>Карта</SelectItem>
-                    <SelectItem value='online'>Online</SelectItem>
+                    <SelectItem value={PAYMENT.CARD}>Карта</SelectItem>
+                    <SelectItem value={PAYMENT.ONLINE}>Online</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

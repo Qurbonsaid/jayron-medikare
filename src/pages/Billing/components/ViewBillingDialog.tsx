@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PAYMENT } from '@/constants/payment';
 import { format } from 'date-fns';
 import { CreditCard, Edit, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -99,6 +100,25 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
         return service;
       })
     );
+  };
+
+  const handleAddService = () => {
+    const newService: EditableService = {
+      id: Date.now().toString(),
+      name: '',
+      count: 1,
+      price: 0,
+      total_price: 0,
+    };
+    setServices([...services, newService]);
+  };
+
+  const handleRemoveService = (id: string) => {
+    if (services.length > 1) {
+      setServices(services.filter((s) => s.id !== id));
+    } else {
+      toast.error('Камида битта хизмат бўлиши керак');
+    }
   };
 
   const handleSaveServices = async () => {
@@ -275,6 +295,11 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       <th className='text-right py-3 px-4 font-medium text-sm'>
                         Жами
                       </th>
+                      {isEditMode && (
+                        <th className='text-center py-3 px-4 font-medium text-sm'>
+                          Амал
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -349,11 +374,37 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                         <td className='py-2 px-4 text-right font-semibold text-sm'>
                           {formatCurrency(service.total_price)}
                         </td>
+                        {isEditMode && (
+                          <td className='py-2 px-4'>
+                            <div className='flex justify-center'>
+                              <Button
+                                size='sm'
+                                variant='destructive'
+                                onClick={() => handleRemoveService(service.id)}
+                                className='h-8 w-8 p-0'
+                              >
+                                ×
+                              </Button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+
+              {/* Add Service Button - Desktop */}
+              {isEditMode && (
+                <Button
+                  variant='outline'
+                  onClick={handleAddService}
+                  className='mt-3 w-full hidden md:flex items-center justify-center'
+                >
+                  <span className='text-lg mr-2'>+</span>
+                  Хизмат қўшиш
+                </Button>
+              )}
 
               {/* Mobile Cards */}
               <div className='md:hidden space-y-3'>
@@ -447,10 +498,33 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                           {formatCurrency(service.total_price)}
                         </span>
                       </div>
+
+                      {isEditMode && (
+                        <Button
+                          size='sm'
+                          variant='destructive'
+                          onClick={() => handleRemoveService(service.id)}
+                          className='w-full mt-2'
+                        >
+                          Ўчириш
+                        </Button>
+                      )}
                     </div>
                   </Card>
                 ))}
               </div>
+
+              {/* Add Service Button - Mobile */}
+              {isEditMode && (
+                <Button
+                  variant='outline'
+                  onClick={handleAddService}
+                  className='mt-3 w-full md:hidden flex items-center justify-center'
+                >
+                  <span className='text-lg mr-2'>+</span>
+                  Хизмат қўшиш
+                </Button>
+              )}
             </div>
 
             {/* Payment Info */}
@@ -576,14 +650,14 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value='cash'>
+                        <SelectItem value={PAYMENT.CASH}>
                           <div className='flex items-center'>
                             <CreditCard className='w-4 h-4 mr-2' />
                             Нақд
                           </div>
                         </SelectItem>
-                        <SelectItem value='card'>Карта</SelectItem>
-                        <SelectItem value='online'>Online</SelectItem>\
+                        <SelectItem value={PAYMENT.CARD}>Карта</SelectItem>
+                        <SelectItem value={PAYMENT.ONLINE}>Online</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
