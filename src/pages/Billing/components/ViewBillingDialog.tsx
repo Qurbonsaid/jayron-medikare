@@ -527,6 +527,286 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
               )}
             </div>
 
+            {/* Analyses Section */}
+            {billingData.data.examination_id?.analyses &&
+              billingData.data.examination_id.analyses.length > 0 && (
+                <div>
+                  <Label className='text-base sm:text-lg font-semibold mb-3 block'>
+                    Таҳлиллар
+                  </Label>
+
+                  {/* Desktop Table */}
+                  <div className='hidden md:block border rounded-lg overflow-hidden'>
+                    <table className='w-full'>
+                      <thead className='bg-muted'>
+                        <tr>
+                          <th className='text-left py-3 px-4 font-medium text-sm'>
+                            Таҳлил тури
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Даража
+                          </th>
+                          <th className='text-left py-3 px-4 font-medium text-sm'>
+                            Клиник кўрсатмалар
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Ҳолат
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Сана
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {billingData.data.examination_id.analyses.map(
+                          (analysis) => (
+                            <tr key={analysis._id} className='border-b'>
+                              <td className='py-2 px-4 text-sm'>
+                                {analysis.analysis_type}
+                              </td>
+                              <td className='py-2 px-4 text-center'>
+                                <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700'>
+                                  {analysis.level}
+                                </span>
+                              </td>
+                              <td className='py-2 px-4 text-sm'>
+                                {analysis.clinical_indications || '-'}
+                              </td>
+                              <td className='py-2 px-4 text-center'>
+                                <span
+                                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                    analysis.status === 'PENDING'
+                                      ? 'bg-yellow-100 text-yellow-700'
+                                      : analysis.status === 'COMPLETED'
+                                      ? 'bg-green-100 text-green-700'
+                                      : 'bg-gray-100 text-gray-700'
+                                  }`}
+                                >
+                                  {analysis.status}
+                                </span>
+                              </td>
+                              <td className='py-2 px-4 text-center text-sm text-muted-foreground'>
+                                {format(
+                                  new Date(analysis.created_at),
+                                  'dd.MM.yyyy'
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className='md:hidden space-y-3'>
+                    {billingData.data.examination_id.analyses.map(
+                      (analysis) => (
+                        <Card key={analysis._id} className='p-3'>
+                          <div className='space-y-2'>
+                            <div className='flex items-start justify-between gap-2'>
+                              <div>
+                                <Label className='text-xs text-muted-foreground'>
+                                  Таҳлил тури
+                                </Label>
+                                <div className='font-medium text-sm mt-1'>
+                                  {analysis.analysis_type}
+                                </div>
+                              </div>
+                              <span
+                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  analysis.status === 'PENDING'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : analysis.status === 'COMPLETED'
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-gray-100 text-gray-700'
+                                }`}
+                              >
+                                {analysis.status}
+                              </span>
+                            </div>
+
+                            <div className='grid grid-cols-2 gap-2 pt-2 border-t'>
+                              <div>
+                                <Label className='text-xs text-muted-foreground'>
+                                  Даража
+                                </Label>
+                                <div className='text-sm mt-1'>
+                                  <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700'>
+                                    {analysis.level}
+                                  </span>
+                                </div>
+                              </div>
+                              <div>
+                                <Label className='text-xs text-muted-foreground'>
+                                  Сана
+                                </Label>
+                                <div className='text-sm mt-1'>
+                                  {format(
+                                    new Date(analysis.created_at),
+                                    'dd.MM.yyyy'
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {analysis.clinical_indications && (
+                              <div className='pt-2 border-t'>
+                                <Label className='text-xs text-muted-foreground'>
+                                  Клиник кўрсатмалар
+                                </Label>
+                                <div className='text-sm mt-1'>
+                                  {analysis.clinical_indications}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+            {/* Rooms Section */}
+            {billingData.data.examination_id?.rooms &&
+              billingData.data.examination_id.rooms.length > 0 && (
+                <div>
+                  <Label className='text-base sm:text-lg font-semibold mb-3 block'>
+                    Палаталар
+                  </Label>
+
+                  {/* Desktop Table */}
+                  <div className='hidden md:block border rounded-lg overflow-hidden'>
+                    <table className='w-full'>
+                      <thead className='bg-muted'>
+                        <tr>
+                          <th className='text-left py-3 px-4 font-medium text-sm'>
+                            Палата
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Қават
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Бошланиш
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Тугаш
+                          </th>
+                          <th className='text-right py-3 px-4 font-medium text-sm'>
+                            Нархи
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {billingData.data.examination_id.rooms.map(
+                          (room, index) => (
+                            <tr key={room._id || index} className='border-b'>
+                              <td className='py-2 px-4'>
+                                <div className='font-medium text-sm'>
+                                  {room.room_name}
+                                </div>
+                                <div className='text-xs text-muted-foreground'>
+                                  ID: {room.room_id}
+                                </div>
+                              </td>
+                              <td className='py-2 px-4 text-center text-sm'>
+                                {room.floor_number || '-'}
+                              </td>
+                              <td className='py-2 px-4 text-center text-sm'>
+                                {format(
+                                  new Date(room.start_date),
+                                  'dd.MM.yyyy'
+                                )}
+                              </td>
+                              <td className='py-2 px-4 text-center text-sm'>
+                                {room.end_date ? (
+                                  format(new Date(room.end_date), 'dd.MM.yyyy')
+                                ) : (
+                                  <span className='text-yellow-600'>
+                                    Давом этмоқда
+                                  </span>
+                                )}
+                              </td>
+                              <td className='py-2 px-4 text-right font-semibold text-sm'>
+                                {formatCurrency(room.room_price)}
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className='md:hidden space-y-3'>
+                    {billingData.data.examination_id.rooms.map(
+                      (room, index) => (
+                        <Card key={room._id || index} className='p-3'>
+                          <div className='space-y-2'>
+                            <div className='flex items-start justify-between'>
+                              <div>
+                                <div className='font-medium text-sm'>
+                                  {room.room_name}
+                                </div>
+                                <div className='text-xs text-muted-foreground mt-0.5'>
+                                  ID: {room.room_id}
+                                </div>
+                              </div>
+                              {room.floor_number && (
+                                <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700'>
+                                  {room.floor_number}-қават
+                                </span>
+                              )}
+                            </div>
+
+                            <div className='grid grid-cols-2 gap-2 pt-2 border-t'>
+                              <div>
+                                <Label className='text-xs text-muted-foreground'>
+                                  Бошланиш
+                                </Label>
+                                <div className='text-sm mt-1'>
+                                  {format(
+                                    new Date(room.start_date),
+                                    'dd.MM.yyyy'
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <Label className='text-xs text-muted-foreground'>
+                                  Тугаш
+                                </Label>
+                                <div className='text-sm mt-1'>
+                                  {room.end_date ? (
+                                    format(
+                                      new Date(room.end_date),
+                                      'dd.MM.yyyy'
+                                    )
+                                  ) : (
+                                    <span className='text-yellow-600'>
+                                      Давом этмоқда
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className='pt-2 border-t flex justify-between items-center'>
+                              <span className='text-xs text-muted-foreground'>
+                                Нархи:
+                              </span>
+                              <span className='font-semibold text-sm'>
+                                {formatCurrency(room.room_price)}
+                              </span>
+                            </div>
+                          </div>
+                        </Card>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
             {/* Payment Info */}
             <Card className='p-3 sm:p-4 bg-primary/5'>
               <Label className='text-base font-semibold mb-3 block'>
