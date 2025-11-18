@@ -39,7 +39,7 @@ export type ExamDataItem = {
   }> | null;
   billing_id: string | null;
   images: Array<string>;
-  status: 'active' | 'inactive' | 'completed' | 'deleted';
+  status;
   diagnosis?:
     | {
         _id: string;
@@ -98,7 +98,7 @@ export type UpdateExamReq = {
   };
 };
 
-type status = 'active' | 'inactive' | 'completed' | 'deleted';
+export type status = 'active' | 'inactive' | 'completed' | 'deleted' | 'pending';
 
 export type ExamRes = {
   success: boolean;

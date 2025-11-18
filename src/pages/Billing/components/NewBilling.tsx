@@ -76,6 +76,7 @@ const NewBilling = ({
     {
       page,
       limit: 20,
+      status : 'pending'
     },
     {
       refetchOnMountOrArgChange: true, // Always refetch when component mounts or args change
