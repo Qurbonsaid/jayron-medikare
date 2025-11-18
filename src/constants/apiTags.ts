@@ -10,4 +10,5 @@ export enum API_TAGS {
   BILLING = 'Billing',
   CORPUS = "CORPUS",
   ROOM = "ROOM",
+  DISEASE="DISEASE"
 }

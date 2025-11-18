@@ -271,8 +271,7 @@ export default function ProfilePage() {
 				}}
 			>
 				<DialogContent
-					className='w-full max-w-md sm:max-w-lg md:max-w-xl rounded-2xl 
-				   max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent'
+					className=' max-w-md md:max-w-xl scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'
 				>
 					<DialogHeader>
 						<DialogTitle className='text-lg font-semibold text-gray-800'>

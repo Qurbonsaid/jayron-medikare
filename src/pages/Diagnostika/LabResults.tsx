@@ -162,7 +162,7 @@ const LabResults = () => {
 	)
 	const selectedOrder = data?.data.find(item => item._id === selectedOrderId)
 
-	const { data: patientsData } = useGetAllPatientQuery({ page: 1, limit: 100 })
+	const { data: patientsData } = useGetAllPatientQuery({ page: 1, limit: 100 , is_diagnosis:true})
 	const { data: diagnosticsData } = useGetAllDiagnosticsQuery()
 	const [showErrors, setShowErrors] = useState(false)
 
