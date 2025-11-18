@@ -590,59 +590,6 @@ const Billing = () => {
             </Card>
           )}
         </div>
-
-        {/* Payment History Summary */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mt-4 sm:mt-6'>
-          <Card className='p-4 sm:p-5 lg:p-6'>
-            <div className='text-xs sm:text-sm text-muted-foreground mb-1'>
-              Бугунги даромад
-            </div>
-            <div className='text-xl sm:text-2xl font-bold text-success'>
-              {formatCurrency(
-                invoices
-                  .filter((inv) => {
-                    const today = new Date();
-                    const invDate = new Date(inv.created_at);
-                    return (
-                      invDate.getDate() === today.getDate() &&
-                      invDate.getMonth() === today.getMonth() &&
-                      invDate.getFullYear() === today.getFullYear()
-                    );
-                  })
-                  .reduce((sum, inv) => sum + inv.paid_amount, 0)
-              )}
-            </div>
-          </Card>
-          <Card className='p-4 sm:p-5 lg:p-6'>
-            <div className='text-xs sm:text-sm text-muted-foreground mb-1'>
-              Бу ҳафта
-            </div>
-            <div className='text-xl sm:text-2xl font-bold'>
-              {formatCurrency(
-                invoices
-                  .filter((inv) => {
-                    const today = new Date();
-                    const invDate = new Date(inv.created_at);
-                    const weekStart = new Date(today);
-                    weekStart.setDate(today.getDate() - today.getDay());
-                    weekStart.setHours(0, 0, 0, 0);
-                    return invDate >= weekStart;
-                  })
-                  .reduce((sum, inv) => sum + inv.paid_amount, 0)
-              )}
-            </div>
-          </Card>
-          <Card className='p-4 sm:p-5 lg:p-6 sm:col-span-2 lg:col-span-1'>
-            <div className='text-xs sm:text-sm text-muted-foreground mb-1'>
-              Қарзлар жами
-            </div>
-            <div className='text-xl sm:text-2xl font-bold text-danger'>
-              {formatCurrency(
-                invoices.reduce((sum, inv) => sum + inv.debt_amount, 0)
-              )}
-            </div>
-          </Card>
-        </div>
       </main>
 
       {/* Invoice Modal */}

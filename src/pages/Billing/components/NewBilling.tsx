@@ -1,5 +1,6 @@
 import { useCreateBillingMutation } from '@/app/api/billingApi/billingApi';
 import { useGetAllExamsQuery } from '@/app/api/examinationApi/examinationApi';
+import { getStatusBadge } from '@/components/common/StatusBadge';
 import {
   AlertDialogFooter,
   AlertDialogHeader,
@@ -17,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PAYMENT } from '@/constants/payment';
 import { CreditCard, Plus, Printer, Send } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
@@ -61,21 +63,74 @@ const NewBilling = ({
   calculateSubtotal,
   calculateGrandTotal,
 }: Props) => {
+  const [page, setPage] = React.useState(1);
+  const [allExams, setAllExams] = React.useState<any[]>([]);
+  const [hasMore, setHasMore] = React.useState(true);
+
   const [createBilling, { isLoading: isCreating }] = useCreateBillingMutation();
-  const { data: examinationsData, isLoading: isLoadingExams } =
-    useGetAllExamsQuery({
-      limit: 100,
-    });
+  const {
+    data: examinationsData,
+    isLoading: isLoadingExams,
+    isFetching,
+  } = useGetAllExamsQuery(
+    {
+      page,
+      limit: 20,
+    },
+    {
+      refetchOnMountOrArgChange: true, // Always refetch when component mounts or args change
+    }
+  );
+
+  // Update allExams when new data arrives (only when modal is open)
+  React.useEffect(() => {
+    if (examinationsData?.data && isInvoiceModalOpen) {
+      if (page === 1) {
+        setAllExams(examinationsData.data);
+      } else {
+        setAllExams((prev) => {
+          const newExams = examinationsData.data.filter(
+            (exam: any) => !prev.some((e) => e._id === exam._id)
+          );
+          return [...prev, ...newExams];
+        });
+      }
+
+      // Check if there's more data
+      if (examinationsData.pagination) {
+        setHasMore(examinationsData.pagination.next_page !== null);
+      }
+    }
+  }, [examinationsData, page, isInvoiceModalOpen]);
 
   const selectedExam = React.useMemo(() => {
-    return examinationsData?.data?.find(
-      (exam) => exam._id === selectedExaminationId
-    );
-  }, [examinationsData, selectedExaminationId]);
+    return allExams.find((exam) => exam._id === selectedExaminationId);
+  }, [allExams, selectedExaminationId]);
 
   const formatNumberWithSpaces = (num: number) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    const bottom =
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
+
+    if (bottom && hasMore && !isFetching) {
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  // Reset when modal closes
+  React.useEffect(() => {
+    if (!isInvoiceModalOpen) {
+      // Modal yopilganda reset
+      setPage(1);
+      setAllExams([]);
+      setHasMore(true);
+      setSelectedExaminationId('');
+    }
+  }, [isInvoiceModalOpen]);
 
   const handleSaveBilling = async () => {
     // Validation
@@ -145,45 +200,85 @@ const NewBilling = ({
         </AlertDialogHeader>
 
         <div className='space-y-4 sm:space-y-6'>
-          {/* Examination Selector */}
           <div>
             <Label className='text-sm mb-2 block'>Кўрикни танланг *</Label>
-            {isLoadingExams ? (
-              <div className='flex justify-center py-4'>
-                <LoadingSpinner />
-              </div>
-            ) : (
-              <Select
-                value={selectedExaminationId}
-                onValueChange={setSelectedExaminationId}
-              >
-                <SelectTrigger className='text-sm'>
-                  <SelectValue placeholder='Кўрикни танланг' />
-                </SelectTrigger>
-                <SelectContent>
-                  {examinationsData?.data &&
-                  examinationsData.data.length > 0 ? (
-                    examinationsData.data.map((exam) => (
-                      <SelectItem key={exam._id} value={exam._id}>
-                        <div className='flex flex-col'>
-                          <span className='font-medium'>
-                            {exam.patient_id.fullname}
-                          </span>
-                          <span className='text-xs text-muted-foreground'>
-                            Шикоят: {exam.complaints} | Доктор:{' '}
-                            {exam.doctor_id.fullname}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className='p-4 text-center text-muted-foreground text-sm'>
-                      Актив кўриклар топилмади
+            <Select
+              value={selectedExaminationId}
+              onValueChange={setSelectedExaminationId}
+            >
+              <SelectTrigger className='h-auto min-h-[42px] py-2.5 px-3'>
+                {selectedExam ? (
+                  <div className='flex items-start justify-between w-full gap-3 text-left'>
+                    <div className='flex-1 min-w-0 space-y-0.5'>
+                      <div className='font-semibold text-sm text-primary truncate'>
+                        {selectedExam.patient_id.fullname}
+                      </div>
+                      <div className='text-xs text-muted-foreground truncate'>
+                        <span className='font-medium'>Шикоят:</span>{' '}
+                        {selectedExam.complaints}
+                      </div>
+                      <div className='text-xs text-muted-foreground truncate'>
+                        <span className='font-medium'>Доктор:</span>{' '}
+                        {selectedExam.doctor_id.fullname}
+                      </div>
                     </div>
-                  )}
-                </SelectContent>
-              </Select>
-            )}
+                    <div className='flex-shrink-0 mt-0.5'>
+                      {getStatusBadge(selectedExam.status)}
+                    </div>
+                  </div>
+                ) : (
+                  <span className='text-muted-foreground text-sm'>
+                    Кўрикни танланг
+                  </span>
+                )}
+              </SelectTrigger>
+              <SelectContent
+                onScroll={handleScroll}
+                className='max-h-[420px] overflow-y-auto w-full'
+              >
+                {isLoadingExams && allExams.length === 0 ? (
+                  <div className='p-4 text-center'>
+                    <LoadingSpinner className='w-5 h-5 mx-auto' />
+                  </div>
+                ) : allExams && allExams.length > 0 ? (
+                  allExams.map((exam) => (
+                    <SelectItem
+                      key={exam._id}
+                      value={exam._id}
+                      className='py-3 px-3 cursor-pointer hover:bg-accent transition-colors'
+                    >
+                      <div className='flex items-start justify-between w-full gap-3'>
+                        <div className='flex-1 min-w-0 space-y-1'>
+                          <div className='font-semibold text-sm text-primary'>
+                            {exam.patient_id.fullname}
+                          </div>
+                          <div className='text-xs text-muted-foreground line-clamp-2'>
+                            <span className='font-medium'>Шикоят:</span>{' '}
+                            {exam.complaints}
+                          </div>
+                          <div className='text-xs text-muted-foreground'>
+                            <span className='font-medium'>Доктор:</span>{' '}
+                            {exam.doctor_id.fullname}
+                          </div>
+                        </div>
+                        <div className='flex-shrink-0 mt-0.5'>
+                          {getStatusBadge(exam.status)}
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className='p-4 text-center text-muted-foreground text-sm'>
+                    Актив кўриклар топилмади
+                  </div>
+                )}
+                {isFetching && allExams.length > 0 && (
+                  <div className='p-2 text-center'>
+                    <LoadingSpinner className='w-4 h-4 mx-auto' />
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Patient Info - Show after selecting examination */}
@@ -476,14 +571,14 @@ const NewBilling = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='cash'>
+                    <SelectItem value={PAYMENT.CASH}>
                       <div className='flex items-center'>
                         <CreditCard className='w-4 h-4 mr-2' />
                         Нақд
                       </div>
                     </SelectItem>
-                    <SelectItem value='card'>Карта</SelectItem>
-                    <SelectItem value='online'>Online</SelectItem>
+                    <SelectItem value={PAYMENT.CARD}>Карта</SelectItem>
+                    <SelectItem value={PAYMENT.ONLINE}>Online</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

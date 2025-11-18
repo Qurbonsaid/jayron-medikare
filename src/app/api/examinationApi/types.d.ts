@@ -21,7 +21,22 @@ export type ExamDataItem = {
   };
   description: string;
   complaints: string;
-  analyses: Array<any> | null;
+  analyses: Array<{
+    _id: string;
+    analysis_type: string;
+    patient: string;
+    results: Array<{
+      analysis_parameter_type: string;
+      analysis_parameter_value: number | string;
+      _id: string;
+    }>;
+    level: string;
+    clinical_indications: string;
+    comment: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+  }> | null;
   billing_id: string | null;
   images: Array<string>;
   status: 'active' | 'inactive' | 'completed' | 'deleted';
@@ -39,7 +54,20 @@ export type ExamDataItem = {
     instructions: string;
     _id: string;
   }>;
-  rooms: Array<any>;
+  rooms: Array<{
+    room_name: string;
+    room_price: number;
+    corpus_id: string | CorpusId;
+    patient_capacity: number;
+    patient_occupied: number;
+    patients: Patient[];
+    floor_number: number;
+    description: string;
+    status: string;
+    _id: string;
+    created_at: string;
+    updated_at: string;
+  }>;
   created_at: Date;
   updated_at: Date;
 };

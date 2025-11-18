@@ -21,8 +21,8 @@ export interface AllRes {
   msg?: string;
 }
 
-export interface GetOneBillingRes {
-  success: boolean;
+export type GetOneBillingRes = {
+  success: true;
   data: {
     _id: string;
     patient_id: {
@@ -31,7 +31,43 @@ export interface GetOneBillingRes {
       fullname: string;
       phone: string;
     };
-    examination_id: string;
+    examination_id: {
+      _id: string;
+      diagnosis: string;
+      analyses: Array<{
+        _id: string;
+        analysis_type: string;
+        patient: string;
+        results: Array<{
+          analysis_parameter_type: string;
+          analysis_parameter_value: number | string;
+          _id: string;
+        }>;
+        level: string;
+        clinical_indications: string;
+        comment: string;
+        status: string;
+        created_at: string;
+        updated_at: string;
+      }>;
+      prescriptions: Array<{
+        medication: string;
+        dosage: number;
+        frequency: number;
+        duration: number;
+        instructions: string;
+        _id: string;
+      }>;
+      rooms: Array<{
+        _id?: string;
+        room_id: string;
+        start_date: Date;
+        end_date?: Date;
+        room_price: number;
+        room_name: string;
+        floor_number?: number;
+      }>;
+    };
     status: string;
     total_amount: number;
     paid_amount: number;
@@ -40,19 +76,19 @@ export interface GetOneBillingRes {
       name: string;
       count: number;
       price: number;
-      _id: string;
       total_price: number;
+      _id: string;
     }>;
     payments: Array<{
       payment_method: string;
       amount: number;
-      payment_date: Date;
+      payment_date: string;
       _id: string;
     }>;
-    created_at: Date;
-    updated_at: Date;
+    created_at: string;
+    updated_at: string;
   };
-}
+};
 
 export type status =
   | 'active'

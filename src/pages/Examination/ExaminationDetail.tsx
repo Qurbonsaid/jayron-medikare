@@ -341,7 +341,7 @@ const ExaminationDetail = () => {
               value='visits'
               className='py-2 sm:py-3 text-xs sm:text-sm'
             >
-              Ташрифлар
+              Таҳлил
             </TabsTrigger>
             <TabsTrigger
               value='images'
