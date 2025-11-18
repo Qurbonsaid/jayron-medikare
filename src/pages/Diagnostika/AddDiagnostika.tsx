@@ -88,9 +88,38 @@ export default function DiagnosticsPage() {
 					setIsDialogOpen(false)
 					clearForm()
 				},
-				onError: error => {
-					toast.error('Tahrirlashда хатолик')
+				onError: (error: any) => {
 					console.error(error)
+
+					// 1️⃣ Backend structured error: error.data.error.msg
+					const msg =
+						error?.error?.msg || error?.data?.error?.msg || error?.data?.msg
+					if (msg) {
+						toast.error(msg)
+						return
+					}
+
+					// 2️⃣ Backend validation errors
+					if (error?.data?.errors) {
+						const backendErrors: Record<string, string> = {}
+						if (Array.isArray(error.data.errors)) {
+							error.data.errors.forEach((err: any) => {
+								if (err.field && err.message)
+									backendErrors[err.field] = err.message
+							})
+						} else if (typeof error.data.errors === 'object') {
+							Object.entries(error.data.errors).forEach(([key, value]) => {
+								backendErrors[key] = Array.isArray(value)
+									? value[0]
+									: String(value)
+							})
+						}
+						if (Object.keys(backendErrors).length > 0) setErrors(backendErrors)
+						return
+					}
+
+					// 3️⃣ Fallback
+					toast.error('Қўшишда хатолик')
 				},
 			})
 		} else {
@@ -102,9 +131,38 @@ export default function DiagnosticsPage() {
 					setIsDialogOpen(false)
 					clearForm()
 				},
-				onError: error => {
-					toast.error('Қўшишда хатолик')
+				onError: (error: any) => {
 					console.error(error)
+
+					// 1️⃣ Backend structured error: error.data.error.msg
+					const msg =
+						error?.error?.msg || error?.data?.error?.msg || error?.data?.msg
+					if (msg) {
+						toast.error(msg)
+						return
+					}
+
+					// 2️⃣ Backend validation errors
+					if (error?.data?.errors) {
+						const backendErrors: Record<string, string> = {}
+						if (Array.isArray(error.data.errors)) {
+							error.data.errors.forEach((err: any) => {
+								if (err.field && err.message)
+									backendErrors[err.field] = err.message
+							})
+						} else if (typeof error.data.errors === 'object') {
+							Object.entries(error.data.errors).forEach(([key, value]) => {
+								backendErrors[key] = Array.isArray(value)
+									? value[0]
+									: String(value)
+							})
+						}
+						if (Object.keys(backendErrors).length > 0) setErrors(backendErrors)
+						return
+					}
+
+					// 3️⃣ Fallback
+					toast.error('Қўшишда хатолик')
 				},
 			})
 		}
@@ -227,10 +285,13 @@ export default function DiagnosticsPage() {
 						)}
 					</div>
 					<DialogFooter className='mt-4'>
-						<Button variant='outline' onClick={() => {
-							setIsDialogOpen(false)
-							setErrors({})
-							}}>
+						<Button
+							variant='outline'
+							onClick={() => {
+								setIsDialogOpen(false)
+								setErrors({})
+							}}
+						>
 							Bekor qilish
 						</Button>
 						<Button

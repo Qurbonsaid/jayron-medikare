@@ -303,12 +303,6 @@ const LabOrder = () => {
 										<p className='font-medium'>{patient.patient_id}</p>
 									</div>
 									<div>
-										<Label className='font-normal'>Diagnostika</Label>
-										<p className='font-medium'>
-											{patient.diagnosis.diagnosis_id.name}
-										</p>
-									</div>
-									<div>
 										<Label className='font-normal'>Телефон</Label>
 										<p className='font-medium'>{patient.phone}</p>
 									</div>

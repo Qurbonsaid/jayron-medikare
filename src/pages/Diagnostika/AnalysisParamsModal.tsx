@@ -91,12 +91,17 @@ export default function AnalysisParamsModal() {
 
 	const maleDisabled = getDisabledState(form.male)
 	const femaleDisabled = getDisabledState(form.female)
+	const generalDisabled = getDisabledState(form.general)
 
 	const disableMinMaxForBoth =
 		maleDisabled.disableMinMax || femaleDisabled.disableMinMax
 
 	const disableValueForBoth =
 		maleDisabled.disableValue || femaleDisabled.disableValue
+
+	const disableMinMaxForBothGeneral = generalDisabled.disableMinMax
+
+	const disableValueForBothGeneral = generalDisabled.disableValue
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target
@@ -132,6 +137,50 @@ export default function AnalysisParamsModal() {
 		}
 
 		return null
+	}
+
+	const validateMaleFemale = () => {
+		const maleFilled = form.male.min || form.male.max
+		const femaleFilled = form.female.min || form.female.max
+		const mfStringFilled = form.male.value || form.female.value
+
+		const generalNumber = form.general.min || form.general.max
+
+		// Agar bittasi boshlangan bo‘lsa → hammasi shart bo‘ladi
+		if (maleFilled || femaleFilled) {
+			if (
+				!form.male.min ||
+				!form.male.max ||
+				!form.female.min ||
+				!form.female.max
+			) {
+				setErrors(prev => ({
+					...prev,
+					normal_range: 'Iltimos, barcha Min va Max maydonlarini to‘ldiring!',
+				}))
+				return false
+			}
+		} else if (mfStringFilled) {
+			if (!form.male.value || !form.female.value) {
+				setErrors(prev => ({
+					...prev,
+					normal_range: 'Iltimos, barcha qiymat  maydonlarini to‘ldiring!',
+				}))
+				return false
+			}
+		} else if (generalNumber) {
+			if (!form.general.min || !form.general.max) {
+				setErrors(prev => ({
+					...prev,
+					normal_range: 'Iltimos, Min va Max  maydonlarini to‘ldiring!',
+				}))
+				return false
+			}
+		}
+
+		// Xatoni o‘chirib qo‘yish
+		setErrors(prev => ({ ...prev, normal_range: '' }))
+		return true
 	}
 
 	// 2. handleNormalChange ichida validatsiya
@@ -209,219 +258,174 @@ export default function AnalysisParamsModal() {
 		setOpen(true)
 	}
 
-	// const handleSubmit = async () => {
-	// 	if (!id) return
-	// 	setErrors({})
-
-	// 	let generalRange = { min: 0, max: 0, value: '' }
-
-	// 	if (form.gender_type === 'GENERAL') {
-	// 		generalRange = buildRange(form.general)
-	// 	}
-
-	// 	const payload: AnalysisParamCreateRequest = {
-	// 		analysis_id: id,
-	// 		parameter_code: form.parameter_code,
-	// 		parameter_name: form.parameter_name,
-	// 		unit: form.unit,
-	// 		description: form.description,
-	// 		normal_range: {
-	// 			male: buildRange(form.male),
-	// 			female: buildRange(form.female),
-	// 			general: generalRange,
-	// 		},
-	// 		value_type: form.value_type,
-	// 		gender_type: form.gender_type,
-	// 	}
-
-	// 	await handleRequest({
-	// 		request: () =>
-	// 			editingParam
-	// 				? updateParameter({ id: editingParam._id, data: payload })
-	// 				: createParameter(payload),
-	// 		onSuccess: () => {
-	// 			if (editingParam) {
-	// 				setParams(prev =>
-	// 					prev.map(p =>
-	// 						p._id === editingParam._id
-	// 							? { ...p, ...payload, normal_range: payload.normal_range }
-	// 							: p
-	// 					)
-	// 				)
-	// 				toast.success('Parametr muvaffaqiyatli yangilandi 🎉')
-	// 			} else {
-	// 				setParams(prev => [
-	// 					...prev,
-	// 					{ ...payload, _id: Date.now().toString() } as AnalysisParameter,
-	// 				])
-	// 				toast.success('Parametr muvaffaqiyatli qo‘shildi 🎉')
-	// 			}
-
-	// 			setOpen(false)
-	// 			setEditingParam(null)
-	// 			setForm({
-	// 				parameter_code: '',
-	// 				parameter_name: '',
-	// 				unit: '',
-	// 				description: '',
-	// 				male: { min: '', max: '', value: '' },
-	// 				female: { min: '', max: '', value: '' },
-	// 				general: { min: '', max: '', value: '' },
-	// 				value_type: 'NUMBER',
-	// 				gender_type: 'MALE_FEMALE',
-	// 			})
-	// 		},
-	// 		onError: () => {
-	// 			toast.error('Xatolik: parametr saqlanmadi!')
-	// 		},
-	// 	})
-	// }
-
-	// Min va Max inputlari uchun
-	
-	
 	const handleSubmit = async () => {
-    if (!id) return
-    setErrors({})
+		if (!id) return
+		setErrors({})
 
-    let generalRange = { min: 0, max: 0, value: '' }
+		if (form.gender_type === 'MALE_FEMALE') {
+			if (!validateMaleFemale()) return // ❗ VALIDATSIYA SHU YERDA
+		}
 
-    if (form.gender_type === 'GENERAL') {
-        generalRange = buildRange(form.general)
-    }
+		let generalRange = { min: 0, max: 0, value: '' }
 
-    const payload: AnalysisParamCreateRequest = {
-        analysis_id: id,
-        parameter_code: form.parameter_code,
-        parameter_name: form.parameter_name,
-        unit: form.unit,
-        description: form.description,
-        normal_range: {
-            male: buildRange(form.male),
-            female: buildRange(form.female),
-            general: generalRange,
-        },
-        value_type: form.value_type,
-        gender_type: form.gender_type,
-    }
+		if (form.gender_type === 'GENERAL') {
+			generalRange = buildRange(form.general)
+		}
 
-    await handleRequest({
-        request: () =>
-            editingParam
-                ? updateParameter({ id: editingParam._id, data: payload })
-                : createParameter(payload),
-        onSuccess: (result) => {
-            // Backend'dan kelgan yangi parameter
-            const newParam = result?.data?.data || result?.data
-            
-            if (editingParam) {
-                setParams(prev =>
-                    prev.map(p =>
-                        p._id === editingParam._id
-                            ? (newParam || { ...p, ...payload, normal_range: payload.normal_range })
-                            : p
-                    )
-                )
-                toast.success('Parametr muvaffaqiyatli yangilandi 🎉')
-            } else {
-                // Backend'dan kelgan to'liq data
-                if (newParam && newParam._id) {
-                    setParams(prev => [...prev, newParam])
-                } else {
-                    // Fallback
-                    setParams(prev => [
-                        ...prev,
-                        { ...payload, _id: Date.now().toString() } as AnalysisParameter,
-                    ])
-                }
-                toast.success("Parametr muvaffaqiyatli qo'shildi 🎉")
-            }
+		const payload: AnalysisParamCreateRequest = {
+			analysis_id: id,
+			parameter_code: form.parameter_code,
+			parameter_name: form.parameter_name,
+			unit: form.unit,
+			description: form.description,
+			normal_range: {
+				male: buildRange(form.male),
+				female: buildRange(form.female),
+				general: generalRange,
+			},
+			value_type: form.value_type,
+			gender_type: form.gender_type,
+		}
 
-            setOpen(false)
-            setEditingParam(null)
-            setForm({
-                parameter_code: '',
-                parameter_name: '',
-                unit: '',
-                description: '',
-                male: { min: '', max: '', value: '' },
-                female: { min: '', max: '', value: '' },
-                general: { min: '', max: '', value: '' },
-                value_type: 'NUMBER',
-                gender_type: 'MALE_FEMALE',
-            })
-        },
-        onError: (error) => {
-            console.error('Parameter save error:', error)
-            
-            // Backend xatolik xabarini olish
-            // let errorMessage = 'Xatolik: parametr saqlanmadi!'
-            
-            // Turli xatolik strukturalarini tekshirish
-            // if (error?.data?.message) {
-            //     errorMessage = error.data.message
-            // } else if (error?.data?.error) {
-            //     errorMessage = error.data.error
-            // } else if (error?.message) {
-            //     errorMessage = error.message
-            // } else if (typeof error === 'string') {
-            //     errorMessage = error
-            // }
-            
-            // toast.error(errorMessage)
-            
-            // Validation errors - form inputlariga bog'lash
-            if (error?.data?.errors) {
-                const backendErrors: Record<string, string> = {}
-                
-                // Object yoki Array bo'lishi mumkin
-                if (Array.isArray(error.data.errors)) {
-                    error.data.errors.forEach((err: any) => {
-                        if (err.field && err.message) {
-                            backendErrors[err.field] = err.message
-                        }
-                    })
-                } else if (typeof error.data.errors === 'object') {
-                    Object.entries(error.data.errors).forEach(([key, value]) => {
-                        backendErrors[key] = Array.isArray(value) 
-                            ? value[0] 
-                            : String(value)
-                    })
-                }
-                
-                if (Object.keys(backendErrors).length > 0) {
-                    setErrors(prev => ({ ...prev, ...backendErrors }))
-                }
-            }
-            
-            // Agar error.data to'g'ridan-to'g'ri string bo'lsa
-            if (typeof error?.msg === 'string') {
-                toast.error(error.msg)
-            }
-        },
-    })
-}
+		await handleRequest({
+			request: () =>
+				editingParam
+					? updateParameter({ id: editingParam._id, data: payload })
+					: createParameter(payload),
+			onSuccess: result => {
+				// Backend'dan kelgan yangi parameter
+				const newParam = result?.data?.data || result?.data
 
-	
-	const isMinMaxDisabled = (range: {
-		min: string
-		max: string
-		value: string
-	}) => {
-		return range.value.trim() !== '' // value mavjud bo'lsa min/max disabled
+				if (editingParam) {
+					setParams(prev =>
+						prev.map(p =>
+							p._id === editingParam._id
+								? newParam || {
+										...p,
+										...payload,
+										normal_range: payload.normal_range,
+								  }
+								: p
+						)
+					)
+					toast.success('Parametr muvaffaqiyatli yangilandi 🎉')
+				} else {
+					// Backend'dan kelgan to'liq data
+					if (newParam && newParam._id) {
+						setParams(prev => [...prev, newParam])
+					} else {
+						// Fallback
+						setParams(prev => [
+							...prev,
+							{ ...payload, _id: Date.now().toString() } as AnalysisParameter,
+						])
+					}
+					toast.success("Parametr muvaffaqiyatli qo'shildi 🎉")
+				}
+
+				setOpen(false)
+				setEditingParam(null)
+				setForm({
+					parameter_code: '',
+					parameter_name: '',
+					unit: '',
+					description: '',
+					male: { min: '', max: '', value: '' },
+					female: { min: '', max: '', value: '' },
+					general: { min: '', max: '', value: '' },
+					value_type: 'NUMBER',
+					gender_type: 'MALE_FEMALE',
+				})
+			},
+			// onError: error => {
+			// 	console.error('Parameter save error:', error)
+
+			// 	if (error?.data?.errors) {
+			// 		const backendErrors: Record<string, string> = {}
+
+			// 		// Object yoki Array bo'lishi mumkin
+			// 		if (Array.isArray(error.data.errors)) {
+			// 			error.data.errors.forEach((err: any) => {
+			// 				if (err.field && err.message) {
+			// 					backendErrors[err.field] = err.message
+			// 				}
+			// 			})
+			// 		} else if (typeof error.data.errors === 'object') {
+			// 			Object.entries(error.data.errors).forEach(([key, value]) => {
+			// 				backendErrors[key] = Array.isArray(value)
+			// 					? value[0]
+			// 					: String(value)
+			// 			})
+			// 		}
+
+			// 		if (Object.keys(backendErrors).length > 0) {
+			// 			setErrors(prev => ({ ...prev, ...backendErrors }))
+			// 		}
+			// 	}
+
+			// 	// Agar error.data to'g'ridan-to'g'ri string bo'lsa
+			// 	if (typeof error?.msg === 'string') {
+			// 		toast.error(error.msg)
+			// 	}
+			// },
+			onError: (error: any) => {
+				console.error('Parameter save error:', error)
+
+				// 1️⃣ Avval backenddan structured error obyektni tekshirish
+				if (error?.error?.msg) {
+					toast.error(error.error.msg)
+					return
+				}
+
+				// 2️⃣ Avvalgi errors object/arrayni tekshirish
+				if (error?.data?.errors) {
+					const backendErrors: Record<string, string> = {}
+
+					if (Array.isArray(error.data.errors)) {
+						error.data.errors.forEach((err: any) => {
+							if (err.field && err.message) {
+								backendErrors[err.field] = err.message
+							}
+						})
+					} else if (typeof error.data.errors === 'object') {
+						Object.entries(error.data.errors).forEach(([key, value]) => {
+							backendErrors[key] = Array.isArray(value)
+								? value[0]
+								: String(value)
+						})
+					}
+
+					if (Object.keys(backendErrors).length > 0) {
+						setErrors(prev => ({ ...prev, ...backendErrors }))
+					}
+				}
+
+				// 3️⃣ Fallback: error.msg string bo‘lsa
+				else if (typeof error?.msg === 'string') {
+					toast.error(error.msg)
+				}
+			},
+		})
 	}
 
-	// Value inputi uchun
-	const isValueDisabled = (range: {
-		min: string
-		max: string
-		value: string
-	}) => {
-		// min va max faqat 0 yoki bo'sh bo'lsa value ochiq bo'lsin
-		const min = Number(range.min) !== 0
-		const max = Number(range.max) !== 0
-		return min || max
-	}
+	const maleHasAny =
+		form.male.min.trim() !== '' ||
+		form.male.max.trim() !== '' ||
+		form.male.value.trim() !== ''
+
+	const femaleHasAny =
+		form.female.min.trim() !== '' ||
+		form.female.max.trim() !== '' ||
+		form.female.value.trim() !== ''
+
+	const isGeneralDisabled = maleHasAny || femaleHasAny
+
+	const generalHasAny =
+		form.general.min.trim() !== '' ||
+		form.general.max.trim() !== '' ||
+		form.general.value.trim() !== ''
+
+	const isMaleFemaleDisabled = generalHasAny
 
 	const onSaveParameter = () => {
 		const validationError = validateNormalRange(form)
@@ -581,55 +585,6 @@ export default function AnalysisParamsModal() {
 									</div>
 								</div>
 
-								{/* Actions */}
-								{/* <div className='flex gap-2 pt-1'>
-									<Button
-										variant='outline'
-										className='flex-1 flex items-center justify-center gap-1 text-xs'
-										onClick={() => openEdit(param)}
-									>
-										<Edit size={14} />
-										Tahrirlash
-									</Button>
-
-									<Dialog
-										open={deleteId === param._id}
-										onOpenChange={isOpen => {
-											if (!isOpen) setDeleteId(null)
-										}}
-									>
-										<DialogTrigger asChild>
-											<Button
-												variant='outline'
-												className='flex-1 flex items-center justify-center gap-1 text-red-600 border-red-300 hover:bg-red-50 text-xs'
-												onClick={() => setDeleteId(param._id)}
-											>
-												<Trash2 size={14} />
-												O‘chirish
-											</Button>
-										</DialogTrigger>
-										<DialogContent className='max-w-xs rounded-xl'>
-											<DialogTitle>Parametr o‘chirish</DialogTitle>
-											<p className='text-sm text-muted-foreground'>
-												Rostan ham ushbu parameterni o‘chirmoqchimisiz?
-											</p>
-											<DialogFooter className='flex justify-end gap-2'>
-												<Button
-													variant='outline'
-													onClick={() => setDeleteId(null)}
-												>
-													Yo‘q
-												</Button>
-												<Button
-													className='bg-red-600 text-white'
-													onClick={() => handleDelete(param._id)}
-												>
-													Ha
-												</Button>
-											</DialogFooter>
-										</DialogContent>
-									</Dialog>
-								</div> */}
 								{/* Actions */}
 								<div className='flex gap-1.5 pt-1'>
 									<Button
@@ -885,6 +840,7 @@ export default function AnalysisParamsModal() {
 										type='radio'
 										checked={form.gender_type === 'MALE_FEMALE'}
 										onChange={() => handleGenderTypeChange('MALE_FEMALE')}
+										disabled={isMaleFemaleDisabled}
 									/>
 									Erkak/Ayol
 								</label>
@@ -893,6 +849,7 @@ export default function AnalysisParamsModal() {
 										type='radio'
 										checked={form.gender_type === 'GENERAL'}
 										onChange={() => handleGenderTypeChange('GENERAL')}
+										disabled={isGeneralDisabled}
 									/>
 									Umumiy
 								</label>
@@ -1023,12 +980,13 @@ export default function AnalysisParamsModal() {
 								<Label>Umumiy</Label>
 								<div className='grid grid-cols-3 gap-2'>
 									<Input
-										placeholder='Min'
-										value={form.general.min}
 										type='number'
+										value={form.general.min}
+										disabled={disableMinMaxForBothGeneral}
 										onChange={e =>
 											handleNormalChange('general', 'min', e.target.value)
 										}
+										placeholder='Min'
 										onKeyDown={e => {
 											if (
 												e.key === ',' ||
@@ -1040,16 +998,16 @@ export default function AnalysisParamsModal() {
 												e.preventDefault()
 											}
 										}}
-										disabled={isMinMaxDisabled(form.general)}
 									/>
 
 									<Input
-										placeholder='Max'
-										value={form.general.max}
 										type='number'
+										value={form.general.max}
+										disabled={disableMinMaxForBothGeneral}
 										onChange={e =>
 											handleNormalChange('general', 'max', e.target.value)
 										}
+										placeholder='Max'
 										onKeyDown={e => {
 											if (
 												e.key === ',' ||
@@ -1061,16 +1019,16 @@ export default function AnalysisParamsModal() {
 												e.preventDefault()
 											}
 										}}
-										disabled={isMinMaxDisabled(form.general)}
 									/>
+
 									<Input
-										placeholder='Qiymat'
-										value={form.general.value}
 										type='string'
+										value={form.general.value}
 										onChange={e =>
 											handleNormalChange('general', 'value', e.target.value)
 										}
-										disabled={isValueDisabled(form.general)}
+										disabled={disableValueForBothGeneral}
+										placeholder='Qiymat'
 									/>
 								</div>
 								{errors.normal_range && (
