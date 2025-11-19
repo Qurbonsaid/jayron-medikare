@@ -14,6 +14,8 @@ import {
 	addImagesRes,
 	imageReq,
 	reomveimagesRes,
+	createPrescriptionDays,
+	takeMedicine,
 } from './types'
 
 export const examinationApi = baseApi.injectEndpoints({
@@ -36,17 +38,7 @@ export const examinationApi = baseApi.injectEndpoints({
 		}),
 		createPrescriptionDays: builder.mutation<
 			void,
-			{
-				id: string
-				prescriptionId: string
-				data: {
-					medication: string
-					dosage: number
-					frequency: number
-					duration: number
-					instructions: string
-				}
-			}
+			createPrescriptionDays
 		>({
 			query: ({ id, prescriptionId, data }) => ({
 				url: `${PATHS.UPDATE_EXAM}${id}/prescription/${prescriptionId}`,
@@ -57,11 +49,7 @@ export const examinationApi = baseApi.injectEndpoints({
 		}),
 		takeMedicine: builder.mutation<
 			void,
-			{
-				id: string
-				prescriptionId: string
-				day: string
-			}
+			takeMedicine
 		>({
 			query: ({ id, prescriptionId, day }) => ({
 				url: `${PATHS.TAKE_MEDICINE}${id}/prescription/${prescriptionId}/day/${day}`,
