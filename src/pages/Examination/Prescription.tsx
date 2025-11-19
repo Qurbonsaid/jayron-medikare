@@ -61,14 +61,20 @@ const Prescription = () => {
   const [selectedExaminationId, setSelectedExaminationId] =
     useState<string>('');
 
+  // Infinite scroll states
+  const [page, setPage] = useState(1);
+  const [allExaminations, setAllExaminations] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   // Get examination ID from navigation state
   const examinationIdFromState = location.state?.examinationId;
 
-  // Fetch all active examinations
+  // Fetch active examinations with pagination
   const { data: examinationsData, isLoading: isLoadingExaminations } =
     useGetAllExamsQuery({
-      page: 1,
-      limit: 100,
+      page: page,
+      limit: 20,
       status: 'active',
     });
 
@@ -92,7 +98,28 @@ const Prescription = () => {
     useDeletePrescriptionMutation();
   const handleRequest = useHandleRequest();
 
-  const examinations = examinationsData?.data || [];
+  // Update examinations list when new data arrives
+  useEffect(() => {
+    if (examinationsData?.data) {
+      if (page === 1) {
+        setAllExaminations(examinationsData.data);
+      } else {
+        setAllExaminations((prev) => {
+          const newData = examinationsData.data.filter(
+            (exam: any) => !prev.some((e) => e._id === exam._id)
+          );
+          return [...prev, ...newData];
+        });
+      }
+
+      // Check if there are more pages
+      const totalPages = examinationsData.pagination?.total_pages || 1;
+      setHasMore(page < totalPages);
+      setIsLoadingMore(false);
+    }
+  }, [examinationsData, page]);
+
+  const examinations = allExaminations;
 
   // Check if any data is loading
   const isLoading =
@@ -126,8 +153,29 @@ const Prescription = () => {
     setFormErrors({
       medications: {},
     });
+    // Reset pagination
+    setPage(1);
+    setAllExaminations([]);
+    setHasMore(true);
     // Clear navigation state
     navigate(location.pathname, { replace: true, state: {} });
+  };
+
+  const loadMoreExaminations = () => {
+    if (!isLoadingMore && hasMore && !isLoadingExaminations) {
+      setIsLoadingMore(true);
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    const bottom =
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
+
+    if (bottom && hasMore && !isLoadingMore) {
+      loadMoreExaminations();
+    }
   };
 
   const calculateAge = (dateOfBirth: string | undefined) => {
@@ -409,31 +457,50 @@ const Prescription = () => {
                 <SelectTrigger className='h-10 sm:h-12'>
                   <SelectValue placeholder='Кўрикни танланг...' />
                 </SelectTrigger>
-                <SelectContent>
-                  {examinations.length === 0 ? (
+                <SelectContent
+                  className='max-h-[300px]'
+                  onScroll={handleScroll}
+                >
+                  {examinations.length === 0 && !isLoadingExaminations ? (
                     <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
                       Актив кўриклар топилмади
                     </div>
                   ) : (
-                    examinations.map((exam: any) => (
-                      <SelectItem key={exam._id} value={exam._id}>
-                        <div className='flex flex-col'>
-                          <span className='font-medium'>
-                            {exam.patient_id?.fullname || 'Номаълум'} -{' '}
-                            {exam.doctor_id?.fullname || 'Номаълум'}
-                          </span>
-                          <span className='text-xs text-muted-foreground'>
-                            Кўрик #{exam._id?.slice(-6) || 'N/A'} •{' '}
-                            {exam.created_at
-                              ? new Date(exam.created_at).toLocaleDateString(
-                                  'uz-UZ'
-                                )
-                              : 'Маълумот йўқ'}{' '}
-                            • {exam.complaints?.slice(0, 50) || 'Шикоят йўқ'}...
-                          </span>
+                    <>
+                      {examinations.map((exam: any) => (
+                        <SelectItem key={exam._id} value={exam._id}>
+                          <div className='flex flex-col'>
+                            <span className='font-medium'>
+                              {exam.patient_id?.fullname || 'Номаълум'} -{' '}
+                              {exam.doctor_id?.fullname || 'Номаълум'}
+                            </span>
+                            <span className='text-xs text-muted-foreground'>
+                              Кўрик #{exam._id?.slice(-6) || 'N/A'} •{' '}
+                              {exam.created_at
+                                ? new Date(exam.created_at).toLocaleDateString(
+                                    'uz-UZ'
+                                  )
+                                : 'Маълумот йўқ'}{' '}
+                              • {exam.complaints?.slice(0, 50) || 'Шикоят йўқ'}
+                              ...
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                      {isLoadingMore && (
+                        <div className='px-2 py-4 text-center'>
+                          <Loader2 className='h-4 w-4 animate-spin mx-auto text-primary' />
+                          <p className='text-xs text-muted-foreground mt-2'>
+                            Юкланмоқда...
+                          </p>
                         </div>
-                      </SelectItem>
-                    ))
+                      )}
+                      {!hasMore && examinations.length > 0 && (
+                        <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
+                          Барча кўриклар юкланди
+                        </div>
+                      )}
+                    </>
                   )}
                 </SelectContent>
               </Select>

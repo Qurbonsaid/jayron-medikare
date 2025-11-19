@@ -35,7 +35,7 @@ export const billingApi = baseApi.injectEndpoints({
       }),
       providesTags: [API_TAGS.BILLING],
     }),
-    updateService: builder.mutation<MutationRes, UpdateService>({
+    updateServiceBilling: builder.mutation<MutationRes, UpdateService>({
       query: ({ id, body }) => ({
         url: PATHS.SERVICE_UPDATE + id,
         method: 'PATCH',
@@ -66,6 +66,6 @@ export const {
   useGetAllBillingQuery,
   useGetOneBillingQuery,
   useUpdatePaymentMutation,
-  useUpdateServiceMutation,
+  useUpdateServiceBillingMutation,
   useDeleteBillingMutation,
 } = billingApi;

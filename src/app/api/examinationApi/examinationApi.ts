@@ -16,6 +16,9 @@ import {
 	reomveimagesRes,
 	createPrescriptionDays,
 	takeMedicine,
+	CreateService,
+	UpdateService,
+	RemoveService,
 } from './types'
 
 export const examinationApi = baseApi.injectEndpoints({
@@ -132,7 +135,28 @@ export const examinationApi = baseApi.injectEndpoints({
 			invalidatesTags: [API_TAGS.IMAGES],
 		}),
 
-		//complete exams
+		//service
+
+		addServiceToExamination: builder.mutation<MutationRes,CreateService>({
+			query : ({id,body}) =>({
+				url: PATHS.CREATE_EXAM + id + '/service',
+				method: 'POST',
+				body
+			})
+		}),
+		updateServiceFromExamination: builder.mutation<MutationRes,UpdateService>({
+			query : ({id,service_id,body}) =>({
+				url: PATHS.CREATE_EXAM + id + '/service/'+service_id,
+				method: 'PATCH',
+				body
+			})
+		}),
+		removeServiceFromExamination: builder.mutation<MutationRes,RemoveService>({
+			query : ({id,service_id}) =>({
+				url: PATHS.CREATE_EXAM + id + '/service/'+service_id,
+				method: 'DELETE',
+			})
+		})
 	}),
 })
 
@@ -149,5 +173,8 @@ export const {
 	useRemoveImagesMutation,
 	useUpdateExamMutation,
 	useUpdatePrescriptionMutation,
-  useTakeMedicineMutation
+  useTakeMedicineMutation,
+	useAddServiceToExaminationMutation,
+	useRemoveServiceFromExaminationMutation,
+	useUpdateServiceFromExaminationMutation
 } = examinationApi
