@@ -63,7 +63,7 @@ const LabOrder = () => {
 	const handleRequest = useHandleRequest()
 
 	const patientIdFromState = location.state?.patientId
-	const { data: patientsData } = useGetAllPatientQuery({ page: 1, limit: 100 })
+	const { data: patientsData } = useGetAllPatientQuery({ page: 1, limit: 100 , is_diagnosis:true })
 	const { data: patientData } = useGetPatientByIdQuery(selectedPatientId, {
 		skip: !selectedPatientId,
 	})
@@ -142,6 +142,10 @@ const LabOrder = () => {
 			toast.error('Илтимос, камида битта таҳлилни танланг')
 			return
 		}
+		if (!clinicalIndications.trim()) {
+			toast.error('Илтимос, клиник кўрсатмани киритинг')
+			return
+		}
 
 		await handleRequest({
 			request: async () => {
@@ -160,6 +164,8 @@ const LabOrder = () => {
 				setClinicalIndications('')
 				setPriority(ExamLevel.ODDIY)
 				setShowErrors(false)
+				setPatient(null)
+				setSelectedPatientId('')
 			},
 			onError: err => {
 				toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
@@ -297,12 +303,6 @@ const LabOrder = () => {
 										<p className='font-medium'>{patient.patient_id}</p>
 									</div>
 									<div>
-										<Label className='font-normal'>Diagnostika</Label>
-										{/* <p className='font-medium'>
-											{patient.diagnosis[0].doctor_id.fullname}
-										</p> */}
-									</div>
-									<div>
 										<Label className='font-normal'>Телефон</Label>
 										<p className='font-medium'>{patient.phone}</p>
 									</div>
@@ -324,11 +324,38 @@ const LabOrder = () => {
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+									{/* <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
 										{tests.map(test => (
 											<div
 												key={test.id}
 												className='flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors'
+											>
+												<Checkbox
+													id={test.id}
+													checked={test.selected}
+													onCheckedChange={() => toggleTest(test.id)}
+												/>
+												<Label
+													htmlFor={test.id}
+													className='flex-1 cursor-pointer text-sm'
+												>
+													{test.name}
+													<Badge variant='secondary' className='ml-2 text-xs'>
+														{test.code}
+													</Badge>
+												</Label>
+											</div>
+										))}
+									</div> */}
+									<div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+										{tests.map(test => (
+											<div
+												key={test.id}
+												className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+													showErrors && !selectedTests.length
+														? 'border-red-500'
+														: 'hover:bg-accent/50'
+												}`}
 											>
 												<Checkbox
 													id={test.id}
@@ -447,9 +474,13 @@ const LabOrder = () => {
 									<Label>Таҳлил сабаби ва клиник ахвол</Label>
 									<Textarea
 										rows={5}
-										className='mt-2 w-full'
+										className={`mt-2 w-full ${
+											showErrors && !clinicalIndications.trim()
+												? 'border-red-500'
+												: ''
+										}`}
 										placeholder='Мисол: Беморда қондаги қанд миқдори ошган...'
-										value={clinicalIndications} // qiymatni state bilan bog'lash
+										value={clinicalIndications}
 										onChange={e => setClinicalIndications(e.target.value)}
 									/>
 								</CardContent>

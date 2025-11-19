@@ -79,11 +79,111 @@ export default function AnalysisParamsModal() {
 		setDeleteId(null)
 	}
 
+	const getDisabledState = range => {
+		const hasValue = range.value?.trim() !== ''
+		const hasNumber = range.min?.trim() !== '' || range.max?.trim() !== ''
+
+		return {
+			disableMinMax: hasValue, // min/max disable bo'ladigan holat
+			disableValue: hasNumber, // value disable bo'ladigan holat
+		}
+	}
+
+	const maleDisabled = getDisabledState(form.male)
+	const femaleDisabled = getDisabledState(form.female)
+	const generalDisabled = getDisabledState(form.general)
+
+	const disableMinMaxForBoth =
+		maleDisabled.disableMinMax || femaleDisabled.disableMinMax
+
+	const disableValueForBoth =
+		maleDisabled.disableValue || femaleDisabled.disableValue
+
+	const disableMinMaxForBothGeneral = generalDisabled.disableMinMax
+
+	const disableValueForBothGeneral = generalDisabled.disableValue
+
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target
 		setForm(prev => ({ ...prev, [name]: value }))
 	}
 
+	// 1. Normal range validatsiyasi
+	const validateNormalRangeRealtime = (form: FormState) => {
+		if (form.gender_type === 'MALE_FEMALE') {
+			const maleFilled =
+				form.male.min.trim() !== '' ||
+				form.male.max.trim() !== '' ||
+				form.male.value.trim() !== ''
+			const femaleFilled =
+				form.female.min.trim() !== '' ||
+				form.female.max.trim() !== '' ||
+				form.female.value.trim() !== ''
+
+			if (!maleFilled && !femaleFilled) {
+				return 'Erkak yoki Ayol qiymatidan kamida bittasi to‘ldirilishi kerak'
+			}
+		}
+
+		if (form.gender_type === 'GENERAL') {
+			const generalFilled =
+				form.general.min.trim() !== '' ||
+				form.general.max.trim() !== '' ||
+				form.general.value.trim() !== ''
+
+			if (!generalFilled) {
+				return 'Umumiy qiymatdan kamida bittasi to‘ldirilishi kerak'
+			}
+		}
+
+		return null
+	}
+
+	const validateMaleFemale = () => {
+		const maleFilled = form.male.min || form.male.max
+		const femaleFilled = form.female.min || form.female.max
+		const mfStringFilled = form.male.value || form.female.value
+
+		const generalNumber = form.general.min || form.general.max
+
+		// Agar bittasi boshlangan bo‘lsa → hammasi shart bo‘ladi
+		if (maleFilled || femaleFilled) {
+			if (
+				!form.male.min ||
+				!form.male.max ||
+				!form.female.min ||
+				!form.female.max
+			) {
+				setErrors(prev => ({
+					...prev,
+					normal_range: 'Iltimos, barcha Min va Max maydonlarini to‘ldiring!',
+				}))
+				return false
+			}
+		} else if (mfStringFilled) {
+			if (!form.male.value || !form.female.value) {
+				setErrors(prev => ({
+					...prev,
+					normal_range: 'Iltimos, barcha qiymat  maydonlarini to‘ldiring!',
+				}))
+				return false
+			}
+		} else if (generalNumber) {
+			if (!form.general.min || !form.general.max) {
+				setErrors(prev => ({
+					...prev,
+					normal_range: 'Iltimos, Min va Max  maydonlarini to‘ldiring!',
+				}))
+				return false
+			}
+		}
+
+		// Xatoni o‘chirib qo‘yish
+		setErrors(prev => ({ ...prev, normal_range: '' }))
+		return true
+	}
+
+	// 2. handleNormalChange ichida validatsiya
 	const handleNormalChange = (
 		type: 'male' | 'female' | 'general',
 		key: 'min' | 'max' | 'value',
@@ -97,13 +197,22 @@ export default function AnalysisParamsModal() {
 			if (key === 'value' && value.trim() !== '') {
 				updated.min = ''
 				updated.max = ''
-				newValueType = 'STRING' // value kiritilgan, STRING
+				newValueType = 'STRING'
 			} else if ((key === 'min' || key === 'max') && value.trim() !== '') {
 				updated.value = ''
-				newValueType = 'NUMBER' // min/max kiritilgan, NUMBER
+				newValueType = 'NUMBER'
 			}
 
-			return { ...prev, [type]: updated, value_type: newValueType }
+			const newForm = { ...prev, [type]: updated, value_type: newValueType }
+
+			// Validatsiyani darhol tekshirish
+			const validationError = validateNormalRangeRealtime(newForm)
+			setErrors(prevErrors => ({
+				...prevErrors,
+				normal_range: validationError || '',
+			}))
+
+			return newForm
 		})
 	}
 
@@ -153,6 +262,10 @@ export default function AnalysisParamsModal() {
 		if (!id) return
 		setErrors({})
 
+		if (form.gender_type === 'MALE_FEMALE') {
+			if (!validateMaleFemale()) return // ❗ VALIDATSIYA SHU YERDA
+		}
+
 		let generalRange = { min: 0, max: 0, value: '' }
 
 		if (form.gender_type === 'GENERAL') {
@@ -179,22 +292,35 @@ export default function AnalysisParamsModal() {
 				editingParam
 					? updateParameter({ id: editingParam._id, data: payload })
 					: createParameter(payload),
-			onSuccess: () => {
+			onSuccess: result => {
+				// Backend'dan kelgan yangi parameter
+				const newParam = result?.data?.data || result?.data
+
 				if (editingParam) {
 					setParams(prev =>
 						prev.map(p =>
 							p._id === editingParam._id
-								? { ...p, ...payload, normal_range: payload.normal_range }
+								? newParam || {
+										...p,
+										...payload,
+										normal_range: payload.normal_range,
+								  }
 								: p
 						)
 					)
 					toast.success('Parametr muvaffaqiyatli yangilandi 🎉')
 				} else {
-					setParams(prev => [
-						...prev,
-						{ ...payload, _id: Date.now().toString() } as AnalysisParameter,
-					])
-					toast.success('Parametr muvaffaqiyatli qo‘shildi 🎉')
+					// Backend'dan kelgan to'liq data
+					if (newParam && newParam._id) {
+						setParams(prev => [...prev, newParam])
+					} else {
+						// Fallback
+						setParams(prev => [
+							...prev,
+							{ ...payload, _id: Date.now().toString() } as AnalysisParameter,
+						])
+					}
+					toast.success("Parametr muvaffaqiyatli qo'shildi 🎉")
 				}
 
 				setOpen(false)
@@ -211,46 +337,145 @@ export default function AnalysisParamsModal() {
 					gender_type: 'MALE_FEMALE',
 				})
 			},
-			onError: () => {
-				toast.error('Xatolik: parametr saqlanmadi!')
+			// onError: error => {
+			// 	console.error('Parameter save error:', error)
+
+			// 	if (error?.data?.errors) {
+			// 		const backendErrors: Record<string, string> = {}
+
+			// 		// Object yoki Array bo'lishi mumkin
+			// 		if (Array.isArray(error.data.errors)) {
+			// 			error.data.errors.forEach((err: any) => {
+			// 				if (err.field && err.message) {
+			// 					backendErrors[err.field] = err.message
+			// 				}
+			// 			})
+			// 		} else if (typeof error.data.errors === 'object') {
+			// 			Object.entries(error.data.errors).forEach(([key, value]) => {
+			// 				backendErrors[key] = Array.isArray(value)
+			// 					? value[0]
+			// 					: String(value)
+			// 			})
+			// 		}
+
+			// 		if (Object.keys(backendErrors).length > 0) {
+			// 			setErrors(prev => ({ ...prev, ...backendErrors }))
+			// 		}
+			// 	}
+
+			// 	// Agar error.data to'g'ridan-to'g'ri string bo'lsa
+			// 	if (typeof error?.msg === 'string') {
+			// 		toast.error(error.msg)
+			// 	}
+			// },
+			onError: (error: any) => {
+				console.error('Parameter save error:', error)
+
+				// 1️⃣ Avval backenddan structured error obyektni tekshirish
+				if (error?.error?.msg) {
+					toast.error(error.error.msg)
+					return
+				}
+
+				// 2️⃣ Avvalgi errors object/arrayni tekshirish
+				if (error?.data?.errors) {
+					const backendErrors: Record<string, string> = {}
+
+					if (Array.isArray(error.data.errors)) {
+						error.data.errors.forEach((err: any) => {
+							if (err.field && err.message) {
+								backendErrors[err.field] = err.message
+							}
+						})
+					} else if (typeof error.data.errors === 'object') {
+						Object.entries(error.data.errors).forEach(([key, value]) => {
+							backendErrors[key] = Array.isArray(value)
+								? value[0]
+								: String(value)
+						})
+					}
+
+					if (Object.keys(backendErrors).length > 0) {
+						setErrors(prev => ({ ...prev, ...backendErrors }))
+					}
+				}
+
+				// 3️⃣ Fallback: error.msg string bo‘lsa
+				else if (typeof error?.msg === 'string') {
+					toast.error(error.msg)
+				}
 			},
 		})
 	}
 
-	// Min va Max inputlari uchun
-	const isMinMaxDisabled = (range: {
-		min: string
-		max: string
-		value: string
-	}) => {
-		return range.value.trim() !== '' // value mavjud bo'lsa min/max disabled
-	}
+	const maleHasAny =
+		form.male.min.trim() !== '' ||
+		form.male.max.trim() !== '' ||
+		form.male.value.trim() !== ''
 
-	// Value inputi uchun
-	const isValueDisabled = (range: {
-		min: string
-		max: string
-		value: string
-	}) => {
-		// min va max faqat 0 yoki bo'sh bo'lsa value ochiq bo'lsin
-		const min = Number(range.min) !== 0
-		const max = Number(range.max) !== 0
-		return min || max
-	}
+	const femaleHasAny =
+		form.female.min.trim() !== '' ||
+		form.female.max.trim() !== '' ||
+		form.female.value.trim() !== ''
+
+	const isGeneralDisabled = maleHasAny || femaleHasAny
+
+	const generalHasAny =
+		form.general.min.trim() !== '' ||
+		form.general.max.trim() !== '' ||
+		form.general.value.trim() !== ''
+
+	const isMaleFemaleDisabled = generalHasAny
 
 	const onSaveParameter = () => {
+		const validationError = validateNormalRange(form)
+		if (validationError) {
+			// Toast o'rniga input ostiga chiqarish
+			setErrors(prev => ({ ...prev, normal_range: validationError }))
+			return
+		}
+
 		const result = addParameterSchema().safeParse(form)
 		if (!result.success) {
-			const newErrors = {}
+			const newErrors: Record<string, string> = {}
 			result.error.errors.forEach(err => {
 				newErrors[err.path[0]] = err.message
 			})
 			setErrors(newErrors)
-			console.log('onSaveParameter da xatolik bor')
 			return
 		}
-		console.log('onSaveParameter ishladi')
+
 		handleSubmit()
+	}
+
+	const validateNormalRange = (form: FormState) => {
+		if (form.gender_type === 'MALE_FEMALE') {
+			const maleFilled =
+				form.male.min.trim() !== '' ||
+				form.male.max.trim() !== '' ||
+				form.male.value.trim() !== ''
+			const femaleFilled =
+				form.female.min.trim() !== '' ||
+				form.female.max.trim() !== '' ||
+				form.female.value.trim() !== ''
+
+			if (!maleFilled && !femaleFilled) {
+				return 'Erkak yoki Ayol qiymatidan kamida bittasi to‘ldirilishi kerak'
+			}
+		}
+
+		if (form.gender_type === 'GENERAL') {
+			const generalFilled =
+				form.general.min.trim() !== '' ||
+				form.general.max.trim() !== '' ||
+				form.general.value.trim() !== ''
+
+			if (!generalFilled) {
+				return 'Umumiy qiymatdan kamida bittasi to‘ldirilishi kerak'
+			}
+		}
+
+		return null
 	}
 
 	useEffect(() => {
@@ -360,55 +585,6 @@ export default function AnalysisParamsModal() {
 									</div>
 								</div>
 
-								{/* Actions */}
-								{/* <div className='flex gap-2 pt-1'>
-									<Button
-										variant='outline'
-										className='flex-1 flex items-center justify-center gap-1 text-xs'
-										onClick={() => openEdit(param)}
-									>
-										<Edit size={14} />
-										Tahrirlash
-									</Button>
-
-									<Dialog
-										open={deleteId === param._id}
-										onOpenChange={isOpen => {
-											if (!isOpen) setDeleteId(null)
-										}}
-									>
-										<DialogTrigger asChild>
-											<Button
-												variant='outline'
-												className='flex-1 flex items-center justify-center gap-1 text-red-600 border-red-300 hover:bg-red-50 text-xs'
-												onClick={() => setDeleteId(param._id)}
-											>
-												<Trash2 size={14} />
-												O‘chirish
-											</Button>
-										</DialogTrigger>
-										<DialogContent className='max-w-xs rounded-xl'>
-											<DialogTitle>Parametr o‘chirish</DialogTitle>
-											<p className='text-sm text-muted-foreground'>
-												Rostan ham ushbu parameterni o‘chirmoqchimisiz?
-											</p>
-											<DialogFooter className='flex justify-end gap-2'>
-												<Button
-													variant='outline'
-													onClick={() => setDeleteId(null)}
-												>
-													Yo‘q
-												</Button>
-												<Button
-													className='bg-red-600 text-white'
-													onClick={() => handleDelete(param._id)}
-												>
-													Ha
-												</Button>
-											</DialogFooter>
-										</DialogContent>
-									</Dialog>
-								</div> */}
 								{/* Actions */}
 								<div className='flex gap-1.5 pt-1'>
 									<Button
@@ -664,6 +840,7 @@ export default function AnalysisParamsModal() {
 										type='radio'
 										checked={form.gender_type === 'MALE_FEMALE'}
 										onChange={() => handleGenderTypeChange('MALE_FEMALE')}
+										disabled={isMaleFemaleDisabled}
 									/>
 									Erkak/Ayol
 								</label>
@@ -672,6 +849,7 @@ export default function AnalysisParamsModal() {
 										type='radio'
 										checked={form.gender_type === 'GENERAL'}
 										onChange={() => handleGenderTypeChange('GENERAL')}
+										disabled={isGeneralDisabled}
 									/>
 									Umumiy
 								</label>
@@ -684,12 +862,31 @@ export default function AnalysisParamsModal() {
 								<Label>Erkak</Label>
 								<div className='grid grid-cols-3 gap-2'>
 									<Input
-										placeholder='Min'
+										disabled={disableMinMaxForBoth}
 										value={form.male.min}
+										placeholder='Min'
 										type='number'
+										onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
 										onChange={e =>
 											handleNormalChange('male', 'min', e.target.value)
 										}
+									/>
+
+									<Input
+										disabled={disableMinMaxForBoth}
+										value={form.male.max}
+										placeholder='Max'
+										type='number'
 										onKeyDown={e => {
 											if (
 												e.key === ',' ||
@@ -701,48 +898,49 @@ export default function AnalysisParamsModal() {
 												e.preventDefault()
 											}
 										}}
-										disabled={isMinMaxDisabled(form.male)}
-									/>
-									<Input
-										placeholder='Max'
-										value={form.male.max}
-										type='number'
 										onChange={e =>
 											handleNormalChange('male', 'max', e.target.value)
 										}
-										onKeyDown={e => {
-											if (
-												e.key === ',' ||
-												e.key === 'e' ||
-												e.key === 'E' ||
-												e.key === '+' ||
-												e.key === '-'
-											) {
-												e.preventDefault()
-											}
-										}}
-										disabled={isMinMaxDisabled(form.male)}
 									/>
+
 									<Input
-										placeholder='Qiymat'
+										disabled={disableValueForBoth}
 										value={form.male.value}
+										placeholder='Qiymat'
 										type='string'
 										onChange={e =>
 											handleNormalChange('male', 'value', e.target.value)
 										}
-										disabled={isValueDisabled(form.male)}
 									/>
 								</div>
-
 								<Label>Ayol</Label>
 								<div className='grid grid-cols-3 gap-2'>
 									<Input
-										placeholder='Min'
+										disabled={disableMinMaxForBoth}
 										value={form.female.min}
+										placeholder='Min'
 										type='number'
+										onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
 										onChange={e =>
 											handleNormalChange('female', 'min', e.target.value)
 										}
+									/>
+
+									<Input
+										disabled={disableMinMaxForBoth}
+										value={form.female.max}
+										placeholder='Max'
+										type='number'
 										onKeyDown={e => {
 											if (
 												e.key === ',' ||
@@ -754,38 +952,26 @@ export default function AnalysisParamsModal() {
 												e.preventDefault()
 											}
 										}}
-										disabled={isMinMaxDisabled(form.female)}
-									/>
-									<Input
-										placeholder='Max'
-										value={form.female.max}
-										type='number'
 										onChange={e =>
 											handleNormalChange('female', 'max', e.target.value)
 										}
-										onKeyDown={e => {
-											if (
-												e.key === ',' ||
-												e.key === 'e' ||
-												e.key === 'E' ||
-												e.key === '+' ||
-												e.key === '-'
-											) {
-												e.preventDefault()
-											}
-										}}
-										disabled={isMinMaxDisabled(form.female)}
 									/>
+
 									<Input
-										placeholder='Qiymat'
+										disabled={disableValueForBoth}
 										value={form.female.value}
+										placeholder='Qiymat'
 										type='string'
 										onChange={e =>
 											handleNormalChange('female', 'value', e.target.value)
 										}
-										disabled={isValueDisabled(form.female)}
 									/>
 								</div>
+								{errors.normal_range && (
+									<p className='text-red-500 text-sm mt-1'>
+										{errors.normal_range}
+									</p>
+								)}
 							</>
 						)}
 
@@ -794,12 +980,13 @@ export default function AnalysisParamsModal() {
 								<Label>Umumiy</Label>
 								<div className='grid grid-cols-3 gap-2'>
 									<Input
-										placeholder='Min'
-										value={form.general.min}
 										type='number'
+										value={form.general.min}
+										disabled={disableMinMaxForBothGeneral}
 										onChange={e =>
 											handleNormalChange('general', 'min', e.target.value)
 										}
+										placeholder='Min'
 										onKeyDown={e => {
 											if (
 												e.key === ',' ||
@@ -811,16 +998,16 @@ export default function AnalysisParamsModal() {
 												e.preventDefault()
 											}
 										}}
-										disabled={isMinMaxDisabled(form.general)}
 									/>
 
 									<Input
-										placeholder='Max'
-										value={form.general.max}
 										type='number'
+										value={form.general.max}
+										disabled={disableMinMaxForBothGeneral}
 										onChange={e =>
 											handleNormalChange('general', 'max', e.target.value)
 										}
+										placeholder='Max'
 										onKeyDown={e => {
 											if (
 												e.key === ',' ||
@@ -832,18 +1019,23 @@ export default function AnalysisParamsModal() {
 												e.preventDefault()
 											}
 										}}
-										disabled={isMinMaxDisabled(form.general)}
 									/>
+
 									<Input
-										placeholder='Qiymat'
-										value={form.general.value}
 										type='string'
+										value={form.general.value}
 										onChange={e =>
 											handleNormalChange('general', 'value', e.target.value)
 										}
-										disabled={isValueDisabled(form.general)}
+										disabled={disableValueForBothGeneral}
+										placeholder='Qiymat'
 									/>
 								</div>
+								{errors.normal_range && (
+									<p className='text-red-500 text-sm mt-1'>
+										{errors.normal_range}
+									</p>
+								)}
 							</>
 						)}
 					</div>

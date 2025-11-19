@@ -1,13 +1,11 @@
 import Appointments from "@/pages/Appointments/Appointments";
-import Billing from "@/pages/Billing";
 import Dashboard from "@/pages/Dashboard";
 import Inpatient from "@/pages/Inpatient/Inpatient";
 import LabResults from "@/pages/Diagnostika/LabResults";
 import PatientPortal from "@/pages/PatientPortal";
 import PatientProfile from "@/pages/Patients/PatientProfile";
 import Patients from "@/pages/Patients/Patients";
-import RadiologyOld from "@/pages/Radiology";
-import RadiologyNew from "@/pages/Radiology/RadiologyNew";
+import Radiology from "@/pages/Radiology/RadiologyNew";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Tizim/Settings";
 import LabOrder from "@/pages/Diagnostika/LabOrder";
@@ -20,15 +18,21 @@ import AnalysisParamsModal from "./pages/Diagnostika/AnalysisParamsModal";
 import Rooms from "./pages/Rooms/Rooms";
 import Medicine from "./pages/Medicine/Medicine";
 import RoomDetail from "./pages/RoomDetail/RoomDetail";
+import ExaminationDetail from "./pages/Examination/ExaminationDetail";
+import Service from "./pages/Examination/Service/Service";
+import Billing from "./pages/Billing/Billing";
 
 export const routers = [
   { path: "/dashboard", element: <Dashboard /> },
   { path: "/patients", element: <Patients /> },
   { path: "/patient/:id", element: <PatientProfile /> },
   { path: "/new-visit", element: <NewVisit /> },
+  { path: "/examination/:id", element: <ExaminationDetail /> },
   { path: "/appointments", element: <Appointments /> },
   { path: "/prescription", element: <Prescription /> },
   { path: "/visits", element: <Visits /> },
+  { path: "/disease", element: <Disease /> },
+  { path: "/service", element: <Service /> },
   { path: "/add-diagnostika", element: <AddDiagnostika /> },
   { path: "/analysisById/:id", element: <AnalysisParamsModal /> },
   { path: "/lab-order", element: <LabOrder /> },
@@ -39,12 +43,12 @@ export const routers = [
   { path: "/lab-results", element: <LabResults /> },
   { path: "/billing", element: <Billing /> },
   { path: "/reports", element: <Reports /> },
-  { path: "/radiology", element: <RadiologyNew /> },
-  { path: "/radiology-old", element: <RadiologyOld /> },
+  { path: "/radiology", element: <Radiology /> },
   { path: "/settings", element: <Settings /> },
   { path: "/profile", element: <Profil /> },
   { path: "/patient-portal", element: <PatientPortal /> },
 ];
+
 
 export const navigator = [
   {
@@ -65,12 +69,7 @@ export const navigator = [
   {
     path: "/new-visit",
     to: null,
-    title: (
-      <div>
-        <h1 className="text-xl font-bold">Янги Кўрик</h1>
-        <p className="text-sm text-muted-foreground">SOAP Ёзув</p>
-      </div>
-    ),
+    title: "Янги Кўрик",
   },
   {
     path: "/appointments",
@@ -86,6 +85,21 @@ export const navigator = [
     path: "/visits",
     to: null,
     title: "Кўриклар",
+  },
+  {
+    path: "/disease",
+    to: null,
+    title: "Касалликлар",
+  },
+  {
+    path: "/service",
+    to: null,
+    title: "Хизматлар",
+  },
+  {
+    path: "/examination/:id",
+    to: "/visits",
+    title: "Кўрик Тафсилотлари",
   },
   {
     path: "/add-diagnostika",
@@ -108,18 +122,8 @@ export const navigator = [
     title: "Стационар",
   },
   {
-    path: "/medicine",
-    to: null,
-    title: "Дори-дармон",
-  },
-  {
     path: "/inpatient/:id",
     to: "/inpatient",
-    title: "Стационар",
-  },
-  {
-    path: "/room/:id",
-    to: -1,
     title: "Стационар",
   },
   {

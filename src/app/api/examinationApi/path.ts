@@ -4,9 +4,7 @@ export enum PATHS {
   GET_EXAM = 'examination/get-one/',
   UPDATE_EXAM = 'examination/update/',
   DELETE_EXAM = 'examination/delete/',
-
-  // prescriptions
-
+  TAKE_MEDICINE='/examination/take/',
   PRESCRIPTION = '/prescription/',
   CREATE_PRESCRIPTION = CREATE_EXAM + '/',
   

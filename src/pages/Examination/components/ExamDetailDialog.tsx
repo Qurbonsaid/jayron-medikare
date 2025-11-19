@@ -33,7 +33,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { getStatusBadge } from './StatusBadge';
+import { getStatusBadge } from '../../../components/common/StatusBadge';
 
 interface ExamDetailDialogProps {
   open: boolean;
