@@ -6,7 +6,8 @@ import LabResults from "@/pages/Diagnostika/LabResults";
 import PatientPortal from "@/pages/PatientPortal";
 import PatientProfile from "@/pages/Patients/PatientProfile";
 import Patients from "@/pages/Patients/Patients";
-import Radiology from "@/pages/Radiology";
+import RadiologyOld from "@/pages/Radiology";
+import RadiologyNew from "@/pages/Radiology/RadiologyNew";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Tizim/Settings";
 import LabOrder from "@/pages/Diagnostika/LabOrder";
@@ -38,7 +39,8 @@ export const routers = [
   { path: "/lab-results", element: <LabResults /> },
   { path: "/billing", element: <Billing /> },
   { path: "/reports", element: <Reports /> },
-  { path: "/radiology", element: <Radiology /> },
+  { path: "/radiology", element: <RadiologyNew /> },
+  { path: "/radiology-old", element: <RadiologyOld /> },
   { path: "/settings", element: <Settings /> },
   { path: "/profile", element: <Profil /> },
   { path: "/patient-portal", element: <PatientPortal /> },

@@ -8,4 +8,6 @@ export enum API_TAGS {
   IMAGES = "images",
   CORPUS = "CORPUS",
   ROOM = "ROOM",
+  IMAGING_TYPE = "ImagingType",
+  MEDICAL_IMAGE = "MedicalImage",
 }

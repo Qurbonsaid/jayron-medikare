@@ -14,3 +14,6 @@ export type CreateExamReq = {
   description?: string;
   complaints: string;
 };
+
+export * from "./examinationApi";
+
