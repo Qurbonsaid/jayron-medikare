@@ -317,7 +317,7 @@ export default function Service() {
                     <Button
                       variant='outline'
                       size='sm'
-                      className='flex-1 flex items-center justify-center gap-1 text-red-600 border-red-300 hover:bg-red-50 text-[11px] sm:text-xs py-1.5 h-7'
+                      className='flex-1 flex items-center justify-center gap-1 text-red-600 border-red-300 hover:bg-red-50 hover:text-red-600 text-[11px] sm:text-xs py-1.5 h-7'
                       onClick={() => setDeleteId(service._id)}
                       disabled={deleting}
                     >
@@ -440,7 +440,7 @@ export default function Service() {
                             <Button
                               size='icon'
                               variant='outline'
-                              className='h-7 w-7 text-red-500 border-red-300 hover:bg-red-50'
+                              className='h-7 w-7 text-red-500 border-red-300 hover:bg-red-50 hover:text-red-500'
                               onClick={() => setDeleteId(service._id)}
                               disabled={deleting}
                             >

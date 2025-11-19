@@ -54,6 +54,20 @@ export type ExamDataItem = {
     instructions: string;
     _id: string;
   }>;
+  services: Array<{
+    service_type_id:
+      | {
+          _id: string;
+          name: string;
+          price: number;
+        }
+      | string;
+    price: number;
+    quantity: number;
+    status: string;
+    notes: string;
+    _id: string;
+  }>;
   rooms: Array<{
     room_name: string;
     room_price: number;
@@ -87,6 +101,9 @@ export interface MutationRes {
     msg: string;
   };
 }
+
+export const status =
+  'active' | 'inactive' | 'pending' | 'completed' | 'deleted';
 
 export type UpdateExamReq = {
   id: string;
@@ -167,4 +184,24 @@ export interface takeMedicine {
   id: string;
   prescriptionId: string;
   day: string;
+}
+
+export interface CreateService {
+  id: string;
+  body: {
+    service_type_id: string;
+    price: number;
+    quantity: number;
+    status: string;
+    notes: string;
+  };
+}
+
+export interface UpdateService extends CreateService {
+  service_id: string;
+}
+
+export interface RemoveService {
+  id: string;
+  service_id: string;
 }
