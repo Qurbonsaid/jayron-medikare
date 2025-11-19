@@ -171,10 +171,10 @@ export const ImagingTypeTab = () => {
               <TableBody>
                 {imagingTypes?.data.map((type, idx) => (
                   <TableRow key={type._id}>
-                    <TableCell className="font-bold">
+                    <TableCell className="text-center font-bold">
                       {(currentPage - 1) * itemsPerPage + idx + 1}
                     </TableCell>
-                    <TableCell className=" font-semibold">
+                    <TableCell className="text-center font-semibold">
                       {type.name}
                     </TableCell>
                     <TableCell className="text-center">

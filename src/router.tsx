@@ -31,7 +31,7 @@ export const routers = [
   { path: "/appointments", element: <Appointments /> },
   { path: "/prescription", element: <Prescription /> },
   { path: "/visits", element: <Visits /> },
-  { path: "/disease", element: <Disease /> },
+  // { path: "/disease", element: <Disease /> },
   { path: "/service", element: <Service /> },
   { path: "/add-diagnostika", element: <AddDiagnostika /> },
   { path: "/analysisById/:id", element: <AnalysisParamsModal /> },
@@ -48,7 +48,6 @@ export const routers = [
   { path: "/profile", element: <Profil /> },
   { path: "/patient-portal", element: <PatientPortal /> },
 ];
-
 
 export const navigator = [
   {

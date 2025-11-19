@@ -49,6 +49,11 @@ import { DeleteWarnMedicalImage } from ".";
 import { ViewMedicalImage } from ".";
 import { formatDate } from "date-fns";
 import { BodyPartConstants } from "@/constants/BodyPart";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Tana qismlari uchun o'zbek nomlari
 const bodyPartLabels: Record<string, string> = {
@@ -208,6 +213,8 @@ export const MedicalImageTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-center">№</TableHead>
+                  <TableHead className="text-center">Бемор</TableHead>
+                  <TableHead className="text-center">Текшириш Тури</TableHead>
                   <TableHead className="text-center">Тавсиф</TableHead>
                   <TableHead className="text-center">
                     Танасининг қисми
@@ -223,8 +230,34 @@ export const MedicalImageTab = () => {
                     <TableCell className="text-center font-bold">
                       {(currentPage - 1) * itemsPerPage + idx + 1}
                     </TableCell>
+                    <TableCell className="text-center font-bold">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          {image?.patient_id?.fullname.length > 20
+                            ? image?.patient_id?.fullname.slice(0, 20) + "..."
+                            : image?.patient_id?.fullname || "Номаълум"}
+                        </TooltipTrigger>
+
+                        <TooltipContent>
+                          {image?.patient_id?.fullname || "Номаълум"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell className="text-center font-bold">
+                      {image?.imaging_type_id?.name}
+                    </TableCell>
                     <TableCell className="text-center font-semibold">
-                      {image.description || "Тавсиф берилмаган"}
+                      <Tooltip>
+                        <TooltipTrigger>
+                          {image?.description.length > 22
+                            ? image?.description.slice(0, 20) + "..."
+                            : image?.description || "Тавсиф берилмаган"}
+                        </TooltipTrigger>
+
+                        <TooltipContent>
+                          {image?.description || "Тавсиф берилмаган"}
+                        </TooltipContent>
+                      </Tooltip>
                     </TableCell>
                     <TableCell className="text-center">
                       {getBodyPartLabel(image.body_part)}

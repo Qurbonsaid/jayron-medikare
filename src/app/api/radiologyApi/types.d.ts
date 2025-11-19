@@ -68,10 +68,35 @@ export type DeletedImagingTypeResponse = {
 // ==================== MEDICAL IMAGE TYPES ====================
 
 export type PatientInfo = {
+  passport: {
+    series: string;
+    number: string;
+  };
   _id: string;
+  patient_id: string;
   fullname: string;
   phone: string;
-  patient_id: string;
+  gender: string;
+  date_of_birth: string;
+  address: string;
+  allergies: string[];
+  regular_medications: [
+    {
+      medicine: string;
+      schedule: string;
+      _id: string;
+    }
+  ];
+  diagnosis: {
+    doctor_id: string;
+    examination_id: string;
+    diagnosis_id: null | string;
+    _id: string;
+  };
+  is_deleted: boolean;
+  email: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type ExaminationInfo = {
@@ -87,14 +112,17 @@ export type ExaminationInfo = {
 export type ImagingTypeInfo = {
   _id: string;
   name: string;
-  description?: string;
+  description: string;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
 };
 
 export type MedicalImage = {
   _id: string;
-  patient_id: string | PatientInfo;
+  patient_id: PatientInfo;
   examination_id: string | ExaminationInfo;
-  imaging_type_id: string | ImagingTypeInfo;
+  imaging_type_id: ImagingTypeInfo;
   image_paths: string[];
   description?: string;
   body_part?: string;
