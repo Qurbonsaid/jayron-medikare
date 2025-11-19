@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { RemovePatient } from "./components/RemovePatient";
+import { formatDate } from "date-fns";
 
 const RoomDetail = () => {
   const [showRoomNewPatient, setShowRoomNewPatient] = useState(false);
@@ -181,7 +182,7 @@ const RoomDetail = () => {
                                   className="w-32 hover:bg-red-600 hover:text-white transition-smooth text-xs xl:text-sm"
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  Ўчириш
+                                  Chiqarish
                                 </Button>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -195,6 +196,16 @@ const RoomDetail = () => {
                           </div>
                           <span>
                             Telefon raqam: <strong>{patientData?.phone}</strong>
+                          </span>
+
+                          <span>
+                            Kelgan vaqti:{" "}
+                            <strong>
+                              {formatDate(
+                                new Date(patient?.start_date),
+                                "dd.MM.yyyy"
+                              )}
+                            </strong>
                           </span>
 
                           <p className="text-sm font-medium">

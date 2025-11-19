@@ -1,0 +1,9 @@
+export { ImagingTypeTab } from "./ImagingTypeTab";
+export { MedicalImageTab } from "./MedicalImageTab";
+export { NewImagingType } from "./NewImagingType";
+export { UpdateImagingType } from "./UpdateImagingType";
+export { DeleteWarnImagingType } from "./DeleteWarnImagingType";
+export { NewMedicalImage } from "./NewMedicalImage";
+export { UpdateMedicalImage } from "./UpdateMedicalImage";
+export { DeleteWarnMedicalImage } from "./DeleteWarnMedicalImage";
+export { ViewMedicalImage } from "./ViewMedicalImage";

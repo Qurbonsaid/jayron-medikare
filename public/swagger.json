@@ -1,0 +1,5656 @@
+{
+  "swaggerDoc": {
+    "openapi": "3.1.0",
+    "info": {
+      "title": "API Documentation",
+      "description": "This is the API documentation for the backend service.",
+      "version": "1.0.0",
+      "contact": {
+        "name": "Support Team",
+        "email": "support@example.com"
+      }
+    },
+    "servers": [
+      {
+        "url": "https://jayron.edumir.uz/",
+        "description": "Production server"
+      },
+      {
+        "url": "http://localhost:8080",
+        "description": "Local development server"
+      }
+    ],
+    "components": {
+      "schemas": {},
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    },
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "paths": {
+      "/upload/file": {
+        "post": {
+          "tags": ["Upload"],
+          "summary": "Upload a single file — Allowed: Authenticated users",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  },
+                  "required": ["file"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "File uploaded successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "url": {
+                        "type": "string",
+                        "example": "/uploads/abc.jpg"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/upload/files": {
+        "post": {
+          "tags": ["Upload"],
+          "summary": "Upload multiple files — Allowed: Authenticated users",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "binary"
+                      }
+                    }
+                  },
+                  "required": ["files"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Files uploaded successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "urls": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "example": ["/uploads/a.jpg", "/uploads/b.jpg"]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/auth/login": {
+        "post": {
+          "tags": ["Auth"],
+          "summary": "User login — Allowed: Public",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string",
+                      "example": "user123"
+                    },
+                    "password": {
+                      "type": "string",
+                      "example": "password"
+                    }
+                  },
+                  "required": ["username", "password"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Login successful",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "access_token": {
+                        "type": "string",
+                        "example": "eyJhbGciOi..."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid username or password"
+            }
+          }
+        }
+      },
+      "/auth/sign-up/ceo": {
+        "post": {
+          "tags": ["Auth"],
+          "summary": "CEO sign-up — Allowed: Public (registration key required)",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string",
+                      "example": "ceo123"
+                    },
+                    "password": {
+                      "type": "string",
+                      "example": "password"
+                    },
+                    "reg_key": {
+                      "type": "string",
+                      "example": "registrationkey789"
+                    }
+                  },
+                  "required": ["username", "password", "reg_key"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "CEO created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "CEO created successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid input or registration key"
+            }
+          }
+        }
+      },
+      "/auth/me": {
+        "get": {
+          "tags": ["Auth"],
+          "summary": "Get current user (requires auth) — Allowed: Authenticated users",
+          "responses": {
+            "200": {
+              "description": "Current user data",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "fullname": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          }
+        }
+      },
+      "/auth/update-me": {
+        "patch": {
+          "tags": ["Auth"],
+          "summary": "Update current user's profile — Allowed: Authenticated users",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fullname": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": "+998901234567"
+                    },
+                    "license_number": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Profile updated successfully"
+            },
+            "400": {
+              "description": "Validation error or duplicate field"
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          }
+        }
+      },
+      "/auth/update-password": {
+        "patch": {
+          "tags": ["Auth"],
+          "summary": "Update current user's password — Allowed: Authenticated users",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "old_password": {
+                      "type": "string",
+                      "example": "oldPass"
+                    },
+                    "new_password": {
+                      "type": "string",
+                      "example": "newPass123"
+                    }
+                  },
+                  "required": ["old_password", "new_password"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Password updated successfully"
+            },
+            "400": {
+              "description": "Incorrect old password or validation error"
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          }
+        }
+      },
+      "/user/create": {
+        "post": {
+          "tags": ["User"],
+          "summary": "Create a new user — Allowed roles: ceo",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string",
+                      "example": "johndoe"
+                    },
+                    "password": {
+                      "type": "string",
+                      "example": "P@ssw0rd"
+                    },
+                    "fullname": {
+                      "type": "string",
+                      "example": "John Doe"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "example": "john@example.com"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": "+998901234567"
+                    },
+                    "role": {
+                      "type": "string",
+                      "example": "ADMIN"
+                    },
+                    "section": {
+                      "type": "string",
+                      "example": "Кардиология"
+                    },
+                    "license_number": {
+                      "type": "string",
+                      "example": "LN-1234"
+                    }
+                  },
+                  "required": [
+                    "username",
+                    "password",
+                    "fullname",
+                    "email",
+                    "phone"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "User created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "User created successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error or duplicate field"
+            }
+          }
+        }
+      },
+      "/user/get-all": {
+        "get": {
+          "tags": ["User"],
+          "summary": "Get paginated list of users — Allowed roles: ceo",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              }
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "example": "john"
+              }
+            },
+            {
+              "name": "role",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "example": "ADMIN"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of users",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "username": {
+                              "type": "string"
+                            },
+                            "fullname": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "phone": {
+                              "type": "string"
+                            },
+                            "role": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        }
+                      },
+                      "pagination": {
+                        "type": "object",
+                        "properties": {
+                          "page": {
+                            "type": "integer"
+                          },
+                          "limit": {
+                            "type": "integer"
+                          },
+                          "total_items": {
+                            "type": "integer"
+                          },
+                          "total_pages": {
+                            "type": "integer"
+                          },
+                          "next_page": {
+                            "type": ["integer", "null"]
+                          },
+                          "prev_page": {
+                            "type": ["integer", "null"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/user/get-one/{id}": {
+        "get": {
+          "tags": ["User"],
+          "summary": "Get a single user by id — Allowed roles: ceo",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "64b8f1a2c3d4e5f6a7b8c9d0"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User object",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "fullname": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string"
+                          },
+                          "section": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "license_number": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "User not found"
+            }
+          }
+        }
+      },
+      "/user/update/{id}": {
+        "put": {
+          "tags": ["User"],
+          "summary": "Update a user — Allowed roles: ceo",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "64b8f1a2c3d4e5f6a7b8c9d0"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fullname": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "section": {
+                      "type": "string"
+                    },
+                    "license_number": {
+                      "type": "string"
+                    },
+                    "password": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "User updated successfully"
+            },
+            "400": {
+              "description": "Validation error or duplicate field"
+            },
+            "404": {
+              "description": "User not found"
+            }
+          }
+        }
+      },
+      "/user/delete/{id}": {
+        "delete": {
+          "tags": ["User"],
+          "summary": "Delete a user by id — Allowed roles: ceo",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "64b8f1a2c3d4e5f6a7b8c9d0"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User deleted successfully"
+            },
+            "404": {
+              "description": "User not found"
+            }
+          }
+        }
+      },
+      "/settings/get": {
+        "post": {
+          "tags": ["Settings"],
+          "summary": "Get current application settings — Allowed roles: ceo",
+          "responses": {
+            "200": {
+              "description": "Settings retrieved successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "clinic_name": {
+                            "type": "string",
+                            "example": "JayronXona"
+                          },
+                          "address": {
+                            "type": "string",
+                            "example": "123 Main St"
+                          },
+                          "phone": {
+                            "type": "string",
+                            "example": "555-1234"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email",
+                            "example": "info@jayronxona.com"
+                          },
+                          "work_start_time": {
+                            "type": "string",
+                            "example": "09:00"
+                          },
+                          "work_end_time": {
+                            "type": "string",
+                            "example": "17:00"
+                          },
+                          "logo_path": {
+                            "type": "string",
+                            "example": "/uploads/logo.png"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Settings not found"
+            }
+          }
+        }
+      },
+      "/settings/update": {
+        "put": {
+          "tags": ["Settings"],
+          "summary": "Update application settings — Allowed roles: ceo",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clinic_name": {
+                      "type": "string",
+                      "example": "JayronXona"
+                    },
+                    "address": {
+                      "type": "string",
+                      "example": "123 Main St"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": "555-1234"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "example": "info@jayronxona.com"
+                    },
+                    "work_start_time": {
+                      "type": "string",
+                      "example": "09:00"
+                    },
+                    "work_end_time": {
+                      "type": "string",
+                      "example": "17:00"
+                    },
+                    "logo_path": {
+                      "type": "string",
+                      "example": "/uploads/logo.png"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Settings updated successfully"
+            },
+            "400": {
+              "description": "Validation error"
+            },
+            "404": {
+              "description": "Settings not found"
+            }
+          }
+        }
+      },
+      "/corpus/create": {
+        "post": {
+          "tags": ["Corpus"],
+          "summary": "Create a new corpus",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "corpus_number": {
+                      "type": "integer",
+                      "example": 1,
+                      "description": "Корпус рақами (такрорланмаслиги керак)"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Асосий корпус"
+                    },
+                    "total_rooms": {
+                      "type": "integer",
+                      "example": 50,
+                      "description": "Умумий хоналар сони"
+                    }
+                  },
+                  "required": ["corpus_number", "total_rooms"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Corpus created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Corpus created successfully"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "corpus_number": {
+                            "type": "integer"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "total_rooms": {
+                            "type": "integer"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Corpus number already exists"
+            }
+          }
+        }
+      },
+      "/corpus/get-all": {
+        "get": {
+          "tags": ["Corpus"],
+          "summary": "Get all corpuses with pagination",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              }
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "corpus_number",
+              "in": "query",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of corpuses",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "corpus_number": {
+                              "type": "integer"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "total_rooms": {
+                              "type": "integer"
+                            },
+                            "status": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "pagination": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/corpus/get-one/{id}": {
+        "get": {
+          "tags": ["Corpus"],
+          "summary": "Get corpus by ID",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Corpus found"
+            },
+            "404": {
+              "description": "Corpus not found"
+            }
+          }
+        }
+      },
+      "/corpus/update/{id}": {
+        "put": {
+          "tags": ["Corpus"],
+          "summary": "Update corpus",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "corpus_number": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "total_rooms": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Corpus updated"
+            },
+            "404": {
+              "description": "Corpus not found"
+            }
+          }
+        }
+      },
+      "/corpus/delete/{id}": {
+        "delete": {
+          "tags": ["Corpus"],
+          "summary": "Delete corpus",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Corpus deleted"
+            },
+            "404": {
+              "description": "Corpus not found"
+            }
+          }
+        }
+      },
+      "/room/create": {
+        "post": {
+          "tags": ["Room"],
+          "summary": "Create a new room",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "room_name": {
+                      "type": "string",
+                      "example": "101-xona"
+                    },
+                    "room_price": {
+                      "type": "number",
+                      "example": 150000,
+                      "description": "Хона нархи"
+                    },
+                    "corpus_id": {
+                      "type": "string",
+                      "example": "64b8f1a2c3d4e5f6a7b8c9d0"
+                    },
+                    "patient_capacity": {
+                      "type": "integer",
+                      "example": 4,
+                      "description": "Умумий сиғим (беморлар ётоғи)"
+                    },
+                    "patient_occupied": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "Бант бўлган ётоқлар сони"
+                    },
+                    "patients": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "patient": {
+                            "type": "string",
+                            "example": "64b8f1a2c3d4e5f6a7b8c9d1",
+                            "description": "Бемор ID"
+                          },
+                          "start_date": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-11-03T10:00:00Z",
+                            "description": "Кириш санаси"
+                          },
+                          "end_date": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-11-10T10:00:00Z",
+                            "description": "Чиқиш санаси"
+                          },
+                          "bed_number": {
+                            "type": "integer",
+                            "example": 1,
+                            "description": "Ётоқ рақами (patient_capacity дан ошмаслиги керак)"
+                          }
+                        }
+                      },
+                      "example": []
+                    },
+                    "floor_number": {
+                      "type": "integer",
+                      "example": 1,
+                      "description": "Нечанчи қават"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "VIP хона, балкон билан"
+                    }
+                  },
+                  "required": [
+                    "room_name",
+                    "room_price",
+                    "corpus_id",
+                    "patient_capacity",
+                    "floor_number"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Room created successfully"
+            },
+            "400": {
+              "description": "patient_occupied cannot exceed patient_capacity"
+            },
+            "404": {
+              "description": "Corpus not found"
+            }
+          }
+        }
+      },
+      "/room/get-all": {
+        "get": {
+          "tags": ["Room"],
+          "summary": "Get all rooms with filters",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              }
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Хона номи ёки тавсиф бўйича қидириш"
+            },
+            {
+              "name": "corpus_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Корпус бўйича филтр"
+            },
+            {
+              "name": "floor_number",
+              "in": "query",
+              "schema": {
+                "type": "integer"
+              },
+              "description": "Қават бўйича филтр"
+            },
+            {
+              "name": "available",
+              "in": "query",
+              "schema": {
+                "type": "boolean",
+                "example": true
+              },
+              "description": "Фақат бўш хоналарни кўрсатиш"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of rooms with corpus and patient info"
+            }
+          }
+        }
+      },
+      "/room/get-one/{id}": {
+        "get": {
+          "tags": ["Room"],
+          "summary": "Get room by ID with full details",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Room found with corpus and patients"
+            },
+            "404": {
+              "description": "Room not found"
+            }
+          }
+        }
+      },
+      "/room/update/{id}": {
+        "put": {
+          "tags": ["Room"],
+          "summary": "Update room",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "room_name": {
+                      "type": "string"
+                    },
+                    "room_price": {
+                      "type": "number"
+                    },
+                    "corpus_id": {
+                      "type": "string"
+                    },
+                    "patient_capacity": {
+                      "type": "integer"
+                    },
+                    "patient_occupied": {
+                      "type": "integer"
+                    },
+                    "patients": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "patient": {
+                            "type": "string",
+                            "example": "64b8f1a2c3d4e5f6a7b8c9d1",
+                            "description": "Бемор ID"
+                          },
+                          "start_date": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-11-03T10:00:00Z",
+                            "description": "Кириш санаси"
+                          },
+                          "end_date": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-11-10T10:00:00Z",
+                            "description": "Чиқиш санаси"
+                          },
+                          "bed_number": {
+                            "type": "integer",
+                            "example": 1,
+                            "description": "Ётоқ рақами (patient_capacity дан ошмаслиги керак)"
+                          }
+                        }
+                      },
+                      "example": []
+                    },
+                    "floor_number": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Room updated"
+            },
+            "400": {
+              "description": "Validation error"
+            },
+            "404": {
+              "description": "Room or Corpus not found"
+            }
+          }
+        }
+      },
+      "/room/delete/{id}": {
+        "delete": {
+          "tags": ["Room"],
+          "summary": "Delete room",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Room deleted"
+            },
+            "404": {
+              "description": "Room not found"
+            }
+          }
+        }
+      },
+      "/room/add-patient/{id}": {
+        "post": {
+          "tags": ["Room"],
+          "summary": "Add patient to room",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Room ID"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "patient_id": {
+                      "type": "string",
+                      "example": "64b8f1a2c3d4e5f6a7b8c9d1",
+                      "description": "Patient ID to add to room"
+                    }
+                  },
+                  "required": ["patient_id"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Patient added to room successfully"
+            },
+            "400": {
+              "description": "Room is full, patient already in room, or room is not active"
+            },
+            "404": {
+              "description": "Room or patient not found"
+            }
+          }
+        }
+      },
+      "/room/remove-patient/{id}": {
+        "post": {
+          "tags": ["Room"],
+          "summary": "Remove patient from room",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Room ID"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "patient_id": {
+                      "type": "string",
+                      "example": "64b8f1a2c3d4e5f6a7b8c9d1",
+                      "description": "Patient ID to remove from room"
+                    }
+                  },
+                  "required": ["patient_id"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Patient removed from room successfully"
+            },
+            "404": {
+              "description": "Room not found or patient not in room"
+            }
+          }
+        }
+      },
+      "/patient/create": {
+        "post": {
+          "tags": ["Patient"],
+          "summary": "Create a new patient — Allowed roles: ceo, receptionist",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fullname": {
+                      "type": "string",
+                      "example": "John Doe"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": "+998901234567"
+                    },
+                    "gender": {
+                      "type": "string",
+                      "example": "male"
+                    },
+                    "date_of_birth": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "1990-01-01"
+                    },
+                    "address": {
+                      "type": "string",
+                      "example": "123 Main St"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "example": "patient@example.com"
+                    },
+                    "allergies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "regular_medications": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "medicine": {
+                            "type": "string"
+                          },
+                          "schedule": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "passport": {
+                      "type": "object",
+                      "properties": {
+                        "series": {
+                          "type": "string",
+                          "example": "AA"
+                        },
+                        "number": {
+                          "type": "string",
+                          "example": "123456"
+                        }
+                      },
+                      "required": ["series", "number"]
+                    }
+                  },
+                  "required": [
+                    "fullname",
+                    "phone",
+                    "gender",
+                    "date_of_birth",
+                    "address",
+                    "passport"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Patient created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Patient created successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error"
+            }
+          }
+        }
+      },
+      "/patient/get-all": {
+        "get": {
+          "tags": ["Patient"],
+          "summary": "Get paginated list of patients — Allowed roles: ceo, receptionist, doctor, nurse",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              }
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "example": "John"
+              }
+            },
+            {
+              "name": "gender",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "example": "male"
+              }
+            },
+            {
+              "name": "doctor_id",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "example": "64b8f1a2c3d4e5f6a7b8c9d0"
+              }
+            },
+            {
+              "name": "is_diagnosis",
+              "in": "query",
+              "schema": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of patients",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "patient_id": {
+                              "type": "string"
+                            },
+                            "fullname": {
+                              "type": "string"
+                            },
+                            "phone": {
+                              "type": "string"
+                            },
+                            "gender": {
+                              "type": "string"
+                            },
+                            "diagnosis": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "doctor_id": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "pagination": {
+                        "type": "object",
+                        "properties": {
+                          "page": {
+                            "type": "integer"
+                          },
+                          "limit": {
+                            "type": "integer"
+                          },
+                          "total_items": {
+                            "type": "integer"
+                          },
+                          "total_pages": {
+                            "type": "integer"
+                          },
+                          "next_page": {
+                            "type": ["integer", "null"]
+                          },
+                          "prev_page": {
+                            "type": ["integer", "null"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/patient/get-one/{id}": {
+        "get": {
+          "tags": ["Patient"],
+          "summary": "Get a single patient by id — Allowed roles: ceo, receptionist, doctor, nurse",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "64b8f1a2c3d4e5f6a7b8c9d0"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Patient object",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "patient_id": {
+                            "type": "string"
+                          },
+                          "fullname": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "type": "string"
+                          },
+                          "gender": {
+                            "type": "string"
+                          },
+                          "date_of_birth": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "address": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "allergies": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "regular_medications": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "medicine": {
+                                  "type": "string"
+                                },
+                                "schedule": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "diagnosis": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "doctor_id": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "passport": {
+                            "type": "object",
+                            "properties": {
+                              "series": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Patient not found"
+            }
+          }
+        }
+      },
+      "/patient/update/{id}": {
+        "put": {
+          "tags": ["Patient"],
+          "summary": "Update a patient — Allowed roles: ceo, receptionist",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "64b8f1a2c3d4e5f6a7b8c9d0"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fullname": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "gender": {
+                      "type": "string"
+                    },
+                    "date_of_birth": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "address": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "allergies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "regular_medications": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "medicine": {
+                            "type": "string"
+                          },
+                          "schedule": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "passport": {
+                      "type": "object",
+                      "properties": {
+                        "series": {
+                          "type": "string"
+                        },
+                        "number": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Patient updated successfully"
+            },
+            "400": {
+              "description": "Validation error"
+            },
+            "404": {
+              "description": "Patient not found"
+            }
+          }
+        }
+      },
+      "/patient/delete/{id}": {
+        "delete": {
+          "tags": ["Patient"],
+          "summary": "Delete a patient by id — Allowed roles: ceo",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "64b8f1a2c3d4e5f6a7b8c9d0"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Patient deleted successfully"
+            },
+            "404": {
+              "description": "Patient not found"
+            }
+          }
+        }
+      },
+      "/examination/create": {
+        "post": {
+          "tags": ["Examination"],
+          "summary": "Create a new examination — Allowed roles: ceo, receptionist",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["patient_id", "doctor_id", "complaints"],
+                  "properties": {
+                    "patient_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8b"
+                    },
+                    "doctor_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8c"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Patient has a mild fever."
+                    },
+                    "complaints": {
+                      "type": "string",
+                      "example": "Headache, fever"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Examination created successfully"
+            },
+            "404": {
+              "description": "Patient or Doctor not found"
+            }
+          }
+        }
+      },
+      "/examination/get-all": {
+        "get": {
+          "tags": ["Examination"],
+          "summary": "Get all examinations — Allowed roles: ceo, receptionist, doctor",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "required": false
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "required": false
+            },
+            {
+              "name": "doctor_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false
+            },
+            {
+              "name": "patient_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false
+            },
+            {
+              "name": "status",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive",
+                  "pending",
+                  "completed",
+                  "deleted"
+                ]
+              },
+              "required": false
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of examinations"
+            }
+          }
+        }
+      },
+      "/examination/get-one/{id}": {
+        "get": {
+          "tags": ["Examination"],
+          "summary": "Get one examination by ID — Allowed roles: ceo, receptionist, doctor",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Examination found"
+            },
+            "404": {
+              "description": "Examination not found"
+            }
+          }
+        }
+      },
+      "/examination/update/{id}": {
+        "patch": {
+          "tags": ["Examination"],
+          "summary": "Update an examination — Allowed roles: ceo, receptionist, doctor",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "doctor_id": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "complaints": {
+                      "type": "string"
+                    },
+                    "diagnosis": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Examination updated successfully"
+            },
+            "404": {
+              "description": "Examination not found"
+            }
+          }
+        }
+      },
+      "/examination/delete/{id}": {
+        "delete": {
+          "tags": ["Examination"],
+          "summary": "Delete an examination — Allowed roles: ceo , receptionist",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Examination deleted successfully"
+            },
+            "404": {
+              "description": "Examination not found"
+            }
+          }
+        }
+      },
+      "/examination/create/{id}/prescription": {
+        "post": {
+          "tags": ["Examination"],
+          "summary": "Create a prescription for an examination — Allowed roles: ceo, doctor",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "medication",
+                    "dosage",
+                    "frequency",
+                    "duration",
+                    "instructions"
+                  ],
+                  "properties": {
+                    "medication": {
+                      "type": "string",
+                      "example": "Paracetamol"
+                    },
+                    "dosage": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "frequency": {
+                      "type": "integer",
+                      "example": 3
+                    },
+                    "duration": {
+                      "type": "integer",
+                      "example": 5
+                    },
+                    "instructions": {
+                      "type": "string",
+                      "example": "Take after meals"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Prescription created successfully"
+            },
+            "404": {
+              "description": "Examination not found"
+            }
+          }
+        }
+      },
+      "/examination/update/{id}/prescription/{prescription_id}": {
+        "patch": {
+          "tags": ["Examination"],
+          "summary": "Update a prescription — Allowed roles: ceo, doctor",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "prescription_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "medication": {
+                      "type": "string"
+                    },
+                    "dosage": {
+                      "type": "integer"
+                    },
+                    "frequency": {
+                      "type": "integer"
+                    },
+                    "duration": {
+                      "type": "integer"
+                    },
+                    "instructions": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Prescription updated successfully"
+            },
+            "404": {
+              "description": "Examination or Prescription not found"
+            }
+          }
+        }
+      },
+      "/examination/delete/{id}/prescription/{prescription_id}": {
+        "delete": {
+          "tags": ["Examination"],
+          "summary": "Delete a prescription — Allowed roles: ceo, doctor",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "prescription_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Prescription deleted successfully"
+            },
+            "404": {
+              "description": "Examination or Prescription not found"
+            }
+          }
+        }
+      },
+      "/examination/complete/{id}": {
+        "patch": {
+          "tags": ["Examination"],
+          "summary": "Complete an examination — Allowed roles: ceo, receptionist",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Examination completed successfully"
+            },
+            "404": {
+              "description": "Examination not found"
+            }
+          }
+        }
+      },
+      "/examination/create/{id}/service": {
+        "post": {
+          "tags": ["Examination"],
+          "summary": "Add a service to examination — Allowed roles: ceo, receptionist",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "service_type_id",
+                    "price",
+                    "quantity",
+                    "status"
+                  ],
+                  "properties": {
+                    "service_type_id": {
+                      "type": "string",
+                      "example": "656a2b1c3d4e5f6789012345"
+                    },
+                    "price": {
+                      "type": "integer",
+                      "example": 50000
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "inactive",
+                        "pending",
+                        "completed",
+                        "deleted"
+                      ],
+                      "example": "pending"
+                    },
+                    "notes": {
+                      "type": "string",
+                      "example": "Urgent"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Service added successfully"
+            },
+            "404": {
+              "description": "Examination not found"
+            }
+          }
+        }
+      },
+      "/examination/update/{id}/service/{service_id}": {
+        "patch": {
+          "tags": ["Examination"],
+          "summary": "Update a service in examination — Allowed roles: ceo, receptionist",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "service_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "service_type_id": {
+                      "type": "string"
+                    },
+                    "price": {
+                      "type": "integer"
+                    },
+                    "quantity": {
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "inactive",
+                        "pending",
+                        "completed",
+                        "deleted"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Service updated successfully"
+            },
+            "404": {
+              "description": "Examination or Service not found"
+            }
+          }
+        }
+      },
+      "/examination/delete/{id}/service/{service_id}": {
+        "delete": {
+          "tags": ["Examination"],
+          "summary": "Delete a service from examination — Allowed roles: ceo, receptionist",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "service_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Service deleted successfully"
+            },
+            "404": {
+              "description": "Examination or Service not found"
+            }
+          }
+        }
+      },
+      "/analysis/create": {
+        "post": {
+          "tags": ["Analysis"],
+          "summary": "Create a new analysis type",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "CBC",
+                      "description": "Tahlil kodi (takrorlanmasligi kerak)"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Complete Blood Count",
+                      "description": "Tahlil nomi"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Umumiy qon tahlili",
+                      "description": "Qo'shimcha ma'lumot"
+                    }
+                  },
+                  "required": ["code", "name"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Analysis created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Analysis created successfully"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Analysis code already exists"
+            }
+          }
+        }
+      },
+      "/analysis/get-all": {
+        "get": {
+          "tags": ["Analysis"],
+          "summary": "Get all analysis types with pagination",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              },
+              "description": "Sahifa raqami"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              },
+              "description": "Bir sahifada nechta element"
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Kod, nom yoki tavsif bo'yicha qidiruv"
+            },
+            {
+              "name": "code",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Aniq kod bo'yicha filtrlash"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of analyses",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "code": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "updated_at": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "pagination": {
+                        "type": "object",
+                        "properties": {
+                          "page": {
+                            "type": "integer"
+                          },
+                          "limit": {
+                            "type": "integer"
+                          },
+                          "total_items": {
+                            "type": "integer"
+                          },
+                          "total_pages": {
+                            "type": "integer"
+                          },
+                          "next_page": {
+                            "type": "integer"
+                          },
+                          "prev_page": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/analysis/get-one/{id}": {
+        "get": {
+          "tags": ["Analysis"],
+          "summary": "Get analysis by ID",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Analysis ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Analysis found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Analysis not found"
+            }
+          }
+        }
+      },
+      "/analysis/update/{id}": {
+        "put": {
+          "tags": ["Analysis"],
+          "summary": "Update analysis",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Analysis ID"
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "CBC"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Complete Blood Count"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Umumiy qon tahlili"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Analysis updated successfully"
+            },
+            "404": {
+              "description": "Analysis not found"
+            },
+            "409": {
+              "description": "Code already exists"
+            }
+          }
+        }
+      },
+      "/analysis/delete/{id}": {
+        "delete": {
+          "tags": ["Analysis"],
+          "summary": "Delete analysis",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Analysis ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Analysis deleted successfully"
+            },
+            "404": {
+              "description": "Analysis not found"
+            }
+          }
+        }
+      },
+      "/analysis-parameter/create": {
+        "post": {
+          "tags": ["Analysis Parameter"],
+          "summary": "Create a new analysis parameter",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "analysis_id": {
+                      "type": "string",
+                      "example": "64b8f1a2c3d4e5f6a7b8c9d0",
+                      "description": "Tahlil ID"
+                    },
+                    "parameter_code": {
+                      "type": "string",
+                      "example": "HGB",
+                      "description": "Parametr kodi (optional)"
+                    },
+                    "parameter_name": {
+                      "type": "string",
+                      "example": "Hemoglobin",
+                      "description": "Parametr nomi"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "example": "g/L",
+                      "description": "O'lchov birligi"
+                    },
+                    "normal_range": {
+                      "type": "object",
+                      "properties": {
+                        "male": {
+                          "type": "object",
+                          "properties": {
+                            "min": {
+                              "type": "number",
+                              "example": 130
+                            },
+                            "max": {
+                              "type": "number",
+                              "example": 160
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "female": {
+                          "type": "object",
+                          "properties": {
+                            "min": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "max": {
+                              "type": "number",
+                              "example": 140
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "general": {
+                          "type": "object",
+                          "properties": {
+                            "min": {
+                              "type": "number"
+                            },
+                            "max": {
+                              "type": "number"
+                            },
+                            "value": {
+                              "type": "string",
+                              "example": "Negative"
+                            }
+                          }
+                        }
+                      },
+                      "description": "Gender-specific yoki umumiy norma oralig'i"
+                    },
+                    "value_type": {
+                      "type": "string",
+                      "enum": ["NUMBER", "STRING"],
+                      "example": "NUMBER",
+                      "description": "Natija turi: NUMBER (sonli) yoki STRING (matnli)"
+                    },
+                    "gender_type": {
+                      "type": "string",
+                      "enum": ["GENERAL", "MALE_FEMALE"],
+                      "example": "MALE_FEMALE",
+                      "description": "Jinsga bog'liqlik: GENERAL (umumiy) yoki MALE_FEMALE (erkak/ayol)"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Qonda gemoglobin miqdori"
+                    }
+                  },
+                  "required": [
+                    "analysis_id",
+                    "parameter_name",
+                    "unit",
+                    "value_type",
+                    "gender_type"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Analysis parameter created successfully"
+            },
+            "404": {
+              "description": "Analysis not found"
+            },
+            "409": {
+              "description": "Parameter code already exists"
+            }
+          }
+        }
+      },
+      "/analysis-parameter/get-all": {
+        "get": {
+          "tags": ["Analysis Parameter"],
+          "summary": "Get all analysis parameters with pagination",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              }
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Nom, kod yoki tavsif bo'yicha qidiruv"
+            },
+            {
+              "name": "analysis_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Aniq tahlil bo'yicha filtrlash"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of analysis parameters"
+            }
+          }
+        }
+      },
+      "/analysis-parameter/by-analysis/{analysis_id}": {
+        "get": {
+          "tags": ["Analysis Parameter"],
+          "summary": "Get all parameters for specific analysis",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "analysis_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Tahlil ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of parameters for this analysis"
+            },
+            "404": {
+              "description": "Analysis not found"
+            }
+          }
+        }
+      },
+      "/analysis-parameter/get-one/{id}": {
+        "get": {
+          "tags": ["Analysis Parameter"],
+          "summary": "Get analysis parameter by ID",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Analysis parameter found with analysis info"
+            },
+            "404": {
+              "description": "Analysis parameter not found"
+            }
+          }
+        }
+      },
+      "/analysis-parameter/update/{id}": {
+        "put": {
+          "tags": ["Analysis Parameter"],
+          "summary": "Update analysis parameter",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "analysis_id": {
+                      "type": "string"
+                    },
+                    "parameter_code": {
+                      "type": "string"
+                    },
+                    "parameter_name": {
+                      "type": "string"
+                    },
+                    "unit": {
+                      "type": "string"
+                    },
+                    "normal_range": {
+                      "type": "object",
+                      "properties": {
+                        "male": {
+                          "type": "object",
+                          "properties": {
+                            "min": {
+                              "type": "number"
+                            },
+                            "max": {
+                              "type": "number"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "female": {
+                          "type": "object",
+                          "properties": {
+                            "min": {
+                              "type": "number"
+                            },
+                            "max": {
+                              "type": "number"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "general": {
+                          "type": "object",
+                          "properties": {
+                            "min": {
+                              "type": "number"
+                            },
+                            "max": {
+                              "type": "number"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Analysis parameter updated"
+            },
+            "404": {
+              "description": "Analysis parameter or Analysis not found"
+            },
+            "409": {
+              "description": "Parameter code already exists"
+            }
+          }
+        }
+      },
+      "/analysis-parameter/delete/{id}": {
+        "delete": {
+          "tags": ["Analysis Parameter"],
+          "summary": "Delete analysis parameter",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Analysis parameter deleted"
+            },
+            "404": {
+              "description": "Analysis parameter not found"
+            }
+          }
+        }
+      },
+      "/patient-analysis/create": {
+        "post": {
+          "tags": ["Patient Analysis"],
+          "summary": "Create new patient analyses",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "analysis": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "64b8f1a2c3d4e5f6a7b8c9d0",
+                        "64b8f1a2c3d4e5f6a7b8c9d1"
+                      ],
+                      "description": "Array of analysis type IDs - separate patient analysis will be created for each"
+                    },
+                    "patient": {
+                      "type": "string",
+                      "example": "64b8f1a2c3d4e5f6a7b8c9d2",
+                      "description": "Patient ID"
+                    },
+                    "level": {
+                      "type": "string",
+                      "enum": ["SHOSHILINCH", "ODDIY", "JUDA_SHOSHILINCH"],
+                      "example": "ODDIY",
+                      "description": "Urgency level of the analysis"
+                    },
+                    "clinical_indications": {
+                      "type": "string",
+                      "example": "Routine checkup",
+                      "description": "Clinical indications for the analysis"
+                    },
+                    "comment": {
+                      "type": "string",
+                      "example": "Patient fasting for 12 hours",
+                      "description": "Additional comments"
+                    }
+                  },
+                  "required": [
+                    "analysis",
+                    "patient",
+                    "level",
+                    "clinical_indications"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Patient analyses created successfully"
+            },
+            "404": {
+              "description": "Patient or analysis type not found"
+            }
+          }
+        }
+      },
+      "/patient-analysis/get-all": {
+        "get": {
+          "tags": ["Patient Analysis"],
+          "summary": "Get all patient analyses with pagination and filters",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              }
+            },
+            {
+              "name": "patient",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Filter by patient ID"
+            },
+            {
+              "name": "status",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["PENDING", "COMPLETED", "CANCELLED"]
+              },
+              "description": "Filter by status"
+            },
+            {
+              "name": "level",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["SHOSHILINCH", "ODDIY", "JUDA_SHOSHILINCH"]
+              },
+              "description": "Filter by urgency level"
+            },
+            {
+              "name": "analysis_type",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Filter by analysis type ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of patient analyses"
+            }
+          }
+        }
+      },
+      "/patient-analysis/by-patient/{patient_id}": {
+        "get": {
+          "tags": ["Patient Analysis"],
+          "summary": "Get all analyses for a specific patient",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "patient_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Patient ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of patient analyses"
+            },
+            "404": {
+              "description": "Patient not found"
+            }
+          }
+        }
+      },
+      "/patient-analysis/get-one/{id}": {
+        "get": {
+          "tags": ["Patient Analysis"],
+          "summary": "Get patient analysis by ID",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Patient analysis ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Patient analysis details"
+            },
+            "404": {
+              "description": "Patient analysis not found"
+            }
+          }
+        }
+      },
+      "/patient-analysis/update/{id}": {
+        "put": {
+          "tags": ["Patient Analysis"],
+          "summary": "Update patient analysis",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Patient analysis ID"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "analysis_parameter_type": {
+                            "type": "string",
+                            "example": "64b8f1a2c3d4e5f6a7b8c9d0"
+                          },
+                          "analysis_parameter_value": {
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              }
+                            ],
+                            "example": 145
+                          }
+                        },
+                        "required": [
+                          "analysis_parameter_type",
+                          "analysis_parameter_value"
+                        ]
+                      },
+                      "description": "Analysis results"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["PENDING", "COMPLETED", "CANCELLED"],
+                      "example": "COMPLETED"
+                    },
+                    "level": {
+                      "type": "string",
+                      "enum": ["SHOSHILINCH", "ODDIY", "JUDA_SHOSHILINCH"],
+                      "example": "ODDIY"
+                    },
+                    "clinical_indications": {
+                      "type": "string",
+                      "example": "Updated clinical indications"
+                    },
+                    "comment": {
+                      "type": "string",
+                      "example": "Updated comment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Patient analysis updated successfully"
+            },
+            "400": {
+              "description": "Invalid parameter value type"
+            },
+            "404": {
+              "description": "Patient analysis not found"
+            }
+          }
+        }
+      },
+      "/patient-analysis/delete/{id}": {
+        "delete": {
+          "tags": ["Patient Analysis"],
+          "summary": "Delete patient analysis",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Patient analysis ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Patient analysis deleted successfully"
+            },
+            "404": {
+              "description": "Patient analysis not found"
+            }
+          }
+        }
+      },
+      "/billing/create": {
+        "post": {
+          "tags": ["Billing"],
+          "summary": "Create a new billing — Allowed roles: ceo, receptionist",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["examination_id", "services", "payment"],
+                  "properties": {
+                    "examination_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8b"
+                    },
+                    "services": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["name", "count", "price"],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "example": "Consultation"
+                          },
+                          "count": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "price": {
+                            "type": "integer",
+                            "example": 50000
+                          }
+                        }
+                      }
+                    },
+                    "payment": {
+                      "type": "object",
+                      "required": ["payment_method", "amount"],
+                      "properties": {
+                        "payment_method": {
+                          "type": "string",
+                          "enum": [
+                            "cash",
+                            "card",
+                            "online",
+                            "bank_transfer",
+                            "crypto"
+                          ],
+                          "example": "cash"
+                        },
+                        "amount": {
+                          "type": "integer",
+                          "example": 50000
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Billing created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Billing created successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/billing/get-all": {
+        "get": {
+          "tags": ["Billing"],
+          "summary": "Get all billings — Allowed roles: ceo, receptionist, doctor, nurse",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 10
+              }
+            },
+            {
+              "name": "status",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive",
+                  "pending",
+                  "completed",
+                  "deleted"
+                ]
+              }
+            },
+            {
+              "name": "patient_id",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of billings",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        }
+                      },
+                      "pagination": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/billing/get-one/{id}": {
+        "get": {
+          "tags": ["Billing"],
+          "summary": "Get one billing by ID — Allowed roles: ceo, receptionist, doctor, nurse",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Billing details",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/billing/update/{id}": {
+        "patch": {
+          "tags": ["Billing"],
+          "summary": "Update billing services — Allowed roles: ceo, receptionist",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "services": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "example": "Consultation"
+                          },
+                          "count": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "price": {
+                            "type": "integer",
+                            "example": 50000
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Billing updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Billing updated successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/billing/payment/{id}": {
+        "patch": {
+          "tags": ["Billing"],
+          "summary": "Add payment to billing — Allowed roles: ceo, receptionist",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["payment"],
+                  "properties": {
+                    "payment": {
+                      "type": "object",
+                      "required": ["payment_method", "amount"],
+                      "properties": {
+                        "payment_method": {
+                          "type": "string",
+                          "enum": [
+                            "cash",
+                            "card",
+                            "online",
+                            "bank_transfer",
+                            "crypto"
+                          ],
+                          "example": "cash"
+                        },
+                        "amount": {
+                          "type": "integer",
+                          "example": 50000
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Payment added successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Payment added successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/billing/delete/{id}": {
+        "delete": {
+          "tags": ["Billing"],
+          "summary": "Delete billing — Allowed roles: ceo",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Billing deleted successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Billing deleted successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/report/billing": {
+        "get": {
+          "tags": ["Report"],
+          "summary": "Get billing report — Allowed roles: ceo, receptionist",
+          "description": "Hisobotlarni interval (daily, weekly, monthly, yearly) bo'yicha olish. Natijada umumiy, to'langan va qarzdorlik summalari qaytariladi.",
+          "parameters": [
+            {
+              "name": "interval",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "enum": ["daily", "weekly", "monthly", "quarterly", "yearly"],
+                "example": "daily"
+              },
+              "description": "Hisobot intervali (daily, weekly, monthly, yearly)"
+            },
+            {
+              "name": "page",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 1,
+                "minimum": 1
+              },
+              "description": "Sahifa raqami (pagination)"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 10,
+                "minimum": 1,
+                "maximum": 100
+              },
+              "description": "Sahifadagi elementlar soni (pagination)"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Hisobot muvaffaqiyatli qaytarildi",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Billing report generated successfully"
+                      },
+                      "page": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "limit": {
+                        "type": "integer",
+                        "example": 10
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "object",
+                              "properties": {
+                                "year": {
+                                  "type": "integer",
+                                  "example": 2025
+                                },
+                                "month": {
+                                  "type": "integer",
+                                  "example": 11
+                                },
+                                "week": {
+                                  "type": "integer",
+                                  "example": 45
+                                },
+                                "day": {
+                                  "type": "integer",
+                                  "example": 6
+                                }
+                              }
+                            },
+                            "totalAmount": {
+                              "type": "number",
+                              "example": 500000
+                            },
+                            "paidAmount": {
+                              "type": "number",
+                              "example": 400000
+                            },
+                            "debtAmount": {
+                              "type": "number",
+                              "example": 100000
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Xato so'rov yoki interval noto'g'ri",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": false
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Invalid interval"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/report/user": {
+        "get": {
+          "tags": ["Report"],
+          "summary": "Get user billing report — Allowed roles: ceo",
+          "description": "Foydalanuvchi o'z billing hisobotini interval (daily, weekly, monthly, yearly) bo'yicha oladi.",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "Foydalanuvchi hisobotlari muvaffaqiyatli qaytarildi",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "User billing report generated successfully"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Xato so'rov yoki interval noto'g'ri",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": false
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Invalid interval"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/diagnosis/create": {
+        "post": {
+          "tags": ["Diagnosis"],
+          "summary": "Create a new diagnosis (ceo, admin, doctor)",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "D001",
+                      "description": "Diagnosis code (unique)"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Diabetes Mellitus",
+                      "description": "Diagnosis name"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Chronic high blood sugar",
+                      "description": "Additional info"
+                    },
+                    "symptoms": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Thirst", "Fatigue"],
+                      "description": "Symptoms list"
+                    },
+                    "causes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Genetics", "Obesity"],
+                      "description": "Causes list"
+                    },
+                    "treatments": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Insulin", "Diet"],
+                      "description": "Treatments list"
+                    },
+                    "is_chronic": {
+                      "type": "boolean",
+                      "example": true,
+                      "description": "Is chronic?"
+                    },
+                    "is_contagious": {
+                      "type": "boolean",
+                      "example": false,
+                      "description": "Is contagious?"
+                    }
+                  },
+                  "required": ["code", "name", "description"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Diagnosis created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Diagnosis created successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Diagnosis code already exists"
+            }
+          }
+        }
+      },
+      "/diagnosis/get-all": {
+        "get": {
+          "tags": ["Diagnosis"],
+          "summary": "Get all diagnoses with pagination (ceo, admin, doctor, nurse, receptionist)",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              },
+              "description": "Page number"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              },
+              "description": "Items per page"
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Search by code, name, or description"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of diagnoses",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "code": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "symptoms": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "causes": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "treatments": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "is_chronic": {
+                              "type": "boolean"
+                            },
+                            "is_contagious": {
+                              "type": "boolean"
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "updated_at": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "pagination": {
+                        "type": "object",
+                        "properties": {
+                          "page": {
+                            "type": "integer"
+                          },
+                          "limit": {
+                            "type": "integer"
+                          },
+                          "total_items": {
+                            "type": "integer"
+                          },
+                          "total_pages": {
+                            "type": "integer"
+                          },
+                          "next_page": {
+                            "type": "integer"
+                          },
+                          "prev_page": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/diagnosis/get-one/{id}": {
+        "get": {
+          "tags": ["Diagnosis"],
+          "summary": "Get diagnosis by ID (ceo, admin, doctor, nurse, receptionist)",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Diagnosis ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Diagnosis found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "symptoms": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "causes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "treatments": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "is_chronic": {
+                            "type": "boolean"
+                          },
+                          "is_contagious": {
+                            "type": "boolean"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Diagnosis not found"
+            }
+          }
+        }
+      },
+      "/diagnosis/update/{id}": {
+        "put": {
+          "tags": ["Diagnosis"],
+          "summary": "Update diagnosis (ceo, admin, doctor)",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Diagnosis ID"
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "D001"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Diabetes Mellitus"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Chronic high blood sugar"
+                    },
+                    "symptoms": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Thirst", "Fatigue"]
+                    },
+                    "causes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Genetics", "Obesity"]
+                    },
+                    "treatments": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Insulin", "Diet"]
+                    },
+                    "is_chronic": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "is_contagious": {
+                      "type": "boolean",
+                      "example": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Diagnosis updated successfully"
+            },
+            "404": {
+              "description": "Diagnosis not found"
+            },
+            "409": {
+              "description": "Diagnosis code already exists"
+            }
+          }
+        }
+      },
+      "/diagnosis/delete/{id}": {
+        "delete": {
+          "tags": ["Diagnosis"],
+          "summary": "Delete diagnosis (ceo, admin, doctor)",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Diagnosis ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Diagnosis deleted successfully"
+            },
+            "404": {
+              "description": "Diagnosis not found"
+            }
+          }
+        }
+      },
+      "/imaging-type/create": {
+        "post": {
+          "tags": ["ImagingType"],
+          "summary": "Create a new imaging type (ceo, receptionist)",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "X-ray",
+                      "description": "Imaging type name"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Radiographic imaging",
+                      "description": "Additional info"
+                    }
+                  },
+                  "required": ["code", "name"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Imaging type created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Imaging type created successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Imaging type code already exists"
+            }
+          }
+        }
+      },
+      "/imaging-type/get-all": {
+        "get": {
+          "tags": ["ImagingType"],
+          "summary": "Get all imaging types with pagination (ceo, receptionist, doctor, nurse)",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              },
+              "description": "Page number"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              },
+              "description": "Items per page"
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Search by code, name, or description"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of imaging types",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "updated_at": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "pagination": {
+                        "type": "object",
+                        "properties": {
+                          "page": {
+                            "type": "integer"
+                          },
+                          "limit": {
+                            "type": "integer"
+                          },
+                          "total_items": {
+                            "type": "integer"
+                          },
+                          "total_pages": {
+                            "type": "integer"
+                          },
+                          "next_page": {
+                            "type": "integer"
+                          },
+                          "prev_page": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/imaging-type/get-one/{id}": {
+        "get": {
+          "tags": ["ImagingType"],
+          "summary": "Get imaging type by ID (ceo, receptionist, doctor, nurse)",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Imaging type ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Imaging type found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Imaging type not found"
+            }
+          }
+        }
+      },
+      "/imaging-type/update/{id}": {
+        "put": {
+          "tags": ["ImagingType"],
+          "summary": "Update imaging type (ceo, receptionist)",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Imaging type ID"
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "X-ray"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Radiographic imaging"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Imaging type updated successfully"
+            },
+            "404": {
+              "description": "Imaging type not found"
+            },
+            "409": {
+              "description": "Imaging type code already exists"
+            }
+          }
+        }
+      },
+      "/imaging-type/delete/{id}": {
+        "delete": {
+          "tags": ["ImagingType"],
+          "summary": "Delete imaging type (ceo, receptionist)",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Imaging type ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Imaging type deleted successfully"
+            },
+            "404": {
+              "description": "Imaging type not found"
+            }
+          }
+        }
+      },
+      "/medical-image/create": {
+        "post": {
+          "tags": ["MedicalImage"],
+          "summary": "Create a new medical image (ceo, receptionist, doctor, admin)",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "examination_id": {
+                      "type": "string",
+                      "example": "64a1f2c3e4b5a6d7f8c9b0b2"
+                    },
+                    "imaging_type_id": {
+                      "type": "string",
+                      "example": "64a1f2c3e4b5a6d7f8c9b0c3"
+                    },
+                    "image_paths": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["/uploads/abcd.jpg", "/uploads/efgh.jpg"],
+                      "description": "Array of uploaded file paths (must exist in Upload collection)"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Fracture imaging",
+                      "description": "Optional description"
+                    },
+                    "body_part": {
+                      "type": "string",
+                      "example": "Left arm",
+                      "description": "Body part imaged"
+                    }
+                  },
+                  "required": [
+                    "patient_id",
+                    "examination_id",
+                    "imaging_type_id",
+                    "image_paths"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Medical image created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Medical image created successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad request (missing or invalid related resources or image paths)"
+            }
+          }
+        }
+      },
+      "/medical-image/get-all": {
+        "get": {
+          "tags": ["MedicalImage"],
+          "summary": "Get all medical images with pagination (ceo, receptionist, doctor, admin, nurse)",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              },
+              "description": "Page number"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              },
+              "description": "Items per page"
+            },
+            {
+              "name": "patient_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Filter by patient id"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of medical images",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "patient_id": {
+                              "type": "string"
+                            },
+                            "examination_id": {
+                              "type": "string"
+                            },
+                            "imaging_type_id": {
+                              "type": "string"
+                            },
+                            "image_paths": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "body_part": {
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "updated_at": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "pagination": {
+                        "type": "object",
+                        "properties": {
+                          "total": {
+                            "type": "integer"
+                          },
+                          "page": {
+                            "type": "integer"
+                          },
+                          "limit": {
+                            "type": "integer"
+                          },
+                          "pages": {
+                            "type": "integer"
+                          },
+                          "next": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "prev": {
+                            "type": "integer",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/medical-image/get-one/{id}": {
+        "get": {
+          "tags": ["MedicalImage"],
+          "summary": "Get medical image by ID (ceo, receptionist, doctor, admin, nurse)",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Medical image ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Medical image found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "patient_id": {
+                            "type": "string"
+                          },
+                          "examination_id": {
+                            "type": "string"
+                          },
+                          "imaging_type_id": {
+                            "type": "string"
+                          },
+                          "image_paths": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "body_part": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Medical image not found"
+            }
+          }
+        }
+      },
+      "/medical-image/update/{id}": {
+        "put": {
+          "tags": ["MedicalImage"],
+          "summary": "Update medical image (ceo, receptionist, doctor, admin)",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Medical image ID"
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "imaging_type_id": {
+                      "type": "string",
+                      "example": "64a1f2c3e4b5a6d7f8c9b0c3"
+                    },
+                    "image_paths": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["/uploads/abcd.jpg"]
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Updated description"
+                    },
+                    "body_part": {
+                      "type": "string",
+                      "example": "Right leg"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Medical image updated successfully"
+            },
+            "400": {
+              "description": "Bad request (invalid imaging type or image paths)"
+            },
+            "404": {
+              "description": "Medical image not found"
+            }
+          }
+        }
+      },
+      "/medical-image/delete/{id}": {
+        "delete": {
+          "tags": ["MedicalImage"],
+          "summary": "Delete medical image (ceo, receptionist, doctor, admin)",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Medical image ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Medical image deleted successfully"
+            },
+            "404": {
+              "description": "Medical image not found"
+            }
+          }
+        }
+      },
+      "/service-type/create": {
+        "post": {
+          "tags": ["ServiceType"],
+          "summary": "Create a new service type",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "CONSULT",
+                      "description": "Service code (unique)"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Consultation",
+                      "description": "Service name"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "General doctor consultation",
+                      "description": "Optional description"
+                    },
+                    "price": {
+                      "type": "integer",
+                      "example": 50000,
+                      "description": "Service price (UZS)"
+                    },
+                    "duration_minutes": {
+                      "type": "integer",
+                      "example": 30,
+                      "description": "Estimated duration in minutes"
+                    },
+                    "is_active": {
+                      "type": "boolean",
+                      "example": true,
+                      "description": "Is service active"
+                    },
+                    "requirements": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Passport", "Referral"],
+                      "description": "List of required items"
+                    }
+                  },
+                  "required": ["code", "name", "price", "duration_minutes"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Service type created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Service type created successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Service type code already exists"
+            }
+          }
+        }
+      },
+      "/service-type/get-all": {
+        "get": {
+          "tags": ["ServiceType"],
+          "summary": "Get all service types with pagination",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              },
+              "description": "Page number"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              },
+              "description": "Items per page"
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Search by code/name/description"
+            },
+            {
+              "name": "code",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Filter by exact code"
+            },
+            {
+              "name": "is_active",
+              "in": "query",
+              "schema": {
+                "type": "boolean"
+              },
+              "description": "Filter by active status"
+            },
+            {
+              "name": "min_price",
+              "in": "query",
+              "schema": {
+                "type": "integer"
+              },
+              "description": "Minimum price"
+            },
+            {
+              "name": "max_price",
+              "in": "query",
+              "schema": {
+                "type": "integer"
+              },
+              "description": "Maximum price"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of service types",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "code": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "price": {
+                              "type": "integer"
+                            },
+                            "duration_minutes": {
+                              "type": "integer"
+                            },
+                            "is_active": {
+                              "type": "boolean"
+                            },
+                            "requirements": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "updated_at": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "pagination": {
+                        "type": "object",
+                        "properties": {
+                          "page": {
+                            "type": "integer"
+                          },
+                          "limit": {
+                            "type": "integer"
+                          },
+                          "total_items": {
+                            "type": "integer"
+                          },
+                          "total_pages": {
+                            "type": "integer"
+                          },
+                          "next_page": {
+                            "type": "integer"
+                          },
+                          "prev_page": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/service-type/get-one/{id}": {
+        "get": {
+          "tags": ["ServiceType"],
+          "summary": "Get service type by ID",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Service type ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Service type found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "price": {
+                            "type": "integer"
+                          },
+                          "duration_minutes": {
+                            "type": "integer"
+                          },
+                          "is_active": {
+                            "type": "boolean"
+                          },
+                          "requirements": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Service type not found"
+            }
+          }
+        }
+      },
+      "/service-type/update/{id}": {
+        "put": {
+          "tags": ["ServiceType"],
+          "summary": "Update service type",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Service type ID"
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "CONSULT"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Consultation"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "General doctor consultation"
+                    },
+                    "price": {
+                      "type": "integer",
+                      "example": 60000
+                    },
+                    "duration_minutes": {
+                      "type": "integer",
+                      "example": 45
+                    },
+                    "is_active": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "requirements": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Referral"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Service type updated successfully"
+            },
+            "404": {
+              "description": "Service type not found"
+            },
+            "409": {
+              "description": "Code already exists"
+            }
+          }
+        }
+      },
+      "/service-type/delete/{id}": {
+        "delete": {
+          "tags": ["ServiceType"],
+          "summary": "Delete service type",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Service type ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Service type deleted successfully"
+            },
+            "404": {
+              "description": "Service type not found"
+            }
+          }
+        }
+      }
+    }
+  },
+  "customOptions": {},
+  "swaggerUrl": {}
+}
