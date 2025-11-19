@@ -399,25 +399,6 @@ const ExaminationDetail = () => {
   return (
     <div className='min-h-screen bg-background'>
       <main className='container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
-        {/* Header */}
-        {/* <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6'>
-          <div className='flex items-center gap-3'>
-            <Button variant='outline' size='icon' onClick={() => navigate(-1)}>
-              <ArrowLeft className='w-4 h-4' />
-            </Button>
-            <div>
-              <h1 className='text-2xl sm:text-3xl font-bold'>
-                Кўрик Тафсилотлари
-              </h1>
-              <p className='text-sm text-muted-foreground mt-1'>
-                Кўрик #{exam._id.slice(-6)}
-              </p>
-            </div>
-          </div>
-          <div className='flex gap-2'>
-            {getStatusBadge(exam.status)}
-          </div>
-        </div> */}
 
         {/* Patient Info Card */}
         <Card className='mb-6'>
@@ -475,7 +456,7 @@ const ExaminationDetail = () => {
               </Button>
               <Button
                 variant='outline'
-                className='w-full text-red-600 hover:text-red-700'
+                className='w-full text-red-600 hover:bg-red-600 hover:text-white'
                 onClick={() => setIsDeleteConfirm(true)}
               >
                 <Trash2 className='w-4 h-4 mr-2' />

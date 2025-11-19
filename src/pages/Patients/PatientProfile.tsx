@@ -192,7 +192,7 @@ const PatientProfile = () => {
                       <Button
                         variant='outline'
                         size='sm'
-                        className='flex-1 sm:flex-none bg-red-500 text-white'
+                        className='flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white hover:text-white'
                         onClick={() => setIsDeleteModalOpen(true)}
                       >
                         <FileX className='w-4 h-4 sm:mr-2' />
