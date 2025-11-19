@@ -33,7 +33,7 @@ export const menuCategories = [
       { title: 'Кўриклар', url: '/visits', icon: Calendar },
       // { title: 'Навбатлар', url: '/appointments', icon: Calendar },
       { title: 'Рецепт ёзиш', url: '/prescription', icon: Pill },
-      { title: 'Касалликлар', url: '/disease', icon: HeartPulse },
+      // { title: 'Касалликлар', url: '/disease', icon: HeartPulse },
       { title: 'Хизматлар', url: '/service', icon: ClipboardCheck },
     ],
   },
