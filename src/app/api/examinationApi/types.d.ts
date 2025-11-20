@@ -53,6 +53,7 @@ export type ExamDataItem = {
     duration: number;
     instructions: string;
     _id: string;
+    days:Day[]
   }>;
   services: Array<{
     service_type_id:
@@ -136,6 +137,12 @@ export type AllExamReq = {
 };
 
 // prescriptions
+export type Day=  {
+	_id: string
+	date: string | null
+	day: number
+	times: number
+}
 
 export type Prescription = {
   medication: string;
@@ -143,6 +150,7 @@ export type Prescription = {
   frequency: number;
   duration: number;
   instructions: string;
+  days?:Day[]
 };
 
 export interface createPrescriptionReq {
