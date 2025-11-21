@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Eye, Filter, Phone, Search, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewPatient from './components/NewPatient';
 
@@ -28,6 +28,12 @@ const Patients = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Infinite scroll states for doctors
+  const [doctorPage, setDoctorPage] = useState(1);
+  const [allDoctors, setAllDoctors] = useState<any[]>([]);
+  const [hasMoreDoctors, setHasMoreDoctors] = useState(true);
+  const [isLoadingMoreDoctors, setIsLoadingMoreDoctors] = useState(false);
+
   const { data: patientdata, isLoading } = useGetAllPatientQuery({
     page: currentPage,
     limit: itemsPerPage,
@@ -36,13 +42,50 @@ const Patients = () => {
     search: searchQuery || undefined,
   });
 
-  // Fetch doctors
   const { data: doctorsData } = useGetUsersQuery({
     role: 'doctor',
-    limit: 100,
+    limit: 20,
+    page: doctorPage,
   });
 
-  const doctors = doctorsData?.data || [];
+  // Update doctors list when new data arrives
+  useEffect(() => {
+    if (doctorsData?.data) {
+      if (doctorPage === 1) {
+        setAllDoctors(doctorsData.data);
+      } else {
+        setAllDoctors((prev) => {
+          const newData = doctorsData.data.filter(
+            (doc: any) => !prev.some((d) => d._id === doc._id)
+          );
+          return [...prev, ...newData];
+        });
+      }
+
+      const totalPages = doctorsData.pagination?.total_pages || 1;
+      setHasMoreDoctors(doctorPage < totalPages);
+      setIsLoadingMoreDoctors(false);
+    }
+  }, [doctorsData, doctorPage]);
+
+  const doctors = allDoctors;
+
+  const loadMoreDoctors = () => {
+    if (!isLoadingMoreDoctors && hasMoreDoctors) {
+      setIsLoadingMoreDoctors(true);
+      setDoctorPage((prev) => prev + 1);
+    }
+  };
+
+  const handleDoctorScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    const bottom =
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
+
+    if (bottom && hasMoreDoctors && !isLoadingMoreDoctors) {
+      loadMoreDoctors();
+    }
+  };
 
   console.log(patientdata);
 
@@ -116,13 +159,30 @@ const Patients = () => {
                   <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
                     <SelectValue placeholder='Шифокор' />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent
+                    className='max-h-[300px]'
+                    onScroll={handleDoctorScroll}
+                  >
                     <SelectItem value='all'>Барчаси</SelectItem>
                     {doctors.map((doctor: any) => (
                       <SelectItem key={doctor._id} value={doctor._id}>
                         {doctor.fullname}
                       </SelectItem>
                     ))}
+                    {isLoadingMoreDoctors && (
+                      <div className='px-2 py-4 text-center'>
+                        <LoadingSpinner
+                          size='sm'
+                          text='Юкланмоқда...'
+                          className='justify-center'
+                        />
+                      </div>
+                    )}
+                    {!hasMoreDoctors && doctors.length > 1 && (
+                      <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
+                        Барча шифокорлар юкланди
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
