@@ -75,7 +75,7 @@ const Prescription = () => {
     useGetAllExamsQuery({
       page: page,
       limit: 20,
-      status: 'active',
+      status: 'pending',
     });
 
   // Fetch selected examination details

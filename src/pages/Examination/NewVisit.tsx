@@ -250,16 +250,12 @@ const NewVisit = () => {
                           {patient.gender === 'male' ? 'Эркак' : 'Аёл'})
                         </span>
                       </h2>
-                      <p className='text-xs sm:text-sm text-muted-foreground'>
-                        ID: {patient.patient_id} • {patient.phone}
+                      <p className='text-xs sm:text-base text-muted-foreground'>
+                        ID: {patient.patient_id}
                       </p>
-                      <p className='text-xs sm:text-sm text-muted-foreground'>
+                      <p className='text-xs sm:text-base text-muted-foreground'>
                         Сана:{' '}
-                        {new Date().toLocaleDateString('uz-UZ', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
+                        {new Date().toLocaleDateString('uz-UZ')}
                       </p>
                       {patient?.allergies && patient.allergies.length > 0 && (
                         <div className='px-3 py-2 bg-danger/20 border border-danger rounded-lg mt-2'>
@@ -294,7 +290,7 @@ const NewVisit = () => {
                         <SelectContent>
                           {doctors.map((doctor: any) => (
                             <SelectItem key={doctor._id} value={doctor._id}>
-                              <div className='flex flex-col'>
+                              <div className='flex flex-col items-start'>
                                 <span className='font-medium'>
                                   {doctor.fullname}
                                 </span>

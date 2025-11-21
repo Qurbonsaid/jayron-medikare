@@ -179,12 +179,6 @@ const Visits = () => {
     });
   };
 
-  // Open delete modal
-  const handleDeleteClick = (exam: any) => {
-    setSelectedExam(exam);
-    setIsDeleteModalOpen(true);
-  };
-
   // Handle delete
   const handleDelete = async () => {
     await handleRequest({
@@ -250,6 +244,8 @@ const Visits = () => {
                     <SelectItem value='all'>Барчаси</SelectItem>
                     <SelectItem value='active'>Фаол</SelectItem>
                     <SelectItem value='completed'>Тугалланган</SelectItem>
+                    <SelectItem value='pending'>Тугалланмаган</SelectItem>
+                    <SelectItem value='deleted'>Ўчирилганлар</SelectItem>
                     <SelectItem value='inactive'>Фаол эмас</SelectItem>
                   </SelectContent>
                 </Select>
