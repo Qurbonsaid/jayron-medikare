@@ -91,36 +91,6 @@ const Billing = () => {
   console.log(data);
 
   const invoices = data?.data || [];
-  // Mock data
-  // const invoices: Invoice[] = [
-  //   {
-  //     invoiceNumber: 'INV-2025-001',
-  //     patientName: 'Алиев Анвар Рашидович',
-  //     date: '07.10.2025',
-  //     totalAmount: 500000,
-  //     paidAmount: 500000,
-  //     balance: 0,
-  //     status: 'Тўланган',
-  //   },
-  //   {
-  //     invoiceNumber: 'INV-2025-002',
-  //     patientName: 'Каримова Нилуфар Азизовна',
-  //     date: '07.10.2025',
-  //     totalAmount: 850000,
-  //     paidAmount: 400000,
-  //     balance: 450000,
-  //     status: 'Қисман тўланган',
-  //   },
-  //   {
-  //     invoiceNumber: 'INV-2025-003',
-  //     patientName: 'Усмонов Жахонгир Баходирович',
-  //     date: '06.10.2025',
-  //     totalAmount: 320000,
-  //     paidAmount: 0,
-  //     balance: 320000,
-  //     status: 'Тўланмаган',
-  //   },
-  // ];
 
   const [services, setServices] = useState<Service[]>([
     {
@@ -215,7 +185,7 @@ const Billing = () => {
       {/* Main Content */}
       <main className='container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6'>
         {/* Add Button */}
-        <div className='mb-4 sm:mb-6'>
+        <div className='mb-4 sm:mb-6 text-right'>
           <Button
             onClick={() => setIsInvoiceModalOpen(true)}
             className='w-full sm:w-auto text-sm'

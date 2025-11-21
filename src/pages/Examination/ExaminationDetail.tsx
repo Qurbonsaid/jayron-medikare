@@ -1129,12 +1129,12 @@ const ExaminationDetail = () => {
           <TabsContent value='visits'>
             <Card>
               <CardHeader>
-                <CardTitle>Ташрифлар Тарихи</CardTitle>
+                <CardTitle>Таҳлиллар Тарихи</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className='text-center py-8'>
                   <p className='text-muted-foreground'>
-                    Ташрифлар тарихи тез орада қўшилади
+                    Таҳлиллар тарихи тез орада қўшилади
                   </p>
                 </div>
               </CardContent>
