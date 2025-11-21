@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { AlertCircle, Loader2, Plus, Printer, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -50,6 +51,7 @@ interface FormValidationErrors {
 const Prescription = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [allergyWarning, setAllergyWarning] = useState(false);
   const [formErrors, setFormErrors] = useState<FormValidationErrors>({
@@ -66,6 +68,7 @@ const Prescription = () => {
   const [allExaminations, setAllExaminations] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [queryKey, setQueryKey] = useState(0);
 
   // Get examination ID from navigation state
   const examinationIdFromState = location.state?.examinationId;
@@ -75,8 +78,9 @@ const Prescription = () => {
     useGetAllExamsQuery({
       page: page,
       limit: 20,
-      status: 'active',
-    });
+      status: 'pending',
+      _key: queryKey, // This forces new query when key changes
+    } as any);
 
   // Fetch selected examination details
   const { data: examinationData, isLoading: isLoadingExamination } =
@@ -100,7 +104,12 @@ const Prescription = () => {
 
   // Update examinations list when new data arrives
   useEffect(() => {
-    if (examinationsData?.data) {
+    console.log('Examinations Data:', examinationsData);
+    console.log('Current Page:', page);
+
+    if (examinationsData?.data && Array.isArray(examinationsData.data)) {
+      console.log('Data length:', examinationsData.data.length);
+
       if (page === 1) {
         setAllExaminations(examinationsData.data);
       } else {
@@ -116,6 +125,9 @@ const Prescription = () => {
       const totalPages = examinationsData.pagination?.total_pages || 1;
       setHasMore(page < totalPages);
       setIsLoadingMore(false);
+    } else {
+      console.log('No data or data is not an array');
+      setIsLoadingMore(false);
     }
   }, [examinationsData, page]);
 
@@ -127,11 +139,10 @@ const Prescription = () => {
 
   // Auto-select examination if coming from another page
   useEffect(() => {
-    if (examinationIdFromState) {
+    if (examinationIdFromState && !selectedExaminationId) {
       setSelectedExaminationId(examinationIdFromState);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [examinationIdFromState]);
+  }, [examinationIdFromState, selectedExaminationId]);
 
   // Update patient state when examination and patient data are loaded
   useEffect(() => {
@@ -153,12 +164,16 @@ const Prescription = () => {
     setFormErrors({
       medications: {},
     });
+    // Clear navigation state first
+    if (examinationIdFromState) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
     // Reset pagination
-    setPage(1);
     setAllExaminations([]);
     setHasMore(true);
-    // Clear navigation state
-    navigate(location.pathname, { replace: true, state: {} });
+    setPage(1);
+    // Change query key to force new query and bypass cache
+    setQueryKey((prev) => prev + 1);
   };
 
   const loadMoreExaminations = () => {
@@ -461,7 +476,12 @@ const Prescription = () => {
                   className='max-h-[300px]'
                   onScroll={handleScroll}
                 >
-                  {examinations.length === 0 && !isLoadingExaminations ? (
+                  {isLoadingExaminations && examinations.length === 0 ? (
+                    <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
+                      <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
+                      Юкланмоқда...
+                    </div>
+                  ) : examinations.length === 0 ? (
                     <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
                       Актив кўриклар топилмади
                     </div>

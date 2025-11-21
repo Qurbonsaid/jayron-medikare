@@ -92,7 +92,7 @@ export const examinationApi = baseApi.injectEndpoints({
 
 		createPrescription: builder.mutation<MutationRes, createPrescriptionReq>({
 			query: ({ id, body }) => ({
-				url: PATHS.CREATE_PRESCRIPTION + id + PATHS.PRESCRIPTION,
+				url: PATHS.CREATE_EXAM + id + PATHS.PRESCRIPTION,
 				method: 'POST',
 				body,
 			}),
@@ -101,7 +101,7 @@ export const examinationApi = baseApi.injectEndpoints({
 		updatePrescription: builder.mutation<MutationRes, updatePrescriptionReq>({
 			query: ({ id, prescription_id, body }) => ({
 				url:
-					PATHS.CREATE_PRESCRIPTION + id + PATHS.PRESCRIPTION + prescription_id,
+					PATHS.CREATE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
 				method: 'PATCH',
 				body,
 			}),
@@ -110,7 +110,7 @@ export const examinationApi = baseApi.injectEndpoints({
 		deletePrescription: builder.mutation<MutationRes, deletePrescriptionReq>({
 			query: ({ id, prescription_id }) => ({
 				url:
-					PATHS.CREATE_PRESCRIPTION + id + PATHS.PRESCRIPTION + prescription_id,
+					PATHS.CREATE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
 				method: 'DELETE',
 			}),
 			invalidatesTags: [API_TAGS.PRESCRIPTION],
