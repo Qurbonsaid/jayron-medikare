@@ -578,7 +578,6 @@ interface ExamRecord {
 	prescriptions: Prescription[]
 }
 
-
 const Medicine = () => {
 	const [currentPage, setCurrentPage] = useState(1)
 	const [roomSearch, setRoomSearch] = useState('')
@@ -627,7 +626,10 @@ const Medicine = () => {
 	}
 
 	// Accordion ochilganda days yaratish
-	const handleAccordionChange = async (recordId: string, prescription: Prescription) => {
+	const handleAccordionChange = async (
+		recordId: string,
+		prescription: Prescription
+	) => {
 		if (
 			prescription.days?.length > 0 ||
 			processedPrescriptions.has(prescription._id)
@@ -712,6 +714,18 @@ const Medicine = () => {
 			</div>
 		)
 	}
+
+	const isToday = (dateStr: string) => {
+		const today = new Date()
+		const d = new Date(dateStr)
+	
+		return (
+			d.getFullYear() === today.getFullYear() &&
+			d.getMonth() === today.getMonth() &&
+			d.getDate() === today.getDate()
+		)
+	}
+	
 
 	const { data: records, pagination } = data
 
@@ -837,6 +851,14 @@ const Medicine = () => {
 																					<div
 																						key={day._id}
 																						className='flex flex-col items-center p-2 xl:p-3 border rounded-lg hover:bg-accent/50 transition-colors'
+																						onClick={() =>
+																							!isCompleted &&
+																							openConfirmModal(
+																								record._id,
+																								prescription._id,
+																								day.day
+																							)
+																						}
 																					>
 																						<p className='text-xs font-medium mb-1 text-center line-clamp-1'>
 																							Кун {day.day}
@@ -847,14 +869,6 @@ const Medicine = () => {
 																							</p>
 																						)}
 																						<button
-																							onClick={() =>
-																								!isCompleted &&
-																								openConfirmModal(
-																									record._id,
-																									prescription._id,
-																									day.day
-																								)
-																							}
 																							disabled={isCompleted}
 																							className={`text-base xl:text-lg font-bold transition-all ${
 																								isCompleted
@@ -895,7 +909,7 @@ const Medicine = () => {
 																						</p>
 																						{lastDate && (
 																							<p className='text-[10px] text-muted-foreground mb-1 text-center'>
-																								{lastDate}
+																							{isToday(day.date) ? "Bugun" : lastDate}	
 																							</p>
 																						)}
 																						<button

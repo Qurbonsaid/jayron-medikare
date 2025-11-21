@@ -144,8 +144,6 @@ export default function AnalysisParamsModal() {
 		const femaleFilled = form.female.min || form.female.max
 		const mfStringFilled = form.male.value || form.female.value
 
-		const generalNumber = form.general.min || form.general.max
-
 		// Agar bittasi boshlangan bo‘lsa → hammasi shart bo‘ladi
 		if (maleFilled || femaleFilled) {
 			if (
@@ -168,22 +166,13 @@ export default function AnalysisParamsModal() {
 				}))
 				return false
 			}
-		} else if (generalNumber) {
-			if (!form.general.min || !form.general.max) {
-				setErrors(prev => ({
-					...prev,
-					normal_range: 'Iltimos, Min va Max  maydonlarini to‘ldiring!',
-				}))
-				return false
-			}
-		}
+		} 
 
 		// Xatoni o‘chirib qo‘yish
 		setErrors(prev => ({ ...prev, normal_range: '' }))
 		return true
 	}
 
-	// 2. handleNormalChange ichida validatsiya
 	const handleNormalChange = (
 		type: 'male' | 'female' | 'general',
 		key: 'min' | 'max' | 'value',
@@ -264,6 +253,22 @@ export default function AnalysisParamsModal() {
 
 		if (form.gender_type === 'MALE_FEMALE') {
 			if (!validateMaleFemale()) return // ❗ VALIDATSIYA SHU YERDA
+		}
+
+		if (form.general.min && !form.general.max) {
+			setErrors(prev => ({
+				...prev,
+				normal_range: 'Iltimos, Max qiymatni ham to‘ldiring!',
+			}))
+			return // ❗ So'rov ketmaydi
+		}
+
+		if (form.general.max && !form.general.min) {
+			setErrors(prev => ({
+				...prev,
+				normal_range: 'Iltimos, Min qiymatni ham to‘ldiring!',
+			}))
+			return // ❗ So'rov ketmaydi
 		}
 
 		let generalRange = { min: 0, max: 0, value: '' }

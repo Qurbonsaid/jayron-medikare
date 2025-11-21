@@ -28,6 +28,7 @@ import {
 	Dialog,
 	DialogClose,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -162,7 +163,11 @@ const LabResults = () => {
 	)
 	const selectedOrder = data?.data.find(item => item._id === selectedOrderId)
 
-	const { data: patientsData } = useGetAllPatientQuery({ page: 1, limit: 100 , is_diagnosis:true})
+	const { data: patientsData } = useGetAllPatientQuery({
+		page: 1,
+		limit: 100,
+		is_diagnosis: true,
+	})
 	const { data: diagnosticsData } = useGetAllDiagnosticsQuery()
 	const [showErrors, setShowErrors] = useState(false)
 
@@ -527,11 +532,7 @@ const LabResults = () => {
 			</div>
 
 			{/* Desktop Table */}
-			{isFetching ? (
-				<div className='flex justify-center py-8'>
-					<Loader2 className='animate-spin w-6 h-6' />
-				</div>
-			) : (
+			{isFetching && (
 				<div className='p-4 sm:p-6'>
 					<Card className='card-shadow hidden lg:block'>
 						<div className='overflow-x-auto'>
@@ -678,6 +679,9 @@ const LabResults = () => {
 						<div className='text-sm text-muted-foreground'>
 							{selectedOrder?.patient.fullname}
 						</div>
+						<DialogDescription>
+							Clinic ko'rsatma : {selectedOrder?.clinical_indications}
+						</DialogDescription>
 					</DialogHeader>
 
 					<div className='mt-4'>

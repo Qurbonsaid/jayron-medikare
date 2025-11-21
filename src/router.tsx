@@ -126,6 +126,11 @@ export const navigator = [
     title: "Стационар",
   },
   {
+    path:"/medicine",
+    to:null,
+    title:"Дори-дармонлар",
+  },
+  {
     path: "/lab-results",
     to: null,
     title: "Таҳлил натижалари",
