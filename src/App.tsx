@@ -32,7 +32,7 @@ function RoutesContent() {
         onOpenChange={setShowShortcuts}
       />
       <Routes>
-        <Route path='/' element={<Navigate to={'/dashboard'} />} />
+        <Route path='/' element={<Navigate to={'/patients'} />} />
         <Route path='/login' element={<Login />} />
 
         {/* Protected Routes */}

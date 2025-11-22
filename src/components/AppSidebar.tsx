@@ -93,7 +93,7 @@ export function AppSidebar() {
     <Sidebar collapsible='icon' className='border-r bg-card z-20'>
       {/* Logo Area */}
       <div className='h-18 flex items-center justify-center border-b relative'>
-        <Link to='/dashboard'>
+        <Link to='/patients'>
           {open ? (
             <div className='flex items-center gap-3'>
               <div className='w-10 h-10 gradient-primary rounded-lg flex items-center justify-center'>

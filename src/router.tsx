@@ -1,5 +1,5 @@
 import Appointments from "@/pages/Appointments/Appointments";
-import Dashboard from "@/pages/Dashboard";
+// import Dashboard from "@/pages/Dashboard";
 import Inpatient from "@/pages/Inpatient/Inpatient";
 import LabResults from "@/pages/Diagnostika/LabResults";
 import PatientPortal from "@/pages/PatientPortal";
@@ -23,7 +23,7 @@ import Service from "./pages/Examination/Service/Service";
 import Billing from "./pages/Billing/Billing";
 
 export const routers = [
-  { path: "/dashboard", element: <Dashboard /> },
+  // { path: "/dashboard", element: <Dashboard /> },
   { path: "/patients", element: <Patients /> },
   { path: "/patient/:id", element: <PatientProfile /> },
   { path: "/new-visit", element: <NewVisit /> },
@@ -50,11 +50,11 @@ export const routers = [
 ];
 
 export const navigator = [
-  {
-    path: "/dashboard",
-    to: null,
-    title: "Бош саҳифа",
-  },
+  // {
+  //   path: "/dashboard",
+  //   to: null,
+  //   title: "Бош саҳифа",
+  // },
   {
     path: "/patients",
     to: null,
