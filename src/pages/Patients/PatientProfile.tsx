@@ -37,7 +37,6 @@ import {
   MapPin,
   Phone,
   Plus,
-  Printer,
   User,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -45,15 +44,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import NewVisitDialog from '../Examination/components/NewVisitDialog';
 import EditPatientModal from './components/EditPatientModal';
-import PatientReportModal from './components/PatientReportModal';
+import PatientPDFModal from './components/PatientPDFModal';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
   const {
     data: patientData,
@@ -174,19 +173,10 @@ const PatientProfile = () => {
                       variant='outline'
                       size='sm'
                       className='flex-1 sm:flex-none'
-                      onClick={() => setIsReportModalOpen(true)}
+                      onClick={() => setIsPDFModalOpen(true)}
                     >
                       <FileText className='w-4 h-4 sm:mr-2' />
-                      <span className='hidden sm:inline'>Ҳисобот</span>
-                    </Button>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='flex-1 sm:flex-none'
-                      onClick={() => window.print()}
-                    >
-                      <Printer className='w-4 h-4 sm:mr-2' />
-                      <span className='hidden sm:inline'>Чоп этиш</span>
+                      <span className='hidden sm:inline'>PDF кўриш</span>
                     </Button>
                     <RBS role={me.role} allowed={['ceo']}>
                       <Button
@@ -623,13 +613,6 @@ const PatientProfile = () => {
               onSuccess={handleEditSuccess}
             />
 
-            <PatientReportModal
-              open={isReportModalOpen}
-              onOpenChange={setIsReportModalOpen}
-              patientName={patient.fullname}
-              patientId={patient.patient_id}
-            />
-
             {/* Delete Confirmation Modal */}
             <Dialog
               open={isDeleteModalOpen}
@@ -684,6 +667,14 @@ const PatientProfile = () => {
               onOpenChange={setIsNewVisitOpen}
               preSelectedPatientId={id}
               onSuccess={refetchExams}
+            />
+
+            {/* PDF Preview Modal */}
+            <PatientPDFModal
+              open={isPDFModalOpen}
+              onOpenChange={setIsPDFModalOpen}
+              patient={patient}
+              exams={exams}
             />
           </>
         )}

@@ -6,6 +6,15 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -27,11 +36,7 @@ const Patients = () => {
   const [doctorFilter, setDoctorFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-
-  // Infinite scroll states for patients
-  const [allPatients, setAllPatients] = useState<any[]>([]);
-  const [hasMorePatients, setHasMorePatients] = useState(true);
-  const [isLoadingMorePatients, setIsLoadingMorePatients] = useState(false);
+  const [queryKey, setQueryKey] = useState(0);
 
   // Infinite scroll states for doctors
   const [doctorPage, setDoctorPage] = useState(1);
@@ -49,7 +54,8 @@ const Patients = () => {
     gender: genderFilter !== 'all' ? genderFilter : undefined,
     doctor_id: doctorFilter !== 'all' ? doctorFilter : undefined,
     search: searchQuery || undefined,
-  });
+    _key: queryKey, // Force new query when key changes
+  } as any);
 
   const { data: doctorsData } = useGetUsersQuery({
     role: 'doctor',
@@ -77,28 +83,8 @@ const Patients = () => {
     }
   }, [doctorsData, doctorPage]);
 
-  // Update patients list when new data arrives
-  useEffect(() => {
-    if (patientdata?.data) {
-      if (currentPage === 1) {
-        setAllPatients(patientdata.data);
-      } else {
-        setAllPatients((prev) => {
-          const newData = patientdata.data.filter(
-            (patient: any) => !prev.some((p) => p._id === patient._id)
-          );
-          return [...prev, ...newData];
-        });
-      }
-
-      const totalPages = patientdata.pagination?.total_pages || 1;
-      setHasMorePatients(currentPage < totalPages);
-      setIsLoadingMorePatients(false);
-    }
-  }, [patientdata, currentPage]);
-
   const doctors = allDoctors;
-  const patients = allPatients;
+  const patients = patientdata?.data || [];
 
   const loadMoreDoctors = () => {
     if (!isLoadingMoreDoctors && hasMoreDoctors) {
@@ -117,34 +103,20 @@ const Patients = () => {
     }
   };
 
-  const loadMorePatients = () => {
-    if (!isLoadingMorePatients && hasMorePatients && !isFetching) {
-      setIsLoadingMorePatients(true);
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  // Scroll listener for window
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 100
-      ) {
-        loadMorePatients();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMorePatients, isLoadingMorePatients, isFetching]);
-
-  // Reset patients when filters change
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-    setAllPatients([]);
-    setHasMorePatients(true);
   }, [searchQuery, genderFilter, doctorFilter]);
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
+  // Refetch data when component mounts (user returns to page)
+  useEffect(() => {
+    setQueryKey((prev) => prev + 1);
+  }, []);
 
   console.log(patientdata);
 
@@ -173,7 +145,7 @@ const Patients = () => {
         <Card className='card-shadow mb-4 sm:mb-6'>
           <div className='p-4 sm:p-6'>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4'>
-              <div className='sm:col-span-2 lg:col-span-6'>
+              <div className='sm:col-span-2 lg:col-span-5'>
                 <div className='relative'>
                   <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground' />
                   <Input
@@ -246,6 +218,26 @@ const Patients = () => {
                 </Select>
               </div>
 
+              <div className='lg:col-span-1'>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='10'>10</SelectItem>
+                    <SelectItem value='20'>20</SelectItem>
+                    <SelectItem value='50'>50</SelectItem>
+                    <SelectItem value='100'>100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className='lg:col-span-2'>
                 <Button
                   variant='outline'
@@ -254,6 +246,7 @@ const Patients = () => {
                     setSearchQuery('');
                     setGenderFilter('all');
                     setDoctorFilter('all');
+                    setItemsPerPage(20);
                     setCurrentPage(1);
                   }}
                 >
@@ -431,22 +424,117 @@ const Patients = () => {
               </div>
             </Card>
 
-            {/* Loading More Indicator */}
-            {(isLoadingMorePatients || isFetching) && hasMorePatients && (
-              <div className='py-8 flex justify-center'>
-                <LoadingSpinner
-                  size='md'
-                  text='Қўшимча маълумотлар юкланмоқда...'
-                />
-              </div>
-            )}
+            {/* Pagination */}
+            {patientdata?.pagination &&
+              patientdata.pagination.total_pages > 1 && (
+                <div className='mt-6 flex justify-center'>
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                          className={
+                            currentPage === 1
+                              ? 'pointer-events-none opacity-50'
+                              : 'cursor-pointer'
+                          }
+                        />
+                      </PaginationItem>
 
-            {/* End of List Indicator */}
-            {!hasMorePatients && patients.length > 0 && (
-              <div className='py-6 text-center text-sm text-muted-foreground'>
-                Барча беморлар юкланди
-              </div>
-            )}
+                      {/* First page */}
+                      {currentPage > 2 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(1)}
+                            className='cursor-pointer'
+                          >
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+
+                      {/* Ellipsis before */}
+                      {currentPage > 3 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+
+                      {/* Previous page */}
+                      {currentPage > 1 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(currentPage - 1)}
+                            className='cursor-pointer'
+                          >
+                            {currentPage - 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+
+                      {/* Current page */}
+                      <PaginationItem>
+                        <PaginationLink isActive className='cursor-default'>
+                          {currentPage}
+                        </PaginationLink>
+                      </PaginationItem>
+
+                      {/* Next page */}
+                      {currentPage < patientdata.pagination.total_pages && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(currentPage + 1)}
+                            className='cursor-pointer'
+                          >
+                            {currentPage + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+
+                      {/* Ellipsis after */}
+                      {currentPage < patientdata.pagination.total_pages - 2 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+
+                      {/* Last page */}
+                      {currentPage < patientdata.pagination.total_pages - 1 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() =>
+                              setCurrentPage(patientdata.pagination.total_pages)
+                            }
+                            className='cursor-pointer'
+                          >
+                            {patientdata.pagination.total_pages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(
+                                prev + 1,
+                                patientdata.pagination.total_pages
+                              )
+                            )
+                          }
+                          className={
+                            currentPage === patientdata.pagination.total_pages
+                              ? 'pointer-events-none opacity-50'
+                              : 'cursor-pointer'
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
           </>
         )}
       </main>
