@@ -37,7 +37,6 @@ import {
   MapPin,
   Phone,
   Plus,
-  Printer,
   User,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -45,6 +44,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import NewVisitDialog from '../Examination/components/NewVisitDialog';
 import EditPatientModal from './components/EditPatientModal';
+import PatientPDFModal from './components/PatientPDFModal';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
@@ -52,6 +52,7 @@ const PatientProfile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
   const {
     data: patientData,
@@ -172,10 +173,10 @@ const PatientProfile = () => {
                       variant='outline'
                       size='sm'
                       className='flex-1 sm:flex-none'
-                      onClick={() => window.print()}
+                      onClick={() => setIsPDFModalOpen(true)}
                     >
-                      <Printer className='w-4 h-4 sm:mr-2' />
-                      <span className='hidden sm:inline'>Чоп этиш</span>
+                      <FileText className='w-4 h-4 sm:mr-2' />
+                      <span className='hidden sm:inline'>PDF кўриш</span>
                     </Button>
                     <RBS role={me.role} allowed={['ceo']}>
                       <Button
@@ -666,6 +667,14 @@ const PatientProfile = () => {
               onOpenChange={setIsNewVisitOpen}
               preSelectedPatientId={id}
               onSuccess={refetchExams}
+            />
+
+            {/* PDF Preview Modal */}
+            <PatientPDFModal
+              open={isPDFModalOpen}
+              onOpenChange={setIsPDFModalOpen}
+              patient={patient}
+              exams={exams}
             />
           </>
         )}
