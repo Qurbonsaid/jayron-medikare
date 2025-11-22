@@ -54,32 +54,85 @@ const NewVisit = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showErrors, setShowErrors] = useState(false);
 
+  // Infinite scroll states for patients
+  const [patientPage, setPatientPage] = useState(1);
+  const [allPatients, setAllPatients] = useState<any[]>([]);
+  const [hasMorePatients, setHasMorePatients] = useState(true);
+  const [isLoadingMorePatients, setIsLoadingMorePatients] = useState(false);
+
+  // Infinite scroll states for doctors
+  const [doctorPage, setDoctorPage] = useState(1);
+  const [allDoctors, setAllDoctors] = useState<any[]>([]);
+  const [hasMoreDoctors, setHasMoreDoctors] = useState(true);
+  const [isLoadingMoreDoctors, setIsLoadingMoreDoctors] = useState(false);
+
   // Get patient ID from navigation state
   const patientIdFromState = location.state?.patientId;
 
-  // Fetch all patients for search
-  const { data: patientsData } = useGetAllPatientQuery({
-    page: 1,
-    limit: 100,
-  });
+  // Fetch all patients for search with pagination
+  const { data: patientsData, isLoading: isLoadingPatients } =
+    useGetAllPatientQuery({
+      page: patientPage,
+      limit: 20,
+    });
 
   // Fetch selected patient details only when we have a selectedPatientId
   const { data: patientData } = useGetPatientByIdQuery(selectedPatientId, {
     skip: !selectedPatientId,
   });
 
-  // Fetch doctors
-  const { data: doctorsData } = useGetUsersQuery({
-    page: 1,
-    limit: 100,
+  // Fetch doctors with pagination
+  const { data: doctorsData, isLoading: isLoadingDoctors } = useGetUsersQuery({
+    page: doctorPage,
+    limit: 20,
     role: 'doctor',
   });
 
   const [createExam, { isLoading: isCreating }] = useCreateExamMutation();
   const handleRequest = useHandleRequest();
 
-  const patients = patientsData?.data || [];
-  const doctors = doctorsData?.data || [];
+  const patients = allPatients;
+  const doctors = allDoctors;
+
+  // Update patients list when new data arrives
+  useEffect(() => {
+    if (patientsData?.data) {
+      if (patientPage === 1) {
+        setAllPatients(patientsData.data);
+      } else {
+        setAllPatients((prev) => {
+          const newData = patientsData.data.filter(
+            (patient: any) => !prev.some((p) => p._id === patient._id)
+          );
+          return [...prev, ...newData];
+        });
+      }
+
+      const totalPages = patientsData.pagination?.total_pages || 1;
+      setHasMorePatients(patientPage < totalPages);
+      setIsLoadingMorePatients(false);
+    }
+  }, [patientsData, patientPage]);
+
+  // Update doctors list when new data arrives
+  useEffect(() => {
+    if (doctorsData?.data) {
+      if (doctorPage === 1) {
+        setAllDoctors(doctorsData.data);
+      } else {
+        setAllDoctors((prev) => {
+          const newData = doctorsData.data.filter(
+            (doc: any) => !prev.some((d) => d._id === doc._id)
+          );
+          return [...prev, ...newData];
+        });
+      }
+
+      const totalPages = doctorsData.pagination?.total_pages || 1;
+      setHasMoreDoctors(doctorPage < totalPages);
+      setIsLoadingMoreDoctors(false);
+    }
+  }, [doctorsData, doctorPage]);
 
   // Auto-select patient if coming from PatientProfile
   useEffect(() => {
@@ -108,6 +161,40 @@ const NewVisit = () => {
     setSearchQuery('');
     setShowErrors(false);
     setOpen(true);
+  };
+
+  const loadMorePatients = () => {
+    if (!isLoadingMorePatients && hasMorePatients && !isLoadingPatients) {
+      setIsLoadingMorePatients(true);
+      setPatientPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePatientScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    const bottom =
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
+
+    if (bottom && hasMorePatients && !isLoadingMorePatients) {
+      loadMorePatients();
+    }
+  };
+
+  const loadMoreDoctors = () => {
+    if (!isLoadingMoreDoctors && hasMoreDoctors && !isLoadingDoctors) {
+      setIsLoadingMoreDoctors(true);
+      setDoctorPage((prev) => prev + 1);
+    }
+  };
+
+  const handleDoctorScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    const bottom =
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
+
+    if (bottom && hasMoreDoctors && !isLoadingMoreDoctors) {
+      loadMoreDoctors();
+    }
   };
 
   const filteredPatients = patients.filter((p) => {
@@ -205,9 +292,11 @@ const NewVisit = () => {
                       onValueChange={setSearchQuery}
                       className='text-sm sm:text-base'
                     />
-                    <CommandList>
+                    <CommandList onScroll={handlePatientScroll}>
                       <CommandEmpty className='py-6 text-sm sm:text-base'>
-                        Бемор топилмади
+                        {isLoadingPatients
+                          ? 'Юкланмоқда...'
+                          : 'Бемор топилмади'}
                       </CommandEmpty>
                       <CommandGroup>
                         {filteredPatients.map((p) => (
@@ -227,6 +316,16 @@ const NewVisit = () => {
                             </div>
                           </CommandItem>
                         ))}
+                        {isLoadingMorePatients && (
+                          <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
+                            Юкланмоқда...
+                          </div>
+                        )}
+                        {!hasMorePatients && patients.length > 0 && (
+                          <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
+                            Барча беморлар юкланди
+                          </div>
+                        )}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -254,8 +353,7 @@ const NewVisit = () => {
                         ID: {patient.patient_id}
                       </p>
                       <p className='text-xs sm:text-base text-muted-foreground'>
-                        Сана:{' '}
-                        {new Date().toLocaleDateString('uz-UZ')}
+                        Сана: {new Date().toLocaleDateString('uz-UZ')}
                       </p>
                       {patient?.allergies && patient.allergies.length > 0 && (
                         <div className='px-3 py-2 bg-danger/20 border border-danger rounded-lg mt-2'>
@@ -287,7 +385,7 @@ const NewVisit = () => {
                         >
                           <SelectValue placeholder='Шифокорни танланг...' />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent onScroll={handleDoctorScroll}>
                           {doctors.map((doctor: any) => (
                             <SelectItem key={doctor._id} value={doctor._id}>
                               <div className='flex flex-col items-start'>
@@ -300,6 +398,16 @@ const NewVisit = () => {
                               </div>
                             </SelectItem>
                           ))}
+                          {isLoadingMoreDoctors && (
+                            <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
+                              Юкланмоқда...
+                            </div>
+                          )}
+                          {!hasMoreDoctors && doctors.length > 0 && (
+                            <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
+                              Барча шифокорлар юкланди
+                            </div>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>

@@ -45,13 +45,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import NewVisitDialog from '../Examination/components/NewVisitDialog';
 import EditPatientModal from './components/EditPatientModal';
-import PatientReportModal from './components/PatientReportModal';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
 
@@ -169,15 +167,6 @@ const PatientProfile = () => {
                     >
                       <Edit className='w-4 h-4 sm:mr-2' />
                       <span className='hidden sm:inline'>Таҳрирлаш</span>
-                    </Button>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='flex-1 sm:flex-none'
-                      onClick={() => setIsReportModalOpen(true)}
-                    >
-                      <FileText className='w-4 h-4 sm:mr-2' />
-                      <span className='hidden sm:inline'>Ҳисобот</span>
                     </Button>
                     <Button
                       variant='outline'
@@ -621,13 +610,6 @@ const PatientProfile = () => {
               onOpenChange={setIsEditModalOpen}
               patient={patient}
               onSuccess={handleEditSuccess}
-            />
-
-            <PatientReportModal
-              open={isReportModalOpen}
-              onOpenChange={setIsReportModalOpen}
-              patientName={patient.fullname}
-              patientId={patient.patient_id}
             />
 
             {/* Delete Confirmation Modal */}
