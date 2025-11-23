@@ -100,13 +100,13 @@ const Radiology = () => {
 			<header className='bg-card border-b border-border sticky top-0 z-10'>
 				<div className='w-full px-3 sm:px-6 py-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between'>
 					<div className='flex items-center gap-3'>
-						<Button
+						{/* <Button
 							variant='ghost'
 							size='icon'
-							onClick={() => navigate('/dashboard')}
+							onClick={() => navigate('/patients')}
 						>
 							<ArrowLeft className='w-5 h-5' />
-						</Button>
+						</Button> */}
 						<div>
 							<h1 className='text-lg sm:text-xl font-bold'>
 								Рентген / МРТ / КТ

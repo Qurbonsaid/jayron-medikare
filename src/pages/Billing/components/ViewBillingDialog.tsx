@@ -1,7 +1,7 @@
 import {
   useGetOneBillingQuery,
   useUpdatePaymentMutation,
-  useUpdateServiceMutation,
+  useUpdateServiceBillingMutation,
 } from '@/app/api/billingApi/billingApi';
 import { getStatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -56,7 +56,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
     }
   );
 
-  const [updateService, { isLoading: isUpdating }] = useUpdateServiceMutation();
+  const [updateService, { isLoading: isUpdating }] = useUpdateServiceBillingMutation();
   const [updatePayment, { isLoading: isPaymentUpdating }] =
     useUpdatePaymentMutation();
 

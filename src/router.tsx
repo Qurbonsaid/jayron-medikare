@@ -1,5 +1,5 @@
 import Appointments from "@/pages/Appointments/Appointments";
-import Dashboard from "@/pages/Dashboard";
+// import Dashboard from "@/pages/Dashboard";
 import Inpatient from "@/pages/Inpatient/Inpatient";
 import LabResults from "@/pages/Diagnostika/LabResults";
 import PatientPortal from "@/pages/PatientPortal";
@@ -21,9 +21,10 @@ import RoomDetail from "./pages/RoomDetail/RoomDetail";
 import ExaminationDetail from "./pages/Examination/ExaminationDetail";
 import Service from "./pages/Examination/Service/Service";
 import Billing from "./pages/Billing/Billing";
+import Disease from './pages/Examination/Disease'
 
 export const routers = [
-  { path: "/dashboard", element: <Dashboard /> },
+  // { path: "/dashboard", element: <Dashboard /> },
   { path: "/patients", element: <Patients /> },
   { path: "/patient/:id", element: <PatientProfile /> },
   { path: "/new-visit", element: <NewVisit /> },
@@ -31,7 +32,7 @@ export const routers = [
   { path: "/appointments", element: <Appointments /> },
   { path: "/prescription", element: <Prescription /> },
   { path: "/visits", element: <Visits /> },
-  // { path: "/disease", element: <Disease /> },
+  { path: "/disease", element: <Disease /> },
   { path: "/service", element: <Service /> },
   { path: "/add-diagnostika", element: <AddDiagnostika /> },
   { path: "/analysisById/:id", element: <AnalysisParamsModal /> },
@@ -50,11 +51,11 @@ export const routers = [
 ];
 
 export const navigator = [
-  {
-    path: "/dashboard",
-    to: null,
-    title: "Бош саҳифа",
-  },
+  // {
+  //   path: "/dashboard",
+  //   to: null,
+  //   title: "Бош саҳифа",
+  // },
   {
     path: "/patients",
     to: null,
@@ -124,6 +125,11 @@ export const navigator = [
     path: "/inpatient/:id",
     to: "/inpatient",
     title: "Стационар",
+  },
+  {
+    path:"/medicine",
+    to:null,
+    title:"Дори-дармонлар",
   },
   {
     path: "/lab-results",

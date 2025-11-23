@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { AlertCircle, Loader2, Plus, Printer, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -50,6 +51,7 @@ interface FormValidationErrors {
 const Prescription = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [allergyWarning, setAllergyWarning] = useState(false);
   const [formErrors, setFormErrors] = useState<FormValidationErrors>({
@@ -61,16 +63,24 @@ const Prescription = () => {
   const [selectedExaminationId, setSelectedExaminationId] =
     useState<string>('');
 
+  // Infinite scroll states
+  const [page, setPage] = useState(1);
+  const [allExaminations, setAllExaminations] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [queryKey, setQueryKey] = useState(0);
+
   // Get examination ID from navigation state
   const examinationIdFromState = location.state?.examinationId;
 
-  // Fetch all active examinations
+  // Fetch active examinations with pagination
   const { data: examinationsData, isLoading: isLoadingExaminations } =
     useGetAllExamsQuery({
-      page: 1,
-      limit: 100,
-      status: 'active',
-    });
+      page: page,
+      limit: 20,
+      status: 'pending',
+      _key: queryKey, // This forces new query when key changes
+    } as any);
 
   // Fetch selected examination details
   const { data: examinationData, isLoading: isLoadingExamination } =
@@ -92,7 +102,36 @@ const Prescription = () => {
     useDeletePrescriptionMutation();
   const handleRequest = useHandleRequest();
 
-  const examinations = examinationsData?.data || [];
+  // Update examinations list when new data arrives
+  useEffect(() => {
+    console.log('Examinations Data:', examinationsData);
+    console.log('Current Page:', page);
+
+    if (examinationsData?.data && Array.isArray(examinationsData.data)) {
+      console.log('Data length:', examinationsData.data.length);
+
+      if (page === 1) {
+        setAllExaminations(examinationsData.data);
+      } else {
+        setAllExaminations((prev) => {
+          const newData = examinationsData.data.filter(
+            (exam: any) => !prev.some((e) => e._id === exam._id)
+          );
+          return [...prev, ...newData];
+        });
+      }
+
+      // Check if there are more pages
+      const totalPages = examinationsData.pagination?.total_pages || 1;
+      setHasMore(page < totalPages);
+      setIsLoadingMore(false);
+    } else {
+      console.log('No data or data is not an array');
+      setIsLoadingMore(false);
+    }
+  }, [examinationsData, page]);
+
+  const examinations = allExaminations;
 
   // Check if any data is loading
   const isLoading =
@@ -100,11 +139,10 @@ const Prescription = () => {
 
   // Auto-select examination if coming from another page
   useEffect(() => {
-    if (examinationIdFromState) {
+    if (examinationIdFromState && !selectedExaminationId) {
       setSelectedExaminationId(examinationIdFromState);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [examinationIdFromState]);
+  }, [examinationIdFromState, selectedExaminationId]);
 
   // Update patient state when examination and patient data are loaded
   useEffect(() => {
@@ -126,8 +164,33 @@ const Prescription = () => {
     setFormErrors({
       medications: {},
     });
-    // Clear navigation state
-    navigate(location.pathname, { replace: true, state: {} });
+    // Clear navigation state first
+    if (examinationIdFromState) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // Reset pagination
+    setAllExaminations([]);
+    setHasMore(true);
+    setPage(1);
+    // Change query key to force new query and bypass cache
+    setQueryKey((prev) => prev + 1);
+  };
+
+  const loadMoreExaminations = () => {
+    if (!isLoadingMore && hasMore && !isLoadingExaminations) {
+      setIsLoadingMore(true);
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    const bottom =
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
+
+    if (bottom && hasMore && !isLoadingMore) {
+      loadMoreExaminations();
+    }
   };
 
   const calculateAge = (dateOfBirth: string | undefined) => {
@@ -409,31 +472,55 @@ const Prescription = () => {
                 <SelectTrigger className='h-10 sm:h-12'>
                   <SelectValue placeholder='Кўрикни танланг...' />
                 </SelectTrigger>
-                <SelectContent>
-                  {examinations.length === 0 ? (
+                <SelectContent
+                  className='max-h-[300px]'
+                  onScroll={handleScroll}
+                >
+                  {isLoadingExaminations && examinations.length === 0 ? (
+                    <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
+                      <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
+                      Юкланмоқда...
+                    </div>
+                  ) : examinations.length === 0 ? (
                     <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
                       Актив кўриклар топилмади
                     </div>
                   ) : (
-                    examinations.map((exam: any) => (
-                      <SelectItem key={exam._id} value={exam._id}>
-                        <div className='flex flex-col'>
-                          <span className='font-medium'>
-                            {exam.patient_id?.fullname || 'Номаълум'} -{' '}
-                            {exam.doctor_id?.fullname || 'Номаълум'}
-                          </span>
-                          <span className='text-xs text-muted-foreground'>
-                            Кўрик #{exam._id?.slice(-6) || 'N/A'} •{' '}
-                            {exam.created_at
-                              ? new Date(exam.created_at).toLocaleDateString(
-                                  'uz-UZ'
-                                )
-                              : 'Маълумот йўқ'}{' '}
-                            • {exam.complaints?.slice(0, 50) || 'Шикоят йўқ'}...
-                          </span>
+                    <>
+                      {examinations.map((exam: any) => (
+                        <SelectItem key={exam._id} value={exam._id}>
+                          <div className='flex flex-col'>
+                            <span className='font-medium'>
+                              {exam.patient_id?.fullname || 'Номаълум'} -{' '}
+                              {exam.doctor_id?.fullname || 'Номаълум'}
+                            </span>
+                            <span className='text-xs text-muted-foreground'>
+                              Кўрик #{exam._id?.slice(-6) || 'N/A'} •{' '}
+                              {exam.created_at
+                                ? new Date(exam.created_at).toLocaleDateString(
+                                    'uz-UZ'
+                                  )
+                                : 'Маълумот йўқ'}{' '}
+                              • {exam.complaints?.slice(0, 50) || 'Шикоят йўқ'}
+                              ...
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                      {isLoadingMore && (
+                        <div className='px-2 py-4 text-center'>
+                          <Loader2 className='h-4 w-4 animate-spin mx-auto text-primary' />
+                          <p className='text-xs text-muted-foreground mt-2'>
+                            Юкланмоқда...
+                          </p>
                         </div>
-                      </SelectItem>
-                    ))
+                      )}
+                      {!hasMore && examinations.length > 0 && (
+                        <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
+                          Барча кўриклар юкланди
+                        </div>
+                      )}
+                    </>
                   )}
                 </SelectContent>
               </Select>

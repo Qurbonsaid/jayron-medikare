@@ -31,7 +31,7 @@ const Login = () => {
         return result;
       },
       onSuccess: () => {
-        navigate('/dashboard');
+        navigate('/patients');
       },
       onError: (err) => {
         const msg = err?.data?.error?.msg;

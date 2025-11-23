@@ -6,7 +6,7 @@ export const userSchema = (editingUserId = false)=> z.object({
 	email: z.string().email("Email формат нотўғри"),
 	phone: z
 		.string()
-		.regex(/^\+?\d{9,15}$/, "Телефон рақам нотўғри форматда"),
+		.regex(/^\+998\d{9}$/, "Телефон рақам нотўғри форматда"),
 		password: editingUserId
 		? z.string().optional()
 		: z.string().min(6, "Парол камида 6 та белгидан иборат бўлиши керак"),

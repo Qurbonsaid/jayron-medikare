@@ -144,7 +144,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
     };
 
     await handleRequest({
-      request: async () => (await createPatient(submitData)),
+      request: async () => await createPatient(submitData),
       onSuccess: (data) => {
         toast.success(`Бемор маълумотлари муваффақиятли сақланди!`);
       },
@@ -189,7 +189,15 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                           <Input
                             placeholder='Алиев'
                             className='border-slate-400 border-2'
-                            {...field}
+                            value={field.value}
+                            onChange={(e) => {
+                              // Faqat harflarni qoldirish (lotin, kirill va probel)
+                              const value = e.target.value.replace(
+                                /[^a-zA-Zа-яА-ЯўўҚқҒғҲҳ\s'-]/g,
+                                ''
+                              );
+                              field.onChange(value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -209,7 +217,15 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                           <Input
                             className='border-slate-400 border-2'
                             placeholder='Жасур'
-                            {...field}
+                            value={field.value}
+                            onChange={(e) => {
+                              // Faqat harflarni qoldirish (lotin, kirill va probel)
+                              const value = e.target.value.replace(
+                                /[^a-zA-Zа-яА-ЯўўҚқҒғҲҳ\s'-]/g,
+                                ''
+                              );
+                              field.onChange(value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -227,7 +243,15 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                           <Input
                             className='border-slate-400 border-2'
                             placeholder='Абдуллаевич'
-                            {...field}
+                            value={field.value}
+                            onChange={(e) => {
+                              // Faqat harflarni qoldirish (lotin, kirill va probel)
+                              const value = e.target.value.replace(
+                                /[^a-zA-Zа-яА-ЯўўҚқҒғҲҳ\s'-]/g,
+                                ''
+                              );
+                              field.onChange(value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -398,7 +422,15 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                               <Input
                                 className='border-slate-400 border-2'
                                 placeholder='AA'
-                                {...field}
+                                maxLength={2}
+                                value={field.value}
+                                onChange={(e) => {
+                                  // Faqat bosh harflarni qoldirish
+                                  const value = e.target.value
+                                    .toUpperCase()
+                                    .replace(/[^A-Z]/g, '');
+                                  field.onChange(value);
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -416,7 +448,16 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                               <Input
                                 className='border-slate-400 border-2'
                                 placeholder='1234567'
-                                {...field}
+                                maxLength={7}
+                                value={field.value}
+                                onChange={(e) => {
+                                  // Faqat raqamlarni qoldirish
+                                  const value = e.target.value.replace(
+                                    /[^0-9]/g,
+                                    ''
+                                  );
+                                  field.onChange(value);
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -571,9 +612,14 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                                 className='border-slate-400 border-2'
                                 placeholder='Аллергия номи (масалан: Пенициллин)'
                                 value={allergyInput}
-                                onChange={(e) =>
-                                  setAllergyInput(e.target.value)
-                                }
+                                onChange={(e) => {
+                                  // Faqat harflarni qoldirish (lotin, kirill va probel)
+                                  const value = e.target.value.replace(
+                                    /[^a-zA-Zа-яА-ЯўЎҚқҒғҲҳ\s'-]/g,
+                                    ''
+                                  );
+                                  setAllergyInput(value);
+                                }}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     e.preventDefault();
@@ -660,9 +706,14 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                                 className='border-slate-400 border-2'
                                 placeholder='Дори номи (масалан: Аспирин)'
                                 value={medicineInput}
-                                onChange={(e) =>
-                                  setMedicineInput(e.target.value)
-                                }
+                                onChange={(e) => {
+                                  // Faqat harflarni qoldirish (lotin, kirill va probel)
+                                  const value = e.target.value.replace(
+                                    /[^a-zA-Zа-яА-ЯўЎҚқҒғҲҳ\s'-]/g,
+                                    ''
+                                  );
+                                  setMedicineInput(value);
+                                }}
                               />
                               <Input
                                 className='border-slate-400 border-2'

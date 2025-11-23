@@ -37,7 +37,6 @@ import {
   MapPin,
   Phone,
   Plus,
-  Printer,
   User,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -45,15 +44,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import NewVisitDialog from '../Examination/components/NewVisitDialog';
 import EditPatientModal from './components/EditPatientModal';
-import PatientReportModal from './components/PatientReportModal';
+import PatientPDFModal from './components/PatientPDFModal';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
   const {
     data: patientData,
@@ -174,25 +173,16 @@ const PatientProfile = () => {
                       variant='outline'
                       size='sm'
                       className='flex-1 sm:flex-none'
-                      onClick={() => setIsReportModalOpen(true)}
+                      onClick={() => setIsPDFModalOpen(true)}
                     >
                       <FileText className='w-4 h-4 sm:mr-2' />
-                      <span className='hidden sm:inline'>Ҳисобот</span>
-                    </Button>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='flex-1 sm:flex-none'
-                      onClick={() => window.print()}
-                    >
-                      <Printer className='w-4 h-4 sm:mr-2' />
-                      <span className='hidden sm:inline'>Чоп этиш</span>
+                      <span className='hidden sm:inline'>PDF кўриш</span>
                     </Button>
                     <RBS role={me.role} allowed={['ceo']}>
                       <Button
                         variant='outline'
                         size='sm'
-                        className='flex-1 sm:flex-none bg-red-500 text-white'
+                        className='flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white hover:text-white'
                         onClick={() => setIsDeleteModalOpen(true)}
                       >
                         <FileX className='w-4 h-4 sm:mr-2' />
@@ -348,16 +338,33 @@ const PatientProfile = () => {
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
                     Диагноз
                   </h3>
-                  {patient.diagnosis?.description ? (
+                  {patient.diagnosis ? (
                     <p className='p-3 bg-accent rounded-lg border-l-4 border-primary'>
                       <div className='flex items-start gap-2'>
                         <span className='text-primary mt-1'>•</span>
                         <div className='flex-1'>
-                          <p className='text-sm sm:text-base font-medium mb-1'>
-                            {patient.diagnosis.description}
-                          </p>
+                          {patient.diagnosis.diagnosis_id?.name && (
+                            <p className='text-sm sm:text-base font-medium mb-1'>
+                              {patient.diagnosis.diagnosis_id.name}
+                              {patient.diagnosis.diagnosis_id.code && (
+                                <span className='text-xs text-muted-foreground ml-2'>
+                                  ({patient.diagnosis.diagnosis_id.code})
+                                </span>
+                              )}
+                            </p>
+                          )}
+                          {patient.diagnosis.description && (
+                            <p className='text-xs sm:text-sm text-muted-foreground'>
+                              {patient.diagnosis.description}
+                            </p>
+                          )}
+                          {patient.diagnosis.diagnosis_id?.description && (
+                            <p className='text-xs sm:text-sm text-muted-foreground mt-1'>
+                              {patient.diagnosis.diagnosis_id.description}
+                            </p>
+                          )}
                           {patient.diagnosis.doctor_id?.fullname && (
-                            <p className='text-xs sm:text-sm text-muted-foreground flex items-center gap-1'>
+                            <p className='text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-2'>
                               <User className='w-3 h-3' />
                               {patient.diagnosis.doctor_id.fullname}
                             </p>
@@ -623,13 +630,6 @@ const PatientProfile = () => {
               onSuccess={handleEditSuccess}
             />
 
-            <PatientReportModal
-              open={isReportModalOpen}
-              onOpenChange={setIsReportModalOpen}
-              patientName={patient.fullname}
-              patientId={patient.patient_id}
-            />
-
             {/* Delete Confirmation Modal */}
             <Dialog
               open={isDeleteModalOpen}
@@ -684,6 +684,14 @@ const PatientProfile = () => {
               onOpenChange={setIsNewVisitOpen}
               preSelectedPatientId={id}
               onSuccess={refetchExams}
+            />
+
+            {/* PDF Preview Modal */}
+            <PatientPDFModal
+              open={isPDFModalOpen}
+              onOpenChange={setIsPDFModalOpen}
+              patient={patient}
+              exams={exams}
             />
           </>
         )}

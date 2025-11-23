@@ -133,13 +133,13 @@ export default function ProfilePage() {
 				<div className='w-full px-4 sm:px-6 py-4 flex flex-row flex-wrap items-center justify-between gap-3'>
 					{/* Chap taraf */}
 					<div className='flex items-center gap-3 min-w-0'>
-						<Button
+						{/* <Button
 							variant='ghost'
 							size='icon'
-							onClick={() => navigate('/dashboard')}
+							onClick={() => navigate('/patients')}
 						>
 							<ArrowLeft className='w-5 h-5' />
-						</Button>
+						</Button> */}
 						<div className='min-w-0'>
 							<h1 className='text-lg sm:text-xl font-bold truncate'>Profil</h1>
 							<p className='text-xs sm:text-sm text-muted-foreground truncate'>

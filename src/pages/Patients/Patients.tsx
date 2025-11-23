@@ -6,6 +6,15 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -13,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Eye, Filter, Phone, Search, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewPatient from './components/NewPatient';
 
@@ -26,23 +35,88 @@ const Patients = () => {
   );
   const [doctorFilter, setDoctorFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [queryKey, setQueryKey] = useState(0);
 
-  const { data: patientdata, isLoading } = useGetAllPatientQuery({
+  // Infinite scroll states for doctors
+  const [doctorPage, setDoctorPage] = useState(1);
+  const [allDoctors, setAllDoctors] = useState<any[]>([]);
+  const [hasMoreDoctors, setHasMoreDoctors] = useState(true);
+  const [isLoadingMoreDoctors, setIsLoadingMoreDoctors] = useState(false);
+
+  const {
+    data: patientdata,
+    isLoading,
+    isFetching,
+  } = useGetAllPatientQuery({
     page: currentPage,
     limit: itemsPerPage,
     gender: genderFilter !== 'all' ? genderFilter : undefined,
     doctor_id: doctorFilter !== 'all' ? doctorFilter : undefined,
     search: searchQuery || undefined,
-  });
+    _key: queryKey, // Force new query when key changes
+  } as any);
 
-  // Fetch doctors
   const { data: doctorsData } = useGetUsersQuery({
     role: 'doctor',
-    limit: 100,
+    limit: 20,
+    page: doctorPage,
   });
 
-  const doctors = doctorsData?.data || [];
+  // Update doctors list when new data arrives
+  useEffect(() => {
+    if (doctorsData?.data) {
+      if (doctorPage === 1) {
+        setAllDoctors(doctorsData.data);
+      } else {
+        setAllDoctors((prev) => {
+          const newData = doctorsData.data.filter(
+            (doc: any) => !prev.some((d) => d._id === doc._id)
+          );
+          return [...prev, ...newData];
+        });
+      }
+
+      const totalPages = doctorsData.pagination?.total_pages || 1;
+      setHasMoreDoctors(doctorPage < totalPages);
+      setIsLoadingMoreDoctors(false);
+    }
+  }, [doctorsData, doctorPage]);
+
+  const doctors = allDoctors;
+  const patients = patientdata?.data || [];
+
+  const loadMoreDoctors = () => {
+    if (!isLoadingMoreDoctors && hasMoreDoctors) {
+      setIsLoadingMoreDoctors(true);
+      setDoctorPage((prev) => prev + 1);
+    }
+  };
+
+  const handleDoctorScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    const bottom =
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
+
+    if (bottom && hasMoreDoctors && !isLoadingMoreDoctors) {
+      loadMoreDoctors();
+    }
+  };
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, genderFilter, doctorFilter]);
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
+  // Refetch data when component mounts (user returns to page)
+  useEffect(() => {
+    setQueryKey((prev) => prev + 1);
+  }, []);
 
   console.log(patientdata);
 
@@ -71,7 +145,7 @@ const Patients = () => {
         <Card className='card-shadow mb-4 sm:mb-6'>
           <div className='p-4 sm:p-6'>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4'>
-              <div className='sm:col-span-2 lg:col-span-6'>
+              <div className='sm:col-span-2 lg:col-span-5'>
                 <div className='relative'>
                   <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground' />
                   <Input
@@ -116,13 +190,50 @@ const Patients = () => {
                   <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
                     <SelectValue placeholder='Шифокор' />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent
+                    className='max-h-[300px]'
+                    onScroll={handleDoctorScroll}
+                  >
                     <SelectItem value='all'>Барчаси</SelectItem>
                     {doctors.map((doctor: any) => (
                       <SelectItem key={doctor._id} value={doctor._id}>
                         {doctor.fullname}
                       </SelectItem>
                     ))}
+                    {isLoadingMoreDoctors && (
+                      <div className='px-2 py-4 text-center'>
+                        <LoadingSpinner
+                          size='sm'
+                          text='Юкланмоқда...'
+                          className='justify-center'
+                        />
+                      </div>
+                    )}
+                    {!hasMoreDoctors && doctors.length > 1 && (
+                      <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
+                        Барча шифокорлар юкланди
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='lg:col-span-1'>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='10'>10</SelectItem>
+                    <SelectItem value='20'>20</SelectItem>
+                    <SelectItem value='50'>50</SelectItem>
+                    <SelectItem value='100'>100</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -135,6 +246,7 @@ const Patients = () => {
                     setSearchQuery('');
                     setGenderFilter('all');
                     setDoctorFilter('all');
+                    setItemsPerPage(20);
                     setCurrentPage(1);
                   }}
                 >
@@ -147,32 +259,20 @@ const Patients = () => {
         </Card>
 
         {/* Results Counter */}
-        {!isLoading && patientdata.data.length > 0 && (
+        {!isLoading && patients.length > 0 && (
           <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4'>
             <p className='text-sm sm:text-base text-muted-foreground'>
               Жами:{' '}
               <span className='font-semibold text-foreground'>
-                {patientdata.data.length}
+                {patients.length}
               </span>{' '}
               бемор
+              {patientdata?.pagination && (
+                <span className='text-xs ml-2'>
+                  ({patientdata.pagination.total_items} дан)
+                </span>
+              )}
             </p>
-            <Select
-              value={itemsPerPage.toString()}
-              onValueChange={(value) => {
-                setItemsPerPage(Number(value));
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className='w-full sm:w-32 h-9 sm:h-10 text-sm'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='10'>10</SelectItem>
-                <SelectItem value='25'>25</SelectItem>
-                <SelectItem value='50'>50</SelectItem>
-                <SelectItem value='100'>100</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         )}
 
@@ -185,7 +285,7 @@ const Patients = () => {
               className='justify-center'
             />
           </Card>
-        ) : patientdata.data.length === 0 ? (
+        ) : patients.length === 0 ? (
           <Card className='card-shadow p-4 sm:p-0'>
             <EmptyState
               icon={Users}
@@ -207,7 +307,7 @@ const Patients = () => {
           <>
             {/* Mobile Card View */}
             <div className='block lg:hidden space-y-3 sm:space-y-4'>
-              {patientdata.data.map((patient) => (
+              {patients.map((patient) => (
                 <Card key={patient._id} className='card-shadow'>
                   <div className='p-4'>
                     <div className='flex items-start justify-between mb-3'>
@@ -233,7 +333,7 @@ const Patients = () => {
                       {patient.diagnosis && (
                         <div className='flex items-center gap-2 text-xs sm:text-sm'>
                           <Users className='w-4 h-4 text-muted-foreground' />
-                          <span>Диагноз мавжуд</span>
+                          <span>{patient.diagnosis.diagnosis_id.name}</span>
                         </div>
                       )}
                     </div>
@@ -275,7 +375,7 @@ const Patients = () => {
                     </tr>
                   </thead>
                   <tbody className='divide-y'>
-                    {patientdata.data.map((patient) => (
+                    {patients.map((patient) => (
                       <tr
                         key={patient._id}
                         className='hover:bg-accent/50 transition-smooth'
@@ -300,7 +400,7 @@ const Patients = () => {
                             : '-'}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm '>
-                          {patient.diagnosis?.description || 'Йўқ'}
+                          {patient.diagnosis.diagnosis_id.name || 'Йўқ'}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4'>
                           <div className='flex justify-center'>
@@ -322,212 +422,119 @@ const Patients = () => {
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              <div className='px-4 xl:px-6 py-3 xl:py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3'>
-                <div className='text-xs xl:text-sm text-muted-foreground'>
-                  {patientdata.pagination.prev_page
-                    ? (patientdata.pagination.page - 1) *
-                        patientdata.pagination.limit +
-                      1
-                    : 1}{' '}
-                  - {patientdata.pagination.total_items} дан{' '}
-                  {patientdata.pagination.limit} та кўрсатилмоқда
-                </div>
-                <div className='flex gap-2'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    className='text-xs xl:text-sm'
-                  >
-                    Олдинги
-                  </Button>
-                  {(() => {
-                    const pages = [];
-                    const showPages = new Set<number>();
-
-                    // Har doim 1-sahifani ko'rsat
-                    showPages.add(1);
-
-                    // Har doim oxirgi sahifani ko'rsat
-                    if (patientdata.pagination.total_pages > 1) {
-                      showPages.add(patientdata.pagination.total_pages);
-                    }
-
-                    // Joriy sahifa va uning atrofidagi sahifalarni ko'rsat
-                    for (
-                      let i = Math.max(2, currentPage - 1);
-                      i <=
-                      Math.min(
-                        patientdata.pagination.total_pages - 1,
-                        currentPage + 1
-                      );
-                      i++
-                    ) {
-                      showPages.add(i);
-                    }
-
-                    const sortedPages = Array.from(showPages).sort(
-                      (a, b) => a - b
-                    );
-
-                    sortedPages.forEach((page, index) => {
-                      // Ellipsis qo'shish agar sahifalar orasida bo'sh joy bo'lsa
-                      if (index > 0 && sortedPages[index - 1] !== page - 1) {
-                        pages.push(
-                          <span
-                            key={`ellipsis-${page}`}
-                            className='px-2 flex items-center text-xs xl:text-sm'
-                          >
-                            ...
-                          </span>
-                        );
-                      }
-
-                      // Sahifa tugmasi
-                      pages.push(
-                        <Button
-                          key={page}
-                          variant='outline'
-                          size='sm'
-                          onClick={() => setCurrentPage(page)}
-                          className={`text-xs xl:text-sm ${
-                            page === currentPage
-                              ? 'bg-primary text-white hover:bg-primary/60 hover:text-white'
-                              : ''
-                          }`}
-                        >
-                          {page}
-                        </Button>
-                      );
-                    });
-
-                    return pages;
-                  })()}
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    disabled={
-                      currentPage === patientdata.pagination.total_pages
-                    }
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    className='text-xs xl:text-sm'
-                  >
-                    Кейинги
-                  </Button>
-                </div>
-              </div>
             </Card>
 
-            {/* Mobile Pagination */}
-            <div className='block lg:hidden mt-4'>
-              <Card className='card-shadow p-4'>
-                <div className='flex flex-col gap-3'>
-                  <div className='text-xs sm:text-sm text-muted-foreground text-center'>
-                    {patientdata.pagination.prev_page
-                      ? (patientdata.pagination.page - 1) *
-                          patientdata.pagination.limit +
-                        1
-                      : 1}{' '}
-                    -{' '}
-                    {Math.min(
-                      patientdata.pagination.page *
-                        patientdata.pagination.limit,
-                      patientdata.pagination.total_items
-                    )}{' '}
-                    дан {patientdata.pagination.total_items} та кўрсатилмоқда
-                  </div>
-                  <div className='flex gap-2 justify-center flex-wrap'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(currentPage - 1)}
-                      className='text-xs sm:text-sm px-3'
-                    >
-                      Олдинги
-                    </Button>
-                    {(() => {
-                      const pages = [];
-                      const showPages = new Set<number>();
+            {/* Pagination */}
+            {patientdata?.pagination &&
+              patientdata.pagination.total_pages > 1 && (
+                <div className='mt-6 flex justify-center'>
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                          className={
+                            currentPage === 1
+                              ? 'pointer-events-none opacity-50'
+                              : 'cursor-pointer'
+                          }
+                        />
+                      </PaginationItem>
 
-                      // Har doim 1 va oxirgi sahifani ko'rsat
-                      showPages.add(1);
-                      if (patientdata.pagination.total_pages > 1) {
-                        showPages.add(patientdata.pagination.total_pages);
-                      }
-
-                      // Joriy sahifa va uning atrofidagi 1 ta sahifani ko'rsat
-                      if (
-                        currentPage > 1 &&
-                        currentPage < patientdata.pagination.total_pages
-                      ) {
-                        showPages.add(currentPage);
-                      }
-                      if (currentPage - 1 > 1) {
-                        showPages.add(currentPage - 1);
-                      }
-                      if (
-                        currentPage + 1 <
-                        patientdata.pagination.total_pages
-                      ) {
-                        showPages.add(currentPage + 1);
-                      }
-
-                      const sortedPages = Array.from(showPages).sort(
-                        (a, b) => a - b
-                      );
-
-                      sortedPages.forEach((page, index) => {
-                        // Ellipsis qo'shish
-                        if (index > 0 && sortedPages[index - 1] !== page - 1) {
-                          pages.push(
-                            <span
-                              key={`ellipsis-${page}`}
-                              className='px-2 flex items-center text-xs sm:text-sm'
-                            >
-                              ...
-                            </span>
-                          );
-                        }
-
-                        // Sahifa tugmasi
-                        pages.push(
-                          <Button
-                            key={page}
-                            variant='outline'
-                            size='sm'
-                            onClick={() => setCurrentPage(page)}
-                            className={`text-xs sm:text-sm px-3 min-w-[32px] ${
-                              page === currentPage
-                                ? 'bg-primary text-white hover:bg-primary/90'
-                                : ''
-                            }`}
+                      {/* First page */}
+                      {currentPage > 2 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(1)}
+                            className='cursor-pointer'
                           >
-                            {page}
-                          </Button>
-                        );
-                      });
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
 
-                      return pages;
-                    })()}
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      disabled={
-                        currentPage === patientdata.pagination.total_pages
-                      }
-                      onClick={() => setCurrentPage(currentPage + 1)}
-                      className='text-xs sm:text-sm px-3'
-                    >
-                      Кейинги
-                    </Button>
-                  </div>
+                      {/* Ellipsis before */}
+                      {currentPage > 3 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+
+                      {/* Previous page */}
+                      {currentPage > 1 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(currentPage - 1)}
+                            className='cursor-pointer'
+                          >
+                            {currentPage - 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+
+                      {/* Current page */}
+                      <PaginationItem>
+                        <PaginationLink isActive className='cursor-default'>
+                          {currentPage}
+                        </PaginationLink>
+                      </PaginationItem>
+
+                      {/* Next page */}
+                      {currentPage < patientdata.pagination.total_pages && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(currentPage + 1)}
+                            className='cursor-pointer'
+                          >
+                            {currentPage + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+
+                      {/* Ellipsis after */}
+                      {currentPage < patientdata.pagination.total_pages - 2 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+
+                      {/* Last page */}
+                      {currentPage < patientdata.pagination.total_pages - 1 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() =>
+                              setCurrentPage(patientdata.pagination.total_pages)
+                            }
+                            className='cursor-pointer'
+                          >
+                            {patientdata.pagination.total_pages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(
+                                prev + 1,
+                                patientdata.pagination.total_pages
+                              )
+                            )
+                          }
+                          className={
+                            currentPage === patientdata.pagination.total_pages
+                              ? 'pointer-events-none opacity-50'
+                              : 'cursor-pointer'
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
-              </Card>
-            </div>
+              )}
           </>
         )}
       </main>

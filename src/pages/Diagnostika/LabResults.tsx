@@ -28,6 +28,7 @@ import {
 	Dialog,
 	DialogClose,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -162,7 +163,11 @@ const LabResults = () => {
 	)
 	const selectedOrder = data?.data.find(item => item._id === selectedOrderId)
 
-	const { data: patientsData } = useGetAllPatientQuery({ page: 1, limit: 100 , is_diagnosis:true})
+	const { data: patientsData } = useGetAllPatientQuery({
+		page: 1,
+		limit: 100,
+		is_diagnosis: true,
+	})
 	const { data: diagnosticsData } = useGetAllDiagnosticsQuery()
 	const [showErrors, setShowErrors] = useState(false)
 
@@ -437,6 +442,14 @@ const LabResults = () => {
 		return range.general
 	}
 
+	if (isFetching) {
+		return (
+			<div className='flex justify-center items-center min-h-screen'>
+				<Loader2 className='animate-spin w-8 h-8' />
+			</div>
+		)
+	}
+
 	return (
 		<div className='min-h-screen bg-background flex flex-col'>
 			{/* Filters */}
@@ -527,157 +540,146 @@ const LabResults = () => {
 			</div>
 
 			{/* Desktop Table */}
-			{isFetching ? (
-				<div className='flex justify-center py-8'>
-					<Loader2 className='animate-spin w-6 h-6' />
-				</div>
-			) : (
-				<div className='p-4 sm:p-6'>
-					<Card className='card-shadow hidden lg:block'>
-						<div className='overflow-x-auto'>
-							<table className='w-full'>
-								<thead className='bg-muted/50'>
-									<tr>
-										{[
-											'ID',
-											'Бемор',
-											'Таҳлил тури',
-											'Сана',
-											'Даража',
-											'Ҳолат',
-											'Ҳаракат',
-										].map(h => (
-											<th
-												key={h}
-												className='px-4 py-3 text-left text-xs font-semibold'
-											>
-												{h}
-											</th>
-										))}
-									</tr>
-								</thead>
-								<tbody className='divide-y'>
-									{data?.data?.length ? (
-										data.data.map((p, i) => (
-											<tr key={p._id} className='hover:bg-accent/50'>
-												<td className='px-4 py-3 text-xs font-medium text-primary'>
-													{i + 1}
-												</td>
-												<td className='px-4 py-3'>{p.patient.fullname}</td>
-												<td className='px-4 py-3 text-xs'>
-													{p.analysis_type.name}
-												</td>
-												<td className='px-4 py-3 text-xs'>
-													{p.created_at
-														? new Date(p.created_at).toLocaleDateString()
-														: '-'}
-												</td>
-												<td className='px-4 py-3 text-xs'>
-													{getLevelBadge(p.level)}
-												</td>
-												<td className='px-4 py-3 text-xs'>
-													{getStatusBadge(p.status)}
-												</td>
-												<td className='px-4 py-3'>
-													<Button
-														size='sm'
-														onClick={() => openResultModal(p._id)}
-														disabled={p.status === 'CANCELLED'}
-														className='text-xs h-8'
-													>
-														{p.status === 'PENDING' ? 'Киритиш' : 'Кўриш'}
-													</Button>
-												</td>
-											</tr>
-										))
-									) : (
-										<tr>
-											<td colSpan={7} className='text-center py-4 text-sm'>
-												Маълумот топилмади
+			<div className='p-4 sm:p-6'>
+				<Card className='card-shadow hidden lg:block'>
+					<div className='overflow-x-auto'>
+						<table className='w-full'>
+							<thead className='bg-muted/50'>
+								<tr>
+									{[
+										'ID',
+										'Бемор',
+										'Таҳлил тури',
+										'Сана',
+										'Даража',
+										'Ҳолат',
+										'Ҳаракат',
+									].map(h => (
+										<th
+											key={h}
+											className='px-4 py-3 text-left text-xs font-semibold'
+										>
+											{h}
+										</th>
+									))}
+								</tr>
+							</thead>
+							<tbody className='divide-y'>
+								{data?.data?.length ? (
+									data.data.map((p, i) => (
+										<tr key={p._id} className='hover:bg-accent/50'>
+											<td className='px-4 py-3 text-xs font-medium text-primary'>
+												{i + 1}
+											</td>
+											<td className='px-4 py-3'>{p.patient.fullname}</td>
+											<td className='px-4 py-3 text-xs'>
+												{p.analysis_type.name}
+											</td>
+											<td className='px-4 py-3 text-xs'>
+												{p.created_at
+													? new Date(p.created_at).toLocaleDateString()
+													: '-'}
+											</td>
+											<td className='px-4 py-3 text-xs'>
+												{getLevelBadge(p.level)}
+											</td>
+											<td className='px-4 py-3 text-xs'>
+												{getStatusBadge(p.status)}
+											</td>
+											<td className='px-4 py-3'>
+												<Button
+													size='sm'
+													onClick={() => openResultModal(p._id)}
+													disabled={p.status === 'CANCELLED'}
+													className='text-xs h-8'
+												>
+													{p.status === 'PENDING' ? 'Киритиш' : 'Кўриш'}
+												</Button>
 											</td>
 										</tr>
-									)}
-								</tbody>
-							</table>
-						</div>
-					</Card>
-				</div>
-			)}
+									))
+								) : (
+									<tr>
+										<td colSpan={7} className='text-center py-4 text-sm'>
+											Маълумот топилмади
+										</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
+				</Card>
+			</div>
 
 			{/* Mobile Table */}
-			{isFetching ? (
-				<div className='flex justify-center py-8'>
-					<Loader2 className='animate-spin w-6 h-6' />
-				</div>
-			) : (
-				<div className='p-4 sm:p-6 block lg:hidden space-y-4'>
-					{data?.data?.length ? (
-						data.data.map((p, i) => (
-							<Card
-								key={p._id}
-								className='rounded-2xl shadow-md border border-gray-100 overflow-hidden'
-							>
-								<div className='p-4 space-y-2'>
-									<div className='flex justify-between items-start'>
-										<div>
-											<h3 className='font-semibold text-base'>
-												{p.analysis_type.name}
-											</h3>
-											<p className='text-xs text-muted-foreground'>
-												Бемор:{' '}
-												<span className='font-medium'>
-													{p.patient.fullname}
-												</span>
-											</p>
-											<p className='text-xs text-muted-foreground'>
-												Сана:{' '}
-												<span className='font-medium'>
-													{new Date(p.created_at).toLocaleDateString()}
-												</span>
-											</p>
-										</div>
-										<span className='text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium'>
-											#{i + 1}
-										</span>
+			<div className='p-4 sm:p-6 block lg:hidden space-y-4'>
+				{data?.data?.length ? (
+					data.data.map((p, i) => (
+						<Card
+							key={p._id}
+							className='rounded-2xl shadow-md border border-gray-100 overflow-hidden'
+						>
+							<div className='p-4 space-y-2'>
+								<div className='flex justify-between items-start'>
+									<div>
+										<h3 className='font-semibold text-base'>
+											{p.analysis_type.name}
+										</h3>
+										<p className='text-xs text-muted-foreground'>
+											Бемор:{' '}
+											<span className='font-medium'>{p.patient.fullname}</span>
+										</p>
+										<p className='text-xs text-muted-foreground'>
+											Сана:{' '}
+											<span className='font-medium'>
+												{new Date(p.created_at).toLocaleDateString()}
+											</span>
+										</p>
 									</div>
-									<div className='flex items-center justify-between space-y-1 text-sm'>
-										<div className='space-y-1'>
-											<div className='flex gap-4'>
-												<span className='text-muted-foreground'>Даража:</span>
-												{getLevelBadge(p.level)}
-											</div>
-											<div className='flex gap-4'>
-												<span className='text-muted-foreground'>Ҳолат:</span>
-												{getStatusBadge(p.status)}
-											</div>
+									<span className='text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium'>
+										#{i + 1}
+									</span>
+								</div>
+								<div className='flex items-center justify-between space-y-1 text-sm'>
+									<div className='space-y-1'>
+										<div className='flex gap-4'>
+											<span className='text-muted-foreground'>Даража:</span>
+											{getLevelBadge(p.level)}
 										</div>
-										<div className='flex justify-end mt-2'>
-											<Button
-												size='sm'
-												className='text-xs py-1 px-2'
-												onClick={() => openResultModal(p._id)}
-												disabled={p.status === 'CANCELLED'}
-											>
-												{p.status === 'PENDING' ? 'Киритиш' : 'Кўриш'}
-											</Button>
+										<div className='flex gap-4'>
+											<span className='text-muted-foreground'>Ҳолат:</span>
+											{getStatusBadge(p.status)}
 										</div>
+									</div>
+									<div className='flex justify-end mt-2'>
+										<Button
+											size='sm'
+											className='text-xs py-1 px-2'
+											onClick={() => openResultModal(p._id)}
+											disabled={p.status === 'CANCELLED'}
+										>
+											{p.status === 'PENDING' ? 'Киритиш' : 'Кўриш'}
+										</Button>
 									</div>
 								</div>
-							</Card>
-						))
-					) : (
-						<div className='text-center py-4 text-sm'>Маълумот топилмади</div>
-					)}
-				</div>
-			)}
+							</div>
+						</Card>
+					))
+				) : (
+					<div className='text-center py-4 text-sm'>Маълумот топилмади</div>
+				)}
+			</div>
 
 			<Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
 				<DialogContent className='w-[95%] h-[85%] sm:max-w-4xl sm:max-h-[90vh] overflow-y-auto rounded-lg p-4 sm:p-6'>
 					<DialogHeader>
 						<DialogTitle>{selectedOrder?.analysis_type.name}</DialogTitle>
-						<div className='text-sm text-muted-foreground'>
+						<div className='text-sm text-gray-900 font-medium'>
 							{selectedOrder?.patient.fullname}
 						</div>
+						<DialogDescription className='mt-2 text-sm text-black text-medium'>
+							Clinic ko'rsatma : {selectedOrder?.clinical_indications}
+						</DialogDescription>
 					</DialogHeader>
 
 					<div className='mt-4'>

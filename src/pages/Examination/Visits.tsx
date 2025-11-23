@@ -52,7 +52,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { getStatusBadge } from '../../components/common/StatusBadge';
 import ExamFilter from './components/ExamFilter';
-import NewVisitDialog from './components/NewVisitDialog';
 
 const Visits = () => {
   const navigate = useNavigate();
@@ -62,7 +61,6 @@ const Visits = () => {
   const [itemsPerPage] = useState(10);
 
   // Modals
-  const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -181,12 +179,6 @@ const Visits = () => {
     });
   };
 
-  // Open delete modal
-  const handleDeleteClick = (exam: any) => {
-    setSelectedExam(exam);
-    setIsDeleteModalOpen(true);
-  };
-
   // Handle delete
   const handleDelete = async () => {
     await handleRequest({
@@ -220,7 +212,7 @@ const Visits = () => {
           </div>
           <Button
             className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
-            onClick={() => setIsNewVisitOpen(true)}
+            onClick={() => navigate('/new-visit')}
           >
             <Plus className='w-4 h-4 mr-2' />
             Янги Кўрик
@@ -252,7 +244,9 @@ const Visits = () => {
                     <SelectItem value='all'>Барчаси</SelectItem>
                     <SelectItem value='active'>Фаол</SelectItem>
                     <SelectItem value='completed'>Тугалланган</SelectItem>
-                    <SelectItem value='inactive'>Фаол эмас</SelectItem>
+                    {/* <SelectItem value='pending'>Тугалланмаган</SelectItem>
+                    <SelectItem value='deleted'>Ўчирилганлар</SelectItem>
+                    <SelectItem value='inactive'>Фаол эмас</SelectItem> */}
                   </SelectContent>
                 </Select>
               </div>
@@ -283,7 +277,7 @@ const Visits = () => {
                 searchQuery ? 'Қидирувни тозалаш' : '+ Янги Кўрик Яратиш'
               }
               onAction={() =>
-                searchQuery ? setSearchQuery('') : setIsNewVisitOpen(true)
+                searchQuery ? setSearchQuery('') : navigate('/new-visit')
               }
             />
           </Card>
@@ -804,13 +798,6 @@ const Visits = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        {/* New Visit Dialog */}
-        <NewVisitDialog
-          open={isNewVisitOpen}
-          onOpenChange={setIsNewVisitOpen}
-          onSuccess={refetch}
-        />
       </main>
     </div>
   );
