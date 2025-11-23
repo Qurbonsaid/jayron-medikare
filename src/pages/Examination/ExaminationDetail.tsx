@@ -644,6 +644,73 @@ const ExaminationDetail = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Room Info Card */}
+            {exam.rooms && exam.rooms.length > 0 && (
+              <Card className='mt-6'>
+                <CardHeader>
+                  <CardTitle>Хоналар Маълумотлари</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className='space-y-4'>
+                    {exam.rooms.map((room: any, index: number) => (
+                      <Card key={room._id} className='border border-primary/10'>
+                        <CardContent className='pt-4'>
+                          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+                            <div>
+                              <Label className='text-muted-foreground'>
+                                Хона Номи
+                              </Label>
+                              <p className='font-medium mt-1'>
+                                {room.room_name || 'Номаълум'}
+                              </p>
+                            </div>
+                            <div>
+                              <Label className='text-muted-foreground'>
+                                Қават
+                              </Label>
+                              <p className='font-medium mt-1'>
+                                {room.floor_number || 'Номаълум'}
+                              </p>
+                            </div>
+                            <div>
+                              <Label className='text-muted-foreground'>
+                                Нархи
+                              </Label>
+                              <p className='font-medium mt-1'>
+                                {room.room_price
+                                  ? `${room.room_price.toLocaleString()} сўм`
+                                  : 'Номаълум'}
+                              </p>
+                            </div>
+                            <div>
+                              <Label className='text-muted-foreground'>
+                                Муддати
+                              </Label>
+                              <p className='font-medium mt-1'>
+                                {room.start_date
+                                  ? new Date(
+                                      room.start_date
+                                    ).toLocaleDateString('uz-UZ')
+                                  : 'Номаълум'}
+                                {room.end_date && (
+                                  <>
+                                    {' - '}
+                                    {new Date(room.end_date).toLocaleDateString(
+                                      'uz-UZ'
+                                    )}
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Prescriptions Tab */}

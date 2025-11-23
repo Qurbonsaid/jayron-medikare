@@ -82,6 +82,16 @@ type Image = {
   updated_at: Date;
 };
 
+export type Room = {
+  room_id: string;
+  start_date: string;
+  room_price: number;
+  room_name: string;
+  floor_number: number;
+  _id: string;
+  end_date: string;
+};
+
 export type ExamDataItem = {
   _id: string;
   patient_id: {
@@ -130,20 +140,7 @@ export type ExamDataItem = {
     notes: string;
     _id: string;
   }>;
-  rooms: Array<{
-    room_name: string;
-    room_price: number;
-    corpus_id: string | CorpusId;
-    patient_capacity: number;
-    patient_occupied: number;
-    patients: Patient[];
-    floor_number: number;
-    description: string;
-    status: string;
-    _id: string;
-    created_at: string;
-    updated_at: string;
-  }>;
+  rooms: Array<Room>;
   created_at: Date;
   updated_at: Date;
 };
