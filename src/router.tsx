@@ -21,6 +21,7 @@ import RoomDetail from "./pages/RoomDetail/RoomDetail";
 import ExaminationDetail from "./pages/Examination/ExaminationDetail";
 import Service from "./pages/Examination/Service/Service";
 import Billing from "./pages/Billing/Billing";
+import Disease from './pages/Examination/Disease'
 
 export const routers = [
   // { path: "/dashboard", element: <Dashboard /> },
@@ -31,7 +32,7 @@ export const routers = [
   { path: "/appointments", element: <Appointments /> },
   { path: "/prescription", element: <Prescription /> },
   { path: "/visits", element: <Visits /> },
-  // { path: "/disease", element: <Disease /> },
+  { path: "/disease", element: <Disease /> },
   { path: "/service", element: <Service /> },
   { path: "/add-diagnostika", element: <AddDiagnostika /> },
   { path: "/analysisById/:id", element: <AnalysisParamsModal /> },
