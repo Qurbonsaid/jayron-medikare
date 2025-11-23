@@ -14,8 +14,14 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatDate } from "date-fns";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, X, Maximize2, Minimize2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { BodyPartConstants } from "@/constants/BodyPart";
 import { useGetOneMedicalImageQuery } from "@/app/api/radiologyApi";
@@ -25,16 +31,16 @@ import { SERVER_URL } from "@/constants/ServerUrl";
 const bodyPartLabels: Record<string, string> = {
   [BodyPartConstants.HEAD]: "Бош",
   [BodyPartConstants.NECK]: "Бўйин",
-  [BodyPartConstants.CHEST]: "Кўкрак",
-  [BodyPartConstants.ABDOMEN]: "Қорин",
-  [BodyPartConstants.PELVIS]: "Тос",
+  [BodyPartConstants.CHEST]: "Кўкрак қафаси",
+  [BodyPartConstants.ABDOMEN]: "Қорин бўшлиғи",
+  [BodyPartConstants.PELVIS]: "Тос суяги",
   [BodyPartConstants.SPINE]: "Умуртқа поғонаси",
   [BodyPartConstants.ARM]: "Қўл",
   [BodyPartConstants.LEG]: "Оёқ",
-  [BodyPartConstants.KNEE]: "Тиззя",
+  [BodyPartConstants.KNEE]: "Тизза",
   [BodyPartConstants.SHOULDER]: "Елка",
   [BodyPartConstants.HAND]: "Кафт",
-  [BodyPartConstants.FOOT]: "Тобан",
+  [BodyPartConstants.FOOT]: "Оёқ табани",
 };
 
 interface ViewMedicalImageProps {
@@ -56,6 +62,7 @@ export const ViewMedicalImage = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   const { data: getMedicalImage, isLoading } = useGetOneMedicalImageQuery(
@@ -76,6 +83,33 @@ export const ViewMedicalImage = ({
   useEffect(() => {
     handleResetView();
   }, [selectedImageIndex]);
+
+  // Keyboard navigation handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!medicalImage?.image_paths || medicalImage.image_paths.length <= 1)
+        return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setSelectedImageIndex((prev) =>
+          prev === 0 ? medicalImage.image_paths!.length - 1 : prev - 1
+        );
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setSelectedImageIndex((prev) =>
+          prev === medicalImage.image_paths!.length - 1 ? 0 : prev + 1
+        );
+      } else if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    if (open) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [open, medicalImage, isFullscreen]);
 
   // Wheel zoom handler
   useEffect(() => {
@@ -128,52 +162,24 @@ export const ViewMedicalImage = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] max-h-[98vh] sm:max-w-[95vw] sm:max-h-[95vh] md:max-w-[99vw] lg:max-w-6xl xl:max-w-7xl p-0 overflow-hidden">
-        <DialogHeader className="p-3 sm:p-4 md:p-5 lg:p-6 pb-2 sm:pb-3 border-b flex-shrink-0">
-          <DialogTitle className="text-base sm:text-lg md:text-xl lg:text-2xl line-clamp-2">
+      <DialogContent className="max-w-[98vw] max-h-[98vh] sm:max-w-[95vw] sm:max-h-[95vh] md:max-w-[99vw] lg:max-w-[95vw] xl:max-w-[98vw] p-0 overflow-hidden overflow-y-auto">
+        <DialogHeader className="p-2 sm:pb-3 border-b flex-shrink-0">
+          <DialogTitle className="text-sm md:text-base lg:text-lg line-clamp-1 sm:line-clamp-2">
             {medicalImage?.imaging_type_id?.name} -{" "}
             {medicalImage?.patient_id?.fullname || "Номаълум бемор"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-3 md:gap-3 lg:gap-4 p-2 sm:p-3 md:p-3 lg:p-4 xl:p-6 max-h-[calc(98vh-70px)] sm:max-h-[calc(95vh-85px)] md:max-h-[calc(95vh-90px)] overflow-hidden">
-          {/* Thumbnails */}
-          <div className="md:col-span-2 lg:col-span-2 order-2 md:order-1">
-            <ScrollArea className="h-[100px] sm:h-[120px] md:h-[calc(90vh-140px)] lg:h-[calc(95vh-160px)]">
-              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-1 gap-1.5 sm:gap-2">
-                {medicalImage.image_paths?.map((path, index) => (
-                  <div
-                    key={index}
-                    onClick={() => {
-                      setSelectedImageIndex(index);
-                      handleResetView();
-                    }}
-                    className={`aspect-square bg-muted rounded-md cursor-pointer border-2 transition-all overflow-hidden ${
-                      selectedImageIndex === index
-                        ? "border-primary ring-1 sm:ring-2 ring-primary/50"
-                        : "border-transparent hover:border-primary/50"
-                    }`}
-                  >
-                    <img
-                      src={getImageUrl(path)}
-                      alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        e.currentTarget.parentElement!.innerHTML = `<div class="w-full h-full flex items-center justify-center bg-muted"><svg class="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>`;
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-
-          {/* Main Viewer */}
-          <div className="md:col-span-7 lg:col-span-7 order-1 md:order-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 md:p-4 h-[calc(98vh-60px)] sm:h-[calc(95vh-75px)] overflow-auto">
+          {/* Main Viewer - Left side, 9 columns */}
+          <div className="lg:col-span-9 flex flex-col">
             <Card
               ref={imageContainerRef}
-              className="bg-black rounded-lg relative flex flex-col items-center justify-center h-[250px] xs:h-[300px] sm:h-[350px] md:h-[45vh] lg:h-[55vh] xl:h-[60vh] overflow-hidden touch-none"
+              className={`bg-black rounded-lg relative flex flex-col items-center justify-center overflow-hidden touch-none transition-all ${
+                isFullscreen
+                  ? "fixed inset-0 z-[100] rounded-none h-screen w-screen"
+                  : "h-full"
+              }`}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -201,19 +207,23 @@ export const ViewMedicalImage = ({
                     src={getImageUrl(
                       medicalImage.image_paths[selectedImageIndex]
                     )}
-                    alt={`Таsvір ${selectedImageIndex + 1}`}
-                    className="max-w-full max-h-[200px] xs:max-h-[250px] sm:max-h-[300px] md:max-h-[40vh] lg:max-h-[50vh] xl:max-h-[55vh] object-contain rounded-lg select-none"
+                    alt={`Тасвир ${selectedImageIndex + 1}`}
+                    className={`max-w-full object-contain rounded-lg select-none ${
+                      isFullscreen
+                        ? "max-h-[85vh]"
+                        : "max-h-[300px] xs:max-h-[350px] sm:max-h-[400px] md:max-h-[50vh] lg:max-h-[70vh]"
+                    }`}
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.src =
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23333' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='20'%3EТаsvір топілмаді%3C/text%3E%3C/svg%3E";
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23333' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='20'%3EТасвир топилмади%3C/text%3E%3C/svg%3E";
                     }}
                   />
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center text-white">
                   <ImageIcon className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mb-2 sm:mb-3 md:mb-4" />
-                  <p className="text-xs sm:text-sm md:text-base">Таsvір йўқ</p>
+                  <p className="text-xs sm:text-sm md:text-base">Тасвир йўқ</p>
                 </div>
               )}
 
@@ -284,191 +294,332 @@ export const ViewMedicalImage = ({
                   </>
                 )}
 
-              {/* Controls */}
-              <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 bg-black/90 rounded-md sm:rounded-lg p-1 sm:p-1.5 md:p-2 flex flex-wrap justify-center items-center gap-1 sm:gap-1.5 md:gap-2 backdrop-blur-sm max-w-[95%]">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0"
-                  onClick={() => setZoom(Math.max(50, zoom - 10))}
-                  disabled={zoom <= 50}
-                  title="Кичрайтириш"
-                >
-                  <span className="text-base sm:text-lg md:text-xl">−</span>
-                </Button>
-                <span className="text-[10px] sm:text-xs md:text-sm text-white px-1 sm:px-1.5 md:px-2 flex items-center min-w-[40px] sm:min-w-[50px] md:min-w-[60px] justify-center">
-                  {zoom}%
-                </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0"
-                  onClick={() => setZoom(Math.min(300, zoom + 10))}
-                  disabled={zoom >= 300}
-                  title="Катталаштириш"
-                >
-                  <span className="text-base sm:text-lg md:text-xl">+</span>
-                </Button>
-                <div className="w-px bg-white/30 h-6 sm:h-7 md:h-8 mx-0.5 sm:mx-1" />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0"
-                  onClick={() => setRotation(rotation - 90)}
-                  title="Чапга айлантириш"
-                >
-                  <span className="text-base sm:text-lg md:text-xl">↺</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0"
-                  onClick={() => setRotation(rotation + 90)}
-                  title="Ўнгга айлантириш"
-                >
-                  <span className="text-base sm:text-lg md:text-xl">↻</span>
-                </Button>
-                <div className="w-px bg-white/30 h-6 sm:h-7 md:h-8 mx-0.5 sm:mx-1" />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20 h-7 sm:h-8 md:h-9 px-2 sm:px-2.5 md:px-3 text-[10px] sm:text-xs md:text-sm"
-                  onClick={handleResetView}
-                  title="Асл ҳолатга қайтариш"
-                >
-                  Қайта
-                </Button>
+              {/* Controls Panel - Combined with Settings */}
+              <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 bg-black/95 rounded-lg p-2 sm:p-3 backdrop-blur-md max-w-[98%] shadow-xl">
+                {/* Zoom & Rotation Controls */}
+                <div className="flex flex-wrap justify-center items-center gap-1 sm:gap-2 mb-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 p-0"
+                    onClick={() => setZoom(Math.max(50, zoom - 10))}
+                    disabled={zoom <= 50}
+                    title="Zoom Out (Ctrl + Scroll)"
+                  >
+                    <span className="text-lg">−</span>
+                  </Button>
+                  <span className="text-xs text-white px-2 min-w-[50px] text-center font-mono">
+                    {zoom}%
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 p-0"
+                    onClick={() => setZoom(Math.min(300, zoom + 10))}
+                    disabled={zoom >= 300}
+                    title="Zoom In (Ctrl + Scroll)"
+                  >
+                    <span className="text-lg">+</span>
+                  </Button>
+                  <div className="w-px bg-white/30 h-6 mx-1" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 p-0"
+                    onClick={() => setRotation(rotation - 90)}
+                    title="Rotate Left"
+                  >
+                    <span className="text-lg">↺</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 p-0"
+                    onClick={() => setRotation(rotation + 90)}
+                    title="Rotate Right"
+                  >
+                    <span className="text-lg">↻</span>
+                  </Button>
+                  <div className="w-px bg-white/30 h-6 mx-1" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-7 sm:h-8 px-2 text-xs"
+                    onClick={handleResetView}
+                    title="Reset View"
+                  >
+                    Қайта
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 p-0"
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                    title={
+                      isFullscreen ? "Exit Fullscreen (Esc)" : "Fullscreen"
+                    }
+                  >
+                    {isFullscreen ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                {/* Brightness & Contrast Sliders */}
+                <div className="flex gap-3 sm:gap-4 items-center">
+                  <div className="flex items-center gap-2 min-w-[120px] sm:min-w-[150px]">
+                    <span className="text-[10px] text-white/80 whitespace-nowrap">
+                      Ёруғлик
+                    </span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="200"
+                      value={brightness}
+                      onChange={(e) => setBrightness(parseInt(e.target.value))}
+                      className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-primary"
+                    />
+                    <span className="text-[10px] text-white font-mono w-8">
+                      {brightness}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 min-w-[120px] sm:min-w-[150px]">
+                    <span className="text-[10px] text-white/80 whitespace-nowrap">
+                      Контраст
+                    </span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="200"
+                      value={contrast}
+                      onChange={(e) => setContrast(parseInt(e.target.value))}
+                      className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-primary"
+                    />
+                    <span className="text-[10px] text-white font-mono w-8">
+                      {contrast}%
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {/* Hint for zoom */}
-              {zoom === 100 && (
-                <div className="hidden sm:block absolute top-2 sm:top-3 md:top-4 left-2 sm:left-3 md:left-4 bg-black/70 text-white text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 md:px-3 rounded-md sm:rounded-lg backdrop-blur-sm">
-                  Ctrl + Scroll - Zoom
+              {/* Hints */}
+              {!isFullscreen && (
+                <div className="hidden sm:block absolute top-2 left-2 bg-black/70 text-white text-[10px] px-2.5 py-1 rounded-lg backdrop-blur-sm space-y-0.5">
+                  <div>🖱️ Ctrl + Scroll - Zoom</div>
+                  <div>⌨️ ← → - Navigate</div>
+                  <div>🖼️ Click ⛶ - Fullscreen</div>
                 </div>
               )}
             </Card>
           </div>
 
-          {/* Info */}
-          <div className="md:col-span-3 lg:col-span-3 order-3">
-            <ScrollArea className="h-full max-h-[250px] sm:max-h-[300px] md:max-h-[calc(90vh-140px)] lg:max-h-[calc(95vh-160px)]">
-              <div className="space-y-2 sm:space-y-3">
-                <Card className="p-2 sm:p-3 md:p-3 lg:p-4">
-                  <h3 className="font-semibold mb-2 sm:mb-2 md:mb-3 text-xs sm:text-sm md:text-base">
-                    Бемор маълумотлари
-                  </h3>
-                  <div className="space-y-1.5 sm:space-y-2 text-[11px] sm:text-xs md:text-xs lg:text-sm">
-                    <div className="flex justify-between gap-1 sm:gap-2">
-                      <span className="text-muted-foreground flex-shrink-0">
-                        Исм:
-                      </span>
-                      <span className="font-medium text-right break-words">
-                        {medicalImage?.patient_id?.fullname || "-"}
-                      </span>
+          {/* Right Sidebar - Info + Thumbnails */}
+          {!isFullscreen && (
+            <div className="lg:col-span-3 flex flex-col-reverse lg:flex-col gap-3 ">
+              {/* Info Section */}
+              <TooltipProvider>
+                <Card className="p-2 sm:p-3 flex-1 min-h-max">
+                  <div className="space-y-3">
+                    {/* Patient Info */}
+                    <div>
+                      <h3 className="font-semibold mb-1.5 text-xs sm:text-sm flex items-center gap-1">
+                        Бемор
+                      </h3>
+                      <div className="space-y-1 text-[10px] sm:text-xs">
+                        <div className="flex justify-between gap-1">
+                          <span className="text-muted-foreground flex-shrink-0">
+                            Исм:
+                          </span>
+                          {medicalImage?.patient_id?.fullname &&
+                          medicalImage.patient_id.fullname.length > 20 ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="font-medium text-right truncate cursor-help">
+                                  {medicalImage.patient_id.fullname.slice(
+                                    0,
+                                    20
+                                  )}
+                                  ...
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{medicalImage.patient_id.fullname}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <span className="font-medium text-right">
+                              {medicalImage?.patient_id?.fullname || "-"}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex justify-between gap-1">
+                          <span className="text-muted-foreground flex-shrink-0">
+                            Телефон:
+                          </span>
+                          <span className="font-medium">
+                            {medicalImage?.patient_id?.phone || "-"}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between gap-1 sm:gap-2">
-                      <span className="text-muted-foreground flex-shrink-0">
-                        Телефон:
-                      </span>
-                      <span className="font-medium">
-                        {medicalImage?.patient_id?.phone || "-"}
-                      </span>
-                    </div>
-                  </div>
-                </Card>
 
-                <Card className="p-2 sm:p-3 md:p-3 lg:p-4">
-                  <h3 className="font-semibold mb-2 sm:mb-2 md:mb-3 text-xs sm:text-sm md:text-base">
-                    Текшириш маълумотлари
-                  </h3>
-                  <div className="space-y-1.5 sm:space-y-2 text-[11px] sm:text-xs md:text-xs lg:text-sm">
-                    <div className="flex justify-between gap-1 sm:gap-2">
-                      <span className="text-muted-foreground flex-shrink-0">
-                        Сана:
-                      </span>
-                      <span className="font-medium">
-                        {formatDate(
-                          new Date(medicalImage.created_at),
-                          "dd.MM.yyyy"
+                    {/* Examination Info */}
+                    <div>
+                      <h3 className="font-semibold mb-1.5 text-xs sm:text-sm flex items-center gap-1">
+                        Текшириш
+                      </h3>
+                      <div className="space-y-1 text-[10px] sm:text-xs">
+                        <div className="flex justify-between gap-1">
+                          <span className="text-muted-foreground flex-shrink-0">
+                            Сана:
+                          </span>
+                          <span className="font-medium">
+                            {formatDate(
+                              new Date(medicalImage.created_at),
+                              "dd.MM.yyyy"
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-1">
+                          <span className="text-muted-foreground flex-shrink-0">
+                            Тури:
+                          </span>
+                          {medicalImage.imaging_type_id?.name &&
+                          medicalImage.imaging_type_id.name.length > 15 ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="font-medium text-right truncate cursor-help">
+                                  {medicalImage.imaging_type_id.name.slice(
+                                    0,
+                                    15
+                                  )}
+                                  ...
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{medicalImage.imaging_type_id.name}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <span className="font-medium text-right">
+                              {medicalImage.imaging_type_id?.name || "Номаълум"}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex justify-between gap-1">
+                          <span className="text-muted-foreground flex-shrink-0">
+                            Қисми:
+                          </span>
+                          {medicalImage.body_part &&
+                          medicalImage.body_part.length > 15 ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="font-medium text-right truncate cursor-help">
+                                  {medicalImage.body_part.slice(0, 15)}...
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{medicalImage.body_part}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <span className="font-medium text-right">
+                              {medicalImage.body_part || "Кўрсатилмаган"}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex justify-between gap-1">
+                          <span className="text-muted-foreground flex-shrink-0">
+                            Сони:
+                          </span>
+                          <span className="font-medium">
+                            {medicalImage.image_paths?.length || 0} та
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    {medicalImage.description && (
+                      <div>
+                        <h3 className="font-semibold mb-1.5 text-xs sm:text-sm flex items-center gap-1">
+                          Тавсиф
+                        </h3>
+                        {medicalImage.description.length > 100 ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2 cursor-help leading-relaxed">
+                                {medicalImage.description}
+                              </p>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <p className="text-xs">
+                                {medicalImage.description}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                            {medicalImage.description}
+                          </p>
                         )}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-1 sm:gap-2">
-                      <span className="text-muted-foreground flex-shrink-0">
-                        Тури:
-                      </span>
-                      <span className="font-medium text-right break-words">
-                        {medicalImage.imaging_type_id?.name || "Номаълум"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-1 sm:gap-2">
-                      <span className="text-muted-foreground flex-shrink-0">
-                        Тана қисми:
-                      </span>
-                      <span className="font-medium text-right break-words">
-                        {medicalImage.body_part || "Кўрсатилмаган"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-1 sm:gap-2">
-                      <span className="text-muted-foreground flex-shrink-0">
-                        Тасвирлар:
-                      </span>
-                      <span className="font-medium">
-                        {medicalImage.image_paths?.length || 0} та
-                      </span>
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </Card>
+              </TooltipProvider>
 
-                {medicalImage.description && (
-                  <Card className="p-2 sm:p-3 md:p-3 lg:p-4">
-                    <h3 className="font-semibold mb-2 sm:mb-2 md:mb-3 text-xs sm:text-sm md:text-base">
-                      Тавсиф
-                    </h3>
-                    <p className="text-[11px] sm:text-xs md:text-xs lg:text-sm text-muted-foreground break-words">
-                      {medicalImage.description}
-                    </p>
-                  </Card>
+              {/* Thumbnails Grid - 2x2 Grid with Scroll */}
+              {medicalImage.image_paths &&
+                medicalImage.image_paths.length > 1 && (
+                  <div className="flex-shrink-0">
+                    <ScrollArea className="h-[120px] sm:h-[160px] md:h-[170px] lg:h-[350px] p-2 rounded-lg border bg-gradient-to-br from-muted/30 to-muted/10">
+                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-2 gap-4 p-2">
+                        {medicalImage.image_paths.map((path, index) => (
+                          <div
+                            key={index}
+                            onClick={() => {
+                              setSelectedImageIndex(index);
+                              handleResetView();
+                            }}
+                            className={`aspect-square bg-muted rounded-lg cursor-pointer border-2 transition-all duration-200 overflow-hidden relative group ${
+                              selectedImageIndex === index
+                                ? "border-primary ring-2 ring-primary/50 scale-[1.02] shadow-lg shadow-primary/30"
+                                : "border-border/40 hover:border-primary/60 hover:scale-[1.02] hover:shadow-md"
+                            }`}
+                          >
+                            <img
+                              src={getImageUrl(path)}
+                              alt={`Thumbnail ${index + 1}`}
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                                e.currentTarget.parentElement!.innerHTML =
+                                  '<div class="w-full h-full flex items-center justify-center bg-muted"><svg class="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>';
+                              }}
+                            />
+                            {selectedImageIndex === index && (
+                              <div className="absolute inset-0 bg-primary/10 pointer-events-none" />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono">
+                              {index + 1}
+                            </div>
+                            {selectedImageIndex === index && (
+                              <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-[8px] px-1 py-0.5 rounded font-medium">
+                                ✓
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
                 )}
-
-                <Card className="p-2 sm:p-3 md:p-3 lg:p-4">
-                  <h3 className="font-semibold mb-2 sm:mb-2 md:mb-3 text-xs sm:text-sm md:text-base">
-                    Таsvір созламалари
-                  </h3>
-                  <div className="space-y-2 sm:space-y-2 md:space-y-3">
-                    <div>
-                      <Label className="text-[10px] sm:text-xs">
-                        Ёруғлик: {brightness}%
-                      </Label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="200"
-                        value={brightness}
-                        onChange={(e) =>
-                          setBrightness(parseInt(e.target.value))
-                        }
-                        className="w-full h-1.5 sm:h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[10px] sm:text-xs">
-                        Контраст: {contrast}%
-                      </Label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="200"
-                        value={contrast}
-                        onChange={(e) => setContrast(parseInt(e.target.value))}
-                        className="w-full h-1.5 sm:h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary mt-1"
-                      />
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </ScrollArea>
-          </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

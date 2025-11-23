@@ -41,6 +41,23 @@ import z from "zod";
 import { BodyPartConstants } from "@/constants/BodyPart";
 import { useState, useEffect } from "react";
 
+// Error type interface
+interface UploadError {
+  data?: {
+    error?: {
+      msg?: string;
+    };
+    message?: string;
+  };
+}
+
+interface UploadResponseError {
+  error?: {
+    msg?: string;
+  };
+  message?: string;
+}
+
 // Helper type for the actual exam data structure returned by API
 interface ExamData {
   _id: string;
@@ -55,22 +72,22 @@ interface ExamData {
 const bodyPartOptions = [
   { value: BodyPartConstants.HEAD, label: "Бош" },
   { value: BodyPartConstants.NECK, label: "Бўйин" },
-  { value: BodyPartConstants.CHEST, label: "Кўкрак" },
-  { value: BodyPartConstants.ABDOMEN, label: "Қорин" },
-  { value: BodyPartConstants.PELVIS, label: "Тос" },
+  { value: BodyPartConstants.CHEST, label: "Кўкрак қафаси" },
+  { value: BodyPartConstants.ABDOMEN, label: "Қорин бўшлиғи" },
+  { value: BodyPartConstants.PELVIS, label: "Тос суяги" },
   { value: BodyPartConstants.SPINE, label: "Умуртқа поғонаси" },
   { value: BodyPartConstants.ARM, label: "Қўл" },
   { value: BodyPartConstants.LEG, label: "Оёқ" },
-  { value: BodyPartConstants.KNEE, label: "Тиззя" },
+  { value: BodyPartConstants.KNEE, label: "Тизза" },
   { value: BodyPartConstants.SHOULDER, label: "Елка" },
   { value: BodyPartConstants.HAND, label: "Кафт" },
-  { value: BodyPartConstants.FOOT, label: "Тобан" },
+  { value: BodyPartConstants.FOOT, label: "Оёқ табани" },
 ];
 
 const MedicalImageSchema = z.object({
-  examination_id: z.string().min(1, "Кўрикни танланг"),
+  examination_id: z.string().optional(), // Read-only, backendga yuborilmaydi
   imaging_type_id: z.string().min(1, "Текшириш турини танланг"),
-  image_paths: z.array(z.string()).min(1, "Камида 1 та таsvир юкланг"),
+  image_paths: z.array(z.string()).min(1, "Камида 1 та тасвир юкланг"),
   body_part: z.string().optional(),
   description: z.string().optional(),
 });
@@ -127,22 +144,42 @@ export const UpdateMedicalImage = ({
     }
   }, [medicalImage, open, form]);
 
+  // Modal yopilganda uploadingFiles tozalash
+  useEffect(() => {
+    if (!open) {
+      setUploadingFiles([]);
+    }
+  }, [open]);
+
   // Rasm yuklash funksiyasi
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    const currentPaths = form.getValues("image_paths");
+    // Fayllarni array'ga o'tkazamiz
+    const fileArray = Array.from(files);
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-
+    // Faqat rasm fayllarini filtrlash
+    const imageFiles = fileArray.filter((file) => {
       if (!file.type.startsWith("image/")) {
-        toast.error(`${file.name} rasm fayli emas`);
-        continue;
+        toast.warning(`"${file.name}" расм файли эмас ва ўтказиб юборилди`);
+        return false;
       }
+      return true;
+    });
 
-      setUploadingFiles((prev) => [...prev, file.name]);
+    if (imageFiles.length === 0) {
+      toast.error("Илтимос, расм файлларини танланг");
+      return;
+    }
 
+    // Barcha fayllarni uploading holatiga qo'shamiz
+    setUploadingFiles((prev) => [...prev, ...imageFiles.map((f) => f.name)]);
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Barcha fayllarni parallel yuklash
+    const uploadPromises = imageFiles.map(async (file) => {
       try {
         const formData = new FormData();
         formData.append("file", file);
@@ -150,22 +187,70 @@ export const UpdateMedicalImage = ({
         const response = await uploadImage(formData).unwrap();
 
         if (response.success && response.file_path) {
-          form.setValue("image_paths", [
-            ...form.getValues("image_paths"),
-            response.file_path,
-          ]);
-          toast.success(`${file.name} юкланди`);
+          successCount++;
+          return response.file_path;
+        } else {
+          errorCount++;
+          const resp = response as unknown as UploadResponseError;
+          const errorMsg = resp?.error?.msg || resp?.message;
+          if (errorMsg) {
+            toast.error(`"${file.name}": ${errorMsg}`);
+          } else {
+            toast.error(`"${file.name}" юклашда хатолик юз берди`);
+          }
+          return null;
         }
-      } catch (error) {
-        toast.error(`${file.name} юклашда хатолик`);
+      } catch (error: unknown) {
+        errorCount++;
+        const err = error as UploadError;
+        const errorMsg = err?.data?.error?.msg || err?.data?.message;
+        if (errorMsg) {
+          toast.error(`"${file.name}": ${errorMsg}`);
+        } else {
+          toast.error(`"${file.name}" юклашда хатолик юз берди`);
+        }
+        return null;
       } finally {
         setUploadingFiles((prev) => prev.filter((name) => name !== file.name));
       }
+    });
+
+    // Barcha yuklashlar tugashini kutamiz
+    const uploadedPaths = await Promise.all(uploadPromises);
+    const validPaths = uploadedPaths.filter(
+      (path): path is string => path !== null
+    );
+
+    // Duplicate detection - mavjud rasmlarni tekshirish
+    const currentPaths = form.getValues("image_paths");
+    const newUniquePaths = validPaths.filter(
+      (path) => !currentPaths.includes(path)
+    );
+    const duplicateCount = validPaths.length - newUniquePaths.length;
+
+    // Barcha yangi yo'llarni bir vaqtning o'zida qo'shamiz
+    if (newUniquePaths.length > 0) {
+      form.setValue("image_paths", [...currentPaths, ...newUniquePaths], {
+        shouldValidate: true,
+      });
+    }
+
+    // Success va error xabarlari
+    if (successCount > 0) {
+      toast.success(`${successCount} та расм муваффақиятли юкланди`);
+    }
+    if (duplicateCount > 0) {
+      toast.warning(
+        `${duplicateCount} та расм аллақачон мавжуд ва ўтказиб юборилди`
+      );
     }
   };
 
   const onSubmit = async (data: MedicalImageFormData) => {
-    if (!medicalImage) return;
+    if (!medicalImage) {
+      toast.error("Тиббий тасвир маълумоти топилмади");
+      return;
+    }
 
     await handleRequest({
       request: async () =>
@@ -180,11 +265,16 @@ export const UpdateMedicalImage = ({
           },
         }).unwrap(),
       onSuccess: () => {
-        toast.success("Тиббий таsvир муваффақиятли янгиланди");
+        toast.success("Тиббий тасвир муваффақиятли янгиланди");
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Янгилашда хатолик");
+        const errorMsg = data?.error?.msg || data?.message;
+        if (errorMsg) {
+          toast.error(errorMsg);
+        } else {
+          toast.error("Тиббий тасвир янгилашда хатолик юз берди");
+        }
       },
     });
   };
@@ -210,15 +300,14 @@ export const UpdateMedicalImage = ({
                   name="examination_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        Кўрик <span className="text-red-500">*</span>
-                      </FormLabel>
+                      <FormLabel>Кўрик</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
+                        disabled
                       >
                         <FormControl>
-                          <SelectTrigger className="border-slate-400 border-2">
+                          <SelectTrigger className="border-slate-300 border-2 bg-slate-50 cursor-not-allowed">
                             <SelectValue placeholder="Кўрикни танланг..." />
                           </SelectTrigger>
                         </FormControl>
@@ -320,7 +409,7 @@ export const UpdateMedicalImage = ({
                             disabled={isUploading}
                           >
                             <ImagePlus className="mr-2 h-4 w-4" />
-                            {isUploading ? "Юкланмоқда..." : "Рasm қўшиш"}
+                            {isUploading ? "Юкланмоқда..." : "Расм қўшиш"}
                           </Button>
                           <input
                             id="update-image-upload"
@@ -346,39 +435,52 @@ export const UpdateMedicalImage = ({
                           </div>
                         )}
 
+                        {/* Uploaded Images Preview - Horizontal Scroll Carousel */}
                         {field.value.length > 0 && (
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {field.value.map((path, index) => (
-                              <div
-                                key={index}
-                                className="relative group border-2 border-slate-200 rounded-lg overflow-hidden aspect-square"
-                              >
-                                <img
-                                  src={path}
-                                  alt={`Rasm ${index + 1}`}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.src =
-                                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
-                                  }}
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const newPaths = field.value.filter(
-                                      (_, i) => i !== index
-                                    );
-                                    field.onChange(newPaths);
-                                  }}
-                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                                >
-                                  <X className="h-4 w-4" />
-                                </button>
-                                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 text-center">
-                                  {index + 1}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium text-muted-foreground">
+                                Юкланган тасвирлар: {field.value.length} та
+                              </p>
+                            </div>
+                            <div className="relative max-w-[85vw] sm:max-w-[80vw] lg:max-w-2xl overflow-hidden mx-auto">
+                              <div className="overflow-x-auto pb-2 scroll-smooth scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40 w-full">
+                                <div className="flex gap-3">
+                                  {field.value.map((path, index) => (
+                                    <div
+                                      key={index}
+                                      className="relative group flex-shrink-0 w-28 h-28 xs:w-32 xs:h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 border-2 border-slate-200 rounded-lg overflow-hidden hover:border-primary transition-all"
+                                    >
+                                      <img
+                                        src={path}
+                                        alt={`Расм ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          e.currentTarget.src =
+                                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
+                                        }}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newPaths = field.value.filter(
+                                            (_, i) => i !== index
+                                          );
+                                          field.onChange(newPaths);
+                                        }}
+                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
+                                        title="О'chirish"
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white text-xs py-1.5 px-2 text-center font-medium">
+                                        #{index + 1}
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
-                            ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -405,36 +507,36 @@ export const UpdateMedicalImage = ({
                   </FormItem>
                 )}
               />
+
+              <DialogFooter className="p-4 sm:p-6 pt-0 gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isLoading}
+                >
+                  Бекор қилиш
+                </Button>
+                <Button
+                  onClick={form.handleSubmit(onSubmit)}
+                  disabled={isLoading}
+                  className="min-w-[120px]"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Сақланмоқда...
+                    </div>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Сақлаш
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
             </form>
           </Form>
         </ScrollArea>
-
-        <DialogFooter className="p-4 sm:p-6 pt-0">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-          >
-            Бекор қилиш
-          </Button>
-          <Button
-            onClick={form.handleSubmit(onSubmit)}
-            disabled={isLoading}
-            className="min-w-[120px]"
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Сақланмоқда...
-              </div>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Сақлаш
-              </>
-            )}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

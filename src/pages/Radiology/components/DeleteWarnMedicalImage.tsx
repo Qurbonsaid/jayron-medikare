@@ -59,7 +59,11 @@ export const DeleteWarnMedicalImage = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Бекор қилиш
           </Button>
-          <Button variant="destructive" disabled={isLoading} onClick={handleDelete}>
+          <Button
+            variant="destructive"
+            disabled={isLoading}
+            onClick={handleDelete}
+          >
             {isLoading ? "Ўчирилмоқда..." : "Ҳа, ўчирилсин"}
           </Button>
         </DialogFooter>

@@ -128,7 +128,7 @@ export const MedicalImageTab = () => {
           className="w-full sm:w-auto"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Янги таsvир қўшиш
+          Янги тасвир қўшиш
         </Button>
       </div>
 
@@ -175,7 +175,7 @@ export const MedicalImageTab = () => {
               <span className="font-semibold text-foreground">
                 {medicalImages?.pagination?.total || 0}
               </span>{" "}
-              таsvир
+              тасвир
             </p>
             <Select
               value={itemsPerPage.toString()}
@@ -347,7 +347,7 @@ export const MedicalImageTab = () => {
                         {image.description || "Тавсиф берилмаган"}
                       </h3>
                       <p className="text-xs sm:text-sm text-muted-foreground mb-1">
-                        {image.image_paths?.length || 0} та таsvир •{" "}
+                        {image.image_paths?.length || 0} та тасвир •{" "}
                         {getBodyPartLabel(image.body_part)}
                       </p>
                       <p className="text-sm sm:text-sm text-muted-foreground">
@@ -497,7 +497,7 @@ export const MedicalImageTab = () => {
             actionLabel={
               searchQuery || currentPage > 1
                 ? "Филтрни тозалаш"
-                : "+ Янги таsvир қўшиш"
+                : "+ Янги тасвир қўшиш"
             }
             onAction={() =>
               searchQuery || currentPage > 1
