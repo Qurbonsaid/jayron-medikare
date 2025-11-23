@@ -63,6 +63,25 @@ type Patient = {
   fullname: string;
 };
 
+type Image = {
+  _id: string;
+  patient_id: string;
+  imaging_type_id: {
+    _id: string;
+    name: string;
+    description: string;
+    is_deleted: boolean;
+    created_at: Date;
+    updated_at: Date;
+  };
+  image_paths: Array<string>;
+  description: string;
+  body_part: string;
+  status: string;
+  created_at: Date;
+  updated_at: Date;
+};
+
 export type ExamDataItem = {
   _id: string;
   patient_id: {
@@ -75,18 +94,19 @@ export type ExamDataItem = {
     fullname: string;
     phone: string;
   };
-  description: string;
-  complaints: string;
-  analyses: Array<Analysis> | null;
-  billing_id: string | null;
-  images: Array<string>;
-  status: status;
-  diagnosis?:
+  diagnosis:
     | {
         _id: string;
         name: string;
       }
-    | string;
+    | string
+    | null;
+  complaints: string;
+  analyses: Array<Analysis> | null;
+  billing_id: string | null;
+  description: string;
+  images: Array<Image>;
+  status: status;
   prescriptions: Array<{
     medication: string;
     dosage: number;

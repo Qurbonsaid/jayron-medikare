@@ -31,12 +31,14 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { BodyPartConstants } from '@/constants/BodyPart';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
   Edit,
+  Eye,
   FilePlus,
   Loader2,
   Plus,
@@ -47,12 +49,31 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { ViewMedicalImage } from '../Radiology/components';
+
+// Tana qismlari uchun o'zbek nomlari
+const bodyPartLabels: Record<string, string> = {
+  [BodyPartConstants.HEAD]: 'Бош',
+  [BodyPartConstants.NECK]: 'Бўйин',
+  [BodyPartConstants.CHEST]: 'Кўкрак',
+  [BodyPartConstants.ABDOMEN]: 'Қорин',
+  [BodyPartConstants.PELVIS]: 'Тос',
+  [BodyPartConstants.SPINE]: 'Умуртқа поғонаси',
+  [BodyPartConstants.ARM]: 'Қўл',
+  [BodyPartConstants.LEG]: 'Оёқ',
+  [BodyPartConstants.KNEE]: 'Тиззя',
+  [BodyPartConstants.SHOULDER]: 'Елка',
+  [BodyPartConstants.HAND]: 'Кафт',
+  [BodyPartConstants.FOOT]: 'Тобан',
+};
 
 const ExaminationDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
   const [editForm, setEditForm] = useState({
     complaints: '',
     description: '',
@@ -1531,29 +1552,120 @@ const ExaminationDetail = () => {
               <CardHeader>
                 <CardTitle className='flex items-center justify-between'>
                   <span>Тасвирлар</span>
-                  {exam.images && exam.images.length > 0 && (
-                    <span className='text-sm font-normal text-muted-foreground'>
-                      ({exam.images.length} та)
-                    </span>
-                  )}
+                  {exam.images &&
+                    exam.images.length > 0 &&
+                    (() => {
+                      const totalImagesCount = exam.images.reduce(
+                        (total: number, img: any) => {
+                          if (
+                            img?.image_paths &&
+                            Array.isArray(img.image_paths)
+                          ) {
+                            return total + img.image_paths.length;
+                          }
+                          return total;
+                        },
+                        0
+                      );
+
+                      return totalImagesCount > 0 ? (
+                        <span className='text-sm font-normal text-muted-foreground'>
+                          ({totalImagesCount} та)
+                        </span>
+                      ) : null;
+                    })()}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {exam.images && exam.images.length > 0 ? (
-                  <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4'>
-                    {exam.images.map((image: string, index: number) => (
-                      <div
-                        key={index}
-                        className='aspect-square rounded-lg overflow-hidden border'
-                      >
-                        <img
-                          src={image}
-                          alt={`Расм ${index + 1}`}
-                          className='w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer'
-                          onClick={() => window.open(image, '_blank')}
-                        />
-                      </div>
-                    ))}
+                  <div className='space-y-3'>
+                    {exam.images.map((image: any, index: number) => {
+                      if (
+                        !image?.image_paths ||
+                        !Array.isArray(image.image_paths) ||
+                        image.image_paths.length === 0
+                      ) {
+                        return null;
+                      }
+
+                      // Display first image from image_paths as thumbnail
+                      const thumbnailPath = image.image_paths[0];
+                      const bodyPartLabel =
+                        bodyPartLabels[image.body_part] ||
+                        image.body_part ||
+                        'Кўрсатилмаган';
+                      const imagingTypeName =
+                        image.imaging_type_id?.name || 'Номаълум';
+                      const imageDate = image.created_at
+                        ? new Date(image.created_at).toLocaleDateString('uz-UZ')
+                        : '';
+
+                      return (
+                        <Card
+                          key={image._id || index}
+                          className='overflow-hidden hover:shadow-lg transition-shadow cursor-pointer'
+                          onClick={() => {
+                            setSelectedImage(image);
+                            setShowViewModal(true);
+                          }}
+                        >
+                          <div className='flex flex-col sm:flex-row'>
+                            {/* Image Section */}
+                            <div className='relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0'>
+                              <img
+                                src={thumbnailPath}
+                                alt={image.description || `Тасвир ${index + 1}`}
+                                className='w-full h-full object-cover hover:scale-105 transition-transform'
+                                onError={(e) => {
+                                  e.currentTarget.src =
+                                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="14"%3EТасвир топилмади%3C/text%3E%3C/svg%3E';
+                                }}
+                              />
+                              {image.image_paths.length > 1 && (
+                                <div className='absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded'>
+                                  +{image.image_paths.length - 1}
+                                </div>
+                              )}
+                              <div className='absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center group'>
+                                <Eye className='w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity' />
+                              </div>
+                            </div>
+
+                            {/* Info Section */}
+                            <div className='flex-1 p-4'>
+                              <div className='space-y-2'>
+                                <h4
+                                  className='font-semibold text-base line-clamp-2'
+                                  title={image.description}
+                                >
+                                  {image.description || 'Тавсиф йўқ'}
+                                </h4>
+                                <div className='flex flex-wrap items-center gap-3 text-sm text-muted-foreground'>
+                                  <div className='flex items-center gap-1'>
+                                    <span className='font-medium text-foreground'>
+                                      {imagingTypeName}
+                                    </span>
+                                  </div>
+                                  <span>•</span>
+                                  <div className='flex items-center gap-1'>
+                                    <span>{bodyPartLabel}</span>
+                                  </div>
+                                  <span>•</span>
+                                  <div className='flex items-center gap-1'>
+                                    <span>
+                                      {image.image_paths.length} та тасвир
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className='text-xs text-muted-foreground'>
+                                  {imageDate}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className='text-center py-8'>
@@ -1566,6 +1678,13 @@ const ExaminationDetail = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* View Medical Images Modal */}
+        <ViewMedicalImage
+          open={showViewModal}
+          onOpenChange={setShowViewModal}
+          medicalImage={selectedImage}
+        />
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteConfirm} onOpenChange={setIsDeleteConfirm}>
