@@ -224,15 +224,32 @@ const PatientPDFModal = ({
           )}
 
           {/* Diagnosis */}
-          {patient.diagnosis?.description && (
+          {patient.diagnosis && (
             <div className='space-y-4'>
               <h2 className='text-xl font-bold text-gray-800 border-b border-gray-300 pb-2'>
                 Диагноз
               </h2>
               <div className='bg-blue-50 border-l-4 border-blue-500 rounded p-4'>
-                <p className='font-medium text-gray-800 mb-2'>
-                  {patient.diagnosis.description}
-                </p>
+                {patient.diagnosis.diagnosis_id?.name && (
+                  <p className='font-bold text-gray-800 mb-1'>
+                    {patient.diagnosis.diagnosis_id.name}
+                    {patient.diagnosis.diagnosis_id.code && (
+                      <span className='text-sm text-gray-600 ml-2'>
+                        ({patient.diagnosis.diagnosis_id.code})
+                      </span>
+                    )}
+                  </p>
+                )}
+                {patient.diagnosis.description && (
+                  <p className='font-medium text-gray-800 mb-2'>
+                    {patient.diagnosis.description}
+                  </p>
+                )}
+                {patient.diagnosis.diagnosis_id?.description && (
+                  <p className='text-sm text-gray-600 mb-2'>
+                    {patient.diagnosis.diagnosis_id.description}
+                  </p>
+                )}
                 {patient.diagnosis.doctor_id?.fullname && (
                   <p className='text-sm text-gray-600'>
                     Шифокор: {patient.diagnosis.doctor_id.fullname}
@@ -380,7 +397,16 @@ const PatientPDFModal = ({
                         <div>
                           <p className='text-xs text-gray-600 mb-1'>Диагноз:</p>
                           <p className='text-sm text-gray-800 bg-blue-50 p-2 rounded border border-blue-200 font-medium'>
-                            {exam.diagnosis}
+                            {typeof exam.diagnosis === 'string'
+                              ? exam.diagnosis
+                              : exam.diagnosis.diagnosis_id?.name
+                              ? `${exam.diagnosis.diagnosis_id.name}${
+                                  exam.diagnosis.diagnosis_id.code
+                                    ? ` (${exam.diagnosis.diagnosis_id.code})`
+                                    : ''
+                                }`
+                              : exam.diagnosis.description ||
+                                'Диагноз белгиланмаган'}
                           </p>
                         </div>
                       )}

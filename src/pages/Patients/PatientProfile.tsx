@@ -338,16 +338,33 @@ const PatientProfile = () => {
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
                     Диагноз
                   </h3>
-                  {patient.diagnosis?.description ? (
+                  {patient.diagnosis ? (
                     <p className='p-3 bg-accent rounded-lg border-l-4 border-primary'>
                       <div className='flex items-start gap-2'>
                         <span className='text-primary mt-1'>•</span>
                         <div className='flex-1'>
-                          <p className='text-sm sm:text-base font-medium mb-1'>
-                            {patient.diagnosis.description}
-                          </p>
+                          {patient.diagnosis.diagnosis_id?.name && (
+                            <p className='text-sm sm:text-base font-medium mb-1'>
+                              {patient.diagnosis.diagnosis_id.name}
+                              {patient.diagnosis.diagnosis_id.code && (
+                                <span className='text-xs text-muted-foreground ml-2'>
+                                  ({patient.diagnosis.diagnosis_id.code})
+                                </span>
+                              )}
+                            </p>
+                          )}
+                          {patient.diagnosis.description && (
+                            <p className='text-xs sm:text-sm text-muted-foreground'>
+                              {patient.diagnosis.description}
+                            </p>
+                          )}
+                          {patient.diagnosis.diagnosis_id?.description && (
+                            <p className='text-xs sm:text-sm text-muted-foreground mt-1'>
+                              {patient.diagnosis.diagnosis_id.description}
+                            </p>
+                          )}
                           {patient.diagnosis.doctor_id?.fullname && (
-                            <p className='text-xs sm:text-sm text-muted-foreground flex items-center gap-1'>
+                            <p className='text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-2'>
                               <User className='w-3 h-3' />
                               {patient.diagnosis.doctor_id.fullname}
                             </p>

@@ -7,6 +7,91 @@ export type examCreateReq = {
   complaints: string;
 };
 
+type Analysis = {
+  _id: string;
+  analysis_type: {
+    _id: string;
+    name: string;
+    description: string;
+  };
+  patient: string;
+  results: Array<{
+    analysis_parameter_type: {
+      _id: string;
+      analysis_id: string;
+      parameter_code: string;
+      parameter_name: string;
+      unit: string;
+      normal_range: {
+        male: {
+          min: number;
+          max: number;
+          value: string;
+        };
+        female: {
+          min: number;
+          max: number;
+          value: string;
+        };
+        general: {
+          min: number;
+          max: number;
+          value: string;
+        };
+      };
+      value_type: string;
+      gender_type: string;
+      description: string;
+      created_at: string;
+      updated_at: string;
+    };
+    analysis_parameter_value: number;
+    _id: string;
+  }>;
+  level: string;
+  status: string;
+  created_at: string;
+};
+
+type CorpusId = {
+  _id: string;
+  name: string;
+};
+
+type Patient = {
+  _id: string;
+  fullname: string;
+};
+
+type Image = {
+  _id: string;
+  patient_id: string;
+  imaging_type_id: {
+    _id: string;
+    name: string;
+    description: string;
+    is_deleted: boolean;
+    created_at: Date;
+    updated_at: Date;
+  };
+  image_paths: Array<string>;
+  description: string;
+  body_part: string;
+  status: string;
+  created_at: Date;
+  updated_at: Date;
+};
+
+export type Room = {
+  room_id: string;
+  start_date: string;
+  room_price: number;
+  room_name: string;
+  floor_number: number;
+  _id: string;
+  end_date: string;
+};
+
 export type ExamDataItem = {
   _id: string;
   patient_id: {
@@ -19,33 +104,19 @@ export type ExamDataItem = {
     fullname: string;
     phone: string;
   };
-  description: string;
-  complaints: string;
-  analyses: Array<{
-    _id: string;
-    analysis_type: string;
-    patient: string;
-    results: Array<{
-      analysis_parameter_type: string;
-      analysis_parameter_value: number | string;
-      _id: string;
-    }>;
-    level: string;
-    clinical_indications: string;
-    comment: string;
-    status: string;
-    created_at: string;
-    updated_at: string;
-  }> | null;
-  billing_id: string | null;
-  images: Array<string>;
-  status;
-  diagnosis?:
+  diagnosis:
     | {
         _id: string;
         name: string;
       }
-    | string;
+    | string
+    | null;
+  complaints: string;
+  analyses: Array<Analysis> | null;
+  billing_id: string | null;
+  description: string;
+  images: Array<Image>;
+  status: status;
   prescriptions: Array<{
     medication: string;
     dosage: number;
@@ -53,7 +124,7 @@ export type ExamDataItem = {
     duration: number;
     instructions: string;
     _id: string;
-    days:Day[]
+    days: Day[];
   }>;
   services: Array<{
     service_type_id:
@@ -69,20 +140,7 @@ export type ExamDataItem = {
     notes: string;
     _id: string;
   }>;
-  rooms: Array<{
-    room_name: string;
-    room_price: number;
-    corpus_id: string | CorpusId;
-    patient_capacity: number;
-    patient_occupied: number;
-    patients: Patient[];
-    floor_number: number;
-    description: string;
-    status: string;
-    _id: string;
-    created_at: string;
-    updated_at: string;
-  }>;
+  rooms: Array<Room>;
   created_at: Date;
   updated_at: Date;
 };
@@ -137,12 +195,12 @@ export type AllExamReq = {
 };
 
 // prescriptions
-export type Day=  {
-	_id: string
-	date: string | null
-	day: number
-	times: number
-}
+export type Day = {
+  _id: string;
+  date: string | null;
+  day: number;
+  times: number;
+};
 
 export type Prescription = {
   medication: string;
@@ -150,7 +208,7 @@ export type Prescription = {
   frequency: number;
   duration: number;
   instructions: string;
-  days?:Day[]
+  days?: Day[];
 };
 
 export interface createPrescriptionReq {
