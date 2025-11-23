@@ -400,8 +400,13 @@ const PatientPDFModal = ({
                             {typeof exam.diagnosis === 'string'
                               ? exam.diagnosis
                               : exam.diagnosis.diagnosis_id?.name
-                              ? `${exam.diagnosis.diagnosis_id.name}${exam.diagnosis.diagnosis_id.code ? ` (${exam.diagnosis.diagnosis_id.code})` : ''}`
-                              : exam.diagnosis.description || 'Диагноз белгиланмаган'}
+                              ? `${exam.diagnosis.diagnosis_id.name}${
+                                  exam.diagnosis.diagnosis_id.code
+                                    ? ` (${exam.diagnosis.diagnosis_id.code})`
+                                    : ''
+                                }`
+                              : exam.diagnosis.description ||
+                                'Диагноз белгиланмаган'}
                           </p>
                         </div>
                       )}
