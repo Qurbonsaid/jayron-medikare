@@ -333,7 +333,7 @@ const Patients = () => {
                       {patient.diagnosis && (
                         <div className='flex items-center gap-2 text-xs sm:text-sm'>
                           <Users className='w-4 h-4 text-muted-foreground' />
-                          <span>Диагноз мавжуд</span>
+                          <span>{patient.diagnosis.diagnosis_id.name}</span>
                         </div>
                       )}
                     </div>
@@ -400,7 +400,7 @@ const Patients = () => {
                             : '-'}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm '>
-                          {patient.diagnosis?.description || 'Йўқ'}
+                          {patient.diagnosis.diagnosis_id.name || 'Йўқ'}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4'>
                           <div className='flex justify-center'>
