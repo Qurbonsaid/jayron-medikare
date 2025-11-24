@@ -185,9 +185,38 @@ const Settings = () => {
 	const handleChange = (field, value) => {
 		setForm(prev => ({ ...prev, [field]: value }))
 
-		// Agar xato shu fieldda bo‘lsa, uni tozalaymiz
+		// Agar xato shu fieldda bo'lsa, uni tozalaymiz
 		if (errorsUser[field]) {
 			setErrorsUser(prev => ({ ...prev, [field]: '' }))
+		}
+	}
+
+	// Phone input uchun maxsus handler
+	const handlePhoneChange = (value: string) => {
+		// Faqat raqamlar va + belgisini qabul qilish
+		const cleaned = value.replace(/[^\d+]/g, '')
+
+		// Agar +998 bilan boshlanmasa, avtomatik qo'shish
+		if (!cleaned.startsWith('+998')) {
+			const digits = cleaned.replace(/\+/g, '')
+			setForm(prev => ({ ...prev, phone: '+998' + digits }))
+		} else {
+			setForm(prev => ({ ...prev, phone: cleaned }))
+		}
+
+		// Real-time validatsiya
+		if (cleaned.length > 0 && cleaned.length < 13) {
+			setErrorsUser(prev => ({
+				...prev,
+				phone: "Telefon raqami 13 ta belgidan iborat bo'lishi kerak",
+			}))
+		} else if (cleaned.length === 13 && !cleaned.match(/^\+998\d{9}$/)) {
+			setErrorsUser(prev => ({
+				...prev,
+				phone: "Telefon raqami formati noto'g'ri",
+			}))
+		} else if (errorsUser.phone) {
+			setErrorsUser(prev => ({ ...prev, phone: '' }))
 		}
 	}
 
@@ -312,7 +341,7 @@ const Settings = () => {
 			fullname: '',
 			username: '',
 			email: '',
-			phone: '',
+			phone: '+998',
 			password: '',
 			role: '',
 			section: '',
@@ -430,9 +459,38 @@ const Settings = () => {
 	const handleChangee = (field: keyof Settings, value: string) => {
 		setGetAllSettings(prev => ({ ...prev, [field]: value }))
 
-		// Agar shu field uchun error bo‘lsa, uni tozalaymiz
+		// Agar shu field uchun error bo'lsa, uni tozalaymiz
 		if (errors[field]) {
 			setErrors(prev => ({ ...prev, [field]: '' }))
+		}
+	}
+
+	// Settings phone uchun maxsus handler
+	const handleSettingsPhoneChange = (value: string) => {
+		// Faqat raqamlar va + belgisini qabul qilish
+		const cleaned = value.replace(/[^\d+]/g, '')
+
+		// Agar +998 bilan boshlanmasa, avtomatik qo'shish
+		if (!cleaned.startsWith('+998')) {
+			const digits = cleaned.replace(/\+/g, '')
+			setGetAllSettings(prev => ({ ...prev!, phone: '+998' + digits }))
+		} else {
+			setGetAllSettings(prev => ({ ...prev!, phone: cleaned }))
+		}
+
+		// Real-time validatsiya
+		if (cleaned.length > 0 && cleaned.length < 13) {
+			setErrors(prev => ({
+				...prev,
+				phone: "Telefon raqami 13 ta belgidan iborat bo'lishi kerak",
+			}))
+		} else if (cleaned.length === 13 && !cleaned.match(/^\+998\d{9}$/)) {
+			setErrors(prev => ({
+				...prev,
+				phone: "Telefon raqami formati noto'g'ri",
+			}))
+		} else if (errors.phone) {
+			setErrors(prev => ({ ...prev, phone: '' }))
 		}
 	}
 
@@ -929,8 +987,10 @@ const Settings = () => {
 									<div>
 										<Label className='text-xs sm:text-sm'>Телефон</Label>
 										<Input
-											value={getAllSettings?.phone || ''}
-											onChange={e => handleChangee('phone', e.target.value)}
+											value={getAllSettings?.phone || '+998'}
+											onChange={e => handleSettingsPhoneChange(e.target.value)}
+											placeholder='+998XXXXXXXXX'
+											maxLength={13}
 											className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
 										/>
 										{errors.phone && (
@@ -1218,7 +1278,7 @@ const Settings = () => {
 							fullname: '',
 							username: '',
 							email: '',
-							phone: '',
+							phone: '+998',
 							password: '',
 							role: '',
 							section: '',
@@ -1284,9 +1344,10 @@ const Settings = () => {
 							<div>
 								<Label className='text-xs sm:text-sm'>Телефон</Label>
 								<Input
-									value={form.phone}
-									onChange={e => handleChange('phone', e.target.value)}
-									placeholder='+998XXXXXXXXX форматда'
+									value={form.phone || '+998'}
+									onChange={e => handlePhoneChange(e.target.value)}
+									placeholder='+998XXXXXXXXX'
+									maxLength={13}
 									className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
 								/>
 								{errorsUser.phone && (
