@@ -86,9 +86,8 @@ export default function ProfilePage() {
 				setEditOpen(false)
 				setErrors({})
 			},
-			onError: () => {
-				console.log('Xatolik bor')
-				toast.error('Profilni yangilashda xatolik yuz berdi!')
+			onError: err => {
+				toast.error(err?.data?.error?.msg)
 			},
 		})
 	}
@@ -270,9 +269,7 @@ export default function ProfilePage() {
 					}
 				}}
 			>
-				<DialogContent
-					className=' max-w-md md:max-w-xl scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'
-				>
+				<DialogContent className=' max-w-md md:max-w-xl scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'>
 					<DialogHeader>
 						<DialogTitle className='text-lg font-semibold text-gray-800'>
 							Profilni tahrirlash
@@ -382,7 +379,7 @@ export default function ProfilePage() {
 							variant='outline'
 							onClick={() => {
 								setEditOpen(false)
-                setErrors({})
+								setErrors({})
 							}}
 							className='w-full sm:w-auto'
 						>

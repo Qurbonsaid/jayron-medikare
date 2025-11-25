@@ -141,42 +141,44 @@ const Settings = () => {
 					license_number: '',
 				})
 			},
-			onError: (error: any) => {
-				console.error('Parameter save error:', error)
+			// 	console.error('Parameter save error:', error)
 
-				// 1️⃣ Avval backenddan structured error obyektni tekshirish
-				if (error?.error?.msg) {
-					toast.error(error.error.msg)
-					return
-				}
+			// 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
+			// 	if (error?.error?.msg) {
+			// 		toast.error(error.error.msg)
+			// 		return
+			// 	}
 
-				// 2️⃣ Avvalgi errors object/arrayni tekshirish
-				if (error?.data?.errors) {
-					const backendErrors: Record<string, string> = {}
+			// 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
+			// 	if (error?.data?.errors) {
+			// 		const backendErrors: Record<string, string> = {}
 
-					if (Array.isArray(error.data.errors)) {
-						error.data.errors.forEach((err: any) => {
-							if (err.field && err.message) {
-								backendErrors[err.field] = err.message
-							}
-						})
-					} else if (typeof error.data.errors === 'object') {
-						Object.entries(error.data.errors).forEach(([key, value]) => {
-							backendErrors[key] = Array.isArray(value)
-								? value[0]
-								: String(value)
-						})
-					}
+			// 		if (Array.isArray(error.data.errors)) {
+			// 			error.data.errors.forEach((err: any) => {
+			// 				if (err.field && err.message) {
+			// 					backendErrors[err.field] = err.message
+			// 				}
+			// 			})
+			// 		} else if (typeof error.data.errors === 'object') {
+			// 			Object.entries(error.data.errors).forEach(([key, value]) => {
+			// 				backendErrors[key] = Array.isArray(value)
+			// 					? value[0]
+			// 					: String(value)
+			// 			})
+			// 		}
 
-					if (Object.keys(backendErrors).length > 0) {
-						setErrors(prev => ({ ...prev, ...backendErrors }))
-					}
-				}
+			// 		if (Object.keys(backendErrors).length > 0) {
+			// 			setErrors(prev => ({ ...prev, ...backendErrors }))
+			// 		}
+			// 	}
 
-				// 3️⃣ Fallback: error.msg string bo‘lsa
-				else if (typeof error?.msg === 'string') {
-					toast.error(error.msg)
-				}
+			// 	// 3️⃣ Fallback: error.msg string bo‘lsa
+			// 	else if (typeof error?.msg === 'string') {
+			// 		toast.error(error.msg)
+			// 	}
+			// },
+			onError: err => {
+				toast.error(err?.data?.error?.msg)
 			},
 		})
 	}
@@ -248,42 +250,44 @@ const Settings = () => {
 					setEditingUserId(null)
 					resetForm()
 				},
-				onError: (error: any) => {
-					console.error('Parameter save error:', error)
+				// 	console.error('Parameter save error:', error)
 
-					// 1️⃣ Avval backenddan structured error obyektni tekshirish
-					if (error?.error?.msg) {
-						toast.error(error.error.msg)
-						return
-					}
+				// 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
+				// 	if (error?.error?.msg) {
+				// 		toast.error(error.error.msg)
+				// 		return
+				// 	}
 
-					// 2️⃣ Avvalgi errors object/arrayni tekshirish
-					if (error?.data?.errors) {
-						const backendErrors: Record<string, string> = {}
+				// 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
+				// 	if (error?.data?.errors) {
+				// 		const backendErrors: Record<string, string> = {}
 
-						if (Array.isArray(error.data.errors)) {
-							error.data.errors.forEach((err: any) => {
-								if (err.field && err.message) {
-									backendErrors[err.field] = err.message
-								}
-							})
-						} else if (typeof error.data.errors === 'object') {
-							Object.entries(error.data.errors).forEach(([key, value]) => {
-								backendErrors[key] = Array.isArray(value)
-									? value[0]
-									: String(value)
-							})
-						}
+				// 		if (Array.isArray(error.data.errors)) {
+				// 			error.data.errors.forEach((err: any) => {
+				// 				if (err.field && err.message) {
+				// 					backendErrors[err.field] = err.message
+				// 				}
+				// 			})
+				// 		} else if (typeof error.data.errors === 'object') {
+				// 			Object.entries(error.data.errors).forEach(([key, value]) => {
+				// 				backendErrors[key] = Array.isArray(value)
+				// 					? value[0]
+				// 					: String(value)
+				// 			})
+				// 		}
 
-						if (Object.keys(backendErrors).length > 0) {
-							setErrors(prev => ({ ...prev, ...backendErrors }))
-						}
-					}
+				// 		if (Object.keys(backendErrors).length > 0) {
+				// 			setErrors(prev => ({ ...prev, ...backendErrors }))
+				// 		}
+				// 	}
 
-					// 3️⃣ Fallback: error.msg string bo‘lsa
-					else if (typeof error?.msg === 'string') {
-						toast.error(error.msg)
-					}
+				// 	// 3️⃣ Fallback: error.msg string bo‘lsa
+				// 	else if (typeof error?.msg === 'string') {
+				// 		toast.error(error.msg)
+				// 	}
+				// },
+				onError: err => {
+					toast.error(err?.data?.error?.msg)
 				},
 			})
 		} else {
@@ -295,42 +299,49 @@ const Settings = () => {
 					setIsUserModalOpen(false)
 					resetForm()
 				},
-				onError: (error: any) => {
-					console.error('Parameter save error:', error)
+				// 	console.error('Parameter save error:', error)
 
-					// 1️⃣ Avval backenddan structured error obyektni tekshirish
-					if (error?.error?.msg) {
-						toast.error(error.error.msg)
-						return
-					}
+				// 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
+				// 	if (error?.error?.msg) {
+				// 		toast.error(error.error.msg)
+				// 		return
+				// 	}
 
-					// 2️⃣ Avvalgi errors object/arrayni tekshirish
-					if (error?.data?.errors) {
-						const backendErrors: Record<string, string> = {}
+				// 	if (error?.msg) {
+				// 		toast.error(error.msg)
+				// 		return
+				// 	}
 
-						if (Array.isArray(error.data.errors)) {
-							error.data.errors.forEach((err: any) => {
-								if (err.field && err.message) {
-									backendErrors[err.field] = err.message
-								}
-							})
-						} else if (typeof error.data.errors === 'object') {
-							Object.entries(error.data.errors).forEach(([key, value]) => {
-								backendErrors[key] = Array.isArray(value)
-									? value[0]
-									: String(value)
-							})
-						}
+				// 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
+				// 	if (error?.data?.errors) {
+				// 		const backendErrors: Record<string, string> = {}
 
-						if (Object.keys(backendErrors).length > 0) {
-							setErrors(prev => ({ ...prev, ...backendErrors }))
-						}
-					}
+				// 		if (Array.isArray(error.data.errors)) {
+				// 			error.data.errors.forEach((err: any) => {
+				// 				if (err.field && err.message) {
+				// 					backendErrors[err.field] = err.message
+				// 				}
+				// 			})
+				// 		} else if (typeof error.data.errors === 'object') {
+				// 			Object.entries(error.data.errors).forEach(([key, value]) => {
+				// 				backendErrors[key] = Array.isArray(value)
+				// 					? value[0]
+				// 					: String(value)
+				// 			})
+				// 		}
 
-					// 3️⃣ Fallback: error.msg string bo‘lsa
-					else if (typeof error?.msg === 'string') {
-						toast.error(error.msg)
-					}
+				// 		if (Object.keys(backendErrors).length > 0) {
+				// 			setErrors(prev => ({ ...prev, ...backendErrors }))
+				// 		}
+				// 	}
+
+				// 	// 3️⃣ Fallback: error.msg string bo‘lsa
+				// 	else if (typeof error?.msg === 'string') {
+				// 		toast.error(error.msg)
+				// 	}
+				// },
+				onError: err => {
+					toast.error(err?.data?.error?.msg)
 				},
 			})
 		}
@@ -369,42 +380,8 @@ const Settings = () => {
 				setSelectedUserId(null)
 				setSelectedUserName('')
 			},
-			onError: (error: any) => {
-				console.error('Parameter save error:', error)
-
-				// 1️⃣ Avval backenddan structured error obyektni tekshirish
-				if (error?.error?.msg) {
-					toast.error(error.error.msg)
-					return
-				}
-
-				// 2️⃣ Avvalgi errors object/arrayni tekshirish
-				if (error?.data?.errors) {
-					const backendErrors: Record<string, string> = {}
-
-					if (Array.isArray(error.data.errors)) {
-						error.data.errors.forEach((err: any) => {
-							if (err.field && err.message) {
-								backendErrors[err.field] = err.message
-							}
-						})
-					} else if (typeof error.data.errors === 'object') {
-						Object.entries(error.data.errors).forEach(([key, value]) => {
-							backendErrors[key] = Array.isArray(value)
-								? value[0]
-								: String(value)
-						})
-					}
-
-					if (Object.keys(backendErrors).length > 0) {
-						setErrors(prev => ({ ...prev, ...backendErrors }))
-					}
-				}
-
-				// 3️⃣ Fallback: error.msg string bo‘lsa
-				else if (typeof error?.msg === 'string') {
-					toast.error(error.msg)
-				}
+			onError: err => {
+				toast.error(err?.data?.error?.msg)
 			},
 		})
 	}

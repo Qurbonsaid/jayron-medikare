@@ -167,9 +167,9 @@ const LabOrder = () => {
 				setPatient(null)
 				setSelectedPatientId('')
 			},
-			onError: err => {
-				toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
-			},
+		 onError: (err) => {
+        toast.error(err?.data?.error?.msg);
+      },
 		})
 	}
 

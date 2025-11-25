@@ -166,7 +166,7 @@ export default function AnalysisParamsModal() {
 				}))
 				return false
 			}
-		} 
+		}
 
 		// Xatoni o‘chirib qo‘yish
 		setErrors(prev => ({ ...prev, normal_range: '' }))
@@ -342,73 +342,8 @@ export default function AnalysisParamsModal() {
 					gender_type: 'MALE_FEMALE',
 				})
 			},
-			// onError: error => {
-			// 	console.error('Parameter save error:', error)
-
-			// 	if (error?.data?.errors) {
-			// 		const backendErrors: Record<string, string> = {}
-
-			// 		// Object yoki Array bo'lishi mumkin
-			// 		if (Array.isArray(error.data.errors)) {
-			// 			error.data.errors.forEach((err: any) => {
-			// 				if (err.field && err.message) {
-			// 					backendErrors[err.field] = err.message
-			// 				}
-			// 			})
-			// 		} else if (typeof error.data.errors === 'object') {
-			// 			Object.entries(error.data.errors).forEach(([key, value]) => {
-			// 				backendErrors[key] = Array.isArray(value)
-			// 					? value[0]
-			// 					: String(value)
-			// 			})
-			// 		}
-
-			// 		if (Object.keys(backendErrors).length > 0) {
-			// 			setErrors(prev => ({ ...prev, ...backendErrors }))
-			// 		}
-			// 	}
-
-			// 	// Agar error.data to'g'ridan-to'g'ri string bo'lsa
-			// 	if (typeof error?.msg === 'string') {
-			// 		toast.error(error.msg)
-			// 	}
-			// },
-			onError: (error: any) => {
-				console.error('Parameter save error:', error)
-
-				// 1️⃣ Avval backenddan structured error obyektni tekshirish
-				if (error?.error?.msg) {
-					toast.error(error.error.msg)
-					return
-				}
-
-				// 2️⃣ Avvalgi errors object/arrayni tekshirish
-				if (error?.data?.errors) {
-					const backendErrors: Record<string, string> = {}
-
-					if (Array.isArray(error.data.errors)) {
-						error.data.errors.forEach((err: any) => {
-							if (err.field && err.message) {
-								backendErrors[err.field] = err.message
-							}
-						})
-					} else if (typeof error.data.errors === 'object') {
-						Object.entries(error.data.errors).forEach(([key, value]) => {
-							backendErrors[key] = Array.isArray(value)
-								? value[0]
-								: String(value)
-						})
-					}
-
-					if (Object.keys(backendErrors).length > 0) {
-						setErrors(prev => ({ ...prev, ...backendErrors }))
-					}
-				}
-
-				// 3️⃣ Fallback: error.msg string bo‘lsa
-				else if (typeof error?.msg === 'string') {
-					toast.error(error.msg)
-				}
+			onError: err => {
+				toast.error(err?.data?.error?.msg)
 			},
 		})
 	}

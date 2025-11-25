@@ -141,6 +141,9 @@ const Medicine = () => {
 			onSuccess: () => {
 				toast.success('Кунлар яратилди')
 			},
+			 onError: (err) => {
+							toast.error(err?.data?.error?.msg);
+						},
 		})
 	}
 
@@ -176,6 +179,9 @@ const Medicine = () => {
 					prescriptionId: null,
 					day: null,
 				})
+			},
+			onError: err => {
+				toast.error(err?.data?.error?.msg)
 			},
 		})
 	}
