@@ -349,7 +349,7 @@ const Medicine = () => {
 																							Кун {day.day}
 																						</p>
 																						{lastDate && (
-																							<p className='text-[10px] text-muted-foreground mb-1.5 text-center'>
+																							<p className='text-[10px] text-black mb-1.5 text-center'>
 																								{isToday(day.date)
 																									? 'Bugun'
 																									: lastDate}
@@ -403,7 +403,7 @@ const Medicine = () => {
 																							Кун {day.day}
 																						</p>
 																						{lastDate && (
-																							<p className='text-[10px] text-muted-foreground mb-1 text-center'>
+																							<p className='text-[10px] text-black mb-1 text-center'>
 																								{isToday(day.date)
 																									? 'Bugun'
 																									: lastDate}
@@ -475,7 +475,7 @@ const Medicine = () => {
 																							</button>
 																						</div>
 																						{lastDate && (
-																							<p className='text-[9px] text-muted-foreground text-left'>
+																							<p className='text-[9px] text-black text-left'>
 																								{isToday(day.date)
 																									? 'Bugun'
 																									: lastDate}
@@ -490,7 +490,7 @@ const Medicine = () => {
 
 																{/* Days yo'q va processing ham yo'q */}
 																{!hasDays && !isProcessing && (
-																	<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
+																	<p className='text-xs sm:text-sm text-black text-center py-4'>
 																		Кунлар юкланмоқда...
 																	</p>
 																)}
