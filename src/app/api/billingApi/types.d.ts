@@ -21,8 +21,8 @@ export interface AllRes {
   msg?: string;
 }
 
-export type GetOneBillingRes = {
-  success: true;
+export interface GetOneBillingRes {
+  success: boolean;
   data: {
     _id: string;
     patient_id: {
@@ -33,19 +33,67 @@ export type GetOneBillingRes = {
     };
     examination_id: {
       _id: string;
-      diagnosis: string;
+      doctor_id: {
+        _id: string;
+        fullname: string;
+        phone: string;
+      };
+      diagnosis: {
+        _id: string;
+        name: string;
+        code: string;
+        description: string;
+      };
       analyses: Array<{
         _id: string;
-        analysis_type: string;
+        analysis_type: {
+          _id: string;
+          name: string;
+          description: string;
+        };
         patient: string;
         results: Array<{
-          analysis_parameter_type: string;
-          analysis_parameter_value: number | string;
+          analysis_parameter_type: {
+            _id: string;
+            parameter_name: string;
+            normal_range: {
+              male: {
+                min: number;
+                max: number;
+                value: string;
+              };
+              female: {
+                min: number;
+                max: number;
+                value: string;
+              };
+              general: {
+                min: number;
+                max: number;
+                value: string;
+              };
+            };
+            value_type: string;
+            gender_type: string;
+          };
+          analysis_parameter_value: number;
           _id: string;
         }>;
         level: string;
-        clinical_indications: string;
-        comment: string;
+        status: string;
+        created_at: string;
+      }>;
+      images: Array<{
+        _id: string;
+        patient_id: string;
+        imaging_type_id: {
+          _id: string;
+          name: string;
+          description: string;
+        };
+        image_paths: string[];
+        description: string;
+        body_part: string;
         status: string;
         created_at: string;
         updated_at: string;
@@ -56,16 +104,36 @@ export type GetOneBillingRes = {
         frequency: number;
         duration: number;
         instructions: string;
+        days: Array<{
+          day: number;
+          times: number;
+          date: string | null;
+          _id: string;
+        }>;
+        _id: string;
+      }>;
+      services: Array<{
+        service_type_id: {
+          _id: string;
+          code: string;
+          name: string;
+          description: string;
+        };
+        price: number;
+        quantity: number;
+        total_price: number;
+        status: string;
+        notes: string;
         _id: string;
       }>;
       rooms: Array<{
-        _id?: string;
         room_id: string;
-        start_date: Date;
-        end_date?: Date;
+        start_date: string;
         room_price: number;
         room_name: string;
-        floor_number?: number;
+        floor_number: number;
+        _id: string;
+        end_date?: string;
       }>;
     };
     status: string;
@@ -88,7 +156,7 @@ export type GetOneBillingRes = {
     created_at: string;
     updated_at: string;
   };
-};
+}
 
 export type status =
   | 'active'

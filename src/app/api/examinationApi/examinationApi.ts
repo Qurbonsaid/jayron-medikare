@@ -101,7 +101,7 @@ export const examinationApi = baseApi.injectEndpoints({
 		updatePrescription: builder.mutation<MutationRes, updatePrescriptionReq>({
 			query: ({ id, prescription_id, body }) => ({
 				url:
-					PATHS.CREATE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
+					PATHS.UPDATE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
 				method: 'PATCH',
 				body,
 			}),
@@ -110,7 +110,7 @@ export const examinationApi = baseApi.injectEndpoints({
 		deletePrescription: builder.mutation<MutationRes, deletePrescriptionReq>({
 			query: ({ id, prescription_id }) => ({
 				url:
-					PATHS.CREATE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
+					PATHS.DELETE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
 				method: 'DELETE',
 			}),
 			invalidatesTags: [API_TAGS.PRESCRIPTION],
@@ -146,14 +146,14 @@ export const examinationApi = baseApi.injectEndpoints({
 		}),
 		updateServiceFromExamination: builder.mutation<MutationRes,UpdateService>({
 			query : ({id,service_id,body}) =>({
-				url: PATHS.CREATE_EXAM + id + '/service/'+service_id,
+				url: PATHS.UPDATE_EXAM + id + '/service/'+service_id,
 				method: 'PATCH',
 				body
 			})
 		}),
 		removeServiceFromExamination: builder.mutation<MutationRes,RemoveService>({
 			query : ({id,service_id}) =>({
-				url: PATHS.CREATE_EXAM + id + '/service/'+service_id,
+				url: PATHS.DELETE_EXAM + id + '/service/'+service_id,
 				method: 'DELETE',
 			})
 		})

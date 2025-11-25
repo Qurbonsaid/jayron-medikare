@@ -251,9 +251,9 @@ const Billing = () => {
                 <table className='w-full'>
                   <thead>
                     <tr className='border-b'>
-                      <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
+                      {/* <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
                         Ҳисоб №
-                      </th>
+                      </th> */}
                       <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
                         Бемор
                       </th>
@@ -283,9 +283,9 @@ const Billing = () => {
                         key={invoice._id}
                         className='border-b hover:bg-muted/50 transition-colors'
                       >
-                        <td className='py-3 px-4 font-medium text-sm'>
+                        {/* <td className='py-3 px-4 font-medium text-sm'>
                           {invoice._id}
-                        </td>
+                        </td> */}
                         <td className='py-3 px-4 text-sm'>
                           {invoice.patient_id.fullname}
                         </td>
