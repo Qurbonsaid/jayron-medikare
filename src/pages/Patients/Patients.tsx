@@ -35,7 +35,7 @@ const Patients = () => {
   );
   const [doctorFilter, setDoctorFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [queryKey, setQueryKey] = useState(0);
 
   // Infinite scroll states for doctors
@@ -145,7 +145,7 @@ const Patients = () => {
         <Card className='card-shadow mb-4 sm:mb-6'>
           <div className='p-4 sm:p-6'>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4'>
-              <div className='sm:col-span-2 lg:col-span-5'>
+              <div className='sm:col-span-2 lg:col-span-6'>
                 <div className='relative'>
                   <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground' />
                   <Input
@@ -218,25 +218,7 @@ const Patients = () => {
                 </Select>
               </div>
 
-              <div className='lg:col-span-1'>
-                <Select
-                  value={itemsPerPage.toString()}
-                  onValueChange={(value) => {
-                    setItemsPerPage(Number(value));
-                    setCurrentPage(1);
-                  }}
-                >
-                  <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='10'>10</SelectItem>
-                    <SelectItem value='20'>20</SelectItem>
-                    <SelectItem value='50'>50</SelectItem>
-                    <SelectItem value='100'>100</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* itemsPerPage moved to pagination area below */}
 
               <div className='lg:col-span-2'>
                 <Button
@@ -425,116 +407,139 @@ const Patients = () => {
             </Card>
 
             {/* Pagination */}
-            {patientdata?.pagination &&
+            {/* {patientdata?.pagination &&
               patientdata.pagination.total_pages > 1 && (
-                <div className='mt-6 flex justify-center'>
-                  <Pagination>
-                    <PaginationContent>
+              )} */}
+            <div className='mt-6 flex flex-col lg:flex-row items-center justify-between gap-4'>
+              <div className='flex items-center gap-2'>
+                <span className='text-sm text-muted-foreground'>Саҳифада:</span>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className='h-8 sm:h-10 text-sm sm:text-base w-24'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='10'>10</SelectItem>
+                    <SelectItem value='20'>20</SelectItem>
+                    <SelectItem value='50'>50</SelectItem>
+                    <SelectItem value='100'>100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='flex justify-center w-full lg:w-auto'>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        className={
+                          currentPage === 1
+                            ? 'pointer-events-none opacity-50'
+                            : 'cursor-pointer'
+                        }
+                      />
+                    </PaginationItem>
+
+                    {/* First page */}
+                    {currentPage > 2 && (
                       <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() =>
-                            setCurrentPage((prev) => Math.max(prev - 1, 1))
-                          }
-                          className={
-                            currentPage === 1
-                              ? 'pointer-events-none opacity-50'
-                              : 'cursor-pointer'
-                          }
-                        />
-                      </PaginationItem>
-
-                      {/* First page */}
-                      {currentPage > 2 && (
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(1)}
-                            className='cursor-pointer'
-                          >
-                            1
-                          </PaginationLink>
-                        </PaginationItem>
-                      )}
-
-                      {/* Ellipsis before */}
-                      {currentPage > 3 && (
-                        <PaginationItem>
-                          <PaginationEllipsis />
-                        </PaginationItem>
-                      )}
-
-                      {/* Previous page */}
-                      {currentPage > 1 && (
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(currentPage - 1)}
-                            className='cursor-pointer'
-                          >
-                            {currentPage - 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )}
-
-                      {/* Current page */}
-                      <PaginationItem>
-                        <PaginationLink isActive className='cursor-default'>
-                          {currentPage}
+                        <PaginationLink
+                          onClick={() => setCurrentPage(1)}
+                          className='cursor-pointer'
+                        >
+                          1
                         </PaginationLink>
                       </PaginationItem>
+                    )}
 
-                      {/* Next page */}
-                      {currentPage < patientdata.pagination.total_pages && (
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(currentPage + 1)}
-                            className='cursor-pointer'
-                          >
-                            {currentPage + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )}
-
-                      {/* Ellipsis after */}
-                      {currentPage < patientdata.pagination.total_pages - 2 && (
-                        <PaginationItem>
-                          <PaginationEllipsis />
-                        </PaginationItem>
-                      )}
-
-                      {/* Last page */}
-                      {currentPage < patientdata.pagination.total_pages - 1 && (
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={() =>
-                              setCurrentPage(patientdata.pagination.total_pages)
-                            }
-                            className='cursor-pointer'
-                          >
-                            {patientdata.pagination.total_pages}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )}
-
+                    {/* Ellipsis before */}
+                    {currentPage > 3 && (
                       <PaginationItem>
-                        <PaginationNext
-                          onClick={() =>
-                            setCurrentPage((prev) =>
-                              Math.min(
-                                prev + 1,
-                                patientdata.pagination.total_pages
-                              )
-                            )
-                          }
-                          className={
-                            currentPage === patientdata.pagination.total_pages
-                              ? 'pointer-events-none opacity-50'
-                              : 'cursor-pointer'
-                          }
-                        />
+                        <PaginationEllipsis />
                       </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              )}
+                    )}
+
+                    {/* Previous page */}
+                    {currentPage > 1 && (
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(currentPage - 1)}
+                          className='cursor-pointer'
+                        >
+                          {currentPage - 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+
+                    {/* Current page */}
+                    <PaginationItem>
+                      <PaginationLink isActive className='cursor-default'>
+                        {currentPage}
+                      </PaginationLink>
+                    </PaginationItem>
+
+                    {/* Next page */}
+                    {currentPage < patientdata.pagination.total_pages && (
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(currentPage + 1)}
+                          className='cursor-pointer'
+                        >
+                          {currentPage + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+
+                    {/* Ellipsis after */}
+                    {currentPage < patientdata.pagination.total_pages - 2 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+
+                    {/* Last page */}
+                    {currentPage < patientdata.pagination.total_pages - 1 && (
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() =>
+                            setCurrentPage(patientdata.pagination.total_pages)
+                          }
+                          className='cursor-pointer'
+                        >
+                          {patientdata.pagination.total_pages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(
+                              prev + 1,
+                              patientdata.pagination.total_pages
+                            )
+                          )
+                        }
+                        className={
+                          currentPage === patientdata.pagination.total_pages
+                            ? 'pointer-events-none opacity-50'
+                            : 'cursor-pointer'
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            </div>
           </>
         )}
       </main>

@@ -58,7 +58,7 @@ const Visits = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Modals
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -344,101 +344,128 @@ const Visits = () => {
 
             {/* Pagination */}
             {examsData?.pagination && (
-              <div className='px-4 xl:px-6 py-3 xl:py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3'>
-                <div className='text-xs xl:text-sm text-muted-foreground'>
-                  {examsData.pagination.prev_page
-                    ? (examsData.pagination.page - 1) *
-                        examsData.pagination.limit +
-                      1
-                    : 1}{' '}
-                  -{' '}
-                  {Math.min(
-                    examsData.pagination.page * examsData.pagination.limit,
-                    examsData.pagination.total_items
-                  )}{' '}
-                  дан {examsData.pagination.total_items} та кўрсатилмоқда
-                </div>
-                <div className='flex gap-2'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    className='text-xs xl:text-sm'
+              <div className='px-4 xl:px-6 py-3 xl:py-4 border-t flex flex-col lg:flex-row items-center justify-between gap-4'>
+                <div className='flex items-center gap-2'>
+                  <span className='text-sm text-muted-foreground'>
+                    Саҳифада:
+                  </span>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}
                   >
-                    Олдинги
-                  </Button>
-                  {(() => {
-                    const pages = [];
-                    const showPages = new Set<number>();
+                    <SelectTrigger className='h-8 sm:h-10 text-sm sm:text-base w-24'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='10'>10</SelectItem>
+                      <SelectItem value='20'>20</SelectItem>
+                      <SelectItem value='50'>50</SelectItem>
+                      <SelectItem value='100'>100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    // Har doim 1-sahifani ko'rsat
-                    showPages.add(1);
+                <div className='flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto'>
+                  <div className='text-xs xl:text-sm text-muted-foreground'>
+                    {examsData.pagination.prev_page
+                      ? (examsData.pagination.page - 1) *
+                          examsData.pagination.limit +
+                        1
+                      : 1}{' '}
+                    -{' '}
+                    {Math.min(
+                      examsData.pagination.page * examsData.pagination.limit,
+                      examsData.pagination.total_items
+                    )}{' '}
+                    дан {examsData.pagination.total_items} та кўрсатилмоқда
+                  </div>
+                  <div className='flex gap-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      className='text-xs xl:text-sm'
+                    >
+                      Олдинги
+                    </Button>
+                    {(() => {
+                      const pages = [];
+                      const showPages = new Set<number>();
 
-                    // Har doim oxirgi sahifani ko'rsat
-                    if (examsData.pagination.total_pages > 1) {
-                      showPages.add(examsData.pagination.total_pages);
-                    }
+                      // Har doim 1-sahifani ko'rsat
+                      showPages.add(1);
 
-                    // Joriy sahifa va uning atrofidagi sahifalarni ko'rsat
-                    for (
-                      let i = Math.max(2, currentPage - 1);
-                      i <=
-                      Math.min(
-                        examsData.pagination.total_pages - 1,
-                        currentPage + 1
-                      );
-                      i++
-                    ) {
-                      showPages.add(i);
-                    }
-
-                    const sortedPages = Array.from(showPages).sort(
-                      (a, b) => a - b
-                    );
-
-                    sortedPages.forEach((page, index) => {
-                      // Ellipsis qo'shish agar sahifalar orasida bo'sh joy bo'lsa
-                      if (index > 0 && sortedPages[index - 1] !== page - 1) {
-                        pages.push(
-                          <span
-                            key={`ellipsis-${page}`}
-                            className='px-2 flex items-center text-xs xl:text-sm'
-                          >
-                            ...
-                          </span>
-                        );
+                      // Har doim oxirgi sahifani ko'rsat
+                      if (examsData.pagination.total_pages > 1) {
+                        showPages.add(examsData.pagination.total_pages);
                       }
 
-                      // Sahifa tugmasi
-                      pages.push(
-                        <Button
-                          key={page}
-                          variant='outline'
-                          size='sm'
-                          onClick={() => setCurrentPage(page)}
-                          className={`text-xs xl:text-sm ${
-                            page === currentPage
-                              ? 'bg-primary text-white hover:bg-primary/60 hover:text-white'
-                              : ''
-                          }`}
-                        >
-                          {page}
-                        </Button>
-                      );
-                    });
+                      // Joriy sahifa va uning atrofidagi sahifalarni ko'rsat
+                      for (
+                        let i = Math.max(2, currentPage - 1);
+                        i <=
+                        Math.min(
+                          examsData.pagination.total_pages - 1,
+                          currentPage + 1
+                        );
+                        i++
+                      ) {
+                        showPages.add(i);
+                      }
 
-                    return pages;
-                  })()}
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    disabled={currentPage === examsData.pagination.total_pages}
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    className='text-xs xl:text-sm'
-                  >
-                    Кейинги
-                  </Button>
+                      const sortedPages = Array.from(showPages).sort(
+                        (a, b) => a - b
+                      );
+
+                      sortedPages.forEach((page, index) => {
+                        // Ellipsis qo'shish agar sahifalar orasida bo'sh joy bo'lsa
+                        if (index > 0 && sortedPages[index - 1] !== page - 1) {
+                          pages.push(
+                            <span
+                              key={`ellipsis-${page}`}
+                              className='px-2 flex items-center text-xs xl:text-sm'
+                            >
+                              ...
+                            </span>
+                          );
+                        }
+
+                        // Sahifa tugmasi
+                        pages.push(
+                          <Button
+                            key={page}
+                            variant='outline'
+                            size='sm'
+                            onClick={() => setCurrentPage(page)}
+                            className={`text-xs xl:text-sm ${
+                              page === currentPage
+                                ? 'bg-primary text-white hover:bg-primary/60 hover:text-white'
+                                : ''
+                            }`}
+                          >
+                            {page}
+                          </Button>
+                        );
+                      });
+
+                      return pages;
+                    })()}
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      disabled={
+                        currentPage === examsData.pagination.total_pages
+                      }
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      className='text-xs xl:text-sm'
+                    >
+                      Кейинги
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
