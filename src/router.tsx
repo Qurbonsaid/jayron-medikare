@@ -22,9 +22,10 @@ import ExaminationDetail from "./pages/Examination/ExaminationDetail";
 import Service from "./pages/Examination/Service/Service";
 import Billing from "./pages/Billing/Billing";
 import Disease from './pages/Examination/Disease'
+import { Navigate } from "react-router-dom";
 
 export const routers = [
-  // { path: "/dashboard", element: <Dashboard /> },
+  { path: "/dashboard", element: <Navigate to={'/patients'}/> },
   { path: "/patients", element: <Patients /> },
   { path: "/patient/:id", element: <PatientProfile /> },
   { path: "/new-visit", element: <NewVisit /> },
