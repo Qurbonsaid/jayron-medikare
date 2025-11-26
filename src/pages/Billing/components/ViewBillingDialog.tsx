@@ -430,6 +430,89 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                 </div>
               )}
 
+            {/* Images Section */}
+            {billingData.data.examination_id?.images &&
+              billingData.data.examination_id.images.length > 0 && (
+                <div>
+                  <Label className='text-base sm:text-lg font-semibold mb-3 block'>
+                    Тасвирлар
+                  </Label>
+
+                  {/* Desktop Table */}
+                  <div className='hidden md:block border rounded-lg overflow-hidden'>
+                    <table className='w-full'>
+                      <thead className='bg-muted'>
+                        <tr>
+                          <th className='text-left py-3 px-4 font-medium text-sm'>
+                            Тасвирлаш тури
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Вaқт
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {billingData.data.examination_id.images.map((image) => (
+                          <tr key={image._id} className='border-b'>
+                            <td className='py-2 px-4'>
+                              <div className='font-medium text-sm'>
+                                {image.imaging_type_id?.name || 'Номаълум'}
+                              </div>
+                              {/* {image._id && (
+                                <div className='text-xs text-muted-foreground'>
+                                  ID: {image._id}
+                                </div>
+                              )} */}
+                            </td>
+                            <td className='py-2 px-4 text-center text-sm text-muted-foreground'>
+                              {format(
+                                new Date(image.created_at),
+                                'dd.MM.yyyy HH:mm'
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className='md:hidden space-y-3'>
+                    {billingData.data.examination_id.images.map((image) => (
+                      <Card key={image._id} className='p-3'>
+                        <div className='space-y-2'>
+                          <div>
+                            <Label className='text-xs text-muted-foreground'>
+                              Тасвирлаш тури
+                            </Label>
+                            <div className='text-sm font-medium mt-1'>
+                              {image.imaging_type_id?.name || 'Номаълум'}
+                            </div>
+                            {/* {image._id && (
+                              <div className='text-xs text-muted-foreground mt-0.5'>
+                                ID: {image._id}
+                              </div>
+                            )} */}
+                          </div>
+
+                          <div className='pt-2 border-t'>
+                            <Label className='text-xs text-muted-foreground'>
+                              Вaқт
+                            </Label>
+                            <div className='text-sm mt-1'>
+                              {format(
+                                new Date(image.created_at),
+                                'dd.MM.yyyy HH:mm'
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
             {/* Rooms Section */}
             {billingData.data.examination_id?.rooms &&
               billingData.data.examination_id.rooms.length > 0 && (
@@ -468,11 +551,11 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                 <div className='font-medium text-sm'>
                                   {room.room_name || 'Номаълум'}
                                 </div>
-                                {room.room_id && (
+                                {/* {room.room_id && (
                                   <div className='text-xs text-muted-foreground'>
                                     ID: {room.room_id}
                                   </div>
-                                )}
+                                )} */}
                               </td>
                               <td className='py-2 px-4 text-center text-sm'>
                                 {room.floor_number || '-'}
@@ -513,11 +596,11 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                 <div className='font-medium text-sm'>
                                   {room.room_name || 'Номаълум'}
                                 </div>
-                                {room.room_id && (
+                                {/* {room.room_id && (
                                   <div className='text-xs text-muted-foreground mt-0.5'>
                                     ID: {room.room_id}
                                   </div>
-                                )}
+                                )} */}
                               </div>
                               {room.floor_number && (
                                 <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700'>
