@@ -85,17 +85,29 @@ const Rooms = () => {
     { skip: !id }
   );
 
+  function handleRoomPatientIsLeavingToday(room: Room) {
+    const today = new Date();
+    const leave = room.patients?.some((patient) => {
+      const leaveDate = new Date(patient.estimated_leave_time);
+      return (
+        leaveDate.getDate() === today.getDate() &&
+        leaveDate.getMonth() === today.getMonth() &&
+        leaveDate.getFullYear() === today.getFullYear()
+      );
+    });
+    return leave;
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">
-              {`${getCorpus?.data.corpus_number || 0} - Korpus`}
+              {getCorpus?.data.corpus_number || ""} - Korpus Xonalar Рўйхати
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Izoh: {getCorpus?.data.description} / Хоналар сони:{" "}
-              {getCorpus?.data.total_rooms || 0} та
+              Барча xonalarni кўриш ва бошқариш
             </p>
           </div>
           <Button
@@ -107,71 +119,6 @@ const Rooms = () => {
           </Button>
         </div>
 
-        <Card className="card-shadow mb-4 sm:mb-6">
-          <div className="p-4 sm:p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4">
-              <div className="sm:col-span-2 lg:col-span-8">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                  <Input
-                    placeholder="Хоналар номи ёки тавсиф бўйича қидириш..."
-                    className="pl-9 sm:pl-10 h-10 sm:h-12 text-sm sm:text-base"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="lg:col-span-4">
-                <Button
-                  variant="outline"
-                  className="w-full h-10 sm:h-12"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setDebouncedSearch("");
-                    setCurrentPage(1);
-                  }}
-                  disabled={!searchQuery && currentPage === 1}
-                >
-                  <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="ml-2">Қидирувни тозалаш</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {getRooms && getRooms?.data && getRooms?.data.length > 0 && (
-          <div className="flex items-start sm:items-center justify-between gap-3 mb-4">
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Жами:{" "}
-              <span className="font-semibold text-foreground">
-                {getRooms?.pagination?.total_items || 0}
-              </span>{" "}
-              Xona
-            </p>
-            <Select
-              value={itemsPerPage.toString()}
-              onValueChange={(value) => {
-                setItemsPerPage(Number(value));
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="w-32 h-9 sm:h-10 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
         {roomsLoading ? (
           <Card className="card-shadow p-8 sm:p-12">
             <LoadingSpinner
@@ -182,6 +129,185 @@ const Rooms = () => {
           </Card>
         ) : getRooms?.data && getRooms?.data.length > 0 ? (
           <>
+            {/* Corpus info */}
+            <Card className="card-shadow p-4 lg:p-6 mb-4 sm:mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 xl:gap-6">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Corpus nomi
+                  </h3>
+                  <p className="mt-1 text-lg font-semibold">
+                    {getCorpus?.data.corpus_number || ""} - Korpus
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Xonalar soni
+                  </h3>
+
+                  <p className="mt-1 text-lg font-semibold">
+                    {getCorpus?.data.total_rooms || 0} ta
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Umumiy sig'im
+                  </h3>
+
+                  <p className="mt-1 text-lg font-semibold">
+                    {getCorpus?.data?.room_statistics.total_capacity || 0} ta
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Umumiy bandlik
+                  </h3>
+
+                  <p
+                    className={`mt-1 text-lg font-semibold ${
+                      getCorpus?.data?.room_statistics.occupied === 0
+                        ? "text-green-600"
+                        : getCorpus?.data?.room_statistics.occupied ===
+                          getCorpus?.data?.room_statistics.total_capacity
+                        ? "text-red-600"
+                        : "text-yellow-600"
+                    }`}
+                  >
+                    {getCorpus?.data?.room_statistics.occupied === 0
+                      ? "Bo'sh"
+                      : getCorpus?.data?.room_statistics.occupied ===
+                        getCorpus?.data?.room_statistics.total_capacity
+                      ? "To'liq"
+                      : (getCorpus?.data?.room_statistics.occupied || 0) +
+                        "ta"}{" "}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Mavjud xonalar
+                  </h3>
+
+                  <p
+                    className={`mt-1 text-lg font-semibold ${
+                      getCorpus?.data?.room_statistics.available === 0
+                        ? "text-red-600"
+                        : ""
+                    }`}
+                  >
+                    {getCorpus?.data?.room_statistics.available === 0
+                      ? "Yo'q"
+                      : (getCorpus?.data?.room_statistics.available || 0) +
+                        " ta"}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Bugun chiqadiganlar
+                  </h3>
+
+                  <p
+                    className={`mt-1 text-lg font-semibold ${
+                      getCorpus?.data?.room_statistics.leaving_today === 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {getCorpus?.data?.room_statistics.leaving_today === 0
+                      ? "Yo'q"
+                      : (getCorpus?.data?.room_statistics.leaving_today || 0) +
+                        "ta"}
+                  </p>
+                </div>
+                <div className="col-span-2 xl:col-span-1">
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Tavsif
+                  </h3>
+
+                  <p className="mt-1 text-md font-semibold">
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <span>
+                          {getCorpus?.data.description
+                            ? getCorpus?.data.description.length > 20
+                              ? getCorpus?.data.description.slice(0, 20) + "..."
+                              : getCorpus?.data.description
+                            : "Berilmagan"}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {getCorpus?.data.description || "Berilmagan"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="card-shadow mb-4 sm:mb-6">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4">
+                  <div className="sm:col-span-2 lg:col-span-8">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                      <Input
+                        placeholder="Хоналар номи ёки тавсиф бўйича қидириш..."
+                        className="pl-9 sm:pl-10 h-10 sm:h-12 text-sm sm:text-base"
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-4">
+                    <Button
+                      variant="outline"
+                      className="w-full h-10 sm:h-12"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setDebouncedSearch("");
+                        setCurrentPage(1);
+                      }}
+                      disabled={!searchQuery && currentPage === 1}
+                    >
+                      <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="ml-2">Қидирувни тозалаш</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {getRooms && getRooms?.data && getRooms?.data.length > 0 && (
+              <div className="flex items-start sm:items-center justify-between gap-3 mb-4">
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  Жами:{" "}
+                  <span className="font-semibold text-foreground">
+                    {getRooms?.pagination?.total_items || 0}
+                  </span>{" "}
+                  Xona
+                </p>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-32 h-9 sm:h-10 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             {/* Desktop Table View */}
             <Card className="card-shadow hidden lg:block">
               <Table>
@@ -199,7 +325,14 @@ const Rooms = () => {
                 </TableHeader>
                 <TableBody>
                   {getRooms?.data.map((room, idx) => (
-                    <TableRow key={room._id}>
+                    <TableRow
+                      key={room._id}
+                      className={`${
+                        handleRoomPatientIsLeavingToday(room)
+                          ? "bg-red-100 hover:bg-red-200"
+                          : "bg-white"
+                      }`}
+                    >
                       <TableCell className="text-center font-bold">
                         {(currentPage - 1) * itemsPerPage + idx + 1}
                       </TableCell>
@@ -216,7 +349,15 @@ const Rooms = () => {
                         {room.patient_capacity} kishilik
                       </TableCell>
 
-                      <TableCell className="text-center">
+                      <TableCell
+                        className={`text-center font-bold ${
+                          room.patient_occupied
+                            ? room.patient_occupied === room.patient_capacity
+                              ? "text-red-600"
+                              : "text-yellow-600"
+                            : "text-green-600"
+                        }`}
+                      >
                         {room.patient_occupied
                           ? room.patient_occupied === room.patient_capacity
                             ? "To'liq band"
@@ -328,12 +469,24 @@ const Rooms = () => {
                       </div>
                       <div className="flex items-center gap-2 text-xs sm:text-sm">
                         <span>
-                          Sig'im: {room.patient_capacity} kishilik | Bandlik:{" "}
-                          {room.patient_occupied
-                            ? room.patient_occupied === room.patient_capacity
-                              ? "To'liq band"
-                              : `${room.patient_occupied} ta band`
-                            : "bo'sh"}
+                          Sig'im: {room.patient_capacity} kishilik |{" "}
+                          <span
+                            className={`text-center font-bold ${
+                              room.patient_occupied
+                                ? room.patient_occupied ===
+                                  room.patient_capacity
+                                  ? "text-red-600"
+                                  : "text-yellow-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            Bandlik:{" "}
+                            {room.patient_occupied
+                              ? room.patient_occupied === room.patient_capacity
+                                ? "To'liq band"
+                                : `${room.patient_occupied} ta band`
+                              : "bo'sh"}
+                          </span>{" "}
                         </span>
                       </div>
                     </div>

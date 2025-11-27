@@ -72,11 +72,15 @@ const Inpatient = () => {
         ) : getCorpuses?.data && getCorpuses?.data.length > 0 ? (
           <>
             <Card className="card-shadow p-4 sm:p-8 xl:p-12 cursor-pointer">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {getCorpuses?.data.map((corpus) => (
                   <Card
                     key={corpus._id}
-                    className={`p-4 bg-green-100 border-green-500/50 hover:bg-green-200 transition-smooth relative`}
+                    className={`p-4  transition-smooth relative ${
+                      corpus.room_statistics.leaving_today > 0
+                        ? "border-red-500 bg-red-100 hover:bg-red-200"
+                        : "bg-green-100 border-green-500/50 hover:bg-green-200"
+                    }`}
                   >
                     <div className="absolute top-4 right-4">
                       <DropdownMenu>
@@ -138,6 +142,13 @@ const Inpatient = () => {
 
                       <p className="text-sm font-medium">
                         {corpus.description}
+                      </p>
+
+                      <p>
+                        Chiqadigan:{" "}
+                        {corpus.room_statistics.leaving_today > 0
+                          ? corpus.room_statistics.leaving_today + " ta"
+                          : "Yo'q"}
                       </p>
                     </div>
                   </Card>

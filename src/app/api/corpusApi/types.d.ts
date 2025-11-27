@@ -1,11 +1,17 @@
 export type Corpuses = {
   _id: string;
-  corpus_number: 0;
+  corpus_number: number;
   description: string;
-  total_rooms: 0;
+  total_rooms: number;
   status: string;
   created_at: string;
   updated_at: string;
+  room_statistics: {
+    total_capacity: number;
+    occupied: number;
+    available: number;
+    leaving_today: number;
+  };
 };
 
 export type UpdateCorpusError = {
