@@ -1,3 +1,4 @@
+import { useGetAllExamsQuery } from "@/app/api/examinationApi";
 import { useGetAllPatientQuery } from "@/app/api/patientApi";
 import { AllPatientRes } from "@/app/api/patientApi/types";
 import { useAddPatientRoomMutation } from "@/app/api/roomApi";
@@ -38,14 +39,18 @@ interface RoomNewPatientProps {
 export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [estimatedLeaveTime, setEstimatedLeaveTime] = useState<string>("");
   const [openPopover, setOpenPopover] = useState(false);
   const handleRequest = useHandleRequest();
   const { id: roomId } = useParams();
-  const { data: patientsData, isLoading } = useGetAllPatientQuery({
+  const { data: examinations, isLoading } = useGetAllExamsQuery({
     page: 1,
     limit: 100,
     search: searchQuery,
+    status: "pending",
+    is_roomed: false,
   });
+
   const [addPatientRoom, { isLoading: isAddPatientLoading }] =
     useAddPatientRoomMutation();
 
@@ -54,7 +59,8 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
       request: async () =>
         await addPatientRoom({
           id: roomId,
-          patient_id: selectedPatient._id,
+          patient_id: selectedPatient.patient_id._id,
+          estimated_leave_time: estimatedLeaveTime,
         }).unwrap(),
       onSuccess: () => {
         toast.success("Бемор муваффақиятли қўшилди");
@@ -92,10 +98,10 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
                 {selectedPatient ? (
                   <div className="flex flex-col items-start w-full">
                     <span className="font-medium text-sm sm:text-base text-primary">
-                      {selectedPatient.fullname}
+                      {selectedPatient.patient_id.fullname}
                     </span>
                     <span className="text-xs sm:text-sm text-muted-foreground">
-                      ID: {selectedPatient.patient_id} • {selectedPatient.phone}
+                      {selectedPatient.patient_id.phone}
                     </span>
                   </div>
                 ) : (
@@ -128,22 +134,22 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
                         Юкланмоқда...
                       </CommandItem>
                     ) : (
-                      patientsData?.data.map((p) => (
+                      examinations?.data.map((e) => (
                         <CommandItem
-                          key={p._id}
-                          value={p._id}
+                          key={e._id}
+                          value={e._id}
                           onSelect={() => {
-                            setSelectedPatient(p);
+                            setSelectedPatient(e);
                             setOpenPopover(false);
                           }}
                           className="py-3"
                         >
                           <div className="flex flex-col w-full">
                             <span className="font-medium text-sm sm:text-base">
-                              {p.fullname}
+                              {e.patient_id.fullname}
                             </span>
                             <span className="text-xs sm:text-sm text-muted-foreground">
-                              ID: {p.patient_id} • {p.phone}
+                              {e.patient_id.phone}
                             </span>
                           </div>
                         </CommandItem>
@@ -154,6 +160,13 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
               </Command>
             </PopoverContent>
           </Popover>
+          <input
+            type="date"
+            className="mt-4 w-full border border-gray-300 rounded-md p-2 text-sm sm:text-base"
+            placeholder="Estimated Leave Time"
+            value={estimatedLeaveTime}
+            onChange={(e) => setEstimatedLeaveTime(e.target.value)}
+          />
         </div>
 
         <DialogFooter className="p-4 sm:p-6 pt-0 flex flex-col sm:flex-row gap-2 sm:gap-0">

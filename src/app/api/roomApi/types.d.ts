@@ -14,6 +14,7 @@ export type Patient = {
         email: string;
       }
     | string;
+  estimated_leave_time: string;
   start_date: string;
   _id: string;
 };

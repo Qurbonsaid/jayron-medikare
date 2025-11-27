@@ -21,11 +21,11 @@ import RoomDetail from "./pages/RoomDetail/RoomDetail";
 import ExaminationDetail from "./pages/Examination/ExaminationDetail";
 import Service from "./pages/Examination/Service/Service";
 import Billing from "./pages/Billing/Billing";
-import Disease from './pages/Examination/Disease'
+import Disease from "./pages/Examination/Disease";
 import { Navigate } from "react-router-dom";
 
 export const routers = [
-  { path: "/dashboard", element: <Navigate to={'/patients'}/> },
+  { path: "/dashboard", element: <Navigate to={"/patients"} /> },
   { path: "/patients", element: <Patients /> },
   { path: "/patient/:id", element: <PatientProfile /> },
   { path: "/new-visit", element: <NewVisit /> },
@@ -128,9 +128,14 @@ export const navigator = [
     title: "Стационар",
   },
   {
-    path:"/medicine",
-    to:null,
-    title:"Дори-дармонлар",
+    path: "/room/:id",
+    to: -1,
+    title: "Стационар",
+  },
+  {
+    path: "/medicine",
+    to: null,
+    title: "Дори-дармонлар",
   },
   {
     path: "/lab-results",

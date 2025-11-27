@@ -103,7 +103,10 @@ export const NewMedicalImage = ({
   const [createMedicalImage, { isLoading }] = useCreateMedicalImageMutation();
   const [uploadImage, { isLoading: isUploading }] = useUploadCreateMutation();
   const { data: imagingTypes } = useGetAllImagingTypesQuery({ limit: 100 });
-  const { data: examinations } = useGetAllExamsQuery({ limit: 100 });
+  const { data: examinations } = useGetAllExamsQuery({
+    limit: 100,
+    status: "pending",
+  });
   const handleRequest = useHandleRequest();
   const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
 

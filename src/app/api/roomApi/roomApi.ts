@@ -72,12 +72,12 @@ export const roomApi = baseApi.injectEndpoints({
 
     addPatientRoom: builder.mutation<
       CreatedRoomResponse,
-      { id: string; patient_id: string }
+      { id: string; patient_id: string; estimated_leave_time: string }
     >({
-      query: ({ id, patient_id }) => ({
+      query: ({ id, patient_id, estimated_leave_time }) => ({
         url: PATHS.ADD_PATIENT + id,
         method: "POST",
-        body: { patient_id },
+        body: { patient_id, estimated_leave_time },
       }),
       invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM],
     }),
@@ -93,6 +93,18 @@ export const roomApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM],
     }),
+
+    updateLeaveTime: builder.mutation<
+      CreatedRoomResponse,
+      { id: string; patient_id: string; estimated_leave_time: string }
+    >({
+      query: ({ id, patient_id, estimated_leave_time }) => ({
+        url: PATHS.UPDATE_LEAVE_TIME + id,
+        method: "PATCH",
+        body: { patient_id, estimated_leave_time },
+      }),
+      invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM],
+    }),
   }),
 });
 
@@ -104,4 +116,5 @@ export const {
   useDeleteRoomMutation,
   useAddPatientRoomMutation,
   useRemovePatientRoomMutation,
+  useUpdateLeaveTimeMutation,
 } = roomApi;
