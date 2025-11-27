@@ -23,8 +23,6 @@ import Service from "./pages/Examination/Service/Service";
 import Billing from "./pages/Billing/Billing";
 import Disease from "./pages/Examination/Disease";
 import { Navigate } from "react-router-dom";
-import path from 'path'
-import { title } from 'process'
 import Medication from './pages/Examination/Medication'
 
 export const routers = [

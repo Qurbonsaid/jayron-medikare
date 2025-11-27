@@ -1,11 +1,11 @@
-import { Pagination } from "../patientApi/types";
+import { Pagination } from '../patientApi/types';
 
 export type examCreateReq = {
   patient_id: string;
   doctor_id: string;
   description: string;
   complaints: string;
-  treatment_type: "stasionar" | "ambulator";
+  treatment_type: 'stasionar' | 'ambulator';
 };
 
 type Analysis = {
@@ -119,8 +119,14 @@ export type ExamDataItem = {
   images: Array<Image>;
   status: status;
   prescriptions: Array<{
-    medication: string;
-    dosage: number;
+    medication_id:
+      | {
+          _id: string;
+          name: string;
+          dosage: number;
+          dosage_unit: string;
+        }
+      | string;
     frequency: number;
     duration: number;
     instructions: string;
@@ -163,7 +169,7 @@ export interface MutationRes {
 }
 
 export const status =
-  "active" | "inactive" | "pending" | "completed" | "deleted";
+  'active' | 'inactive' | 'pending' | 'completed' | 'deleted';
 
 export type UpdateExamReq = {
   id: string;
@@ -176,11 +182,11 @@ export type UpdateExamReq = {
 };
 
 export type status =
-  | "active"
-  | "inactive"
-  | "completed"
-  | "deleted"
-  | "pending";
+  | 'active'
+  | 'inactive'
+  | 'completed'
+  | 'deleted'
+  | 'pending';
 
 export type ExamRes = {
   success: boolean;
@@ -205,12 +211,10 @@ export type Day = {
 };
 
 export type Prescription = {
-  medication: string;
-  dosage: number;
+  medication_id: string;
   frequency: number;
-  duration: number;
   instructions: string;
-  days?: Day[];
+  duration: number;
 };
 
 export interface createPrescriptionReq {
