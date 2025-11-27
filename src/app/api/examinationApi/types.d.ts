@@ -90,7 +90,7 @@ export type Room = {
   room_name: string;
   floor_number: number;
   _id: string;
-  end_date: string;
+  end_date?: string;
 };
 
 export type ExamDataItem = {
