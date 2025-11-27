@@ -1,7 +1,7 @@
 import { API_TAGS } from '@/constants/apiTags'
 import { baseApi } from '../baseApi'
-import { PATHS } from './paths'
 import { Disease, DiseaseCreateRequest, DiseaseUpdateRequest, getAllDiagnosisReq, getAllDiagnosisRes } from './types'
+import { PATHS } from './paths'
 
 export const diseaseApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
