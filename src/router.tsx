@@ -23,6 +23,9 @@ import Service from "./pages/Examination/Service/Service";
 import Billing from "./pages/Billing/Billing";
 import Disease from './pages/Examination/Disease'
 import { Navigate } from "react-router-dom";
+import path from 'path'
+import { title } from 'process'
+import Medication from './pages/Examination/Medication'
 
 export const routers = [
   { path: "/dashboard", element: <Navigate to={'/patients'}/> },
@@ -34,6 +37,7 @@ export const routers = [
   { path: "/prescription", element: <Prescription /> },
   { path: "/visits", element: <Visits /> },
   { path: "/disease", element: <Disease /> },
+  { path: "/medication", element: <Medication /> },
   { path: "/service", element: <Service /> },
   { path: "/add-diagnostika", element: <AddDiagnostika /> },
   { path: "/analysisById/:id", element: <AnalysisParamsModal /> },
@@ -93,6 +97,11 @@ export const navigator = [
     title: "Касалликлар",
   },
   {
+    path:"/medication",
+    to:null,
+    title:"Дори-дармонлар",
+  },
+  {
     path: "/service",
     to: null,
     title: "Хизматлар",
@@ -145,7 +154,7 @@ export const navigator = [
   {
     path: "/reports",
     to: null,
-    title: "Ҳисоботлар",
+    // title: "Ҳисоботлар",
   },
   {
     path: "/radiology",
