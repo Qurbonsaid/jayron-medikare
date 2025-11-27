@@ -123,7 +123,7 @@ const Prescription = () => {
   const { data: medicationsData } = useGetAllMedicationsQuery({
     page: 1,
     limit: 100,
-    search: medicationSearch,
+    search: medicationSearch || undefined,
   });
 
   const [createPrescription, { isLoading: isCreating }] =
@@ -409,8 +409,14 @@ const Prescription = () => {
 
   const startEditPrescription = (prescription: any) => {
     setEditingPrescriptionId(prescription._id);
+    // Extract medication_id - it may be an object (populated) or a string
+    const medId =
+      typeof prescription.medication_id === 'object' &&
+      prescription.medication_id !== null
+        ? prescription.medication_id._id
+        : prescription.medication_id || '';
     setEditPrescriptionForm({
-      medication_id: prescription.medication_id || '',
+      medication_id: medId,
       frequency: prescription.frequency?.toString() || '',
       duration: prescription.duration?.toString() || '',
       instructions: prescription.instructions || '',
@@ -740,7 +746,23 @@ const Prescription = () => {
                                             }
                                           >
                                             <SelectTrigger>
-                                              <SelectValue placeholder='Дорини танланг' />
+                                              <SelectValue placeholder='Дорини танланг'>
+                                                {editPrescriptionForm.medication_id
+                                                  ? `${
+                                                      medicationsData?.data?.find(
+                                                        (m: any) =>
+                                                          m._id ===
+                                                          editPrescriptionForm.medication_id
+                                                      )?.name
+                                                    } - ${
+                                                      medicationsData?.data?.find(
+                                                        (m: any) =>
+                                                          m._id ===
+                                                          editPrescriptionForm.medication_id
+                                                      )?.dosage
+                                                    }` || 'Дорини танланг'
+                                                  : 'Дорини танланг'}
+                                              </SelectValue>
                                             </SelectTrigger>
                                             <SelectContent>
                                               <div className='p-2'>
@@ -771,8 +793,7 @@ const Prescription = () => {
                                                     value={medication._id}
                                                   >
                                                     {medication.name} -{' '}
-                                                    {medication.dosage}{' '}
-                                                    {medication.dosage_unit}
+                                                    {medication.dosage}
                                                   </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -904,9 +925,7 @@ const Prescription = () => {
                                                 null &&
                                               prescription.medication_id
                                                 .dosage &&
-                                              prescription.medication_id
-                                                .dosage_unit &&
-                                              ` - ${prescription.medication_id.dosage} ${prescription.medication_id.dosage_unit}`}
+                                              ` - ${prescription.medication_id.dosage}`}
                                           </p>
                                         </div>
                                         <div>
@@ -1102,8 +1121,7 @@ const Prescription = () => {
                                             {medication.name}
                                           </span>
                                           <span className='text-xs text-muted-foreground'>
-                                            {medication.dosage}{' '}
-                                            {medication.dosage_unit}
+                                            {medication.dosage}
                                           </span>
                                         </div>
                                       </SelectItem>

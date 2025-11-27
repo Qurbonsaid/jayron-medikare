@@ -136,7 +136,7 @@ const ExaminationDetail = () => {
   const { data: medicationsData } = useGetAllMedicationsQuery({
     page: 1,
     limit: 100,
-    search: medicationSearch,
+    search: medicationSearch || undefined,
   });
 
   const [updateExam, { isLoading: isUpdating }] = useUpdateExamMutation();
