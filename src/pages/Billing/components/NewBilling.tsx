@@ -30,11 +30,8 @@ import { Service } from '../Billing';
 interface Props {
   isInvoiceModalOpen: boolean;
   setIsInvoiceModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  addService: () => void;
   services: Array<Service>;
-  updateService: (id: string, field: keyof Service, value: any) => void;
   formatCurrency: (amount: number) => string;
-  removeService: (id: string) => void;
   discount: number;
   setDiscount: React.Dispatch<React.SetStateAction<number>>;
   paymentAmount: string;
@@ -50,11 +47,8 @@ interface Props {
 const NewBilling = ({
   isInvoiceModalOpen,
   setIsInvoiceModalOpen,
-  addService,
   services,
-  updateService,
   formatCurrency,
-  removeService,
   discount,
   setDiscount,
   paymentAmount,
