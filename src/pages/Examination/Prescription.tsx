@@ -5,6 +5,7 @@ import {
   useGetOneExamQuery,
   useUpdatePrescriptionMutation,
 } from '@/app/api/examinationApi/examinationApi';
+import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import { useGetPatientByIdQuery } from '@/app/api/patientApi/patientApi';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -30,14 +31,12 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface Medication {
   id: string;
-  drug: string;
-  dosage: string;
+  medication_id: string;
   frequency: string;
   duration: string;
   instructions: string;
@@ -45,8 +44,7 @@ interface Medication {
 
 interface ValidationErrors {
   [key: string]: {
-    drug?: boolean;
-    dosage?: boolean;
+    medication_id?: boolean;
     frequency?: boolean;
     duration?: boolean;
     instructions?: boolean;
@@ -60,7 +58,6 @@ interface FormValidationErrors {
 const Prescription = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [allergyWarning, setAllergyWarning] = useState(false);
   const [formErrors, setFormErrors] = useState<FormValidationErrors>({
@@ -72,16 +69,21 @@ const Prescription = () => {
     string | null
   >(null);
   const [editPrescriptionForm, setEditPrescriptionForm] = useState({
-    medication: '',
-    dosage: '',
+    medication_id: '',
     frequency: '',
     duration: '',
     instructions: '',
   });
+  const [editMedicationSearch, setEditMedicationSearch] = useState('');
 
   // Patient selection states
   const [patient, setPatient] = useState<any>(null);
   const [selectedExaminationId, setSelectedExaminationId] =
+    useState<string>('');
+
+  // Medication search states
+  const [medicationSearch, setMedicationSearch] = useState('');
+  const [selectedMedicationForNew, setSelectedMedicationForNew] =
     useState<string>('');
 
   // Infinite scroll states
@@ -116,6 +118,13 @@ const Prescription = () => {
     useGetPatientByIdQuery(examinationData?.data.patient_id?._id || '', {
       skip: !examinationData?.data.patient_id?._id,
     });
+
+  // Fetch medications for search
+  const { data: medicationsData } = useGetAllMedicationsQuery({
+    page: 1,
+    limit: 100,
+    search: medicationSearch,
+  });
 
   const [createPrescription, { isLoading: isCreating }] =
     useCreatePrescriptionMutation();
@@ -234,8 +243,7 @@ const Prescription = () => {
   const addMedication = () => {
     const newMed: Medication = {
       id: Date.now().toString(),
-      drug: '',
-      dosage: '',
+      medication_id: '',
       frequency: '',
       duration: '',
       instructions: '',
@@ -297,22 +305,10 @@ const Prescription = () => {
     for (const med of medications) {
       errors[med.id] = {};
 
-      // Check if drug name is filled
-      if (!med.drug || med.drug.trim() === '') {
-        errors[med.id].drug = true;
+      // Check if medication is selected
+      if (!med.medication_id || med.medication_id.trim() === '') {
+        errors[med.id].medication_id = true;
         hasErrors = true;
-      }
-
-      // Check if dosage is filled and valid
-      if (!med.dosage || med.dosage.trim() === '') {
-        errors[med.id].dosage = true;
-        hasErrors = true;
-      } else {
-        const dosage = parseFloat(med.dosage);
-        if (isNaN(dosage) || dosage <= 0) {
-          errors[med.id].dosage = true;
-          hasErrors = true;
-        }
       }
 
       // Check if frequency is selected
@@ -321,16 +317,10 @@ const Prescription = () => {
         hasErrors = true;
       }
 
-      // Check if duration is filled and valid
+      // Check if duration is filled
       if (!med.duration || med.duration.trim() === '') {
         errors[med.id].duration = true;
         hasErrors = true;
-      } else {
-        const duration = parseInt(med.duration);
-        if (isNaN(duration) || duration <= 0) {
-          errors[med.id].duration = true;
-          hasErrors = true;
-        }
       }
 
       // Check if instructions are filled
@@ -348,33 +338,16 @@ const Prescription = () => {
       return;
     }
 
-    // Additional validations after basic checks
-    for (const med of medications) {
-      const dosage = parseFloat(med.dosage);
-      if (dosage > 10000) {
-        toast.error(
-          `"${med.drug}" учун доза жуда катта (10000 мг дан ошмаслиги керак)`
-        );
-        return;
-      }
-
-      const duration = parseInt(med.duration);
-      if (duration > 365) {
-        toast.error(
-          `"${med.drug}" учун муддат жуда узун (365 кундан ошмаслиги керак)`
-        );
-        return;
-      }
-    }
-
     // Check for duplicate medications
-    const drugNames = medications.map((med) => med.drug.toLowerCase().trim());
-    const duplicates = drugNames.filter(
-      (name, index) => drugNames.indexOf(name) !== index
+    const medicationIds = medications.map((med) =>
+      med.medication_id.toLowerCase().trim()
+    );
+    const duplicates = medicationIds.filter(
+      (id, index) => medicationIds.indexOf(id) !== index
     );
     if (duplicates.length > 0) {
       toast.error(
-        `Такрорланган дори: "${duplicates[0]}". Ҳар бир дори фақат бир марта қўшилиши керак.`
+        'Такрорланган дори. Ҳар бир дори фақат бир марта қўшилиши керак.'
       );
       return;
     }
@@ -387,8 +360,7 @@ const Prescription = () => {
           const res = await createPrescription({
             id: selectedExaminationId,
             body: {
-              medication: med.drug,
-              dosage: parseInt(med.dosage),
+              medication_id: med.medication_id,
               frequency: parseInt(med.frequency.replace(/\D/g, '')),
               duration: parseInt(med.duration.replace(/\D/g, '')),
               instructions: med.instructions,
@@ -400,9 +372,7 @@ const Prescription = () => {
           successCount++;
         },
         onError: (error) => {
-          toast.error(
-            error?.data?.error?.msg || `${med.drug} сақлашда хатолик`
-          );
+          toast.error(error?.data?.error?.msg || `Дорини сақлашда хатолик`);
         },
       });
     }
@@ -440,35 +410,28 @@ const Prescription = () => {
   const startEditPrescription = (prescription: any) => {
     setEditingPrescriptionId(prescription._id);
     setEditPrescriptionForm({
-      medication: prescription.medication || '',
-      dosage: prescription.dosage?.toString() || '',
+      medication_id: prescription.medication_id || '',
       frequency: prescription.frequency?.toString() || '',
       duration: prescription.duration?.toString() || '',
       instructions: prescription.instructions || '',
     });
+    setEditMedicationSearch('');
   };
 
   const cancelEditPrescription = () => {
     setEditingPrescriptionId(null);
     setEditPrescriptionForm({
-      medication: '',
-      dosage: '',
+      medication_id: '',
       frequency: '',
       duration: '',
       instructions: '',
     });
+    setEditMedicationSearch('');
   };
 
   const handleUpdatePrescription = async (prescriptionId: string) => {
-    if (!editPrescriptionForm.medication.trim()) {
-      toast.error('Илтимос, дори номини киритинг');
-      return;
-    }
-    if (
-      !editPrescriptionForm.dosage ||
-      parseFloat(editPrescriptionForm.dosage) <= 0
-    ) {
-      toast.error('Илтимос, тўғри дозани киритинг');
+    if (!editPrescriptionForm.medication_id.trim()) {
+      toast.error('Илтимос, дорини танланг');
       return;
     }
     if (
@@ -492,8 +455,7 @@ const Prescription = () => {
           id: selectedExaminationId,
           prescription_id: prescriptionId,
           body: {
-            medication: editPrescriptionForm.medication,
-            dosage: parseFloat(editPrescriptionForm.dosage),
+            medication_id: editPrescriptionForm.medication_id,
             frequency: parseInt(editPrescriptionForm.frequency),
             duration: parseInt(editPrescriptionForm.duration),
             instructions: editPrescriptionForm.instructions,
@@ -503,7 +465,14 @@ const Prescription = () => {
       },
       onSuccess: () => {
         toast.success('Рецепт муваффақиятли янгиланди');
-        cancelEditPrescription();
+        setEditPrescriptionForm({
+          medication_id: '',
+          frequency: '',
+          duration: '',
+          instructions: '',
+        });
+        setEditMedicationSearch('');
+        setEditingPrescriptionId(null);
       },
       onError: (error) => {
         toast.error(error?.data?.error?.msg || 'Рецептни янгилашда хатолик');
@@ -709,14 +678,14 @@ const Prescription = () => {
                               'Номаълум'}
                           </p>
                         </div>
-                      <div className='space-y-1'>
-                        <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Шикоят
-                        </Label>
-                        <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
-                          {examinationData.data.complaints || 'Маълумот йўқ'}
-                        </p>
-                      </div>
+                        <div className='space-y-1'>
+                          <Label className='text-xs sm:text-sm text-muted-foreground'>
+                            Шикоят
+                          </Label>
+                          <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
+                            {examinationData.data.complaints || 'Маълумот йўқ'}
+                          </p>
+                        </div>
                       </div>
                       {examinationData.data.description && (
                         <div className='space-y-1'>
@@ -756,35 +725,58 @@ const Prescription = () => {
                                   {editingPrescriptionId ===
                                   prescription._id ? (
                                     <div className='space-y-4'>
-                                      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
-                                        <div className='space-y-2'>
+                                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                                        <div className='space-y-2 sm:col-span-2'>
                                           <Label>Дори Номи *</Label>
-                                          <Input
-                                            placeholder='Дори номини киритинг'
+                                          <Select
                                             value={
-                                              editPrescriptionForm.medication
+                                              editPrescriptionForm.medication_id
                                             }
-                                            onChange={(e) =>
+                                            onValueChange={(value) =>
                                               setEditPrescriptionForm({
                                                 ...editPrescriptionForm,
-                                                medication: e.target.value,
+                                                medication_id: value,
                                               })
                                             }
-                                          />
-                                        </div>
-                                        <div className='space-y-2'>
-                                          <Label>Дозаси (мг) *</Label>
-                                          <Input
-                                            type='number'
-                                            placeholder='Дозани киритинг'
-                                            value={editPrescriptionForm.dosage}
-                                            onChange={(e) =>
-                                              setEditPrescriptionForm({
-                                                ...editPrescriptionForm,
-                                                dosage: e.target.value,
-                                              })
-                                            }
-                                          />
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder='Дорини танланг' />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <div className='p-2'>
+                                                <Input
+                                                  placeholder='Қидириш...'
+                                                  value={editMedicationSearch}
+                                                  onChange={(e) =>
+                                                    setEditMedicationSearch(
+                                                      e.target.value
+                                                    )
+                                                  }
+                                                  className='mb-2'
+                                                />
+                                              </div>
+                                              {medicationsData?.data
+                                                ?.filter((med: any) =>
+                                                  editMedicationSearch
+                                                    ? med.name
+                                                        .toLowerCase()
+                                                        .includes(
+                                                          editMedicationSearch.toLowerCase()
+                                                        )
+                                                    : true
+                                                )
+                                                .map((medication: any) => (
+                                                  <SelectItem
+                                                    key={medication._id}
+                                                    value={medication._id}
+                                                  >
+                                                    {medication.name} -{' '}
+                                                    {medication.dosage}{' '}
+                                                    {medication.dosage_unit}
+                                                  </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                          </Select>
                                         </div>
                                         <div className='space-y-2'>
                                           <Label>Кунига (марта) *</Label>
@@ -794,10 +786,10 @@ const Prescription = () => {
                                             value={
                                               editPrescriptionForm.frequency
                                             }
-                                            onChange={(e) =>
+                                            onChange={(value) =>
                                               setEditPrescriptionForm({
                                                 ...editPrescriptionForm,
-                                                frequency: e.target.value,
+                                                frequency: value.target.value,
                                               })
                                             }
                                           />
@@ -810,10 +802,10 @@ const Prescription = () => {
                                             value={
                                               editPrescriptionForm.duration
                                             }
-                                            onChange={(e) =>
+                                            onChange={(value) =>
                                               setEditPrescriptionForm({
                                                 ...editPrescriptionForm,
-                                                duration: e.target.value,
+                                                duration: value.target.value,
                                               })
                                             }
                                           />
@@ -895,21 +887,26 @@ const Prescription = () => {
                                           </Button>
                                         </div>
                                       </div>
-                                      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
+                                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
                                         <div>
                                           <Label className='text-xs sm:text-sm text-muted-foreground'>
                                             Дори Номи
                                           </Label>
                                           <p className='font-semibold text-sm sm:text-base mt-1'>
-                                            {prescription.medication}
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <Label className='text-xs sm:text-sm text-muted-foreground'>
-                                            Дозаси
-                                          </Label>
-                                          <p className='font-semibold text-sm sm:text-base mt-1'>
-                                            {prescription.dosage} мг
+                                            {typeof prescription.medication_id ===
+                                              'object' &&
+                                            prescription.medication_id !== null
+                                              ? prescription.medication_id.name
+                                              : 'Маълумот йўқ'}
+                                            {typeof prescription.medication_id ===
+                                              'object' &&
+                                              prescription.medication_id !==
+                                                null &&
+                                              prescription.medication_id
+                                                .dosage &&
+                                              prescription.medication_id
+                                                .dosage_unit &&
+                                              ` - ${prescription.medication_id.dosage} ${prescription.medication_id.dosage_unit}`}
                                           </p>
                                         </div>
                                         <div>
@@ -919,14 +916,6 @@ const Prescription = () => {
                                           <p className='font-semibold text-sm sm:text-base mt-1'>
                                             Кунига {prescription.frequency}{' '}
                                             марта
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <Label className='text-xs sm:text-sm text-muted-foreground'>
-                                            Муддати
-                                          </Label>
-                                          <p className='font-semibold text-sm sm:text-base mt-1'>
-                                            {prescription.duration} кун
                                           </p>
                                         </div>
                                       </div>
@@ -1069,82 +1058,87 @@ const Prescription = () => {
                             <Trash2 className='h-4 w-4' />
                           </Button>
                         </div>
-                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
-                          <div className='sm:col-span-2 lg:col-span-1'>
+                        <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+                          <div className='sm:col-span-2'>
                             <Label className='text-xs sm:text-sm'>
-                              Дори Номи <span className='text-red-500'>*</span>
-                            </Label>
-                            <Input
-                              value={med.drug}
-                              onChange={(e) =>
-                                updateMedication(med.id, 'drug', e.target.value)
-                              }
-                              placeholder='Дори номи'
-                              className={`text-sm mt-1 ${
-                                formErrors.medications[med.id]?.drug
-                                  ? 'border-red-500 focus-visible:ring-red-500'
-                                  : ''
-                              }`}
-                            />
-                          </div>
-                          <div>
-                            <Label className='text-xs sm:text-sm'>
-                              Дозаси (мг){' '}
-                              <span className='text-red-500'>*</span>
-                            </Label>
-                            <Input
-                              type='number'
-                              value={med.dosage}
-                              onChange={(e) =>
-                                updateMedication(
-                                  med.id,
-                                  'dosage',
-                                  e.target.value
-                                )
-                              }
-                              placeholder='500'
-                              className={`text-sm mt-1 ${
-                                formErrors.medications[med.id]?.dosage
-                                  ? 'border-red-500 focus-visible:ring-red-500'
-                                  : ''
-                              }`}
-                            />
-                          </div>
-                          <div>
-                            <Label className='text-xs sm:text-sm'>
-                              Қабул Қилиш{' '}
-                              <span className='text-red-500'>*</span>
+                              Дори <span className='text-red-500'>*</span>
                             </Label>
                             <Select
-                              value={med.frequency}
+                              value={med.medication_id}
                               onValueChange={(value) =>
-                                updateMedication(med.id, 'frequency', value)
+                                updateMedication(med.id, 'medication_id', value)
                               }
                             >
                               <SelectTrigger
                                 className={`text-sm mt-1 ${
-                                  formErrors.medications[med.id]?.frequency
+                                  formErrors.medications[med.id]?.medication_id
                                     ? 'border-red-500 focus:ring-red-500'
                                     : ''
                                 }`}
                               >
-                                <SelectValue placeholder='Танланг' />
+                                <SelectValue placeholder='Дорини танланг' />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value='1x'>
-                                  Кунига 1 марта
-                                </SelectItem>
-                                <SelectItem value='2x'>
-                                  Кунига 2 марта
-                                </SelectItem>
-                                <SelectItem value='3x'>
-                                  Кунига 3 марта
-                                </SelectItem>
-                                <SelectItem value='4x'>
-                                  Кунига 4 марта
-                                </SelectItem>
+                                <div className='p-2'>
+                                  <Input
+                                    placeholder='Дори қидириш...'
+                                    value={medicationSearch}
+                                    onChange={(e) =>
+                                      setMedicationSearch(e.target.value)
+                                    }
+                                    className='text-sm mb-2'
+                                  />
+                                </div>
+                                {medicationsData?.data &&
+                                medicationsData.data.length > 0 ? (
+                                  medicationsData.data.map(
+                                    (medication: any) => (
+                                      <SelectItem
+                                        key={medication._id}
+                                        value={medication._id}
+                                      >
+                                        <div className='flex flex-col'>
+                                          <span className='font-medium'>
+                                            {medication.name}
+                                          </span>
+                                          <span className='text-xs text-muted-foreground'>
+                                            {medication.dosage}{' '}
+                                            {medication.dosage_unit}
+                                          </span>
+                                        </div>
+                                      </SelectItem>
+                                    )
+                                  )
+                                ) : (
+                                  <div className='p-4 text-center text-sm text-muted-foreground'>
+                                    Дори топилмади
+                                  </div>
+                                )}
                               </SelectContent>
                             </Select>
+                          </div>
+                          <div>
+                            <Label className='text-xs sm:text-sm'>
+                              Қабул Қилиш (кунига марта){' '}
+                              <span className='text-red-500'>*</span>
+                            </Label>
+                            <Input
+                              type='number'
+                              placeholder='Қабул қилиш'
+                              value={med.frequency}
+                              onChange={(e) =>
+                                updateMedication(
+                                  med.id,
+                                  'frequency',
+                                  e.target.value
+                                )
+                              }
+                              className={`text-sm mt-1 ${
+                                formErrors.medications[med.id]?.frequency
+                                  ? 'border-red-500 focus:ring-red-500'
+                                  : ''
+                              }`}
+                            />
                           </div>
                           <div>
                             <Label className='text-xs sm:text-sm'>
@@ -1153,6 +1147,7 @@ const Prescription = () => {
                             </Label>
                             <Input
                               type='number'
+                              placeholder='Даволаш муддати'
                               value={med.duration}
                               onChange={(e) =>
                                 updateMedication(
@@ -1161,10 +1156,9 @@ const Prescription = () => {
                                   e.target.value
                                 )
                               }
-                              placeholder='7'
                               className={`text-sm mt-1 ${
                                 formErrors.medications[med.id]?.duration
-                                  ? 'border-red-500 focus-visible:ring-red-500'
+                                  ? 'border-red-500 focus:ring-red-500'
                                   : ''
                               }`}
                             />
