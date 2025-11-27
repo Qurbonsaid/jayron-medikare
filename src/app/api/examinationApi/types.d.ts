@@ -5,6 +5,7 @@ export type examCreateReq = {
   doctor_id: string;
   description: string;
   complaints: string;
+  treatment_type: "stasionar" | "ambulator";
 };
 
 type Analysis = {

@@ -338,7 +338,7 @@ const PatientProfile = () => {
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
                     Диагноз
                   </h3>
-                  {patient.diagnosis ? (
+                  {patient.diagnosis.diagnosis_id ? (
                     <p className='p-3 bg-accent rounded-lg border-l-4 border-primary'>
                       <div className='flex items-start gap-2'>
                         <span className='text-primary mt-1'>•</span>
@@ -346,20 +346,15 @@ const PatientProfile = () => {
                           {patient.diagnosis.diagnosis_id?.name && (
                             <p className='text-sm sm:text-base font-medium mb-1'>
                               {patient.diagnosis.diagnosis_id.name}
-                              {patient.diagnosis.diagnosis_id.code && (
+                              {patient.diagnosis.diagnosis_id?.code && (
                                 <span className='text-xs text-muted-foreground ml-2'>
                                   ({patient.diagnosis.diagnosis_id.code})
                                 </span>
                               )}
                             </p>
                           )}
-                          {patient.diagnosis.description && (
+                          {patient.diagnosis.diagnosis_id.description && (
                             <p className='text-xs sm:text-sm text-muted-foreground'>
-                              {patient.diagnosis.description}
-                            </p>
-                          )}
-                          {patient.diagnosis.diagnosis_id?.description && (
-                            <p className='text-xs sm:text-sm text-muted-foreground mt-1'>
                               {patient.diagnosis.diagnosis_id.description}
                             </p>
                           )}

@@ -242,9 +242,9 @@ const Visits = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='all'>Барчаси</SelectItem>
-                    <SelectItem value='active'>Фаол</SelectItem>
                     <SelectItem value='completed'>Тугалланган</SelectItem>
-                    {/* <SelectItem value='pending'>Тугалланмаган</SelectItem>
+                    <SelectItem value='pending'>Тугалланмаган</SelectItem>
+                    {/* <SelectItem value='active'>Фаол</SelectItem>
                     <SelectItem value='deleted'>Ўчирилганлар</SelectItem>
                     <SelectItem value='inactive'>Фаол эмас</SelectItem> */}
                   </SelectContent>
