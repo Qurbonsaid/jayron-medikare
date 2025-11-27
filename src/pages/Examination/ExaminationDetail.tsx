@@ -39,6 +39,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   Edit,
+  Eye,
   FilePlus,
   Loader2,
   Plus,
@@ -49,6 +50,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { ViewMedicalImage } from '../Radiology/components';
 
 // Tana qismlari uchun o'zbek nomlari
 const bodyPartLabels: Record<string, string> = {
@@ -71,6 +73,9 @@ const ExaminationDetail = () => {
   const { id } = useParams();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('examination');
   const [editForm, setEditForm] = useState({
     complaints: '',
     description: '',
@@ -132,14 +137,14 @@ const ExaminationDetail = () => {
     useCompleteExamsMutation();
   const [deletePrescription, { isLoading: isDeletingPrescription }] =
     useDeletePrescriptionMutation();
-  const [updatePrescription, { isLoading: isUpdatingPrescription }] =
-    useUpdatePrescriptionMutation();
   const [addService, { isLoading: isAddingServiceMutation }] =
     useAddServiceToExaminationMutation();
   const [updateService, { isLoading: isUpdatingService }] =
     useUpdateServiceFromExaminationMutation();
   const [removeService, { isLoading: isRemovingService }] =
     useRemoveServiceFromExaminationMutation();
+  const [updatePrescription, { isLoading: isUpdatingPrescription }] =
+    useUpdatePrescriptionMutation();
   const handleRequest = useHandleRequest();
 
   // Update form when exam changes
@@ -161,6 +166,7 @@ const ExaminationDetail = () => {
 
   const handleEdit = () => {
     setIsEditMode(true);
+    setActiveTab('examination');
   };
 
   const handleCancelEdit = () => {
@@ -259,78 +265,6 @@ const ExaminationDetail = () => {
       },
       onError: (error) => {
         toast.error(error?.data?.error?.msg || 'Рецептни ўчиришда хатолик');
-      },
-    });
-  };
-
-  const startEditPrescription = (prescription: any) => {
-    setEditingPrescriptionId(prescription._id);
-    setPrescriptionForm({
-      medication: prescription.medication || '',
-      dosage: prescription.dosage?.toString() || '',
-      frequency: prescription.frequency?.toString() || '',
-      duration: prescription.duration?.toString() || '',
-      instructions: prescription.instructions || '',
-    });
-  };
-
-  const cancelEditPrescription = () => {
-    setEditingPrescriptionId(null);
-    setPrescriptionForm({
-      medication: '',
-      dosage: '',
-      frequency: '',
-      duration: '',
-      instructions: '',
-    });
-  };
-
-  const handleUpdatePrescription = async (prescriptionId: string) => {
-    if (!prescriptionForm.medication.trim()) {
-      toast.error('Илтимос, дори номини киритинг');
-      return;
-    }
-    if (!prescriptionForm.dosage || parseFloat(prescriptionForm.dosage) <= 0) {
-      toast.error('Илтимос, тўғри дозани киритинг');
-      return;
-    }
-    if (
-      !prescriptionForm.frequency ||
-      parseInt(prescriptionForm.frequency) <= 0
-    ) {
-      toast.error('Илтимос, қабул қилиш частотасини киритинг');
-      return;
-    }
-    if (
-      !prescriptionForm.duration ||
-      parseInt(prescriptionForm.duration) <= 0
-    ) {
-      toast.error('Илтимос, даволаш муддатини киритинг');
-      return;
-    }
-
-    await handleRequest({
-      request: async () => {
-        const res = await updatePrescription({
-          id: exam._id,
-          prescription_id: prescriptionId,
-          body: {
-            medication: prescriptionForm.medication,
-            dosage: parseFloat(prescriptionForm.dosage),
-            frequency: parseInt(prescriptionForm.frequency),
-            duration: parseInt(prescriptionForm.duration),
-            instructions: prescriptionForm.instructions,
-          },
-        }).unwrap();
-        return res;
-      },
-      onSuccess: () => {
-        toast.success('Рецепт муваффақиятли янгиланди');
-        cancelEditPrescription();
-        refetch();
-      },
-      onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Рецептни янгилашда хатолик');
       },
     });
   };
@@ -480,6 +414,86 @@ const ExaminationDetail = () => {
     });
   };
 
+  // Prescription handlers
+  const startEditPrescription = (prescription: any) => {
+    setEditingPrescriptionId(prescription._id);
+    setPrescriptionForm({
+      medication: prescription.medication || '',
+      dosage: prescription.dosage?.toString() || '',
+      frequency: prescription.frequency?.toString() || '',
+      duration: prescription.duration?.toString() || '',
+      instructions: prescription.instructions || '',
+    });
+  };
+
+  const cancelEditPrescription = () => {
+    setEditingPrescriptionId(null);
+    setPrescriptionForm({
+      medication: '',
+      dosage: '',
+      frequency: '',
+      duration: '',
+      instructions: '',
+    });
+  };
+
+  const handleUpdatePrescription = async (prescriptionId: string) => {
+    if (!prescriptionForm.medication.trim()) {
+      toast.error('Илтимос, дори номини киритинг');
+      return;
+    }
+    if (!prescriptionForm.dosage || parseFloat(prescriptionForm.dosage) <= 0) {
+      toast.error('Илтимос, тўғри дозани киритинг');
+      return;
+    }
+    if (
+      !prescriptionForm.frequency ||
+      parseInt(prescriptionForm.frequency) <= 0
+    ) {
+      toast.error('Илтимос, тўғри қабул қилиш частотасини киритинг');
+      return;
+    }
+    if (
+      !prescriptionForm.duration ||
+      parseInt(prescriptionForm.duration) <= 0
+    ) {
+      toast.error('Илтимос, тўғри муддатни киритинг');
+      return;
+    }
+
+    await handleRequest({
+      request: async () => {
+        const res = await updatePrescription({
+          id: exam._id,
+          prescription_id: prescriptionId,
+          body: {
+            medication: prescriptionForm.medication,
+            dosage: parseFloat(prescriptionForm.dosage),
+            frequency: parseInt(prescriptionForm.frequency),
+            duration: parseInt(prescriptionForm.duration),
+            instructions: prescriptionForm.instructions,
+          },
+        }).unwrap();
+        return res;
+      },
+      onSuccess: () => {
+        toast.success('Рецепт муваффақиятли янгиланди');
+        setEditingPrescriptionId(null);
+        setPrescriptionForm({
+          medication: '',
+          dosage: '',
+          frequency: '',
+          duration: '',
+          instructions: '',
+        });
+        refetch();
+      },
+      onError: (error) => {
+        toast.error(error?.data?.error?.msg || 'Рецептни янгилашда хатолик');
+      },
+    });
+  };
+
   if (isLoading) {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
@@ -588,7 +602,20 @@ const ExaminationDetail = () => {
         </Card>
 
         {/* Tabs */}
-        <Tabs defaultValue='examination' className='space-y-6'>
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => {
+            // Tahrirlash rejimida boshqa tablarga o'tishni bloklash
+            if (isEditMode && value !== 'examination') {
+              toast.error(
+                'Илтимос, аввал таҳрирлашни тугатинг ёки бекор қилинг'
+              );
+              return;
+            }
+            setActiveTab(value);
+          }}
+          className='space-y-6'
+        >
           <TabsList className='grid w-full grid-cols-5 h-auto gap-1'>
             <TabsTrigger
               value='examination'
@@ -599,29 +626,31 @@ const ExaminationDetail = () => {
             <TabsTrigger
               value='prescriptions'
               className='py-2 sm:py-3 text-xs sm:text-sm'
+              disabled={isEditMode}
             >
               Рецептлар
             </TabsTrigger>
             <TabsTrigger
               value='services'
               className='py-2 sm:py-3 text-xs sm:text-sm'
+              disabled={isEditMode}
             >
               Хизматлар
             </TabsTrigger>
-            <Button
-              variant='outline'
-              className='py-2 sm:py-3 text-xs bg-[#f5f5f5] border-none sm:text-sm h-auto hover:bg-[#f5f5f5] hover:text-[#868786]'
-              onClick={() => navigate('/lab-results')}
+            <TabsTrigger
+              value='visits'
+              className='py-2 sm:py-3 text-xs sm:text-sm'
+              disabled={isEditMode}
             >
               Таҳлил
-            </Button>
-            <Button
-              variant='outline'
-              className='py-2 sm:py-3 text-xs sm:text-sm h-auto bg-[#f5f5f5] border-none hover:bg-[#f5f5f5] hover:text-[#868786]'
-              onClick={() => navigate('/radiology')}
+            </TabsTrigger>
+            <TabsTrigger
+              value='images'
+              className='py-2 sm:py-3 text-xs sm:text-sm'
+              disabled={isEditMode}
             >
               Тасвирлар
-            </Button>
+            </TabsTrigger>
           </TabsList>
 
           {/* Examination Tab */}
@@ -823,7 +852,12 @@ const ExaminationDetail = () => {
                           <CardContent className='pt-4'>
                             {editingPrescriptionId === prescription._id ? (
                               <div className='space-y-4'>
-                                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+                                <div className='flex items-center justify-between mb-3'>
+                                  <span className='text-sm font-medium text-primary'>
+                                    Рецепт #{index + 1} - Таҳрирлаш
+                                  </span>
+                                </div>
+                                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                                   <div className='space-y-2'>
                                     <Label>Дори Номи *</Label>
                                     <Input
@@ -852,10 +886,12 @@ const ExaminationDetail = () => {
                                     />
                                   </div>
                                   <div className='space-y-2'>
-                                    <Label>Кунига (марта) *</Label>
+                                    <Label>
+                                      Қабул қилиш (кунига неча марта) *
+                                    </Label>
                                     <Input
                                       type='number'
-                                      placeholder='Қабул қилиш'
+                                      placeholder='Частотани киритинг'
                                       value={prescriptionForm.frequency}
                                       onChange={(e) =>
                                         setPrescriptionForm({
@@ -869,7 +905,7 @@ const ExaminationDetail = () => {
                                     <Label>Муддати (кун) *</Label>
                                     <Input
                                       type='number'
-                                      placeholder='Даволаш муддати'
+                                      placeholder='Муддатни киритинг'
                                       value={prescriptionForm.duration}
                                       onChange={(e) =>
                                         setPrescriptionForm({
@@ -883,7 +919,7 @@ const ExaminationDetail = () => {
                                 <div className='space-y-2'>
                                   <Label>Қўшимча Кўрсатмалар</Label>
                                   <Textarea
-                                    placeholder='Қўшимча кўрсатмалар киритинг'
+                                    placeholder='Қўшимча кўрсатмаларни киритинг'
                                     value={prescriptionForm.instructions}
                                     onChange={(e) =>
                                       setPrescriptionForm({
@@ -891,7 +927,7 @@ const ExaminationDetail = () => {
                                         instructions: e.target.value,
                                       })
                                     }
-                                    rows={2}
+                                    rows={3}
                                   />
                                 </div>
                                 <div className='flex gap-2 justify-end'>
@@ -1103,6 +1139,7 @@ const ExaminationDetail = () => {
                                   <SelectItem value='pending'>
                                     Кутилмоқда
                                   </SelectItem>
+                                  <SelectItem value='active'>Актив</SelectItem>
                                   <SelectItem value='completed'>
                                     Якунланган
                                   </SelectItem>
@@ -1219,14 +1256,14 @@ const ExaminationDetail = () => {
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
+                                      <SelectItem value='active'>
+                                        Актив
+                                      </SelectItem>
                                       <SelectItem value='pending'>
                                         Кутилмоқда
                                       </SelectItem>
                                       <SelectItem value='completed'>
                                         Якунланган
-                                      </SelectItem>
-                                      <SelectItem value='cancelled'>
-                                        Бекор қилинган
                                       </SelectItem>
                                     </SelectContent>
                                   </Select>
@@ -1387,7 +1424,565 @@ const ExaminationDetail = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Visits Tab */}
+          <TabsContent value='visits'>
+            <Card>
+              <CardHeader>
+                <CardTitle className='flex items-center justify-between'>
+                  <span>Таҳлиллар</span>
+                  {exam.analyses && exam.analyses.length > 0 && (
+                    <span className='text-sm font-normal text-muted-foreground'>
+                      ({exam.analyses.length} та)
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {exam.analyses && exam.analyses.length > 0 ? (
+                  <div className='space-y-4'>
+                    {exam.analyses.map((analysis: any, index: number) => {
+                      const paramType = analysis.analysis_parameter_type;
+                      const paramValue = analysis.analysis_parameter_value;
+
+                      // Check if this is new structure (single parameter per analysis)
+                      const isNewStructure =
+                        paramType && typeof paramType === 'object';
+
+                      if (isNewStructure) {
+                        // NEW STRUCTURE: Single parameter with detailed info
+                        const isAbnormal =
+                          paramType?.normal_range &&
+                          (() => {
+                            const range =
+                              paramType.normal_range.general ||
+                              paramType.normal_range.male ||
+                              paramType.normal_range.female;
+                            if (range && typeof paramValue === 'number') {
+                              return (
+                                paramValue < range.min || paramValue > range.max
+                              );
+                            }
+                            return false;
+                          })();
+
+                        return (
+                          <Card
+                            key={analysis._id}
+                            className={`border ${
+                              isAbnormal
+                                ? 'border-red-300 bg-red-50/30'
+                                : 'border-primary/10 bg-primary/5'
+                            }`}
+                          >
+                            <CardContent className='pt-4'>
+                              <div className='space-y-4'>
+                                {/* Parameter Info */}
+                                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                                  <div>
+                                    <Label className='text-xs text-muted-foreground'>
+                                      Параметр номи
+                                    </Label>
+                                    <p className='font-bold text-base mt-1'>
+                                      {paramType.parameter_name}
+                                    </p>
+                                    {paramType.parameter_code && (
+                                      <p className='text-xs text-muted-foreground mt-1'>
+                                        Код: {paramType.parameter_code}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div>
+                                    <Label className='text-xs text-muted-foreground'>
+                                      Натижа
+                                    </Label>
+                                    <div className='flex items-baseline gap-2 mt-1'>
+                                      <p
+                                        className={`font-bold text-lg ${
+                                          isAbnormal
+                                            ? 'text-red-600'
+                                            : 'text-green-600'
+                                        }`}
+                                      >
+                                        {paramValue}
+                                      </p>
+                                      {paramType.unit && (
+                                        <span className='text-sm text-muted-foreground'>
+                                          {paramType.unit}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Normal Range */}
+                                {paramType?.normal_range && (
+                                  <div className='bg-white rounded border p-3'>
+                                    <Label className='text-xs text-muted-foreground block mb-2'>
+                                      Меъёрий қийматлар
+                                    </Label>
+                                    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm'>
+                                      {paramType.normal_range.general && (
+                                        <div>
+                                          <p className='text-xs text-muted-foreground'>
+                                            Умумий:
+                                          </p>
+                                          <p className='font-semibold'>
+                                            {paramType.normal_range.general.min}{' '}
+                                            -{' '}
+                                            {paramType.normal_range.general.max}
+                                            {paramType.normal_range.general
+                                              .value &&
+                                              ` (${paramType.normal_range.general.value})`}
+                                          </p>
+                                        </div>
+                                      )}
+                                      {paramType.normal_range.male && (
+                                        <div>
+                                          <p className='text-xs text-muted-foreground'>
+                                            Эркаклар:
+                                          </p>
+                                          <p className='font-semibold'>
+                                            {paramType.normal_range.male.min} -{' '}
+                                            {paramType.normal_range.male.max}
+                                            {paramType.normal_range.male
+                                              .value &&
+                                              ` (${paramType.normal_range.male.value})`}
+                                          </p>
+                                        </div>
+                                      )}
+                                      {paramType.normal_range.female && (
+                                        <div>
+                                          <p className='text-xs text-muted-foreground'>
+                                            Аёллар:
+                                          </p>
+                                          <p className='font-semibold'>
+                                            {paramType.normal_range.female.min}{' '}
+                                            -{' '}
+                                            {paramType.normal_range.female.max}
+                                            {paramType.normal_range.female
+                                              .value &&
+                                              ` (${paramType.normal_range.female.value})`}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Description */}
+                                {paramType?.description && (
+                                  <div>
+                                    <Label className='text-xs text-muted-foreground'>
+                                      Таърифи
+                                    </Label>
+                                    <p className='text-sm mt-1 bg-blue-50 p-2 rounded border border-blue-200'>
+                                      {paramType.description}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* Status Indicator */}
+                                {isAbnormal && (
+                                  <div className='bg-red-100 border border-red-300 rounded p-3'>
+                                    <p className='text-sm font-semibold text-red-800 flex items-center gap-2'>
+                                      <AlertTriangle className='w-4 h-4' />
+                                      Огоҳлантириш: Натижа меъёрий қийматдан
+                                      ташқарида
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      } else {
+                        // OLD STRUCTURE: Analysis with multiple results
+                        return (
+                          <Card
+                            key={analysis._id}
+                            className='border border-primary/10 bg-primary/5'
+                          >
+                            <CardContent className='pt-4'>
+                              <div className='flex items-center justify-between mb-3'>
+                                <div>
+                                  <span className='text-sm font-medium text-primary'>
+                                    Таҳлил #{index + 1}
+                                  </span>
+                                  {analysis.created_at && (
+                                    <p className='text-xs text-muted-foreground mt-1'>
+                                      {new Date(
+                                        analysis.created_at
+                                      ).toLocaleString('uz-UZ', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      })}
+                                    </p>
+                                  )}
+                                </div>
+                                {analysis.status && (
+                                  <div className='text-right'>
+                                    <span
+                                      className={`inline-block px-3 py-1 rounded text-xs font-semibold ${
+                                        analysis.status === 'completed'
+                                          ? 'bg-green-100 text-green-800'
+                                          : analysis.status === 'active'
+                                          ? 'bg-blue-100 text-blue-800'
+                                          : analysis.status === 'pending'
+                                          ? 'bg-yellow-100 text-yellow-800'
+                                          : 'bg-gray-200 text-gray-700'
+                                      }`}
+                                    >
+                                      {analysis.status === 'completed'
+                                        ? 'Тугалланган'
+                                        : analysis.status === 'active'
+                                        ? 'Фаол'
+                                        : analysis.status === 'pending'
+                                        ? 'Кутилмоқда'
+                                        : analysis.status}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className='space-y-3'>
+                                {analysis.analysis_type && (
+                                  <div>
+                                    <Label className='text-xs text-muted-foreground'>
+                                      Таҳлил Тури
+                                    </Label>
+                                    <p className='font-semibold text-sm mt-1'>
+                                      {typeof analysis.analysis_type ===
+                                      'object'
+                                        ? analysis.analysis_type.name
+                                        : analysis.analysis_type}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {analysis.level && (
+                                  <div>
+                                    <Label className='text-xs text-muted-foreground'>
+                                      Даража
+                                    </Label>
+                                    <p className='font-semibold text-sm mt-1'>
+                                      {analysis.level}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {typeof analysis.analysis_type === 'object' &&
+                                  analysis.analysis_type.description && (
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Таърифи
+                                      </Label>
+                                      <p className='text-sm mt-1 bg-blue-50 p-2 rounded border border-blue-200'>
+                                        {analysis.analysis_type.description}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                {analysis.clinical_indications && (
+                                  <div>
+                                    <Label className='text-xs text-muted-foreground'>
+                                      Клиник Кўрсатмалар
+                                    </Label>
+                                    <p className='text-sm mt-1 bg-white p-2 rounded border'>
+                                      {analysis.clinical_indications}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {analysis.results &&
+                                  analysis.results.length > 0 && (
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground mb-2 block'>
+                                        Натижалар
+                                      </Label>
+                                      <div className='bg-white rounded border'>
+                                        <div className='overflow-x-auto'>
+                                          <table className='w-full text-sm'>
+                                            <thead className='bg-muted/50'>
+                                              <tr>
+                                                <th className='text-left p-2 font-semibold'>
+                                                  Параметр
+                                                </th>
+                                                <th className='text-right p-2 font-semibold'>
+                                                  Қиймат
+                                                </th>
+                                                <th className='text-right p-2 font-semibold'>
+                                                  Меъёр
+                                                </th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              {analysis.results.map(
+                                                (result: any) => {
+                                                  const resParamType =
+                                                    typeof result.analysis_parameter_type ===
+                                                    'object'
+                                                      ? result.analysis_parameter_type
+                                                      : null;
+                                                  const resValue =
+                                                    result.analysis_parameter_value;
+
+                                                  // Check if abnormal
+                                                  const resIsAbnormal =
+                                                    resParamType?.normal_range &&
+                                                    (() => {
+                                                      const range =
+                                                        resParamType
+                                                          .normal_range
+                                                          .general ||
+                                                        resParamType
+                                                          .normal_range.male ||
+                                                        resParamType
+                                                          .normal_range.female;
+                                                      if (
+                                                        range &&
+                                                        typeof resValue ===
+                                                          'number'
+                                                      ) {
+                                                        return (
+                                                          resValue <
+                                                            range.min ||
+                                                          resValue > range.max
+                                                        );
+                                                      }
+                                                      return false;
+                                                    })();
+
+                                                  const normalRangeText =
+                                                    resParamType?.normal_range &&
+                                                    (() => {
+                                                      const range =
+                                                        resParamType
+                                                          .normal_range
+                                                          .general ||
+                                                        resParamType
+                                                          .normal_range.male ||
+                                                        resParamType
+                                                          .normal_range.female;
+                                                      if (range) {
+                                                        return `${range.min} - ${range.max}`;
+                                                      }
+                                                      return '-';
+                                                    })();
+
+                                                  return (
+                                                    <tr
+                                                      key={result._id}
+                                                      className={`border-t ${
+                                                        resIsAbnormal
+                                                          ? 'bg-red-50'
+                                                          : ''
+                                                      }`}
+                                                    >
+                                                      <td className='p-2'>
+                                                        {resParamType
+                                                          ? resParamType.parameter_name
+                                                          : result.analysis_parameter_type}
+                                                      </td>
+                                                      <td
+                                                        className={`p-2 text-right font-medium ${
+                                                          resIsAbnormal
+                                                            ? 'text-red-600 font-bold'
+                                                            : 'text-green-600'
+                                                        }`}
+                                                      >
+                                                        {resValue}
+                                                        {resParamType?.unit && (
+                                                          <span className='text-xs text-muted-foreground ml-1'>
+                                                            {resParamType.unit}
+                                                          </span>
+                                                        )}
+                                                      </td>
+                                                      <td className='p-2 text-right text-muted-foreground'>
+                                                        {normalRangeText || '-'}
+                                                      </td>
+                                                    </tr>
+                                                  );
+                                                }
+                                              )}
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                {analysis.comment && (
+                                  <div>
+                                    <Label className='text-xs text-muted-foreground'>
+                                      Изоҳ
+                                    </Label>
+                                    <p className='text-sm mt-1 bg-yellow-50 p-2 rounded border border-yellow-200'>
+                                      {analysis.comment}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      }
+                    })}
+                  </div>
+                ) : (
+                  <div className='text-center py-8'>
+                    <p className='text-muted-foreground'>
+                      Ҳали таҳлиллар қўшилмаган
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Images Tab */}
+          <TabsContent value='images'>
+            <Card>
+              <CardHeader>
+                <CardTitle className='flex items-center justify-between'>
+                  <span>Тасвирлар</span>
+                  {exam.images &&
+                    exam.images.length > 0 &&
+                    (() => {
+                      const totalImagesCount = exam.images.reduce(
+                        (total: number, img: any) => {
+                          if (
+                            img?.image_paths &&
+                            Array.isArray(img.image_paths)
+                          ) {
+                            return total + img.image_paths.length;
+                          }
+                          return total;
+                        },
+                        0
+                      );
+
+                      return totalImagesCount > 0 ? (
+                        <span className='text-sm font-normal text-muted-foreground'>
+                          ({totalImagesCount} та)
+                        </span>
+                      ) : null;
+                    })()}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {exam.images && exam.images.length > 0 ? (
+                  <div className='space-y-3'>
+                    {exam.images.map((image: any, index: number) => {
+                      if (
+                        !image?.image_paths ||
+                        !Array.isArray(image.image_paths) ||
+                        image.image_paths.length === 0
+                      ) {
+                        return null;
+                      }
+
+                      // Display first image from image_paths as thumbnail
+                      const thumbnailPath = image.image_paths[0];
+                      const bodyPartLabel =
+                        bodyPartLabels[image.body_part] ||
+                        image.body_part ||
+                        'Кўрсатилмаган';
+                      const imagingTypeName =
+                        image.imaging_type_id?.name || 'Номаълум';
+                      const imageDate = image.created_at
+                        ? new Date(image.created_at).toLocaleDateString('uz-UZ')
+                        : '';
+
+                      return (
+                        <Card
+                          key={image._id || index}
+                          className='overflow-hidden hover:shadow-lg transition-shadow cursor-pointer'
+                          onClick={() => {
+                            setSelectedImage(image);
+                            setShowViewModal(true);
+                          }}
+                        >
+                          <div className='flex flex-col sm:flex-row'>
+                            {/* Image Section */}
+                            <div className='relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0'>
+                              <img
+                                src={thumbnailPath}
+                                alt={image.description || `Тасвир ${index + 1}`}
+                                className='w-full h-full object-cover hover:scale-105 transition-transform'
+                                onError={(e) => {
+                                  e.currentTarget.src =
+                                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="14"%3EТасвир топилмади%3C/text%3E%3C/svg%3E';
+                                }}
+                              />
+                              {image.image_paths.length > 1 && (
+                                <div className='absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded'>
+                                  +{image.image_paths.length - 1}
+                                </div>
+                              )}
+                              <div className='absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center group'>
+                                <Eye className='w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity' />
+                              </div>
+                            </div>
+
+                            {/* Info Section */}
+                            <div className='flex-1 p-4'>
+                              <div className='space-y-2'>
+                                <h4
+                                  className='font-semibold text-base line-clamp-2'
+                                  title={image.description}
+                                >
+                                  {image.description || 'Тавсиф йўқ'}
+                                </h4>
+                                <div className='flex flex-wrap items-center gap-3 text-sm text-muted-foreground'>
+                                  <div className='flex items-center gap-1'>
+                                    <span className='font-medium text-foreground'>
+                                      {imagingTypeName}
+                                    </span>
+                                  </div>
+                                  <span>•</span>
+                                  <div className='flex items-center gap-1'>
+                                    <span>{bodyPartLabel}</span>
+                                  </div>
+                                  <span>•</span>
+                                  <div className='flex items-center gap-1'>
+                                    <span>
+                                      {image.image_paths.length} та тасвир
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className='text-xs text-muted-foreground'>
+                                  {imageDate}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className='text-center py-8'>
+                    <p className='text-muted-foreground'>
+                      Ҳали тасвирлар қўшилмаган
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
+
+        {/* View Medical Images Modal */}
+        <ViewMedicalImage
+          open={showViewModal}
+          onOpenChange={setShowViewModal}
+          medicalImage={selectedImage}
+        />
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteConfirm} onOpenChange={setIsDeleteConfirm}>

@@ -692,14 +692,14 @@ const Prescription = () => {
                   <CardContent>
                     <div className='space-y-3 sm:space-y-4'>
                       <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-                        <div className='space-y-1'>
+                        {/* <div className='space-y-1'>
                           <Label className='text-xs sm:text-sm text-muted-foreground'>
                             Кўрик ID
                           </Label>
                           <p className='font-mono font-semibold text-xs sm:text-sm break-all'>
                             {examinationData.data._id || 'N/A'}
                           </p>
-                        </div>
+                        </div> */}
                         <div className='space-y-1'>
                           <Label className='text-xs sm:text-sm text-muted-foreground'>
                             Шифокор
@@ -709,7 +709,6 @@ const Prescription = () => {
                               'Номаълум'}
                           </p>
                         </div>
-                      </div>
                       <div className='space-y-1'>
                         <Label className='text-xs sm:text-sm text-muted-foreground'>
                           Шикоят
@@ -717,6 +716,7 @@ const Prescription = () => {
                         <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
                           {examinationData.data.complaints || 'Маълумот йўқ'}
                         </p>
+                      </div>
                       </div>
                       {examinationData.data.description && (
                         <div className='space-y-1'>

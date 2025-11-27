@@ -124,8 +124,6 @@ export type OnePatientRes = {
         code: string;
         description: string;
       };
-
-      description: string | null;
       _id: string;
     };
     fullname: string;
