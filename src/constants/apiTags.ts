@@ -13,4 +13,5 @@ export enum API_TAGS {
   IMAGING_TYPE = "ImagingType",
   MEDICAL_IMAGE = "MedicalImage",
   DISEASE = "DISEASE",
+  MEDICATION = "MEDICATION",
 }

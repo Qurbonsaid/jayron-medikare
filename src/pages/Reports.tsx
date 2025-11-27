@@ -1,300 +1,312 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, FileSpreadsheet, Printer, TrendingUp, Users, DollarSign, Clock, Bed } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { StatCard } from "@/components/ui/stat-card";
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+	useGetAllAnalysisQuery,
+	useGetAllBillingsQuery,
+	useGetDiagnosisQuery,
+	useGetAllDoctorsQuery,
+	useGetAllExaminationsQuery,
+	useGetAllPatientsQuery,
+	useGetAllRoomsQuery,
+	useGetAllUsersQuery,
+} from '@/app/api/report/report'
+import { AnalysisChart } from '@/components/Reports/AnalysisChart'
+import { BillingChart } from '@/components/Reports/BillingChart'
+import { DiagnosisChart } from '@/components/Reports/DiagnosisChart'
+import { DoctorPerformanceTable } from '@/components/Reports/DoctorPerformanceTable'
+import { ExaminationChart } from '@/components/Reports/ExaminationChart'
+import { PatientChart } from '@/components/Reports/PatientChart'
+import { StatisticsCard } from '@/components/Reports/StatisticsCard'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import {
+	Bed,
+	DollarSign,
+	Download,
+	FileSpreadsheet,
+	Printer,
+	Users,
+} from 'lucide-react'
+import { useState } from 'react'
+
+export enum REPORT_DATE_FILTER {
+	DAILY = 'daily',
+	THIS_WEEK = 'weekly',
+	THIS_MONTH = 'monthly',
+	QUARTERLY = 'quarterly',
+	THIS_YEAR = 'yearly',
+}
 
 const Reports = () => {
-  const navigate = useNavigate();
-  const [dateRange, setDateRange] = useState("month");
-  const [selectedDepartment, setSelectedDepartment] = useState("all");
+	const [billingInterval, setBillingInterval] = useState<REPORT_DATE_FILTER>(
+		REPORT_DATE_FILTER.DAILY
+	)
+	const [patientInterval, setPatientInterval] = useState<REPORT_DATE_FILTER>(
+		REPORT_DATE_FILTER.DAILY
+	)
+	const [doctorInterval, setDoctorInterval] = useState<REPORT_DATE_FILTER>(
+		REPORT_DATE_FILTER.DAILY
+	)
+	const [examinationInterval, setExaminationInterval] =
+		useState<REPORT_DATE_FILTER>(REPORT_DATE_FILTER.DAILY)
+	const [analysisInterval, setAnalysisInterval] = useState<REPORT_DATE_FILTER>(
+		REPORT_DATE_FILTER.DAILY
+	)
 
-  // Mock data for charts
-  const patientFlowData = [
-    { date: "01.10", ambulator: 45, statsionar: 12 },
-    { date: "02.10", ambulator: 52, statsionar: 15 },
-    { date: "03.10", ambulator: 48, statsionar: 13 },
-    { date: "04.10", ambulator: 61, statsionar: 14 },
-    { date: "05.10", ambulator: 55, statsionar: 16 },
-    { date: "06.10", ambulator: 58, statsionar: 14 },
-    { date: "07.10", ambulator: 63, statsionar: 17 },
-  ];
+	// API Queries - ular avtomatik refetch qiladilar interval o'zgarganda
+	const { data: billingsData, isLoading: billingsLoading } =
+		useGetAllBillingsQuery(
+			{ interval: billingInterval, page: 1, limit: 50 },
+			{ skip: false }
+		)
 
-  const revenueData = [
-    { service: "Консультация", amount: 4500000 },
-    { service: "Лаборатория", amount: 3200000 },
-    { service: "МРТ/КТ", amount: 2800000 },
-    { service: "Рентген", amount: 1500000 },
-    { service: "УЗИ", amount: 1800000 },
-  ];
+	const { data: patientsData, isLoading: patientsLoading } =
+		useGetAllPatientsQuery(
+			{ interval: patientInterval, page: 1, limit: 50 },
+			{ skip: false }
+		)
 
-  const diseaseData = [
-    { name: "ОРВИ (J00-J06)", value: 245, color: "#2196F3" },
-    { name: "Гипертония (I10)", value: 189, color: "#4CAF50" },
-    { name: "Диабет (E11)", value: 156, color: "#FFC107" },
-    { name: "Гастрит (K29)", value: 134, color: "#F44336" },
-    { name: "Остеохондроз (M42)", value: 112, color: "#9C27B0" },
-    { name: "Бошқалар", value: 324, color: "#607D8B" },
-  ];
+	const { data: diagnosisData, isLoading: diagnosisLoading } =
+		useGetDiagnosisQuery()
 
-  const doctorPerformance = [
-    { doctor: "Др. Алиев А.Р.", patients: 156, avgTime: "15 мин", revenue: "12,450,000" },
-    { doctor: "Др. Каримова Н.А.", patients: 142, avgTime: "18 мин", revenue: "11,200,000" },
-    { doctor: "Др. Усмонов Ж.Б.", patients: 128, avgTime: "16 мин", revenue: "9,850,000" },
-    { doctor: "Др. Иброҳимова М.С.", patients: 119, avgTime: "17 мин", revenue: "8,900,000" },
-    { doctor: "Др. Раҳимов Ф.Х.", patients: 105, avgTime: "19 мин", revenue: "7,600,000" },
-  ];
+	const { data: doctorsData, isLoading: doctorsLoading } =
+		useGetAllDoctorsQuery(
+			{ interval: doctorInterval, page: 1, limit: 50 },
+			{ skip: false }
+		)
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(value) + " сўм";
-  };
+	const { data: examinationsData, isLoading: examinationsLoading } =
+		useGetAllExaminationsQuery(
+			{ interval: examinationInterval, page: 1, limit: 50 },
+			{ skip: false }
+		)
 
-  const handleExport = (format: "excel" | "pdf") => {
-    console.log(`Exporting to ${format}...`);
-    // Implement export logic
-  };
+	const { data: analysisData, isLoading: analysisLoading } =
+		useGetAllAnalysisQuery(
+			{ interval: analysisInterval, page: 1, limit: 50 },
+			{ skip: false }
+		)
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Export Buttons - Mobile */}
-      <div className="container mx-auto px-3 sm:px-4 py-3 sm:hidden">
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleExport("excel")} className="flex-1 text-xs">
-            <FileSpreadsheet className="w-3 h-3 mr-1" />
-            Excel
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleExport("pdf")} className="flex-1 text-xs">
-            <Download className="w-3 h-3 mr-1" />
-            PDF
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => window.print()} className="flex-1 text-xs">
-            <Printer className="w-3 h-3 mr-1" />
-            Чоп
-          </Button>
-        </div>
-      </div>
+	const { data: roomsData, isLoading: roomsLoading } = useGetAllRoomsQuery()
 
-      {/* Main Content */}
-      <main className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
-        {/* Export Buttons - Desktop */}
-        <div className="hidden sm:flex items-center gap-2 mb-4 sm:mb-6 justify-end">
-          <Button variant="outline" onClick={() => handleExport("excel")} className="text-sm">
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
-            Excel
-          </Button>
-          <Button variant="outline" onClick={() => handleExport("pdf")} className="text-sm">
-            <Download className="w-4 h-4 mr-2" />
-            PDF
-          </Button>
-          <Button variant="outline" onClick={() => window.print()} className="text-sm">
-            <Printer className="w-4 h-4 mr-2" />
-            Чоп этиш
-          </Button>
-        </div>
-        {/* Filters */}
-        <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            <div>
-              <Label className="text-xs sm:text-sm">Давр</Label>
-              <Select value={dateRange} onValueChange={setDateRange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="today">Бугун</SelectItem>
-                  <SelectItem value="week">Ҳафта</SelectItem>
-                  <SelectItem value="month">Ой</SelectItem>
-                  <SelectItem value="year">Йил</SelectItem>
-                  <SelectItem value="custom">Танлаш</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs sm:text-sm">Бўлим</Label>
-              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Барча бўлимлар</SelectItem>
-                  <SelectItem value="therapy">Терапия</SelectItem>
-                  <SelectItem value="surgery">Хирургия</SelectItem>
-                  <SelectItem value="pediatrics">Педиатрия</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </Card>
+	const { data: usersData, isLoading: usersLoading } = useGetAllUsersQuery()
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
-          <StatCard
-            title="Жами беморлар"
-            value="1,248"
-            icon={Users}
-            trend={{ value: 12.5, isPositive: true }}
-            variant="default"
-          />
-          <StatCard
-            title="Жами даромад"
-            value="28.4М"
-            icon={DollarSign}
-            trend={{ value: 8.3, isPositive: true }}
-            variant="success"
-          />
-          <StatCard
-            title="Ўртача кутиш вақти"
-            value="14 мин"
-            icon={Clock}
-            trend={{ value: 5.2, isPositive: false }}
-            variant="warning"
-          />
-          <StatCard
-            title="Палата бандлиги"
-            value="78%"
-            icon={Bed}
-            trend={{ value: 3.1, isPositive: true }}
-            variant="default"
-          />
-        </div>
+	// Calculate statistics
+	const totalBilling =
+		billingsData?.data?.reduce((sum, item) => sum + item.totalAmount, 0) || 0
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-          {/* Patient Flow Chart */}
-          <Card className="p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Беморлар оқими
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={patientFlowData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="ambulator" stroke="#2196F3" name="Амбулатор" strokeWidth={2} />
-                <Line type="monotone" dataKey="statsionar" stroke="#4CAF50" name="Стационар" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </Card>
+	const totalPatients =
+		patientsData?.data?.reduce((sum, item) => sum + item.totalPatients, 0) || 0
 
-          {/* Revenue Chart */}
-          <Card className="p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-success" />
-              Даромад хизматлар бўйича
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={revenueData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="service" type="category" width={100} />
-                <Tooltip formatter={(value) => formatCurrency(value as number)} />
-                <Bar dataKey="amount" fill="#2196F3" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
+	const formatCurrency = (value: number) => {
+		return new Intl.NumberFormat('uz-UZ', {
+			notation: 'compact',
+			compactDisplay: 'short',
+		}).format(value)
+	}
 
-          {/* Disease Distribution Chart */}
-          <Card className="p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Касалликлар тақсимоти</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={diseaseData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {diseaseData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
+	const handleExport = (format: 'excel' | 'pdf') => {
+		console.log(`Exporting to ${format}...`)
+		// Implement export logic
+	}
 
-          {/* Doctor Performance */}
-          <Card className="p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Шифокорлар самарадорлиги</h3>
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <table className="w-full min-w-[400px]">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 px-2 sm:px-0 text-xs sm:text-sm font-medium text-muted-foreground">Шифокор</th>
-                    <th className="text-center py-2 text-xs sm:text-sm font-medium text-muted-foreground hidden sm:table-cell">Беморлар</th>
-                    <th className="text-center py-2 text-xs sm:text-sm font-medium text-muted-foreground hidden md:table-cell">Ўрт. вақт</th>
-                    <th className="text-right py-2 px-2 sm:px-0 text-xs sm:text-sm font-medium text-muted-foreground">Даромад</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {doctorPerformance.map((doc, index) => (
-                    <tr key={index} className="border-b hover:bg-muted/50 transition-colors">
-                      <td className="py-2 sm:py-3 px-2 sm:px-0 font-medium text-xs sm:text-sm">{doc.doctor}</td>
-                      <td className="py-2 sm:py-3 text-center hidden sm:table-cell">
-                        <Badge variant="outline" className="text-xs">{doc.patients}</Badge>
-                      </td>
-                      <td className="py-2 sm:py-3 text-center text-xs text-muted-foreground hidden md:table-cell">{doc.avgTime}</td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-0 text-right font-semibold text-success text-xs sm:text-sm">{doc.revenue}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </div>
+	const isLoading =
+		billingsLoading || patientsLoading || roomsLoading || usersLoading
 
-        {/* SSV Report Generator */}
-        <Card className="p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">ССВ ҳисобот яратиш</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            <div className="sm:col-span-2 lg:col-span-1">
-              <Label className="text-xs sm:text-sm">Шаблон танлаш</Label>
-              <Select defaultValue="monthly">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="monthly">Ойлик ҳисобот</SelectItem>
-                  <SelectItem value="quarterly">Чоракли ҳисобот</SelectItem>
-                  <SelectItem value="yearly">Йиллик ҳисобот</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-end">
-              <Button className="w-full text-sm">
-                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                XML юклаш
-              </Button>
-            </div>
-            <div className="flex items-end">
-              <Button variant="outline" className="w-full text-sm">
-                <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                Excel юклаш
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </main>
-    </div>
-  );
-};
+	return (
+		<div className='min-h-screen bg-background'>
+			{/* Header with Export Buttons */}
+			<div className='border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+				<div className='container mx-auto px-3 sm:px-4 lg:px-6 py-4'>
+					<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
+						<div>
+							<h1 className='text-2xl font-bold tracking-tight'>Ҳисоботлар</h1>
+							<p className='text-sm text-muted-foreground mt-1'>
+								Тизим фаолияти статистикаси
+							</p>
+						</div>
+						<div className='flex gap-2'>
+							<Button
+								variant='outline'
+								size='sm'
+								onClick={() => handleExport('excel')}
+								className='text-xs sm:text-sm'
+							>
+								<FileSpreadsheet className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
+								Excel
+							</Button>
+							<Button
+								variant='outline'
+								size='sm'
+								onClick={() => handleExport('pdf')}
+								className='text-xs sm:text-sm'
+							>
+								<Download className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
+								PDF
+							</Button>
+							<Button
+								variant='outline'
+								size='sm'
+								onClick={() => window.print()}
+								className='text-xs sm:text-sm'
+							>
+								<Printer className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
+								<span className='hidden sm:inline'>Чоп этиш</span>
+								<span className='sm:hidden'>Чоп</span>
+							</Button>
+						</div>
+					</div>
+				</div>
+			</div>
 
-export default Reports;
+			{/* Main Content */}
+			<main className='container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-6'>
+				{/* KPI Cards */}
+				<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+					<StatisticsCard
+						title='Жами беморлар'
+						value={totalPatients.toLocaleString()}
+						icon={Users}
+						variant='default'
+					/>
+					<StatisticsCard
+						title='Жами даромад'
+						value={formatCurrency(totalBilling) + ' сўм'}
+						icon={DollarSign}
+						variant='success'
+					/>
+					{/* <StatisticsCard
+						title='Ташхислар'
+						value={
+							diagnosisData?.data?.totalExaminations.toLocaleString() || '0'
+						}
+						icon={Activity}
+						variant='warning'
+					/> */}
+					<StatisticsCard
+						title='Палата бандлиги'
+						value={`${
+							roomsData?.data?.occupancyRate.toFixed(1) || 0
+						}%`}
+						icon={Bed}
+						description={`${roomsData?.data?.occupiedBeds || 0}/${
+							roomsData?.data?.totalBeds || 0
+						} бандлаштирилган`}
+						variant='default'
+					/>
+				</div>
+
+				{/* User Statistics */}
+				{usersData?.data && (
+					<div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
+						<Card className='p-4'>
+							<h3 className='text-sm font-medium text-muted-foreground mb-2'>
+								Шифокорлар
+							</h3>
+							<p className='text-2xl font-bold'>
+								{usersData.data.doctor.total}
+							</p>
+							<div className='flex gap-4 mt-2 text-xs text-muted-foreground'>
+								<span className='text-green-600'>
+									Актив: {usersData.data.doctor.active}
+								</span>
+								<span className='text-red-600'>
+									Ноактив: {usersData.data.doctor.inactive}
+								</span>
+							</div>
+						</Card>
+						<Card className='p-4'>
+							<h3 className='text-sm font-medium text-muted-foreground mb-2'>
+								Ҳамширалар
+							</h3>
+							<p className='text-2xl font-bold'>{usersData.data.nurse.total}</p>
+							<div className='flex gap-4 mt-2 text-xs text-muted-foreground'>
+								<span className='text-green-600'>
+									Актив: {usersData.data.nurse.active}
+								</span>
+								<span className='text-red-600'>
+									Ноактив: {usersData.data.nurse.inactive}
+								</span>
+							</div>
+						</Card>
+						<Card className='p-4'>
+							<h3 className='text-sm font-medium text-muted-foreground mb-2'>
+								Регистраторлар
+							</h3>
+							<p className='text-2xl font-bold'>
+								{usersData.data.receptionist.total}
+							</p>
+							<div className='flex gap-4 mt-2 text-xs text-muted-foreground'>
+								<span className='text-green-600'>
+									Актив: {usersData.data.receptionist.active}
+								</span>
+								<span className='text-red-600'>
+									Ноактив: {usersData.data.receptionist.inactive}
+								</span>
+							</div>
+						</Card>
+					</div>
+				)}
+
+				{/* Charts Section */}
+				<div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+					{/* Billing Chart */}
+					<BillingChart
+						data={billingsData?.data || []}
+						isLoading={billingsLoading}
+						interval={billingInterval}
+						onIntervalChange={setBillingInterval}
+					/>
+
+					{/* Patient Chart */}
+					<PatientChart
+						data={patientsData?.data || []}
+						isLoading={patientsLoading}
+						interval={patientInterval}
+						onIntervalChange={setPatientInterval}
+					/>
+
+					{/* Examination Chart */}
+					<ExaminationChart
+						data={examinationsData?.data || []}
+						isLoading={examinationsLoading}
+						interval={examinationInterval}
+						onIntervalChange={setExaminationInterval}
+					/>
+
+					{/* Analysis Chart */}
+					<AnalysisChart
+						data={analysisData?.data || []}
+						isLoading={analysisLoading}
+						interval={analysisInterval}
+						onIntervalChange={setAnalysisInterval}
+					/>
+
+					{/* Diagnosis Chart */}
+					<DiagnosisChart
+						data={diagnosisData?.data?.diagnosisStats || []}
+						isLoading={diagnosisLoading}
+					/>
+
+					{/* Doctor Performance Table */}
+					<DoctorPerformanceTable
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						data={(doctorsData?.data || []) as any}
+						isLoading={doctorsLoading}
+						interval={doctorInterval}
+						onIntervalChange={setDoctorInterval}
+					/>
+				</div>
+
+				{/* Info Alert */}
+				<Alert>
+					<AlertDescription>
+						Барча маълумотлар танланган давр бўйича кўрсатилган. Батафсил
+						маълумот олиш учун давр танланг.
+					</AlertDescription>
+				</Alert>
+			</main>
+		</div>
+	)
+}
+
+export default Reports

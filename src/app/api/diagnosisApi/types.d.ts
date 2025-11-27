@@ -17,7 +17,7 @@ interface AllResponse {
 }
 
 interface getAllDiagnosisRes extends AllResponse {
-  data: Array<{
+  data: {
     _id: string;
     name: string;
     code: string;
@@ -30,8 +30,9 @@ interface getAllDiagnosisRes extends AllResponse {
     is_deleted: boolean;
     created_at: Date;
     updated_at: Date;
-  }>;
+  }[]
 }
+
 
 export interface Disease {
   _id: string

@@ -1,4 +1,4 @@
-import { Pagination } from '../patientApi/types';
+import { Pagination } from "../patientApi/types";
 
 export type examCreateReq = {
   patient_id: string;
@@ -163,7 +163,7 @@ export interface MutationRes {
 }
 
 export const status =
-  'active' | 'inactive' | 'pending' | 'completed' | 'deleted';
+  "active" | "inactive" | "pending" | "completed" | "deleted";
 
 export type UpdateExamReq = {
   id: string;
@@ -176,11 +176,11 @@ export type UpdateExamReq = {
 };
 
 export type status =
-  | 'active'
-  | 'inactive'
-  | 'completed'
-  | 'deleted'
-  | 'pending';
+  | "active"
+  | "inactive"
+  | "completed"
+  | "deleted"
+  | "pending";
 
 export type ExamRes = {
   success: boolean;
@@ -193,6 +193,7 @@ export type AllExamReq = {
   patient_id?: string;
   status?: status;
   is_roomed?: boolean;
+  search?: string;
 };
 
 // prescriptions

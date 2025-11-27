@@ -6,4 +6,5 @@ export enum PATHS {
   DELETE = "/room/delete/",
   ADD_PATIENT = "/room/add-patient/",
   REMOVE_PATIENT = "/room/remove-patient/",
+  UPDATE_LEAVE_TIME = "/room/update-leave-time/",
 }

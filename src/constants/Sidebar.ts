@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Beaker,
   BedDouble,
   Calendar,
   CirclePlus,
@@ -9,6 +10,7 @@ import {
   List,
   Microscope,
   Pill,
+  PillBottle,
   ScanLine,
   Settings,
   Stethoscope,
@@ -35,6 +37,7 @@ export const menuCategories = [
       { title: 'Рецепт ёзиш', url: '/prescription', icon: Pill },
       { title: 'Касалликлар', url: '/disease', icon: HeartPulse },
       { title: 'Хизматлар', url: '/service', icon: ClipboardCheck },
+      { title: 'Дори-дармонлар', url: '/medication', icon: PillBottle },
     ],
   },
   {

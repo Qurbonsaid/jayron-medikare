@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Edit, MoreHorizontal, Plus, Trash2, User } from "lucide-react";
+import { Clock, Edit, MoreHorizontal, Plus, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { RoomNewPatient } from "./components/RoomNewPatient";
@@ -19,10 +19,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RemovePatient } from "./components/RemovePatient";
 import { formatDate } from "date-fns";
+import { UpdateLeaveTime } from "./components/UpdateLeaveTime";
+import handleIsLeavingToday from "@/lib/handleIsLeavingToday";
 
 const RoomDetail = () => {
   const [showRoomNewPatient, setShowRoomNewPatient] = useState(false);
   const [showRemovePatient, setShowRemovePatient] = useState(false);
+  const [showUpdateLeaveTime, setShowUpdateLeaveTime] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null
   );
@@ -98,7 +101,16 @@ const RoomDetail = () => {
                     Bandlik
                   </h3>
 
-                  <p className="mt-1 text-lg font-semibold">
+                  <p
+                    className={`mt-1 text-lg font-semibold ${
+                      room?.data.patient_occupied
+                        ? room.data.patient_occupied ===
+                          room.data.patient_capacity
+                          ? "text-red-600"
+                          : "text-yellow-600"
+                        : "text-green-600"
+                    }`}
+                  >
                     {room?.data.patient_occupied
                       ? room.data.patient_occupied ===
                         room.data.patient_capacity
@@ -155,7 +167,11 @@ const RoomDetail = () => {
                     return (
                       <Card
                         key={patient._id}
-                        className={`p-4 bg-green-100 border-green-500/50 hover:bg-green-200 transition-smooth relative`}
+                        className={`p-4 transition-smooth relative ${
+                          handleIsLeavingToday(patient.estimated_leave_time)
+                            ? "border-red-500 bg-red-100 hover:bg-red-200"
+                            : "bg-green-100 border-green-500/50 hover:bg-green-200"
+                        }`}
                       >
                         <div className="absolute top-4 right-4">
                           <DropdownMenu>
@@ -169,6 +185,22 @@ const RoomDetail = () => {
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent>
+                              <DropdownMenuItem>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setShowUpdateLeaveTime(true);
+                                    setSelectedPatientId(
+                                      patientData?._id || null
+                                    );
+                                  }}
+                                  className="w-32 hover:bg-yellow-600 hover:text-white transition-smooth text-xs xl:text-sm"
+                                >
+                                  <Clock className="w-4 h-4" />
+                                  o'zgartirish
+                                </Button>
+                              </DropdownMenuItem>
                               <DropdownMenuItem>
                                 <Button
                                   size="sm"
@@ -191,15 +223,15 @@ const RoomDetail = () => {
 
                         <div className="flex flex-col items-center text-center space-y-2">
                           <User className="h-8 w-8" />
-                          <div className="font-bold">
+                          <div className="font-bold text-sm">
                             <span>{patientData?.fullname}</span>
                           </div>
-                          <span>
-                            Telefon raqam: <strong>{patientData?.phone}</strong>
+                          <span className="text-sm font-semibold">
+                            Tel: <strong>{patientData?.phone}</strong>
                           </span>
 
-                          <span>
-                            Kelgan vaqti:{" "}
+                          <span className="text-sm font-semibold">
+                            Kelgan:{" "}
                             <strong>
                               {formatDate(
                                 new Date(patient?.start_date),
@@ -209,7 +241,13 @@ const RoomDetail = () => {
                           </span>
 
                           <p className="text-sm font-medium">
-                            Email: {patientData?.email}
+                            Ketadi:
+                            <strong>
+                              {formatDate(
+                                new Date(patient?.estimated_leave_time),
+                                "dd.MM.yyyy"
+                              )}
+                            </strong>
                           </p>
                         </div>
                       </Card>
@@ -233,6 +271,11 @@ const RoomDetail = () => {
         <RemovePatient
           open={showRemovePatient}
           onOpenChange={setShowRemovePatient}
+          patient_id={selectedPatientId}
+        />
+        <UpdateLeaveTime
+          open={showUpdateLeaveTime}
+          onOpenChange={setShowUpdateLeaveTime}
           patient_id={selectedPatientId}
         />
       </div>
