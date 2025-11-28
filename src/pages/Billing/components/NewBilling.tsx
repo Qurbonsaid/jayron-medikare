@@ -1,7 +1,6 @@
 import { useCreateBillingMutation } from '@/app/api/billingApi/billingApi';
 import { useGetAllExamsQuery } from '@/app/api/examinationApi/examinationApi';
 import { useGetAllPatientAnalysisQuery } from '@/app/api/patientAnalysisApi/patientAnalysisApi';
-import { useGetAllRoomsQuery } from '@/app/api/roomApi/roomApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { getStatusBadge } from '@/components/common/StatusBadge';
 import {
@@ -30,11 +29,8 @@ import { Service } from '../Billing';
 interface Props {
   isInvoiceModalOpen: boolean;
   setIsInvoiceModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  addService: () => void;
   services: Array<Service>;
-  updateService: (id: string, field: keyof Service, value: any) => void;
   formatCurrency: (amount: number) => string;
-  removeService: (id: string) => void;
   discount: number;
   setDiscount: React.Dispatch<React.SetStateAction<number>>;
   paymentAmount: string;
@@ -50,11 +46,8 @@ interface Props {
 const NewBilling = ({
   isInvoiceModalOpen,
   setIsInvoiceModalOpen,
-  addService,
   services,
-  updateService,
   formatCurrency,
-  removeService,
   discount,
   setDiscount,
   paymentAmount,
@@ -116,7 +109,7 @@ const NewBilling = ({
     return allExams.find((exam) => exam._id === selectedExaminationId);
   }, [allExams, selectedExaminationId]);
 
-  // Fetch Analysis
+  // Fetch Analysis - only for selected patient
   const { data: analysisData, isLoading: isLoadingAnalysis } =
     useGetAllPatientAnalysisQuery(
       {
@@ -131,17 +124,17 @@ const NewBilling = ({
       }
     );
 
-  // Fetch Rooms
-  const { data: roomsData, isLoading: isLoadingRooms } = useGetAllRoomsQuery(
-    {
-      page: 1,
-      limit: 100,
-      available: true,
-    },
-    {
-      refetchOnMountOrArgChange: true,
-    }
-  );
+  // Filter analysis to only show patient's own analyses
+  const filteredAnalysis = React.useMemo(() => {
+    if (!analysisData?.data) return [];
+    return analysisData.data;
+  }, [analysisData]);
+
+  // Filter rooms to only show examination's rooms
+  const filteredRooms = React.useMemo(() => {
+    if (!selectedExam?.rooms || selectedExam.rooms.length === 0) return [];
+    return selectedExam.rooms;
+  }, [selectedExam]);
 
   // Fetch Services
   const { data: servicesData, isLoading: isLoadingServices } =
@@ -156,31 +149,48 @@ const NewBilling = ({
         max_price: undefined,
       },
       {
+        skip: !selectedExam,
         refetchOnMountOrArgChange: true,
       }
     );
 
+  // Filter services to only show examination's services
+  const filteredServices = React.useMemo(() => {
+    if (!selectedExam?.services || selectedExam.services.length === 0)
+      return [];
+    if (!servicesData?.data) return [];
+
+    const examServiceIds = selectedExam.services.map((service: any) =>
+      typeof service.service_type_id === 'object'
+        ? service.service_type_id._id
+        : service.service_type_id
+    );
+    return servicesData.data.filter((service) =>
+      examServiceIds.includes(service._id)
+    );
+  }, [selectedExam, servicesData]);
+
   // Auto-select all analysis, rooms, and services when data is loaded
   React.useEffect(() => {
-    if (analysisData?.data && selectedExam) {
-      const allAnalysisIds = analysisData.data.map((a) => a._id);
+    if (filteredAnalysis.length > 0 && selectedExam) {
+      const allAnalysisIds = filteredAnalysis.map((a) => a._id);
       setSelectedAnalysis(allAnalysisIds);
     }
-  }, [analysisData, selectedExam]);
+  }, [filteredAnalysis, selectedExam]);
 
   React.useEffect(() => {
-    if (roomsData?.data && selectedExam) {
-      const allRoomIds = roomsData.data.map((r) => r._id);
+    if (filteredRooms.length > 0 && selectedExam) {
+      const allRoomIds = filteredRooms.map((r) => r._id || r.room_id);
       setSelectedRooms(allRoomIds);
     }
-  }, [roomsData, selectedExam]);
+  }, [filteredRooms, selectedExam]);
 
   React.useEffect(() => {
-    if (servicesData?.data && selectedExam) {
-      const allServiceIds = servicesData.data.map((s) => s._id);
+    if (filteredServices.length > 0 && selectedExam) {
+      const allServiceIds = filteredServices.map((s) => s._id);
       setSelectedServices(allServiceIds);
     }
-  }, [servicesData, selectedExam]);
+  }, [filteredServices, selectedExam]);
 
   const formatNumberWithSpaces = (num: number) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -230,7 +240,11 @@ const NewBilling = ({
       return;
     }
 
-    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
+    if (
+      paymentAmount === '' ||
+      paymentAmount === null ||
+      paymentAmount === undefined
+    ) {
       toast.error('Илтимос, тўлов миқдорини киритинг');
       return;
     }
@@ -595,445 +609,327 @@ const NewBilling = ({
             <div className='space-y-4'>
               {/* Analysis Section */}
               <div>
-                <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3'>
+                <div className='mb-3'>
                   <Label className='text-base sm:text-lg font-semibold'>
                     Таҳлиллар
                   </Label>
-                  <Select
-                    value=''
-                    onValueChange={(value) => {
-                      if (value && !selectedAnalysis.includes(value)) {
-                        setSelectedAnalysis([...selectedAnalysis, value]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className='w-full sm:w-[300px] text-sm'>
-                      <SelectValue placeholder='Таҳлил қўшиш' />
-                    </SelectTrigger>
-                    <SelectContent className='max-h-[300px]'>
-                      {isLoadingAnalysis ? (
-                        <div className='p-4 text-center'>
-                          <LoadingSpinner className='w-5 h-5 mx-auto' />
-                        </div>
-                      ) : analysisData?.data && analysisData.data.length > 0 ? (
-                        analysisData.data.map((analysis) => (
-                          <SelectItem
-                            key={analysis._id}
-                            value={analysis._id}
-                            disabled={selectedAnalysis.includes(analysis._id)}
-                          >
-                            <div className='flex flex-col'>
-                              <div className='font-medium text-sm'>
-                                {analysis.analysis_type.name}
-                              </div>
-                              <div className='text-xs text-muted-foreground'>
-                                {analysis.analysis_type.code}
-                              </div>
-                            </div>
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className='p-4 text-center text-muted-foreground text-sm'>
-                          Таҳлиллар топилмади
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
                 </div>
 
-                {selectedAnalysis.length > 0 && (
-                  <>
+                {isLoadingAnalysis ? (
+                  <div className='p-4 text-center'>
+                    <LoadingSpinner className='w-5 h-5 mx-auto' />
+                  </div>
+                ) : filteredAnalysis.length > 0 ? (
+                  <div className='border rounded-lg overflow-hidden'>
                     {/* Desktop Table View */}
-                    <div className='hidden md:block border rounded-lg overflow-hidden'>
+                    <div className='hidden md:block'>
                       <table className='w-full'>
                         <thead className='bg-muted'>
                           <tr>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
-                              Таҳлил номи
+                              Таҳлил тури
                             </th>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
-                              Код
+                              Даража
                             </th>
-                            <th className='text-center py-3 px-4 font-medium text-sm'>
-                              Холати
+                            <th className='text-left py-3 px-4 font-medium text-sm'>
+                              Клиник кўрсатмалар
                             </th>
-                            <th className='w-16'></th>
+                            <th className='text-left py-3 px-4 font-medium text-sm'>
+                              Холат
+                            </th>
+                            <th className='text-right py-3 px-4 font-medium text-sm'>
+                              Сана
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
-                          {selectedAnalysis.map((id) => {
-                            const analysis = analysisData?.data?.find(
-                              (a) => a._id === id
-                            );
-                            return analysis ? (
-                              <tr key={id} className='border-b'>
-                                <td className='py-2 px-4 text-sm'>
-                                  {analysis.analysis_type.name}
-                                </td>
-                                <td className='py-2 px-4 text-sm text-muted-foreground'>
+                          {filteredAnalysis.map((analysis) => (
+                            <tr
+                              key={analysis._id}
+                              className='border-b last:border-0'
+                            >
+                              <td className='py-3 px-4 text-sm'>
+                                {analysis.analysis_type.name}
+                              </td>
+                              <td className='py-3 px-4 text-sm'>
+                                <span className='text-primary font-medium'>
                                   {analysis.analysis_type.code}
-                                </td>
-                                <td className='py-2 px-4 text-center'>
-                                  <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800'>
-                                    {analysis.status}
-                                  </span>
-                                </td>
-                                <td className='py-2 px-4'>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    onClick={() =>
-                                      setSelectedAnalysis(
-                                        selectedAnalysis.filter((a) => a !== id)
-                                      )
-                                    }
-                                    className='text-danger hover:text-danger'
-                                  >
-                                    ×
-                                  </Button>
-                                </td>
-                              </tr>
-                            ) : null;
-                          })}
+                                </span>
+                              </td>
+                              <td className='py-3 px-4 text-sm text-muted-foreground'>
+                                -
+                              </td>
+                              <td className='py-3 px-4'>
+                                <span className='inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 uppercase'>
+                                  {analysis.status}
+                                </span>
+                              </td>
+                              <td className='py-3 px-4 text-sm text-right text-muted-foreground'>
+                                {new Date(
+                                  analysis.created_at
+                                ).toLocaleDateString('uz-UZ')}
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
 
                     {/* Mobile Card View */}
-                    <div className='md:hidden space-y-3'>
-                      {selectedAnalysis.map((id) => {
-                        const analysis = analysisData?.data?.find(
-                          (a) => a._id === id
-                        );
-                        return analysis ? (
-                          <Card key={id} className='p-3'>
-                            <div className='space-y-2'>
-                              <div className='flex items-start justify-between gap-2'>
-                                <div className='flex-1'>
-                                  <div className='font-semibold text-sm'>
-                                    {analysis.analysis_type.name}
-                                  </div>
-                                  <div className='text-xs text-muted-foreground mt-1'>
-                                    {analysis.analysis_type.code}
-                                  </div>
-                                </div>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  onClick={() =>
-                                    setSelectedAnalysis(
-                                      selectedAnalysis.filter((a) => a !== id)
-                                    )
-                                  }
-                                  className='text-danger hover:text-danger h-6 w-6 p-0'
-                                >
-                                  ×
-                                </Button>
-                              </div>
+                    <div className='md:hidden'>
+                      {filteredAnalysis.map((analysis, index) => (
+                        <div
+                          key={analysis._id}
+                          className={`p-4 ${
+                            index !== filteredAnalysis.length - 1
+                              ? 'border-b'
+                              : ''
+                          }`}
+                        >
+                          <div className='space-y-2'>
+                            <div className='flex justify-between items-start'>
                               <div>
-                                <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800'>
-                                  {analysis.status}
-                                </span>
+                                <div className='font-semibold text-sm'>
+                                  {analysis.analysis_type.name}
+                                </div>
+                                <div className='text-xs text-primary font-medium mt-1'>
+                                  {analysis.analysis_type.code}
+                                </div>
                               </div>
+                              <span className='inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 uppercase'>
+                                {analysis.status}
+                              </span>
                             </div>
-                          </Card>
-                        ) : null;
-                      })}
+                            <div className='text-xs text-muted-foreground'>
+                              {new Date(analysis.created_at).toLocaleDateString(
+                                'uz-UZ'
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </>
+                  </div>
+                ) : (
+                  <div className='p-8 text-center text-muted-foreground text-sm border rounded-lg bg-muted/20'>
+                    Таҳлиллар топилмади
+                  </div>
                 )}
               </div>
 
               {/* Rooms Section */}
               <div>
-                <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3'>
+                <div className='mb-3'>
                   <Label className='text-base sm:text-lg font-semibold'>
-                    Хоналар
+                    Палаталар
                   </Label>
-                  <Select
-                    value=''
-                    onValueChange={(value) => {
-                      if (value && !selectedRooms.includes(value)) {
-                        setSelectedRooms([...selectedRooms, value]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className='w-full sm:w-[300px] text-sm'>
-                      <SelectValue placeholder='Хона қўшиш' />
-                    </SelectTrigger>
-                    <SelectContent className='max-h-[300px]'>
-                      {isLoadingRooms ? (
-                        <div className='p-4 text-center'>
-                          <LoadingSpinner className='w-5 h-5 mx-auto' />
-                        </div>
-                      ) : roomsData?.data && roomsData.data.length > 0 ? (
-                        roomsData.data.map((room) => (
-                          <SelectItem
-                            key={room._id}
-                            value={room._id}
-                            disabled={selectedRooms.includes(room._id)}
-                          >
-                            <div className='flex flex-col'>
-                              <div className='font-medium text-sm'>
-                                {room.room_name}
-                              </div>
-                              <div className='text-xs text-muted-foreground'>
-                                {formatCurrency(room.room_price)} / кун
-                              </div>
-                            </div>
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className='p-4 text-center text-muted-foreground text-sm'>
-                          Хоналар топилмади
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
                 </div>
 
-                {selectedRooms.length > 0 && (
-                  <>
+                {filteredRooms.length > 0 ? (
+                  <div className='border rounded-lg overflow-hidden'>
                     {/* Desktop Table View */}
-                    <div className='hidden md:block border rounded-lg overflow-hidden'>
+                    <div className='hidden md:block'>
                       <table className='w-full'>
                         <thead className='bg-muted'>
                           <tr>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
-                              Хона номи
-                            </th>
-                            <th className='text-right py-3 px-4 font-medium text-sm'>
-                              Нархи (кунлик)
+                              Палата
                             </th>
                             <th className='text-center py-3 px-4 font-medium text-sm'>
                               Қават
                             </th>
-                            <th className='w-16'></th>
+                            <th className='text-center py-3 px-4 font-medium text-sm'>
+                              Бошланиш
+                            </th>
+                            <th className='text-center py-3 px-4 font-medium text-sm'>
+                              Тугаш
+                            </th>
+                            <th className='text-right py-3 px-4 font-medium text-sm'>
+                              Нархи
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
-                          {selectedRooms.map((id) => {
-                            const room = roomsData?.data?.find(
-                              (r) => r._id === id
-                            );
-                            return room ? (
-                              <tr key={id} className='border-b'>
-                                <td className='py-2 px-4 text-sm'>
-                                  {room.room_name}
-                                </td>
-                                <td className='py-2 px-4 text-right text-sm font-semibold'>
-                                  {formatCurrency(room.room_price)}
-                                </td>
-                                <td className='py-2 px-4 text-center text-sm text-muted-foreground'>
-                                  {room.floor_number}
-                                </td>
-                                <td className='py-2 px-4'>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    onClick={() =>
-                                      setSelectedRooms(
-                                        selectedRooms.filter((r) => r !== id)
-                                      )
-                                    }
-                                    className='text-danger hover:text-danger'
-                                  >
-                                    ×
-                                  </Button>
-                                </td>
-                              </tr>
-                            ) : null;
-                          })}
+                          {filteredRooms.map((room) => (
+                            <tr
+                              key={room._id || room.room_id}
+                              className='border-b last:border-0'
+                            >
+                              <td className='py-3 px-4 text-sm'>
+                                {room.room_name}
+                              </td>
+                              <td className='py-3 px-4 text-sm text-center'>
+                                {room.floor_number}
+                              </td>
+                              <td className='py-3 px-4 text-sm text-center text-muted-foreground'>
+                                {room.start_date
+                                  ? new Date(
+                                      room.start_date
+                                    ).toLocaleDateString('uz-UZ')
+                                  : new Date().toLocaleDateString('uz-UZ')}
+                              </td>
+                              <td className='py-3 px-4 text-sm text-center'>
+                                {room.end_date ? (
+                                  new Date(room.end_date).toLocaleDateString(
+                                    'uz-UZ'
+                                  )
+                                ) : (
+                                  <span className='text-orange-600 font-medium'>
+                                    Давом этмоқда
+                                  </span>
+                                )}
+                              </td>
+                              <td className='py-3 px-4 text-sm text-right font-semibold'>
+                                {formatCurrency(room.room_price)}
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
 
                     {/* Mobile Card View */}
-                    <div className='md:hidden space-y-3'>
-                      {selectedRooms.map((id) => {
-                        const room = roomsData?.data?.find((r) => r._id === id);
-                        return room ? (
-                          <Card key={id} className='p-3'>
-                            <div className='space-y-2'>
-                              <div className='flex items-start justify-between gap-2'>
-                                <div className='flex-1'>
-                                  <div className='font-semibold text-sm'>
-                                    {room.room_name}
-                                  </div>
-                                  <div className='text-xs text-muted-foreground mt-1'>
-                                    Қават: {room.floor_number}
-                                  </div>
+                    <div className='md:hidden'>
+                      {filteredRooms.map((room, index) => (
+                        <div
+                          key={room._id || room.room_id}
+                          className={`p-4 ${
+                            index !== filteredRooms.length - 1 ? 'border-b' : ''
+                          }`}
+                        >
+                          <div className='space-y-2'>
+                            <div className='flex justify-between items-start'>
+                              <div>
+                                <div className='font-semibold text-sm'>
+                                  {room.room_name}
                                 </div>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  onClick={() =>
-                                    setSelectedRooms(
-                                      selectedRooms.filter((r) => r !== id)
-                                    )
-                                  }
-                                  className='text-danger hover:text-danger h-6 w-6 p-0'
-                                >
-                                  ×
-                                </Button>
+                                <div className='text-xs text-muted-foreground mt-1'>
+                                  Қават: {room.floor_number}
+                                </div>
                               </div>
-                              <div className='text-sm font-semibold'>
-                                {formatCurrency(room.room_price)} / кун
-                              </div>
+                              <span className='text-orange-600 font-medium text-xs'>
+                                Давом этмоқда
+                              </span>
                             </div>
-                          </Card>
-                        ) : null;
-                      })}
+                            <div className='flex justify-between items-center text-xs'>
+                              <span className='text-muted-foreground'>
+                                {room.start_date
+                                  ? new Date(
+                                      room.start_date
+                                    ).toLocaleDateString('uz-UZ')
+                                  : new Date().toLocaleDateString('uz-UZ')}
+                              </span>
+                              <span className='font-semibold'>
+                                {formatCurrency(room.room_price)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </>
+                  </div>
+                ) : (
+                  <div className='p-8 text-center text-muted-foreground text-sm border rounded-lg bg-muted/20'>
+                    Палаталар топилмади
+                  </div>
                 )}
               </div>
 
               {/* Services Section */}
               <div>
-                <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3'>
+                <div className='mb-3'>
                   <Label className='text-base sm:text-lg font-semibold'>
-                    Қўшимча хизматлар
+                    Хизматлар
                   </Label>
-                  <Select
-                    value=''
-                    onValueChange={(value) => {
-                      if (value && !selectedServices.includes(value)) {
-                        setSelectedServices([...selectedServices, value]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className='w-full sm:w-[300px] text-sm'>
-                      <SelectValue placeholder='Хизмат қўшиш' />
-                    </SelectTrigger>
-                    <SelectContent className='max-h-[300px]'>
-                      {isLoadingServices ? (
-                        <div className='p-4 text-center'>
-                          <LoadingSpinner className='w-5 h-5 mx-auto' />
-                        </div>
-                      ) : servicesData?.data && servicesData.data.length > 0 ? (
-                        servicesData.data.map((service) => (
-                          <SelectItem
-                            key={service._id}
-                            value={service._id}
-                            disabled={selectedServices.includes(service._id)}
-                          >
-                            <div className='flex flex-col'>
-                              <div className='font-medium text-sm'>
-                                {service.name}
-                              </div>
-                              <div className='text-xs text-muted-foreground'>
-                                {formatCurrency(service.price)} -{' '}
-                                {service.duration_minutes} дақ
-                              </div>
-                            </div>
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className='p-4 text-center text-muted-foreground text-sm'>
-                          Хизматлар топилмади
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
                 </div>
 
-                {selectedServices.length > 0 && (
-                  <>
+                {isLoadingServices ? (
+                  <div className='p-4 text-center'>
+                    <LoadingSpinner className='w-5 h-5 mx-auto' />
+                  </div>
+                ) : filteredServices.length > 0 ? (
+                  <div className='border rounded-lg overflow-hidden'>
                     {/* Desktop Table View */}
-                    <div className='hidden md:block border rounded-lg overflow-hidden'>
+                    <div className='hidden md:block'>
                       <table className='w-full'>
                         <thead className='bg-muted'>
                           <tr>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
                               Хизмат номи
                             </th>
+                            <th className='text-center py-3 px-4 font-medium text-sm'>
+                              Сони
+                            </th>
                             <th className='text-right py-3 px-4 font-medium text-sm'>
                               Нархи
                             </th>
-                            <th className='text-center py-3 px-4 font-medium text-sm'>
-                              Давомийлиги
+                            <th className='text-right py-3 px-4 font-medium text-sm'>
+                              Жами
                             </th>
-                            <th className='w-16'></th>
                           </tr>
                         </thead>
                         <tbody>
-                          {selectedServices.map((id) => {
-                            const service = servicesData?.data?.find(
-                              (s) => s._id === id
-                            );
-                            return service ? (
-                              <tr key={id} className='border-b'>
-                                <td className='py-2 px-4 text-sm'>
-                                  {service.name}
-                                </td>
-                                <td className='py-2 px-4 text-right text-sm font-semibold'>
-                                  {formatCurrency(service.price)}
-                                </td>
-                                <td className='py-2 px-4 text-center text-sm text-muted-foreground'>
-                                  {service.duration_minutes} дақ
-                                </td>
-                                <td className='py-2 px-4'>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    onClick={() =>
-                                      setSelectedServices(
-                                        selectedServices.filter((s) => s !== id)
-                                      )
-                                    }
-                                    className='text-danger hover:text-danger'
-                                  >
-                                    ×
-                                  </Button>
-                                </td>
-                              </tr>
-                            ) : null;
-                          })}
+                          {filteredServices.map((service) => (
+                            <tr
+                              key={service._id}
+                              className='border-b last:border-0'
+                            >
+                              <td className='py-3 px-4 text-sm'>
+                                {service.name}
+                              </td>
+                              <td className='py-3 px-4 text-sm text-center'>
+                                1
+                              </td>
+                              <td className='py-3 px-4 text-sm text-right'>
+                                {formatCurrency(service.price)}
+                              </td>
+                              <td className='py-3 px-4 text-sm text-right font-semibold'>
+                                {formatCurrency(service.price)}
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
 
                     {/* Mobile Card View */}
-                    <div className='md:hidden space-y-3'>
-                      {selectedServices.map((id) => {
-                        const service = servicesData?.data?.find(
-                          (s) => s._id === id
-                        );
-                        return service ? (
-                          <Card key={id} className='p-3'>
-                            <div className='space-y-2'>
-                              <div className='flex items-start justify-between gap-2'>
-                                <div className='flex-1'>
-                                  <div className='font-semibold text-sm'>
-                                    {service.name}
-                                  </div>
-                                  <div className='text-xs text-muted-foreground mt-1'>
-                                    Давомийлиги: {service.duration_minutes} дақ
-                                  </div>
+                    <div className='md:hidden'>
+                      {filteredServices.map((service, index) => (
+                        <div
+                          key={service._id}
+                          className={`p-4 ${
+                            index !== filteredServices.length - 1
+                              ? 'border-b'
+                              : ''
+                          }`}
+                        >
+                          <div className='space-y-2'>
+                            <div className='font-semibold text-sm'>
+                              {service.name}
+                            </div>
+                            <div className='flex justify-between items-center text-xs'>
+                              <span className='text-muted-foreground'>
+                                Сони: 1
+                              </span>
+                              <div className='text-right'>
+                                <div className='text-muted-foreground'>
+                                  {formatCurrency(service.price)}
                                 </div>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  onClick={() =>
-                                    setSelectedServices(
-                                      selectedServices.filter((s) => s !== id)
-                                    )
-                                  }
-                                  className='text-danger hover:text-danger h-6 w-6 p-0'
-                                >
-                                  ×
-                                </Button>
-                              </div>
-                              <div className='text-sm font-semibold'>
-                                {formatCurrency(service.price)}
+                                <div className='font-semibold'>
+                                  {formatCurrency(service.price)}
+                                </div>
                               </div>
                             </div>
-                          </Card>
-                        ) : null;
-                      })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </>
+                  </div>
+                ) : (
+                  <div className='p-8 text-center text-muted-foreground text-sm border rounded-lg bg-muted/20'>
+                    Хизматлар топилмади
+                  </div>
                 )}
               </div>
             </div>

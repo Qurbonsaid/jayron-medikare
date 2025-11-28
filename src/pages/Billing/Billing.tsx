@@ -122,36 +122,6 @@ const Billing = () => {
     return subtotal - discount;
   };
 
-  const addService = () => {
-    const newService: Service = {
-      id: Date.now().toString(),
-      name: '',
-      quantity: 1,
-      unitPrice: 0,
-      total: 0,
-    };
-    setServices([...services, newService]);
-  };
-
-  const updateService = (id: string, field: keyof Service, value: any) => {
-    setServices(
-      services.map((service) => {
-        if (service.id === id) {
-          const updated = { ...service, [field]: value };
-          if (field === 'quantity' || field === 'unitPrice') {
-            updated.total = updated.quantity * updated.unitPrice;
-          }
-          return updated;
-        }
-        return service;
-      })
-    );
-  };
-
-  const removeService = (id: string) => {
-    setServices(services.filter((service) => service.id !== id));
-  };
-
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
       invoice.patient_id.fullname
@@ -566,11 +536,8 @@ const Billing = () => {
       <NewBilling
         isInvoiceModalOpen={isInvoiceModalOpen}
         setIsInvoiceModalOpen={setIsInvoiceModalOpen}
-        addService={addService}
         services={services}
-        updateService={updateService}
         formatCurrency={formatCurrency}
-        removeService={removeService}
         discount={discount}
         setDiscount={setDiscount}
         paymentAmount={paymentAmount}

@@ -50,6 +50,9 @@ const NewVisit = () => {
   const [patient, setPatient] = useState<any>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
+  const [treatmentType, setTreatmentType] = useState<'stasionar' | 'ambulator'>(
+    'ambulator'
+  );
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showErrors, setShowErrors] = useState(false);
@@ -230,6 +233,7 @@ const NewVisit = () => {
           patient_id: selectedPatientId,
           doctor_id: selectedDoctorId,
           complaints: subjective,
+          treatment_type: treatmentType,
         };
         if (description.trim()) {
           request['description'] = description;
@@ -240,6 +244,7 @@ const NewVisit = () => {
           doctor_id: selectedDoctorId,
           complaints: subjective,
           description: description,
+          treatment_type: treatmentType,
         });
         return res;
       },
@@ -410,6 +415,37 @@ const NewVisit = () => {
                           )}
                         </SelectContent>
                       </Select>
+
+                      {/* Treatment Type Switch */}
+                      <div className='mt-4'>
+                        <h4 className='text-sm font-medium mb-3'>
+                          Даволаш тури
+                        </h4>
+                        <div className='grid grid-cols-2 gap-3 border-2 border-blue-500 rounded-xl p-1'>
+                          <button
+                            type='button'
+                            onClick={() => setTreatmentType('ambulator')}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                              treatmentType === 'ambulator'
+                                ? 'bg-primary text-white shadow-md'
+                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                            }`}
+                          >
+                            Амбулатор
+                          </button>
+                          <button
+                            type='button'
+                            onClick={() => setTreatmentType('stasionar')}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                              treatmentType === 'stasionar'
+                                ? 'bg-primary text-white shadow-md'
+                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                            }`}
+                          >
+                            Стационар
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
