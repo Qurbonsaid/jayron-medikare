@@ -141,9 +141,13 @@ const Medicine = () => {
 			onSuccess: () => {
 				toast.success('Кунлар яратилди')
 			},
-			 onError: (err) => {
-							toast.error(err?.data?.error?.msg);
-						},
+			onError: err => {
+				if (err?.data) {
+					toast.error(err?.data?.error?.msg)
+				} else {
+					toast.error(err?.error?.msg || 'Хатолик юз берди')
+				}
+			},
 		})
 	}
 
@@ -181,7 +185,11 @@ const Medicine = () => {
 				})
 			},
 			onError: err => {
-				toast.error(err?.data?.error?.msg)
+				if (err?.data) {
+					toast.error(err?.data?.error?.msg)
+				} else {
+					toast.error(err?.error?.msg || 'Хатолик юз берди')
+				}
 			},
 		})
 	}
