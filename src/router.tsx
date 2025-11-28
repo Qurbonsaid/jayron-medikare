@@ -1,6 +1,7 @@
 import Appointments from "@/pages/Appointments/Appointments";
 // import Dashboard from "@/pages/Dashboard";
 import Inpatient from "@/pages/Inpatient/Inpatient";
+import InpatientCalendar from "@/pages/Inpatient/InpatientCalendar";
 import LabResults from "@/pages/Diagnostika/LabResults";
 import PatientPortal from "@/pages/PatientPortal";
 import PatientProfile from "@/pages/Patients/PatientProfile";
@@ -39,6 +40,7 @@ export const routers = [
   { path: "/analysisById/:id", element: <AnalysisParamsModal /> },
   { path: "/lab-order", element: <LabOrder /> },
   { path: "/inpatient", element: <Inpatient /> },
+  { path: "/inpatient-calendar", element: <InpatientCalendar /> },
   { path: "/inpatient/:id", element: <Rooms /> },
   { path: "/room/:id", element: <RoomDetail /> },
   { path: "/medicine", element: <Medicine /> },
@@ -121,6 +123,11 @@ export const navigator = [
     path: "/inpatient",
     to: null,
     title: "Стационар",
+  },
+  {
+    path: "/inpatient-calendar",
+    to: null,
+    title: "Стационар Календари",
   },
   {
     path: "/inpatient/:id",
