@@ -14,7 +14,7 @@ import { useMeQuery, useUpdateMeMutation } from '@/app/api/authApi'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
 import { toast } from 'sonner'
 import { profileSchema } from '@/validation/validationProfile'
-import { clearAuthTokens } from '@/app/api/baseApi'
+import { baseApi, clearAuthTokens } from '@/app/api/baseApi'
 
 export default function ProfilePage() {
 	const navigate = useNavigate()
@@ -58,6 +58,8 @@ export default function ProfilePage() {
 		phone: '',
 		license_number: '',
 	})
+
+	const { refetch } = useMeQuery(undefined, { skip: false });
 
 	// Ma’lumotlarni tahrirlash modal ochilganda formni to‘ldirish
 	useEffect(() => {
@@ -417,6 +419,9 @@ export default function ProfilePage() {
 							onClick={() => {
 								clearAuthTokens()
 								navigate('/login')
+								localStorage.removeItem('rtk_cache');
+								baseApi.util.resetApiState()
+								refetch()
 							}}
 							className='bg-red-600 hover:bg-red-700 text-white'
 						>

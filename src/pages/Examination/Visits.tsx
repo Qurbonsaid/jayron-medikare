@@ -7,17 +7,8 @@ import {
 } from '@/app/api/examinationApi/examinationApi';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import {
   Select,
@@ -34,24 +25,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Edit,
-  Eye,
-  FilePlus,
-  FileText,
-  Plus,
-  Search,
-  Trash2,
-} from 'lucide-react';
+import { Eye, FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { getStatusBadge } from '../../components/common/StatusBadge';
+import DeleteVisit from './components/DeleteVisit';
+import EditVisit from './components/EditVisit';
 import ExamFilter from './components/ExamFilter';
+import VisitDetail from './components/VisitDetail';
 
 const Visits = () => {
   const navigate = useNavigate();
@@ -242,9 +225,9 @@ const Visits = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='all'>Барчаси</SelectItem>
-                    <SelectItem value='active'>Фаол</SelectItem>
                     <SelectItem value='completed'>Тугалланган</SelectItem>
-                    {/* <SelectItem value='pending'>Тугалланмаган</SelectItem>
+                    <SelectItem value='pending'>Тугалланмаган</SelectItem>
+                    {/* <SelectItem value='active'>Фаол</SelectItem>
                     <SelectItem value='deleted'>Ўчирилганлар</SelectItem>
                     <SelectItem value='inactive'>Фаол эмас</SelectItem> */}
                   </SelectContent>
@@ -344,127 +327,139 @@ const Visits = () => {
 
             {/* Pagination */}
             {examsData?.pagination && (
-              <div className='px-4 xl:px-6 py-3 xl:py-4 border-t flex flex-col lg:flex-row items-center justify-between gap-4'>
-                <div className='flex items-center gap-2'>
-                  <span className='text-sm text-muted-foreground'>
-                    Саҳифада:
-                  </span>
-                  <Select
-                    value={itemsPerPage.toString()}
-                    onValueChange={(value) => {
-                      setItemsPerPage(Number(value));
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <SelectTrigger className='h-8 sm:h-10 text-sm sm:text-base w-24'>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='10'>10</SelectItem>
-                      <SelectItem value='20'>20</SelectItem>
-                      <SelectItem value='50'>50</SelectItem>
-                      <SelectItem value='100'>100</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className='flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto'>
-                  <div className='text-xs xl:text-sm text-muted-foreground'>
-                    {examsData.pagination.prev_page
-                      ? (examsData.pagination.page - 1) *
-                          examsData.pagination.limit +
-                        1
-                      : 1}{' '}
-                    -{' '}
-                    {Math.min(
-                      examsData.pagination.page * examsData.pagination.limit,
-                      examsData.pagination.total_items
-                    )}{' '}
-                    дан {examsData.pagination.total_items} та кўрсатилмоқда
+              <div className='px-4 sm:px-6 py-4 border-t'>
+                <div className='flex flex-col sm:flex-row items-center justify-between gap-4'>
+                  {/* Items per page */}
+                  <div className='flex items-center gap-2'>
+                    <span className='text-sm text-muted-foreground'>
+                      Саҳифада:
+                    </span>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className='h-9 w-20 text-sm'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='10'>10</SelectItem>
+                        <SelectItem value='20'>20</SelectItem>
+                        <SelectItem value='50'>50</SelectItem>
+                        <SelectItem value='100'>100</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className='flex gap-2'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(currentPage - 1)}
-                      className='text-xs xl:text-sm'
-                    >
-                      Олдинги
-                    </Button>
-                    {(() => {
-                      const pages = [];
-                      const showPages = new Set<number>();
 
-                      // Har doim 1-sahifani ko'rsat
-                      showPages.add(1);
+                  {/* Page info and navigation */}
+                  <div className='flex flex-col sm:flex-row items-center gap-3'>
+                    {/* Page info */}
+                    <div className='text-sm text-muted-foreground whitespace-nowrap'>
+                      {examsData.pagination.prev_page
+                        ? (examsData.pagination.page - 1) *
+                            examsData.pagination.limit +
+                          1
+                        : 1}{' '}
+                      -{' '}
+                      {Math.min(
+                        examsData.pagination.page * examsData.pagination.limit,
+                        examsData.pagination.total_items
+                      )}{' '}
+                      дан {examsData.pagination.total_items} та
+                    </div>
 
-                      // Har doim oxirgi sahifani ko'rsat
-                      if (examsData.pagination.total_pages > 1) {
-                        showPages.add(examsData.pagination.total_pages);
-                      }
+                    {/* Page buttons */}
+                    <div className='flex items-center gap-1'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        className='h-9 px-3'
+                      >
+                        Олдинги
+                      </Button>
 
-                      // Joriy sahifa va uning atrofidagi sahifalarni ko'rsat
-                      for (
-                        let i = Math.max(2, currentPage - 1);
-                        i <=
-                        Math.min(
-                          examsData.pagination.total_pages - 1,
-                          currentPage + 1
-                        );
-                        i++
-                      ) {
-                        showPages.add(i);
-                      }
+                      <div className='flex items-center gap-1'>
+                        {(() => {
+                          const pages = [];
+                          const showPages = new Set<number>();
 
-                      const sortedPages = Array.from(showPages).sort(
-                        (a, b) => a - b
-                      );
+                          // Always show first page
+                          showPages.add(1);
 
-                      sortedPages.forEach((page, index) => {
-                        // Ellipsis qo'shish agar sahifalar orasida bo'sh joy bo'lsa
-                        if (index > 0 && sortedPages[index - 1] !== page - 1) {
-                          pages.push(
-                            <span
-                              key={`ellipsis-${page}`}
-                              className='px-2 flex items-center text-xs xl:text-sm'
-                            >
-                              ...
-                            </span>
+                          // Always show last page
+                          if (examsData.pagination.total_pages > 1) {
+                            showPages.add(examsData.pagination.total_pages);
+                          }
+
+                          // Show current page and surrounding pages
+                          for (
+                            let i = Math.max(2, currentPage - 1);
+                            i <=
+                            Math.min(
+                              examsData.pagination.total_pages - 1,
+                              currentPage + 1
+                            );
+                            i++
+                          ) {
+                            showPages.add(i);
+                          }
+
+                          const sortedPages = Array.from(showPages).sort(
+                            (a, b) => a - b
                           );
+
+                          sortedPages.forEach((page, index) => {
+                            // Add ellipsis if there's a gap
+                            if (
+                              index > 0 &&
+                              sortedPages[index - 1] !== page - 1
+                            ) {
+                              pages.push(
+                                <span
+                                  key={`ellipsis-${page}`}
+                                  className='px-2 text-sm text-muted-foreground'
+                                >
+                                  ...
+                                </span>
+                              );
+                            }
+
+                            // Add page button
+                            pages.push(
+                              <Button
+                                key={page}
+                                variant={
+                                  page === currentPage ? 'default' : 'outline'
+                                }
+                                size='sm'
+                                onClick={() => setCurrentPage(page)}
+                                className='h-9 w-9 p-0'
+                              >
+                                {page}
+                              </Button>
+                            );
+                          });
+
+                          return pages;
+                        })()}
+                      </div>
+
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        disabled={
+                          currentPage === examsData.pagination.total_pages
                         }
-
-                        // Sahifa tugmasi
-                        pages.push(
-                          <Button
-                            key={page}
-                            variant='outline'
-                            size='sm'
-                            onClick={() => setCurrentPage(page)}
-                            className={`text-xs xl:text-sm ${
-                              page === currentPage
-                                ? 'bg-primary text-white hover:bg-primary/60 hover:text-white'
-                                : ''
-                            }`}
-                          >
-                            {page}
-                          </Button>
-                        );
-                      });
-
-                      return pages;
-                    })()}
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      disabled={
-                        currentPage === examsData.pagination.total_pages
-                      }
-                      onClick={() => setCurrentPage(currentPage + 1)}
-                      className='text-xs xl:text-sm'
-                    >
-                      Кейинги
-                    </Button>
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        className='h-9 px-3'
+                      >
+                        Кейинги
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -473,358 +468,35 @@ const Visits = () => {
         )}
 
         {/* Detail Modal */}
-        <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-          <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
-            <DialogHeader>
-              <DialogTitle className='text-xl'>Кўрик Тафсилотлари</DialogTitle>
-              <DialogDescription>
-                Кўрик ва бемор ҳақида тўлиқ маълумот
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedExam && (
-              <div className='space-y-6 py-4'>
-                {/* Patient Information */}
-                <div className='space-y-3'>
-                  <h3 className='text-lg font-semibold border-b pb-2'>
-                    Бемор Маълумотлари
-                  </h3>
-                  <div className='grid grid-cols-2 gap-4 text-sm'>
-                    <div>
-                      <span className='text-muted-foreground'>Исм:</span>
-                      <p className='font-medium'>
-                        {selectedExam.patient_id?.fullname}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground'>Телефон:</span>
-                      <p className='font-medium'>
-                        {selectedExam.patient_id?.phone}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground'>Шифокор:</span>
-                      <p className='font-medium'>
-                        {selectedExam.doctor_id?.fullname}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground'>Статус:</span>
-                      <div className='mt-1'>
-                        {getStatusBadge(selectedExam.status)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Examination Details */}
-                <div className='space-y-3'>
-                  <h3 className='text-lg font-semibold border-b pb-2'>
-                    Кўрик Маълумотлари
-                  </h3>
-                  <div className='space-y-3 text-sm'>
-                    <div>
-                      <span className='text-muted-foreground block mb-1'>
-                        Шикоят:
-                      </span>
-                      <p className='font-medium bg-muted p-3 rounded-md'>
-                        {selectedExam.complaints || 'Киритилмаган'}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground block mb-1'>
-                        Ташхис:
-                      </span>
-                      <p className='font-medium bg-muted p-3 rounded-md'>
-                        {selectedExam.diagnosis?.name ||
-                          selectedExam.diagnosis ||
-                          'Киритилмаган'}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground block mb-1'>
-                        Тавсия:
-                      </span>
-                      <p className='font-medium bg-muted p-3 rounded-md'>
-                        {selectedExam.description || 'Киритилмаган'}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-muted-foreground block mb-1'>
-                        Сана:
-                      </span>
-                      <p className='font-medium'>
-                        {new Date(selectedExam.created_at).toLocaleString(
-                          'uz-UZ',
-                          {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          }
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Prescriptions List */}
-                {selectedExam.prescriptions &&
-                  selectedExam.prescriptions.length > 0 && (
-                    <div className='space-y-3'>
-                      <h3 className='text-lg font-semibold border-b pb-2 flex items-center justify-between'>
-                        <span>Рецептлар</span>
-                        <span className='text-sm font-normal text-muted-foreground'>
-                          ({selectedExam.prescriptions.length} та)
-                        </span>
-                      </h3>
-                      <div className='space-y-3'>
-                        {selectedExam.prescriptions.map(
-                          (prescription: any, index: number) => (
-                            <div
-                              key={prescription._id}
-                              className='p-4 bg-primary/5 border border-primary/10 rounded-lg space-y-3'
-                            >
-                              <div className='flex items-center justify-between'>
-                                <span className='text-xs font-medium text-primary'>
-                                  Рецепт #{index + 1}
-                                </span>
-                              </div>
-                              <div className='grid grid-cols-2 gap-3 text-sm'>
-                                <div>
-                                  <span className='text-muted-foreground block mb-1'>
-                                    Дори Номи:
-                                  </span>
-                                  <p className='font-semibold'>
-                                    {prescription.medication}
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className='text-muted-foreground block mb-1'>
-                                    Дозаси:
-                                  </span>
-                                  <p className='font-semibold'>
-                                    {prescription.dosage} мг
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className='text-muted-foreground block mb-1'>
-                                    Қабул Қилиш:
-                                  </span>
-                                  <p className='font-semibold'>
-                                    Кунига {prescription.frequency} марта
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className='text-muted-foreground block mb-1'>
-                                    Муддати:
-                                  </span>
-                                  <p className='font-semibold'>
-                                    {prescription.duration} кун
-                                  </p>
-                                </div>
-                              </div>
-                              {prescription.instructions && (
-                                <div className='pt-2 border-t border-primary/10'>
-                                  <span className='text-muted-foreground text-xs block mb-1'>
-                                    Қўшимча Кўрсатмалар:
-                                  </span>
-                                  <p className='text-sm font-medium'>
-                                    {prescription.instructions}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                {/* Action Buttons */}
-                <div className='space-y-2 pt-4 border-t'>
-                  <h3 className='text-lg font-semibold mb-3'>Ҳаракатлар</h3>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <Button
-                      variant='outline'
-                      className='w-full'
-                      onClick={() => {
-                        setIsDetailModalOpen(false);
-                        navigate('/prescription', {
-                          state: { examinationId: selectedExam._id },
-                        });
-                      }}
-                    >
-                      <FilePlus className='w-4 h-4 mr-2' />
-                      Рецепт Ёзиш
-                    </Button>
-                    <Button
-                      variant='outline'
-                      className='w-full text-red-600 hover:text-red-700'
-                      onClick={handleDeleteFromDetail}
-                    >
-                      <Trash2 className='w-4 h-4 mr-2' />
-                      Ўчириш
-                    </Button>
-                    <Button
-                      variant='outline'
-                      className='w-full'
-                      onClick={handleEditFromDetail}
-                    >
-                      <Edit className='w-4 h-4 mr-2' />
-                      Таҳрирлаш
-                    </Button>
-                    <Button
-                      variant='default'
-                      className='w-full bg-green-600 hover:bg-green-700'
-                      onClick={handleCompleteExam}
-                      disabled={
-                        isCompleting || selectedExam.status === 'completed'
-                      }
-                    >
-                      <CheckCircle2 className='w-4 h-4 mr-2' />
-                      {isCompleting
-                        ? 'Якунланмоқда...'
-                        : selectedExam.status === 'completed'
-                        ? 'Якунланган'
-                        : 'Кўрикни Якунлаш'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+        <VisitDetail
+          isDetailModalOpen={isDetailModalOpen}
+          setIsDetailModalOpen={setIsDetailModalOpen}
+          selectedExam={selectedExam}
+          handleEditFromDetail={handleEditFromDetail}
+          handleDeleteFromDetail={handleDeleteFromDetail}
+          handleCompleteExam={handleCompleteExam}
+          isCompleting={isCompleting}
+        />
 
         {/* Edit Modal */}
-        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent className='max-w-2xl'>
-            <DialogHeader>
-              <DialogTitle>Кўрикни таҳрирлаш</DialogTitle>
-              <DialogDescription>
-                Кўрик маълумотларини ўзгартиринг
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className='space-y-4 py-4'>
-              {/* Complaints */}
-              <div className='space-y-2'>
-                <Label>Шикоят</Label>
-                <Textarea
-                  placeholder='Бемор шикоятини киритинг...'
-                  value={editForm.complaints}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, complaints: e.target.value })
-                  }
-                  className='min-h-24'
-                />
-              </div>
-
-              {/* Diagnosis */}
-              <div className='space-y-2'>
-                <Label>Ташхис</Label>
-                <Select
-                  value={editForm.diagnosis}
-                  onValueChange={(value) =>
-                    setEditForm({ ...editForm, diagnosis: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Ташхисни танланг...' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {diagnoses.map((diagnosis: any) => (
-                      <SelectItem key={diagnosis._id} value={diagnosis._id}>
-                        {diagnosis.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Description */}
-              <div className='space-y-2'>
-                <Label>Тавсия</Label>
-                <Textarea
-                  placeholder='Кўрик натижаси ва тавсияларни киритинг...'
-                  value={editForm.description}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, description: e.target.value })
-                  }
-                  className='min-h-24'
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                variant='outline'
-                onClick={() => setIsEditModalOpen(false)}
-                disabled={isUpdating}
-              >
-                Бекор қилиш
-              </Button>
-              <Button onClick={handleUpdate} disabled={isUpdating}>
-                {isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <EditVisit
+          isEditModalOpen={isEditModalOpen}
+          setIsEditModalOpen={setIsEditModalOpen}
+          editForm={editForm}
+          setEditForm={setEditForm}
+          diagnoses={diagnoses}
+          handleUpdate={handleUpdate}
+          isUpdating={isUpdating}
+        />
 
         {/* Delete Confirmation Modal */}
-        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className='flex items-center gap-2'>
-                <AlertTriangle className='w-5 h-5 text-red-600' />
-                Кўрикни ўчириш
-              </DialogTitle>
-              <DialogDescription>
-                Сиз ҳақиқатан ҳам бу кўрикни ўчирмоқчимисиз? Бу амални қайтариб
-                бўлмайди.
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedExam && (
-              <div className='py-4'>
-                <div className='p-4 bg-muted rounded-lg space-y-2'>
-                  <p className='text-sm'>
-                    <span className='font-semibold'>Бемор:</span>{' '}
-                    {selectedExam.patient_id.fullname}
-                  </p>
-                  <p className='text-sm'>
-                    <span className='font-semibold'>Шифокор:</span>{' '}
-                    {selectedExam.doctor_id.fullname}
-                  </p>
-                  <p className='text-sm'>
-                    <span className='font-semibold'>Сана:</span>{' '}
-                    {new Date(selectedExam.created_at).toLocaleDateString(
-                      'uz-UZ'
-                    )}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <DialogFooter>
-              <Button
-                variant='outline'
-                onClick={() => setIsDeleteModalOpen(false)}
-                disabled={isDeleting}
-              >
-                Бекор қилиш
-              </Button>
-              <Button
-                variant='destructive'
-                onClick={handleDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? 'Ўчирилмоқда...' : 'Ўчириш'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <DeleteVisit
+          isDeleteModalOpen={isDeleteModalOpen}
+          setIsDeleteModalOpen={setIsDeleteModalOpen}
+          selectedExam={selectedExam}
+          handleDelete={handleDelete}
+          isDeleting={isDeleting}
+        />
       </main>
     </div>
   );
