@@ -116,6 +116,7 @@ export type ExamDataItem = {
   analyses: Array<Analysis> | null;
   billing_id: string | null;
   description: string;
+  treatment_type:"stasionar"|"ambulator";
   images: Array<Image>;
   status: status;
   prescriptions: Array<{
@@ -131,16 +132,14 @@ export type ExamDataItem = {
     duration: number;
     instructions: string;
     _id: string;
-    days: Day[];
+    days: Array<Day>;
   }>;
   services: Array<{
-    service_type_id:
-      | {
+    service_type_id:{
           _id: string;
           name: string;
           price: number;
-        }
-      | string;
+        };
     price: number;
     quantity: number;
     status: string;

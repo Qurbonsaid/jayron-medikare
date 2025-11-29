@@ -32,44 +32,50 @@ const getBillingStatusBadge = (status: string) => {
 
   const statusConfig: Record<string, { text: string; class: string }> = {
     paid: {
-      text: 'Тўланған',
-      class: 'bg-green-100 text-green-700 border border-green-300',
+      text: 'Тўланган',
+      class: 'bg-green-100 text-green-700 border text-center border-green-300',
     },
     unpaid: {
       text: 'Тўланмаган',
-      class: 'bg-red-100 text-red-700 border border-red-300',
+      class: 'bg-red-100 text-red-700 border text-center border-red-300',
     },
     partially_paid: {
       text: 'Қисман тўланған',
-      class: 'bg-yellow-100 text-yellow-700 border border-yellow-300',
+      class:
+        'bg-yellow-100 text-yellow-700 border text-center border-yellow-300',
     },
     completed: {
       text: 'Тўланған',
-      class: 'bg-green-100 text-green-700 border border-green-300',
+      class: 'bg-green-100 text-green-700 border text-center border-green-300',
     },
     incompleted: {
       text: 'Тўланмаган',
-      class: 'bg-red-100 text-red-700 border border-red-300',
+      class: 'bg-red-100 text-red-700 border text-center border-red-300',
     },
     pending: {
       text: 'Қисман тўланған',
-      class: 'bg-yellow-100 text-yellow-700 border border-yellow-300',
+      class:
+        'bg-yellow-100 text-yellow-700 border text-center border-yellow-300',
     },
   };
 
   const config = statusConfig[status] || {
     text: status,
-    class: 'bg-gray-100 text-gray-700 border border-gray-300',
+    class: 'bg-gray-100 text-gray-700 border text-center border-gray-300',
   };
 
   return (
-    <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${config.class}`}
+    <p
+      className={`inline-flex justify-center items-center px-2.5 py-1 rounded-full text-xs font-semibold text-center mx-auto ${config.class}`}
     >
       {config.text}
-    </span>
+    </p>
   );
 };
+
+export const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
+  };
 
 const Billing = () => {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -79,48 +85,17 @@ const Billing = () => {
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [discount, setDiscount] = useState(0);
-  const [selectedExaminationId, setSelectedExaminationId] = useState('');
+  
+  
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { data, isLoading } = useGetAllBillingQuery({});
 
-  console.log(data);
-
   const invoices = data?.data || [];
 
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: '1',
-      name: 'Консультация терапевта',
-      quantity: 1,
-      unitPrice: 150000,
-      total: 150000,
-    },
-    {
-      id: '2',
-      name: 'Умумий қон таҳлили',
-      quantity: 1,
-      unitPrice: 80000,
-      total: 80000,
-    },
-  ]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
-  };
-
-  const calculateSubtotal = () => {
-    return services.reduce((sum, service) => sum + service.total, 0);
-  };
-
-  const calculateGrandTotal = () => {
-    const subtotal = calculateSubtotal();
-    return subtotal - discount;
-  };
+  
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
@@ -239,7 +214,7 @@ const Billing = () => {
                       <th className='text-right py-3 px-4 font-medium text-muted-foreground text-sm'>
                         Қолдиқ
                       </th>
-                      <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
+                      <th className='text-center py-3 px-4 font-medium text-muted-foreground text-sm'>
                         Ҳолат
                       </th>
                       <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
@@ -271,7 +246,7 @@ const Billing = () => {
                         <td className='py-3 px-4 text-right text-danger font-semibold text-sm'>
                           {formatCurrency(invoice.debt_amount)}
                         </td>
-                        <td className='py-3 px-4'>
+                        <td className='py-3 px-4 text-center'>
                           {getBillingStatusBadge(invoice.status)}
                         </td>
                         <td className='py-3 px-4'>
@@ -531,25 +506,11 @@ const Billing = () => {
           )}
         </div>
       </main>
-
       {/* Invoice Modal */}
       <NewBilling
         isInvoiceModalOpen={isInvoiceModalOpen}
         setIsInvoiceModalOpen={setIsInvoiceModalOpen}
-        services={services}
-        formatCurrency={formatCurrency}
-        discount={discount}
-        setDiscount={setDiscount}
-        paymentAmount={paymentAmount}
-        setPaymentAmount={setPaymentAmount}
-        paymentMethod={paymentMethod}
-        setPaymentMethod={setPaymentMethod}
-        selectedExaminationId={selectedExaminationId}
-        setSelectedExaminationId={setSelectedExaminationId}
-        calculateSubtotal={calculateSubtotal}
-        calculateGrandTotal={calculateGrandTotal}
       />
-
       {/* View Billing Dialog */}
       <ViewBillingDialog
         isOpen={isViewDialogOpen}

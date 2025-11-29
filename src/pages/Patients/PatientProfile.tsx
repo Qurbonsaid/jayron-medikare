@@ -338,7 +338,7 @@ const PatientProfile = () => {
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
                     Диагноз
                   </h3>
-                  {patient.diagnosis.diagnosis_id ? (
+                  {patient.diagnosis?.diagnosis_id ? (
                     <p className='p-3 bg-accent rounded-lg border-l-4 border-primary'>
                       <div className='flex items-start gap-2'>
                         <span className='text-primary mt-1'>•</span>
