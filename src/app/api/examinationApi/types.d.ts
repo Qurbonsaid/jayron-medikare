@@ -192,6 +192,8 @@ export type AllExamReq = {
   patient_id?: string;
   status?: status;
   is_roomed?: boolean;
+  treatment_type?: "stasionar" | "ambulator";
+  room_name?: string;
   search?: string;
 };
 

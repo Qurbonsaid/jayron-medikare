@@ -20,13 +20,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
-import { Save, Search, User } from "lucide-react";
+import { Clock, Save, Search, User } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -160,8 +161,15 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
               </Command>
             </PopoverContent>
           </Popover>
-          <input
+          <div className="flex items-center gap-3 my-4">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <h3 className="text-base sm:text-lg font-bold">
+              Ketish vaqtini tanlang
+            </h3>
+          </div>
+          <Input
             type="date"
+            min={new Date().toISOString().split("T")[0]}
             className="mt-4 w-full border border-gray-300 rounded-md p-2 text-sm sm:text-base"
             placeholder="Estimated Leave Time"
             value={estimatedLeaveTime}

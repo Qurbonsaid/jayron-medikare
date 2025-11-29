@@ -5,7 +5,9 @@ import {
   Edit,
   MoreHorizontal,
   Plus,
+  Search,
   Trash2,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -22,6 +24,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useGetAllExamsQuery } from "@/app/api/examinationApi";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { ExamDataItem } from "@/app/api/examinationApi/types";
 
 const Inpatient = () => {
   const [showNewBuilding, setShowNewBuilding] = useState(false);
@@ -29,6 +46,8 @@ const Inpatient = () => {
   const [showUpdateBuilding, setShowUpdateBuilding] = useState(false);
   const [oneCorpus, setOneCorpus] = useState({});
   const navigate = useNavigate();
+  const [searchExamsQuery, setSearchExamsQuery] = useState("");
+  const [openPopover, setOpenPopover] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [corpusNumber, setCorpusNumber] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,6 +58,22 @@ const Inpatient = () => {
     search: searchQuery,
     corpus_number: corpusNumber,
   });
+  const { data: examinations, isLoading: isExaminationsLoading } =
+    useGetAllExamsQuery({
+      page: 1,
+      limit: 100,
+      search: searchExamsQuery,
+      status: "pending",
+      is_roomed: true,
+      treatment_type: "stasionar",
+    });
+
+  function handleSelExam(selExam: ExamDataItem) {
+    setOpenPopover(false);
+    const { rooms } = selExam as ExamDataItem;
+    const roomId = rooms[rooms.length - 1]?.room_id;
+    if (roomId) navigate(`/room/${roomId}`);
+  }
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
@@ -72,6 +107,82 @@ const Inpatient = () => {
         ) : getCorpuses?.data && getCorpuses?.data.length > 0 ? (
           <>
             <Card className="card-shadow p-4 sm:p-8 xl:p-12 cursor-pointer">
+              <Card className="mb-6">
+                <Popover open={openPopover} onOpenChange={setOpenPopover}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openPopover}
+                      className="w-full justify-between h-12 sm:h-14 text-sm sm:text-base"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="truncate">Беморни қидириш...</span>
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[calc(100vw-2rem)] sm:w-[600px] md:w-[700px] lg:w-[910px] p-0"
+                    align="start"
+                    side="bottom"
+                  >
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="Исм, ID ёки телефон орқали қидириш..."
+                        value={searchExamsQuery}
+                        onValueChange={setSearchExamsQuery}
+                        className="text-sm sm:text-base"
+                      />
+                      <CommandList>
+                        <CommandEmpty className="p-4 text-sm sm:text-base">
+                          Бемор топилмади
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {isLoading ? (
+                            <CommandItem
+                              disabled
+                              className="py-3 justify-center"
+                            >
+                              Юкланмоқда...
+                            </CommandItem>
+                          ) : (
+                            examinations?.data.map((e) => (
+                              <CommandItem
+                                key={e._id}
+                                value={e._id}
+                                onSelect={() => handleSelExam(e)}
+                                className="py-3"
+                              >
+                                <div className="flex flex-col w-full">
+                                  <span className="font-medium text-sm sm:text-base">
+                                    {e.patient_id.fullname}
+                                  </span>
+                                  <div className="">
+                                    <span className="text-xs sm:text-sm text-muted-foreground">
+                                      {e.patient_id.phone}
+                                      {" / "}
+                                    </span>
+
+                                    <span className="text-xs sm:text-sm font-semibold">
+                                      {e.rooms[e.rooms.length - 1]
+                                        ?.floor_number || 0}{" "}
+                                      -қават,{" "}
+                                      {e.rooms[e.rooms.length - 1]?.room_name ||
+                                        "Номаълум"}{" "}
+                                    </span>
+                                  </div>
+                                </div>
+                              </CommandItem>
+                            ))
+                          )}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </Card>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {getCorpuses?.data.map((corpus) => (
                   <Card

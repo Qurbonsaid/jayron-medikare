@@ -1,7 +1,7 @@
 import { useCreateBillingMutation } from '@/app/api/billingApi/billingApi';
 import { useGetAllExamsQuery } from '@/app/api/examinationApi/examinationApi';
 import { useGetAllPatientAnalysisQuery } from '@/app/api/patientAnalysisApi/patientAnalysisApi';
-import { useGetAllRoomsQuery } from '@/app/api/roomApi/roomApi';
+import { useGetRoomsFromRoomApiQuery } from '@/app/api/roomApi/roomApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { getStatusBadge } from '@/components/common/StatusBadge';
 import {
@@ -132,7 +132,7 @@ const NewBilling = ({
     );
 
   // Fetch Rooms
-  const { data: roomsData, isLoading: isLoadingRooms } = useGetAllRoomsQuery(
+  const { data: roomsData, isLoading: isLoadingRooms } = useGetRoomsFromRoomApiQuery(
     {
       page: 1,
       limit: 100,
