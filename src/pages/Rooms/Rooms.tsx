@@ -13,7 +13,6 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { NewRoom } from "./components";
 import { useState, useEffect } from "react";
-import { useGetAllRoomsQuery } from "@/app/api/roomApi";
 import { Card } from "@/components/ui/card";
 import {
   Tooltip,
@@ -48,6 +47,7 @@ import {
 import { UpdateRoom } from "./components/updateRoom";
 import { Room } from "@/app/api/roomApi/types";
 import { DeleteWarnRoom } from "./components/deleteWarnRoom";
+import { useGetRoomsFromRoomApiQuery } from "@/app/api/roomApi";
 
 const Rooms = () => {
   const { id } = useParams();
@@ -65,8 +65,8 @@ const Rooms = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(1); // Reset page when search changes
-    }, 500); // 500ms delay
+      setCurrentPage(1);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -75,15 +75,16 @@ const Rooms = () => {
     { id },
     { skip: !id }
   );
-  const { data: getRooms, isLoading: roomsLoading } = useGetAllRoomsQuery(
-    {
-      corpus_id: id,
-      page: currentPage,
-      limit: itemsPerPage,
-      search: debouncedSearch,
-    },
-    { skip: !id }
-  );
+  const { data: getRooms, isLoading: roomsLoading } =
+    useGetRoomsFromRoomApiQuery(
+      {
+        corpus_id: id,
+        page: currentPage,
+        limit: itemsPerPage,
+        search: debouncedSearch,
+      },
+      { skip: !id }
+    );
 
   function handleRoomPatientIsLeavingToday(room: Room) {
     const today = new Date();
@@ -104,10 +105,10 @@ const Rooms = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">
-              {getCorpus?.data.corpus_number || ""} - Korpus Xonalar Рўйхати
+              {getCorpus?.data.corpus_number || ""} - Корпус Хоналар Рўйхати
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Барча xonalarni кўриш ва бошқариш
+              Барча хоналарни кўриш ва бошқариш
             </p>
           </div>
           <Button
@@ -115,7 +116,7 @@ const Rooms = () => {
             className="w-full sm:w-auto"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Янги Xona
+            Янги Хона
           </Button>
         </div>
 
@@ -134,15 +135,15 @@ const Rooms = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 xl:gap-6">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Corpus nomi
+                    Корпус номи
                   </h3>
                   <p className="mt-1 text-lg font-semibold">
-                    {getCorpus?.data.corpus_number || ""} - Korpus
+                    {getCorpus?.data.corpus_number || ""} - Корпус
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Xonalar soni
+                    Хоналар сони
                   </h3>
 
                   <p className="mt-1 text-lg font-semibold">
@@ -151,7 +152,7 @@ const Rooms = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Umumiy sig'im
+                    Умумий сиғим
                   </h3>
 
                   <p className="mt-1 text-lg font-semibold">
@@ -160,7 +161,7 @@ const Rooms = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Umumiy bandlik
+                    Умумий бандлик
                   </h3>
 
                   <p
@@ -184,7 +185,7 @@ const Rooms = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Mavjud xonalar
+                    Мавжуд хоналар
                   </h3>
 
                   <p
@@ -202,7 +203,7 @@ const Rooms = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Bugun chiqadiganlar
+                    Бугун чиқадиганлар
                   </h3>
 
                   <p
@@ -286,7 +287,7 @@ const Rooms = () => {
                   <span className="font-semibold text-foreground">
                     {getRooms?.pagination?.total_items || 0}
                   </span>{" "}
-                  Xona
+                  Хона
                 </p>
                 <Select
                   value={itemsPerPage.toString()}
@@ -314,11 +315,11 @@ const Rooms = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-center">№</TableHead>
-                    <TableHead className="text-center">Xona nomi</TableHead>
-                    <TableHead className="text-center">Xona narxi</TableHead>
-                    <TableHead className="text-center">Sig'im</TableHead>
-                    <TableHead className="text-center">Bandlik</TableHead>
-                    <TableHead className="text-center">Xona qavati</TableHead>
+                    <TableHead className="text-center">Хона номи</TableHead>
+                    <TableHead className="text-center">Хона нархи</TableHead>
+                    <TableHead className="text-center">Сиғим</TableHead>
+                    <TableHead className="text-center">Бандлик</TableHead>
+                    <TableHead className="text-center">Хона қавати</TableHead>
                     <TableHead className="text-center">Tavsif</TableHead>
                     <TableHead className="text-center">Harakatlar</TableHead>
                   </TableRow>
@@ -342,11 +343,11 @@ const Rooms = () => {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        {room.room_price.toLocaleString()} so'm
+                        {room.room_price.toLocaleString()} сўм
                       </TableCell>
 
                       <TableCell className="text-center">
-                        {room.patient_capacity} kishilik
+                        {room.patient_capacity} кишилик
                       </TableCell>
 
                       <TableCell
@@ -366,7 +367,7 @@ const Rooms = () => {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        {room.floor_number} - qavat
+                        {room.floor_number} - қават
                       </TableCell>
 
                       <TableCell className="text-center">
@@ -455,7 +456,7 @@ const Rooms = () => {
                         <h3 className="font-semibold text-base sm:text-lg mb-1">
                           {room.room_name}{" "}
                           <span className="text-sm">
-                            Qavat: {room.floor_number}
+                            Қават: {room.floor_number}
                           </span>
                         </h3>
                         <p className="text-xs sm:text-sm text-muted-foreground">
@@ -465,11 +466,11 @@ const Rooms = () => {
                     </div>
                     <div className="space-y-2 mb-3">
                       <div className="flex items-center gap-2 text-xs sm:text-sm">
-                        <span>Xona narxi {room.room_price} so'm</span>
+                        <span>Хона нархи {room.room_price} сўм</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs sm:text-sm">
                         <span>
-                          Sig'im: {room.patient_capacity} kishilik |{" "}
+                          Сиғим: {room.patient_capacity} кишилик |{" "}
                           <span
                             className={`text-center font-bold ${
                               room.patient_occupied
@@ -480,12 +481,12 @@ const Rooms = () => {
                                 : "text-green-600"
                             }`}
                           >
-                            Bandlik:{" "}
+                            Бандлик:{" "}
                             {room.patient_occupied
                               ? room.patient_occupied === room.patient_capacity
-                                ? "To'liq band"
-                                : `${room.patient_occupied} ta band`
-                              : "bo'sh"}
+                                ? "Тўлиқ банд"
+                                : `${room.patient_occupied} та банд`
+                              : "бўш"}
                           </span>{" "}
                         </span>
                       </div>
@@ -647,17 +648,17 @@ const Rooms = () => {
               title={
                 searchQuery || currentPage > 1
                   ? "Ҳеч нарса топилмади"
-                  : "Ҳали Xonалар йўқ"
+                  : "Ҳали Хоналар йўқ"
               }
               description={
                 searchQuery || currentPage > 1
                   ? "Қидирув сўзини текширинг ёки филтрни ўзгартиринг"
-                  : "Биринчи Xonани қўшиш учун қуйидаги тугмани босинг"
+                  : "Биринчи Хонани қўшиш учун қуйидаги тугмани босинг"
               }
               actionLabel={
                 searchQuery || currentPage > 1
                   ? "Филтрни тозалаш"
-                  : "+ Янги Xona Қўшиш"
+                  : "+ Янги Хона Қўшиш"
               }
               onAction={() =>
                 searchQuery || currentPage > 1

@@ -122,3 +122,4 @@ export const baseApi = createApi({
 
 export { clearAuthTokens, updateCache };
 export default baseApi;
+export const { util: apiUtil } = baseApi

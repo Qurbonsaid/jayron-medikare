@@ -34,14 +34,14 @@ import z from "zod";
 const RoomSchema = z.object({
   room_name: z
     .string()
-    .min(3, "Xona nomi kamida 3 ta belgidan iborat bo'lishi kerak"),
-  room_price: z.number().min(1, "Xona narxi kiritilishi kerak"),
-  corpus_id: z.string().min(1, "Korpus ID kiritilishi kerak"),
-  patient_capacity: z.number().min(1, "Bemor sig'imi kamida 1 bo'lishi kerak"),
-  floor_number: z.number().min(0, "Qavat raqami kiritilishi kerak").optional(),
+    .min(3, "Хона номи камида 3 та белгидан иборат бўлиши керак"),
+  room_price: z.number().min(1, "Хона нархи киритилиши керак"),
+  corpus_id: z.string().min(1, "Корпус ID киритилиши керак"),
+  patient_capacity: z.number().min(1, "Бемор сиғими камида 1 бўлиши керак"),
+  floor_number: z.number().min(0, "Қават рақами киритилиши керак").optional(),
   description: z
     .string()
-    .min(5, "Izoh kamida 5 ta belgidan iborat bo'lishi kerak")
+    .min(5, "Изоҳ камида 5 та белгидан иборат бўлиши керак")
     .optional(),
 });
 
@@ -88,7 +88,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
       request: async () =>
         await updatedRooms(submitData as UpdatedRoomRequest).unwrap(),
       onSuccess: () => {
-        toast.success("Xona муваффақиятли янгиланди");
+        toast.success("Хона муваффақиятли янгиланди");
         form.reset();
         onOpenChange(false);
       },
@@ -121,11 +121,11 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Xona nomi <span className="text-red-500">*</span>
+                        Хона номи <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="101-xona"
+                          placeholder="101-хона"
                           className="border-slate-400 border-2 w-full"
                           {...field}
                         />
@@ -141,7 +141,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Xona narxi <span className="text-red-500">*</span>
+                        Хона нархи <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -167,7 +167,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Xona sig'imi <span className="text-red-500">*</span>
+                        Хона сиғими <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -193,7 +193,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Xona qavati <span className="text-red-500">*</span>
+                        Хона қавати <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -218,7 +218,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
                   defaultValue={room?.description}
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>Izoh</FormLabel>
+                      <FormLabel>Изоҳ</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Асосий корпус"

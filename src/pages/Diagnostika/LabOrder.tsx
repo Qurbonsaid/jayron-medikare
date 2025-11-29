@@ -166,6 +166,7 @@ const LabOrder = () => {
 				setShowErrors(false)
 				setPatient(null)
 				setSelectedPatientId('')
+				navigate('/lab-results')
 			},
 		 onError: (err) => {
         toast.error(err?.data?.error?.msg);

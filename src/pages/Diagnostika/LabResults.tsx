@@ -208,17 +208,7 @@ const LabResults = () => {
 		setSelectedOrderId(orderId)
 		setIsModalOpen(true)
 		setIsVerified(false)
-		setComments('')
 	}
-
-	// const handleSubmitResults = () => {
-	// 	if (!isVerified) {
-	// 		toast.error('Илтимос, натижаларни тасдиқланг')
-	// 		return
-	// 	}
-	// 	toast.success('Натижалар юборилди')
-	// 	setIsModalOpen(false)
-	// }
 
 	// ichida komponent
 	const [updatePatientAnalysis, { isLoading: isUpdating }] =
@@ -372,20 +362,6 @@ const LabResults = () => {
 		return { icon: '✓', color: 'text-green-600' }
 	}
 
-	// const handleResultChange = (index: number, value: string) => {
-	// 	const updated = [...testParameters]
-
-	// 	updated[index].analysis_parameter_value = value
-
-	// 	// VALIDATSIYA: bo‘sh bo‘lsa error=true
-	// 	if (!value || value.trim() === '') {
-	// 		updated[index].error = true
-	// 	} else {
-	// 		updated[index].error = false
-	// 	}
-
-	// 	setTestParameters(updated)
-	// }
 	const handleResultChange = (index: number, value: string | number) => {
 		setTestParameters(prev => {
 			const updated = [...prev]

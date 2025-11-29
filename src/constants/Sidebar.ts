@@ -18,6 +18,7 @@ import {
   User,
   Users,
   Wallet,
+  CalendarDays,
 } from 'lucide-react';
 export const menuCategories = [
   {
@@ -56,6 +57,7 @@ export const menuCategories = [
     title: 'СТАЦИОНАР',
     icon: BedDouble,
     items: [
+      { title: 'Стационар календари', url: '/inpatient-calendar', icon: CalendarDays },
       { title: 'Стационар бошқаруви', url: '/inpatient', icon: BedDouble },
       { title: 'Дори va lichenya Бериsh', url: '/medicine', icon: Pill },
     ],

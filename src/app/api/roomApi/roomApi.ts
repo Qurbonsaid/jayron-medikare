@@ -22,7 +22,7 @@ export const roomApi = baseApi.injectEndpoints({
       invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM],
     }),
 
-    getAllRooms: builder.query<GetAllRoomsResponse, GetAllRoomsParams>({
+    getRoomsFromRoomApi: builder.query<GetAllRoomsResponse, GetAllRoomsParams>({
       query: (params = {}) => {
         const queryParams = new URLSearchParams();
 
@@ -110,7 +110,7 @@ export const roomApi = baseApi.injectEndpoints({
 
 export const {
   useCreateRoomMutation,
-  useGetAllRoomsQuery,
+  useGetRoomsFromRoomApiQuery,
   useGetOneRoomQuery,
   useUpdateRoomMutation,
   useDeleteRoomMutation,

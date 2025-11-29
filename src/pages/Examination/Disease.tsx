@@ -130,12 +130,6 @@ export default function AnalysisParamsModal() {
 		if (!form.code.trim()) newErrors.code = 'Kasallik kodi majburiy'
 		if (!form.name.trim()) newErrors.name = 'Kasallik nomi majburiy'
 		if (!form.description.trim()) newErrors.description = 'Tavsif majburiy'
-		// if (form.symptoms.length === 0)
-		//     newErrors.symptoms = 'Kamida bitta alomat kiriting'
-		// if (form.causes.length === 0)
-		//     newErrors.causes = 'Kamida bitta sabab kiriting'
-		// if (form.treatments.length === 0)
-		//     newErrors.treatments = 'Kamida bitta davolash usuli kiriting'
 
 		setErrors(newErrors)
 		return Object.keys(newErrors).length === 0
