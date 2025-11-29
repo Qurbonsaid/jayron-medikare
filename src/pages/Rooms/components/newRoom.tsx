@@ -29,14 +29,14 @@ import z from "zod";
 const RoomSchema = z.object({
   room_name: z
     .string()
-    .min(3, "Xona nomi kamida 3 ta belgidan iborat bo'lishi kerak"),
-  room_price: z.number().min(1, "Xona narxi kiritilishi kerak"),
-  corpus_id: z.string().min(1, "Korpus ID kiritilishi kerak"),
-  patient_capacity: z.number().min(1, "Bemor sig'imi kamida 1 bo'lishi kerak"),
-  floor_number: z.number().min(0, "Qavat raqami kiritilishi kerak").optional(),
+    .min(3, "Хона номи камида 3 та белгидан иборат бўлиши керак"),
+  room_price: z.number().min(1, "Хона нархи киритилиши керак"),
+  corpus_id: z.string().min(1, "Корпус ID киритилиши керак"),
+  patient_capacity: z.number().min(1, "Бемор сиғими камида 1 бўлиши керак"),
+  floor_number: z.number().min(0, "Қават рақами киритилиши керак").optional(),
   description: z
     .string()
-    .min(5, "Izoh kamida 5 ta belgidan iborat bo'lishi kerak")
+    .min(5, "Изоҳ камида 5 та белгидан иборат бўлиши керак")
     .optional(),
 });
 
@@ -57,7 +57,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
     mode: "onSubmit",
     reValidateMode: "onChange",
     defaultValues: {
-      room_name: "101-xona",
+      room_name: "101-хона",
       room_price: 150000,
       corpus_id: corpusId,
       patient_capacity: 4,
@@ -75,7 +75,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
       request: async () =>
         await createdRooms(submitData as CreatedRoomRequest).unwrap(),
       onSuccess: () => {
-        toast.success("Xona муваффақиятли қўшилди");
+        toast.success("Хона муваффақиятли қўшилди");
         form.reset();
         onOpenChange(false);
       },
@@ -90,7 +90,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
-            Янги Xona Қўшиш
+            Янги Хона Қўшиш
           </DialogTitle>
         </DialogHeader>
 
@@ -107,11 +107,11 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Xona nomi <span className="text-red-500">*</span>
+                        Хона номи <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="101-xona"
+                          placeholder="101-хона"
                           className="border-slate-400 border-2 w-full"
                           {...field}
                         />
@@ -126,7 +126,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Xona narxi <span className="text-red-500">*</span>
+                        Хона нархи <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -151,7 +151,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Xona sig'imi <span className="text-red-500">*</span>
+                        Хона сиғими <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -176,7 +176,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Xona qavati <span className="text-red-500">*</span>
+                        Хона қавати <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -200,7 +200,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                   name="description"
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>Izoh</FormLabel>
+                      <FormLabel>Изоҳ</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Асосий корпус"

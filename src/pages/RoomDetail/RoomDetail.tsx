@@ -7,9 +7,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Clock, Edit, MoreHorizontal, Plus, Trash2, User } from "lucide-react";
+import { Clock, MoreHorizontal, Plus, Trash2, User } from "lucide-react";
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { RoomNewPatient } from "./components/RoomNewPatient";
 import {
   DropdownMenu,
