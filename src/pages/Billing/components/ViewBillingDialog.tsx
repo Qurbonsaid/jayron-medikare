@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 import { CreditCard, Edit, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { ServiceItem } from './ServiceItem';
 
 interface Props {
   isOpen: boolean;
@@ -430,6 +431,67 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                 </div>
               )}
 
+            {/* Services from Examination Section */}
+            {billingData.data.examination_id?.services &&
+              billingData.data.examination_id.services.length > 0 && (
+                <div>
+                  <Label className='text-base sm:text-lg font-semibold mb-3 block'>
+                    Кўрик хизматлари
+                  </Label>
+
+                  {/* Desktop Table */}
+                  <div className='hidden md:block border rounded-lg overflow-hidden'>
+                    <table className='w-full'>
+                      <thead className='bg-muted'>
+                        <tr>
+                          <th className='text-left py-3 px-4 font-medium text-sm'>
+                            Хизмат номи
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Код
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Сони
+                          </th>
+                          <th className='text-right py-3 px-4 font-medium text-sm'>
+                            Нархи
+                          </th>
+                          <th className='text-right py-3 px-4 font-medium text-sm'>
+                            Жами
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {billingData.data.examination_id.services.map(
+                          (service) => (
+                            <ServiceItem
+                              key={service._id}
+                              serviceId={service.service_type_id._id}
+                              quantity={service.quantity}
+                              price={service.price}
+                            />
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className='md:hidden space-y-3'>
+                    {billingData.data.examination_id.services.map((service) => (
+                      <Card key={service._id} className='p-0 overflow-hidden'>
+                        <ServiceItem
+                          serviceId={service.service_type_id._id}
+                          quantity={service.quantity}
+                          price={service.price}
+                          isMobile
+                        />
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
             {/* Images Section */}
             {billingData.data.examination_id?.images &&
               billingData.data.examination_id.images.length > 0 && (
@@ -659,7 +721,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
             {/* Services */}
             <div>
               <Label className='text-base sm:text-lg font-semibold mb-3 block'>
-                Хизматлар
+                Хизмат Нархлари
               </Label>
 
               {/* Desktop Table */}

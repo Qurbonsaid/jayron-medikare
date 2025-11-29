@@ -25,6 +25,7 @@ import { Eye, Filter, Phone, Search, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewPatient from './components/NewPatient';
+import PDFGenerator from './components/PatientPDF';
 
 const Patients = () => {
   const navigate = useNavigate();

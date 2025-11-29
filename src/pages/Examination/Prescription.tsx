@@ -1,12 +1,15 @@
 import {
+  useAddServiceToExaminationMutation,
   useCreatePrescriptionMutation,
   useDeletePrescriptionMutation,
   useGetAllExamsQuery,
   useGetOneExamQuery,
+  useRemoveServiceFromExaminationMutation,
   useUpdatePrescriptionMutation,
 } from '@/app/api/examinationApi/examinationApi';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import { useGetPatientByIdQuery } from '@/app/api/patientApi/patientApi';
+import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,15 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import {
-  AlertCircle,
-  Edit,
-  Loader2,
-  Plus,
-  Printer,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { AlertCircle, Edit, Loader2, Plus, Printer, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -42,6 +37,14 @@ interface Medication {
   instructions: string;
 }
 
+interface ServiceItem {
+  id: string;
+  service_id: string;
+  quantity: string;
+  status: string;
+  notes: string;
+}
+
 interface ValidationErrors {
   [key: string]: {
     medication_id?: boolean;
@@ -51,18 +54,29 @@ interface ValidationErrors {
   };
 }
 
+interface ServiceValidationErrors {
+  [key: string]: {
+    service_id?: boolean;
+    quantity?: boolean;
+  };
+}
+
 interface FormValidationErrors {
   medications: ValidationErrors;
+  services: ServiceValidationErrors;
 }
 
 const Prescription = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [medications, setMedications] = useState<Medication[]>([]);
+  const [services, setServices] = useState<ServiceItem[]>([]);
   const [allergyWarning, setAllergyWarning] = useState(false);
   const [formErrors, setFormErrors] = useState<FormValidationErrors>({
     medications: {},
+    services: {},
   });
+  const [serviceSearch, setServiceSearch] = useState('');
 
   // Prescription editing states
   const [editingPrescriptionId, setEditingPrescriptionId] = useState<
@@ -126,12 +140,23 @@ const Prescription = () => {
     search: medicationSearch || undefined,
   });
 
+  // Fetch services for search
+  const { data: servicesData } = useGetAllServiceQuery({
+    page: 1,
+    limit: 100,
+    search: serviceSearch,
+  } as any);
+
   const [createPrescription, { isLoading: isCreating }] =
     useCreatePrescriptionMutation();
   const [deletePrescription, { isLoading: isDeleting }] =
     useDeletePrescriptionMutation();
   const [updatePrescription, { isLoading: isUpdating }] =
     useUpdatePrescriptionMutation();
+  const [addServiceToExam, { isLoading: isAddingService }] =
+    useAddServiceToExaminationMutation();
+  const [removeServiceFromExam, { isLoading: isRemovingService }] =
+    useRemoveServiceFromExaminationMutation();
   const handleRequest = useHandleRequest();
 
   // Update examinations list when new data arrives
@@ -193,8 +218,10 @@ const Prescription = () => {
     setSelectedExaminationId('');
     setAllergyWarning(false);
     setMedications([]);
+    setServices([]);
     setFormErrors({
       medications: {},
+      services: {},
     });
     // Clear navigation state first
     if (examinationIdFromState) {
@@ -281,6 +308,49 @@ const Prescription = () => {
     setMedications(medications.filter((med) => med.id !== id));
   };
 
+  // Service handlers
+  const addService = () => {
+    const newService: ServiceItem = {
+      id: Date.now().toString(),
+      service_id: '',
+      quantity: '1',
+      status: 'pending',
+      notes: '',
+    };
+    setServices([...services, newService]);
+  };
+
+  const updateServiceField = (
+    id: string,
+    field: keyof ServiceItem,
+    value: string
+  ) => {
+    setServices(
+      services.map((srv) => (srv.id === id ? { ...srv, [field]: value } : srv))
+    );
+
+    // Clear validation error when user selects/types
+    if (
+      value.trim() !== '' &&
+      (field === 'service_id' || field === 'quantity')
+    ) {
+      setFormErrors((prev) => ({
+        ...prev,
+        services: {
+          ...prev.services,
+          [id]: {
+            ...prev.services[id],
+            [field]: false,
+          },
+        },
+      }));
+    }
+  };
+
+  const removeService = (id: string) => {
+    setServices(services.filter((srv) => srv.id !== id));
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -292,68 +362,107 @@ const Prescription = () => {
       return;
     }
 
-    // Validate medications list
-    if (medications.length === 0) {
-      toast.error('Илтимос, камида битта дори қўшинг');
+    // Validate that at least one medication or service is added
+    if (medications.length === 0 && services.length === 0) {
+      toast.error('Илтимос, камида битта дори ёки хизмат қўшинг');
       return;
     }
 
     // Validate each medication and collect errors
-    const errors: ValidationErrors = {};
+    const medErrors: ValidationErrors = {};
+    const srvErrors: ServiceValidationErrors = {};
     let hasErrors = false;
 
     for (const med of medications) {
-      errors[med.id] = {};
+      medErrors[med.id] = {};
 
       // Check if medication is selected
       if (!med.medication_id || med.medication_id.trim() === '') {
-        errors[med.id].medication_id = true;
+        medErrors[med.id].medication_id = true;
         hasErrors = true;
       }
 
       // Check if frequency is selected
       if (!med.frequency || med.frequency.trim() === '') {
-        errors[med.id].frequency = true;
+        medErrors[med.id].frequency = true;
         hasErrors = true;
       }
 
       // Check if duration is filled
       if (!med.duration || med.duration.trim() === '') {
-        errors[med.id].duration = true;
+        medErrors[med.id].duration = true;
         hasErrors = true;
       }
 
       // Check if instructions are filled
       if (!med.instructions || med.instructions.trim() === '') {
-        errors[med.id].instructions = true;
+        medErrors[med.id].instructions = true;
+        hasErrors = true;
+      }
+    }
+
+    // Validate services
+    for (const srv of services) {
+      srvErrors[srv.id] = {};
+
+      if (!srv.service_id || srv.service_id.trim() === '') {
+        srvErrors[srv.id].service_id = true;
+        hasErrors = true;
+      }
+
+      if (
+        !srv.quantity ||
+        srv.quantity.trim() === '' ||
+        parseInt(srv.quantity) < 1
+      ) {
+        srvErrors[srv.id].quantity = true;
         hasErrors = true;
       }
     }
 
     if (hasErrors) {
       setFormErrors({
-        medications: errors,
+        medications: medErrors,
+        services: srvErrors,
       });
       toast.error('Илтимос, барча майдонларни тўлдиринг');
       return;
     }
 
     // Check for duplicate medications
-    const medicationIds = medications.map((med) =>
-      med.medication_id.toLowerCase().trim()
-    );
-    const duplicates = medicationIds.filter(
-      (id, index) => medicationIds.indexOf(id) !== index
-    );
-    if (duplicates.length > 0) {
-      toast.error(
-        'Такрорланган дори. Ҳар бир дори фақат бир марта қўшилиши керак.'
+    if (medications.length > 0) {
+      const medicationIds = medications.map((med) =>
+        med.medication_id.toLowerCase().trim()
       );
-      return;
+      const duplicates = medicationIds.filter(
+        (id, index) => medicationIds.indexOf(id) !== index
+      );
+      if (duplicates.length > 0) {
+        toast.error(
+          'Такрорланган дори. Ҳар бир дори фақат бир марта қўшилиши керак.'
+        );
+        return;
+      }
+    }
+
+    // Check for duplicate services
+    if (services.length > 0) {
+      const serviceIds = services.map((srv) =>
+        srv.service_id.toLowerCase().trim()
+      );
+      const duplicates = serviceIds.filter(
+        (id, index) => serviceIds.indexOf(id) !== index
+      );
+      if (duplicates.length > 0) {
+        toast.error(
+          'Такрорланган хизмат. Ҳар бир хизмат фақат бир марта қўшилиши керак.'
+        );
+        return;
+      }
     }
 
     // Save each medication separately
-    let successCount = 0;
+    let medSuccessCount = 0;
     for (const med of medications) {
       await handleRequest({
         request: async () => {
@@ -369,7 +478,7 @@ const Prescription = () => {
           return res;
         },
         onSuccess: () => {
-          successCount++;
+          medSuccessCount++;
         },
         onError: (error) => {
           toast.error(error?.data?.error?.msg || `Дорини сақлашда хатолик`);
@@ -377,11 +486,47 @@ const Prescription = () => {
       });
     }
 
-    if (successCount === medications.length) {
-      toast.success(`${successCount} та дори муваффақиятли сақланди`);
+    // Save each service separately
+    let srvSuccessCount = 0;
+    for (const srv of services) {
+      // Get service details for price
+      const serviceDetails = servicesData?.data?.find(
+        (s: any) => s._id === srv.service_id
+      );
+
+      await handleRequest({
+        request: async () => {
+          const res = await addServiceToExam({
+            id: selectedExaminationId,
+            body: {
+              service_type_id: srv.service_id,
+              price: serviceDetails?.price || 0,
+              quantity: parseInt(srv.quantity) || 1,
+              status: srv.status,
+              notes: srv.notes,
+            },
+          }).unwrap();
+          return res;
+        },
+        onSuccess: () => {
+          srvSuccessCount++;
+        },
+        onError: (error) => {
+          toast.error(error?.data?.error?.msg || `Хизматни сақлашда хатолик`);
+        },
+      });
+    }
+
+    const totalItems = medications.length + services.length;
+    const totalSuccess = medSuccessCount + srvSuccessCount;
+
+    if (totalSuccess === totalItems) {
+      toast.success(
+        `${medSuccessCount} та дори ва ${srvSuccessCount} та хизмат муваффақиятли сақланди`
+      );
       navigate(-1);
-    } else if (successCount > 0) {
-      toast.warning(`${successCount}/${medications.length} та дори сақланди`);
+    } else if (totalSuccess > 0) {
+      toast.warning(`${totalSuccess}/${totalItems} та элемент сақланди`);
     }
   };
 
@@ -706,258 +851,6 @@ const Prescription = () => {
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Existing Prescriptions */}
-                {examinationData.data.prescriptions &&
-                  examinationData.data.prescriptions.length > 0 && (
-                    <Card className='mb-4 sm:mb-6 border-primary/20'>
-                      <CardHeader>
-                        <CardTitle className='text-base sm:text-lg md:text-xl flex items-center gap-2'>
-                          <span>Мавжуд Рецептлар</span>
-                          <span className='text-sm font-normal text-muted-foreground'>
-                            ({examinationData.data.prescriptions.length} та)
-                          </span>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className='space-y-3 sm:space-y-4'>
-                          {examinationData.data.prescriptions.map(
-                            (prescription, index) => (
-                              <Card
-                                key={prescription._id}
-                                className='border border-primary/10 bg-primary/5'
-                              >
-                                <CardContent className='pt-3 sm:pt-4'>
-                                  {editingPrescriptionId ===
-                                  prescription._id ? (
-                                    <div className='space-y-4'>
-                                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                                        <div className='space-y-2 sm:col-span-2'>
-                                          <Label>Дори Номи *</Label>
-                                          <Select
-                                            value={
-                                              editPrescriptionForm.medication_id
-                                            }
-                                            onValueChange={(value) =>
-                                              setEditPrescriptionForm({
-                                                ...editPrescriptionForm,
-                                                medication_id: value,
-                                              })
-                                            }
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue placeholder='Дорини танланг'>
-                                                {editPrescriptionForm.medication_id
-                                                  ? `${
-                                                      medicationsData?.data?.find(
-                                                        (m: any) =>
-                                                          m._id ===
-                                                          editPrescriptionForm.medication_id
-                                                      )?.name
-                                                    } - ${
-                                                      medicationsData?.data?.find(
-                                                        (m: any) =>
-                                                          m._id ===
-                                                          editPrescriptionForm.medication_id
-                                                      )?.dosage
-                                                    }` || 'Дорини танланг'
-                                                  : 'Дорини танланг'}
-                                              </SelectValue>
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <div className='p-2'>
-                                                <Input
-                                                  placeholder='Қидириш...'
-                                                  value={editMedicationSearch}
-                                                  onChange={(e) =>
-                                                    setEditMedicationSearch(
-                                                      e.target.value
-                                                    )
-                                                  }
-                                                  className='mb-2'
-                                                />
-                                              </div>
-                                              {medicationsData?.data
-                                                ?.filter((med: any) =>
-                                                  editMedicationSearch
-                                                    ? med.name
-                                                        .toLowerCase()
-                                                        .includes(
-                                                          editMedicationSearch.toLowerCase()
-                                                        )
-                                                    : true
-                                                )
-                                                .map((medication: any) => (
-                                                  <SelectItem
-                                                    key={medication._id}
-                                                    value={medication._id}
-                                                  >
-                                                    {medication.name} -{' '}
-                                                    {medication.dosage}
-                                                  </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                        <div className='space-y-2'>
-                                          <Label>Кунига (марта) *</Label>
-                                          <Input
-                                            type='number'
-                                            placeholder='Қабул қилиш'
-                                            value={
-                                              editPrescriptionForm.frequency
-                                            }
-                                            onChange={(value) =>
-                                              setEditPrescriptionForm({
-                                                ...editPrescriptionForm,
-                                                frequency: value.target.value,
-                                              })
-                                            }
-                                          />
-                                        </div>
-                                        <div className='space-y-2'>
-                                          <Label>Муддати (кун) *</Label>
-                                          <Input
-                                            type='number'
-                                            placeholder='Даволаш муддати'
-                                            value={
-                                              editPrescriptionForm.duration
-                                            }
-                                            onChange={(value) =>
-                                              setEditPrescriptionForm({
-                                                ...editPrescriptionForm,
-                                                duration: value.target.value,
-                                              })
-                                            }
-                                          />
-                                        </div>
-                                      </div>
-                                      <div className='space-y-2'>
-                                        <Label>Қўшимча Кўрсатмалар</Label>
-                                        <Textarea
-                                          placeholder='Қўшимча кўрсатмалар киритинг'
-                                          value={
-                                            editPrescriptionForm.instructions
-                                          }
-                                          onChange={(e) =>
-                                            setEditPrescriptionForm({
-                                              ...editPrescriptionForm,
-                                              instructions: e.target.value,
-                                            })
-                                          }
-                                          rows={2}
-                                        />
-                                      </div>
-                                      <div className='flex gap-2 justify-end'>
-                                        <Button
-                                          variant='outline'
-                                          onClick={cancelEditPrescription}
-                                          disabled={isUpdating}
-                                        >
-                                          <X className='w-4 h-4 mr-2' />
-                                          Бекор қилиш
-                                        </Button>
-                                        <Button
-                                          onClick={() =>
-                                            handleUpdatePrescription(
-                                              prescription._id
-                                            )
-                                          }
-                                          disabled={isUpdating}
-                                        >
-                                          {isUpdating
-                                            ? 'Сақланмоқда...'
-                                            : 'Сақлаш'}
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <div className='flex items-center justify-between mb-3'>
-                                        <span className='text-xs sm:text-sm font-medium text-primary'>
-                                          Рецепт #{index + 1}
-                                        </span>
-                                        <div className='flex gap-2'>
-                                          <Button
-                                            variant='ghost'
-                                            size='sm'
-                                            onClick={() =>
-                                              startEditPrescription(
-                                                prescription
-                                              )
-                                            }
-                                            disabled={
-                                              editingPrescriptionId !== null
-                                            }
-                                            className='h-8 w-8 p-0'
-                                          >
-                                            <Edit className='h-4 w-4' />
-                                          </Button>
-                                          <Button
-                                            variant='ghost'
-                                            size='sm'
-                                            onClick={() =>
-                                              handleDeletePrescription(
-                                                prescription._id
-                                              )
-                                            }
-                                            disabled={isDeleting}
-                                            className='h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10'
-                                          >
-                                            <Trash2 className='h-4 w-4' />
-                                          </Button>
-                                        </div>
-                                      </div>
-                                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-                                        <div>
-                                          <Label className='text-xs sm:text-sm text-muted-foreground'>
-                                            Дори Номи
-                                          </Label>
-                                          <p className='font-semibold text-sm sm:text-base mt-1'>
-                                            {typeof prescription.medication_id ===
-                                              'object' &&
-                                            prescription.medication_id !== null
-                                              ? prescription.medication_id.name
-                                              : 'Маълумот йўқ'}
-                                            {typeof prescription.medication_id ===
-                                              'object' &&
-                                              prescription.medication_id !==
-                                                null &&
-                                              prescription.medication_id
-                                                .dosage &&
-                                              ` - ${prescription.medication_id.dosage}`}
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <Label className='text-xs sm:text-sm text-muted-foreground'>
-                                            Қабул Қилиш
-                                          </Label>
-                                          <p className='font-semibold text-sm sm:text-base mt-1'>
-                                            Кунига {prescription.frequency}{' '}
-                                            марта
-                                          </p>
-                                        </div>
-                                      </div>
-                                      {prescription.instructions && (
-                                        <div className='mt-3 sm:mt-4 p-3 bg-background rounded-md'>
-                                          <Label className='text-xs sm:text-sm text-muted-foreground'>
-                                            Қўшимча Кўрсатмалар
-                                          </Label>
-                                          <p className='text-sm sm:text-base mt-1 whitespace-pre-wrap'>
-                                            {prescription.instructions}
-                                          </p>
-                                        </div>
-                                      )}
-                                    </>
-                                  )}
-                                </CardContent>
-                              </Card>
-                            )
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
               </>
             )}
           </>
@@ -1048,7 +941,244 @@ const Prescription = () => {
                 </Button>
               </CardHeader>
               <CardContent className='space-y-3 sm:space-y-4'>
-                {medications.length === 0 ? (
+                {/* Existing Prescriptions */}
+                {examinationData?.data?.prescriptions &&
+                  examinationData.data.prescriptions.length > 0 && (
+                    <>
+                      <div className='text-xs font-medium text-muted-foreground mb-2'>
+                        Мавжуд рецептлар (
+                        {examinationData.data.prescriptions.length} та)
+                      </div>
+                      {examinationData.data.prescriptions.map(
+                        (prescription: any, index: number) => (
+                          <Card
+                            key={prescription._id}
+                            className='border border-border bg-primary/5'
+                          >
+                            <CardContent className='pt-3 sm:pt-4'>
+                              {editingPrescriptionId === prescription._id ? (
+                                // Edit mode
+                                <div className='space-y-4'>
+                                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                                    <div className='space-y-2 sm:col-span-2'>
+                                      <Label className='text-xs sm:text-sm'>
+                                        Дори Номи *
+                                      </Label>
+                                      <Select
+                                        value={
+                                          editPrescriptionForm.medication_id
+                                        }
+                                        onValueChange={(value) =>
+                                          setEditPrescriptionForm({
+                                            ...editPrescriptionForm,
+                                            medication_id: value,
+                                          })
+                                        }
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder='Дорини танланг' />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <div className='p-2'>
+                                            <Input
+                                              placeholder='Қидириш...'
+                                              value={editMedicationSearch}
+                                              onChange={(e) =>
+                                                setEditMedicationSearch(
+                                                  e.target.value
+                                                )
+                                              }
+                                              className='mb-2'
+                                            />
+                                          </div>
+                                          {medicationsData?.data
+                                            ?.filter((med: any) =>
+                                              editMedicationSearch
+                                                ? med.name
+                                                    .toLowerCase()
+                                                    .includes(
+                                                      editMedicationSearch.toLowerCase()
+                                                    )
+                                                : true
+                                            )
+                                            .map((medication: any) => (
+                                              <SelectItem
+                                                key={medication._id}
+                                                value={medication._id}
+                                              >
+                                                {medication.name} -{' '}
+                                                {medication.dosage}
+                                              </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className='space-y-2'>
+                                      <Label className='text-xs sm:text-sm'>
+                                        Кунига (марта) *
+                                      </Label>
+                                      <Input
+                                        type='number'
+                                        placeholder='Қабул қилиш'
+                                        value={editPrescriptionForm.frequency}
+                                        onChange={(e) =>
+                                          setEditPrescriptionForm({
+                                            ...editPrescriptionForm,
+                                            frequency: e.target.value,
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                    <div className='space-y-2'>
+                                      <Label className='text-xs sm:text-sm'>
+                                        Муддати (кун) *
+                                      </Label>
+                                      <Input
+                                        type='number'
+                                        placeholder='Даволаш муддати'
+                                        value={editPrescriptionForm.duration}
+                                        onChange={(e) =>
+                                          setEditPrescriptionForm({
+                                            ...editPrescriptionForm,
+                                            duration: e.target.value,
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className='space-y-2'>
+                                    <Label className='text-xs sm:text-sm'>
+                                      Қўшимча Кўрсатмалар
+                                    </Label>
+                                    <Textarea
+                                      placeholder='Қўшимча кўрсатмалар киритинг'
+                                      value={editPrescriptionForm.instructions}
+                                      onChange={(e) =>
+                                        setEditPrescriptionForm({
+                                          ...editPrescriptionForm,
+                                          instructions: e.target.value,
+                                        })
+                                      }
+                                      rows={2}
+                                    />
+                                  </div>
+                                  <div className='flex gap-2 justify-end'>
+                                    <Button
+                                      variant='outline'
+                                      size='sm'
+                                      onClick={cancelEditPrescription}
+                                      disabled={isUpdating}
+                                    >
+                                      <X className='w-4 h-4 mr-2' />
+                                      Бекор
+                                    </Button>
+                                    <Button
+                                      size='sm'
+                                      onClick={() =>
+                                        handleUpdatePrescription(
+                                          prescription._id
+                                        )
+                                      }
+                                      disabled={isUpdating}
+                                    >
+                                      {isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                // View mode
+                                <>
+                                  <div className='flex items-center justify-between mb-2'>
+                                    <span className='text-xs sm:text-sm font-medium text-primary'>
+                                      Дори #{index + 1}
+                                    </span>
+                                    <div className='flex items-center gap-2'>
+                                      <span className='text-xs px-2 py-1 rounded-full bg-green-100 text-green-700'>
+                                        Сақланган
+                                      </span>
+                                      <Button
+                                        variant='ghost'
+                                        size='sm'
+                                        onClick={() =>
+                                          startEditPrescription(prescription)
+                                        }
+                                        disabled={
+                                          editingPrescriptionId !== null
+                                        }
+                                        className='h-7 w-7 p-0'
+                                      >
+                                        <Edit className='h-3.5 w-3.5' />
+                                      </Button>
+                                      <Button
+                                        variant='ghost'
+                                        size='sm'
+                                        onClick={() =>
+                                          handleDeletePrescription(
+                                            prescription._id
+                                          )
+                                        }
+                                        disabled={isDeleting}
+                                        className='h-7 w-7 p-0 text-destructive hover:text-destructive'
+                                      >
+                                        <Trash2 className='h-3.5 w-3.5' />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Дори номи
+                                      </Label>
+                                      <p className='text-sm font-medium'>
+                                        {typeof prescription.medication_id ===
+                                        'object'
+                                          ? prescription.medication_id?.name
+                                          : 'Номаълум'}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Қабул қилиш
+                                      </Label>
+                                      <p className='text-sm font-medium'>
+                                        {prescription.frequency} марта/кун
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Муддат
+                                      </Label>
+                                      <p className='text-sm font-medium'>
+                                        {prescription.duration} кун
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Кўрсатмалар
+                                      </Label>
+                                      <p className='text-sm'>
+                                        {prescription.instructions || '-'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )
+                      )}
+                    </>
+                  )}
+
+                {/* New Medications */}
+                {medications.length > 0 && (
+                  <div className='text-xs font-medium text-muted-foreground mb-2 mt-4'>
+                    Янги дорилар
+                  </div>
+                )}
+                {medications.length === 0 &&
+                (!examinationData?.data?.prescriptions ||
+                  examinationData.data.prescriptions.length === 0) ? (
                   <div className='text-center py-8 sm:py-12'>
                     <p className='text-muted-foreground text-sm sm:text-base mb-2'>
                       Ҳали дорилар қўшилмаган
@@ -1212,13 +1342,281 @@ const Prescription = () => {
               </CardContent>
             </Card>
 
+            {/* Services List */}
+            <Card className='mb-4 sm:mb-6'>
+              <CardHeader className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 space-y-2 sm:space-y-0'>
+                <CardTitle className='text-base sm:text-lg md:text-xl'>
+                  Хизматлар Рўйхати
+                </CardTitle>
+                <Button
+                  onClick={addService}
+                  size='sm'
+                  className='w-full sm:w-auto text-xs sm:text-sm'
+                >
+                  <Plus className='mr-2 h-3 w-3 sm:h-4 sm:w-4' />
+                  Хизмат Қўшиш
+                </Button>
+              </CardHeader>
+              <CardContent className='space-y-3 sm:space-y-4'>
+                {/* Existing Services */}
+                {examinationData?.data?.services &&
+                  examinationData.data.services.length > 0 && (
+                    <>
+                      <div className='text-xs font-medium text-muted-foreground mb-2'>
+                        Мавжуд хизматлар ({examinationData.data.services.length}{' '}
+                        та)
+                      </div>
+                      {examinationData.data.services.map(
+                        (service: any, index: number) => (
+                          <Card
+                            key={service._id}
+                            className='border border-border bg-primary/5'
+                          >
+                            <CardContent className='pt-3 sm:pt-4'>
+                              <div className='flex items-center justify-between mb-2'>
+                                <span className='text-xs sm:text-sm font-medium text-primary'>
+                                  Хизмат #{index + 1}
+                                </span>
+                                <span
+                                  className={`text-xs px-2 py-1 rounded-full ${
+                                    service.status === 'completed'
+                                      ? 'bg-green-100 text-green-700'
+                                      : service.status === 'active'
+                                      ? 'bg-blue-100 text-blue-700'
+                                      : 'bg-yellow-100 text-yellow-700'
+                                  }`}
+                                >
+                                  {service.status === 'completed'
+                                    ? 'Якунланган'
+                                    : service.status === 'active'
+                                    ? 'Актив'
+                                    : 'Кутилмоқда'}
+                                </span>
+                              </div>
+                              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
+                                <div>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Хизмат номи
+                                  </Label>
+                                  <p className='text-sm font-medium'>
+                                    {service.service_type_id?.name ||
+                                      'Номаълум'}
+                                  </p>
+                                </div>
+                                <div>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Нарх
+                                  </Label>
+                                  <p className='text-sm font-medium'>
+                                    {service.price?.toLocaleString()} сўм
+                                  </p>
+                                </div>
+                                <div>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Миқдор
+                                  </Label>
+                                  <p className='text-sm font-medium'>
+                                    {service.quantity}
+                                  </p>
+                                </div>
+                                <div>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Жами
+                                  </Label>
+                                  <p className='text-sm font-medium text-primary'>
+                                    {(
+                                      service.price * service.quantity
+                                    )?.toLocaleString()}{' '}
+                                    сўм
+                                  </p>
+                                </div>
+                              </div>
+                              {service.notes && (
+                                <div className='mt-2'>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Изоҳ
+                                  </Label>
+                                  <p className='text-sm'>{service.notes}</p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )
+                      )}
+                    </>
+                  )}
+
+                {/* New Services */}
+                {services.length > 0 && (
+                  <div className='text-xs font-medium text-muted-foreground mb-2 mt-4'>
+                    Янги хизматлар
+                  </div>
+                )}
+                {services.length === 0 &&
+                (!examinationData?.data?.services ||
+                  examinationData.data.services.length === 0) ? (
+                  <div className='text-center py-8 sm:py-12'>
+                    <p className='text-muted-foreground text-sm sm:text-base mb-2'>
+                      Ҳали хизматлар қўшилмаган
+                    </p>
+                    <p className='text-xs sm:text-sm text-muted-foreground'>
+                      "Хизмат Қўшиш" тугмасини босинг
+                    </p>
+                  </div>
+                ) : (
+                  services.map((srv, index) => (
+                    <Card
+                      key={srv.id}
+                      className='border border-border shadow-sm'
+                    >
+                      <CardContent className='pt-3 sm:pt-4'>
+                        <div className='flex items-center justify-between mb-3'>
+                          <span className='text-xs sm:text-sm font-medium text-muted-foreground'>
+                            Янги хизмат #{index + 1}
+                          </span>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => removeService(srv.id)}
+                            className='h-8 w-8 p-0 text-destructive hover:text-destructive'
+                          >
+                            <Trash2 className='h-4 w-4' />
+                          </Button>
+                        </div>
+                        <div className='space-y-4'>
+                          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+                            <div className='space-y-2'>
+                              <Label className='text-xs sm:text-sm'>
+                                Хизмат Тури{' '}
+                                <span className='text-red-500'>*</span>
+                              </Label>
+                              <Select
+                                value={srv.service_id}
+                                onValueChange={(value) =>
+                                  updateServiceField(
+                                    srv.id,
+                                    'service_id',
+                                    value
+                                  )
+                                }
+                              >
+                                <SelectTrigger
+                                  className={`text-sm ${
+                                    formErrors.services[srv.id]?.service_id
+                                      ? 'border-red-500 focus:ring-red-500'
+                                      : ''
+                                  }`}
+                                >
+                                  <SelectValue placeholder='Хизмат турини танланг' />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <div className='p-2'>
+                                    <Input
+                                      placeholder='Хизмат қидириш...'
+                                      value={serviceSearch}
+                                      onChange={(e) =>
+                                        setServiceSearch(e.target.value)
+                                      }
+                                      className='text-sm mb-2'
+                                    />
+                                  </div>
+                                  {servicesData?.data &&
+                                  servicesData.data.length > 0 ? (
+                                    servicesData.data.map((service: any) => (
+                                      <SelectItem
+                                        key={service._id}
+                                        value={service._id}
+                                      >
+                                        {service.name} -{' '}
+                                        {service.price?.toLocaleString()} сўм
+                                      </SelectItem>
+                                    ))
+                                  ) : (
+                                    <div className='p-4 text-center text-sm text-muted-foreground'>
+                                      Хизмат топилмади
+                                    </div>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className='space-y-2'>
+                              <Label className='text-xs sm:text-sm'>
+                                Миқдор <span className='text-red-500'>*</span>
+                              </Label>
+                              <Input
+                                type='number'
+                                placeholder='Миқдор киритинг'
+                                value={srv.quantity}
+                                onChange={(e) =>
+                                  updateServiceField(
+                                    srv.id,
+                                    'quantity',
+                                    e.target.value
+                                  )
+                                }
+                                className={`text-sm ${
+                                  formErrors.services[srv.id]?.quantity
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : ''
+                                }`}
+                              />
+                            </div>
+                            <div className='space-y-2'>
+                              <Label className='text-xs sm:text-sm'>
+                                Ҳолат
+                              </Label>
+                              <Select
+                                value={srv.status}
+                                onValueChange={(value) =>
+                                  updateServiceField(srv.id, 'status', value)
+                                }
+                              >
+                                <SelectTrigger className='text-sm'>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value='pending'>
+                                    Кутилмоқда
+                                  </SelectItem>
+                                  <SelectItem value='active'>Актив</SelectItem>
+                                  <SelectItem value='completed'>
+                                    Якунланган
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className='space-y-2'>
+                            <Label className='text-xs sm:text-sm'>Изоҳ</Label>
+                            <Textarea
+                              placeholder='Қўшимча изоҳ киритинг'
+                              value={srv.notes}
+                              onChange={(e) =>
+                                updateServiceField(
+                                  srv.id,
+                                  'notes',
+                                  e.target.value
+                                )
+                              }
+                              rows={2}
+                              className='text-sm'
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
             {/* Action Buttons */}
             <div className='flex flex-col sm:flex-row justify-end gap-2 sm:gap-3'>
               <Button
                 variant='outline'
                 className='w-full sm:w-auto text-sm'
                 onClick={clearSelection}
-                disabled={isCreating}
+                disabled={isCreating || isAddingService}
               >
                 Бекор Қилиш
               </Button>
@@ -1227,11 +1625,14 @@ const Prescription = () => {
                 onClick={handleSavePrescription}
                 disabled={
                   isCreating ||
-                  medications.length === 0 ||
+                  isAddingService ||
+                  (medications.length === 0 && services.length === 0) ||
                   !selectedExaminationId
                 }
               >
-                {isCreating ? 'Сақланмоқда...' : 'Тасдиқлаш ва Сақлаш'}
+                {isCreating || isAddingService
+                  ? 'Сақланмоқда...'
+                  : 'Тасдиқлаш ва Сақлаш'}
               </Button>
             </div>
           </>

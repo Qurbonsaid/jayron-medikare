@@ -1,7 +1,5 @@
 import { useCreateBillingMutation } from '@/app/api/billingApi/billingApi';
 import { useGetAllExamsQuery } from '@/app/api/examinationApi/examinationApi';
-import { useGetAllPatientAnalysisQuery } from '@/app/api/patientAnalysisApi/patientAnalysisApi';
-import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { getStatusBadge } from '@/components/common/StatusBadge';
 import {
   AlertDialogFooter,
@@ -21,54 +19,90 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PAYMENT } from '@/constants/payment';
-import { CreditCard, Printer, Send } from 'lucide-react';
+import { CreditCard, Plus, Printer, Send } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
-import { Service } from '../Billing';
+import { formatCurrency, Service } from '../Billing';
+import { AnalysisItem } from './AnalysisItem';
+import { RoomItem } from './RoomItem';
+import { ServiceItem } from './ServiceItem';
 
 interface Props {
   isInvoiceModalOpen: boolean;
   setIsInvoiceModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  services: Array<Service>;
-  formatCurrency: (amount: number) => string;
-  discount: number;
-  setDiscount: React.Dispatch<React.SetStateAction<number>>;
-  paymentAmount: string;
-  setPaymentAmount: React.Dispatch<React.SetStateAction<string>>;
-  paymentMethod: string;
-  setPaymentMethod: React.Dispatch<React.SetStateAction<string>>;
-  selectedExaminationId: string;
-  setSelectedExaminationId: React.Dispatch<React.SetStateAction<string>>;
-  calculateSubtotal: () => number;
-  calculateGrandTotal: () => number;
 }
 
-const NewBilling = ({
-  isInvoiceModalOpen,
-  setIsInvoiceModalOpen,
-  services,
-  formatCurrency,
-  discount,
-  setDiscount,
-  paymentAmount,
-  setPaymentAmount,
-  paymentMethod,
-  setPaymentMethod,
-  selectedExaminationId,
-  setSelectedExaminationId,
-  calculateSubtotal,
-  calculateGrandTotal,
-}: Props) => {
+const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
   const [page, setPage] = React.useState(1);
   const [allExams, setAllExams] = React.useState<any[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
+  const [discount, setDiscount] = React.useState(0);
 
   // Analysis, Room, Service states
+  const [paymentAmount, setPaymentAmount] = React.useState('');
+  const [paymentMethod, setPaymentMethod] = React.useState('cash');
+  const [selectedExaminationId, setSelectedExaminationId] = React.useState('');
   const [selectedAnalysis, setSelectedAnalysis] = React.useState<string[]>([]);
   const [selectedRooms, setSelectedRooms] = React.useState<string[]>([]);
   const [selectedServices, setSelectedServices] = React.useState<string[]>([]);
 
+  // General services state (local to NewBilling)
+  const [services, setServices] = React.useState<Service[]>([
+    {
+      id: Date.now().toString(),
+      name: '',
+      quantity: 1,
+      unitPrice: 0,
+      total: 0,
+    },
+  ]);
+
   const [createBilling, { isLoading: isCreating }] = useCreateBillingMutation();
+
+  // Service management functions
+  const addService = () => {
+    const newService: Service = {
+      id: Date.now().toString(),
+      name: '',
+      quantity: 1,
+      unitPrice: 0,
+      total: 0,
+    };
+    setServices([...services, newService]);
+  };
+
+  const updateService = (
+    id: string,
+    field: keyof Service,
+    value: string | number
+  ) => {
+    setServices(
+      services.map((service) => {
+        if (service.id === id) {
+          const updated = { ...service, [field]: value };
+          if (field === 'quantity' || field === 'unitPrice') {
+            updated.total = updated.quantity * updated.unitPrice;
+          }
+          return updated;
+        }
+        return service;
+      })
+    );
+  };
+
+  const removeService = (id: string) => {
+    setServices(services.filter((s) => s.id !== id));
+  };
+
+  const calculateSubtotal = () => {
+    return services.reduce((sum, service) => sum + service.total, 0);
+  };
+
+  const calculateGrandTotal = () => {
+    const subtotal = calculateSubtotal();
+    return subtotal - discount;
+  };
+
   const {
     data: examinationsData,
     isLoading: isLoadingExams,
@@ -109,88 +143,48 @@ const NewBilling = ({
     return allExams.find((exam) => exam._id === selectedExaminationId);
   }, [allExams, selectedExaminationId]);
 
-  // Fetch Analysis - only for selected patient
-  const { data: analysisData, isLoading: isLoadingAnalysis } =
-    useGetAllPatientAnalysisQuery(
-      {
-        page: 1,
-        limit: 100,
-        patient: selectedExam?.patient_id?._id,
-        status: 'COMPLETED',
-      },
-      {
-        skip: !selectedExam?.patient_id?._id,
-        refetchOnMountOrArgChange: true,
-      }
+  // Get selected items from examination
+  const analysisIds = React.useMemo(() => {
+    if (!selectedExam?.analyses) return [];
+    return selectedExam.analyses.map((a: any) =>
+      typeof a === 'object' ? a._id : a
     );
-
-  // Filter analysis to only show patient's own analyses
-  const filteredAnalysis = React.useMemo(() => {
-    if (!analysisData?.data) return [];
-    return analysisData.data;
-  }, [analysisData]);
-
-  // Filter rooms to only show examination's rooms
-  const filteredRooms = React.useMemo(() => {
-    if (!selectedExam?.rooms || selectedExam.rooms.length === 0) return [];
-    return selectedExam.rooms;
   }, [selectedExam]);
 
-  // Fetch Services
-  const { data: servicesData, isLoading: isLoadingServices } =
-    useGetAllServiceQuery(
-      {
-        page: 1,
-        limit: 100,
-        search: undefined,
-        code: undefined,
-        is_active: true,
-        min_price: undefined,
-        max_price: undefined,
-      },
-      {
-        skip: !selectedExam,
-        refetchOnMountOrArgChange: true,
-      }
+  const roomIds = React.useMemo(() => {
+    if (!selectedExam?.rooms) return [];
+    return selectedExam.rooms.map((r: any) =>
+      typeof r.room_id === 'object' ? r.room_id._id : r.room_id
     );
+  }, [selectedExam]);
 
-  // Filter services to only show examination's services
-  const filteredServices = React.useMemo(() => {
-    if (!selectedExam?.services || selectedExam.services.length === 0)
-      return [];
-    if (!servicesData?.data) return [];
-
-    const examServiceIds = selectedExam.services.map((service: any) =>
-      typeof service.service_type_id === 'object'
-        ? service.service_type_id._id
-        : service.service_type_id
+  const serviceIds = React.useMemo(() => {
+    if (!selectedExam?.services) return [];
+    return selectedExam.services.map((s: any) =>
+      typeof s.service_type_id === 'object'
+        ? s.service_type_id._id
+        : s.service_type_id
     );
-    return servicesData.data.filter((service) =>
-      examServiceIds.includes(service._id)
-    );
-  }, [selectedExam, servicesData]);
+  }, [selectedExam]);
 
-  // Auto-select all analysis, rooms, and services when data is loaded
+  // Auto-select all items from examination
   React.useEffect(() => {
-    if (filteredAnalysis.length > 0 && selectedExam) {
-      const allAnalysisIds = filteredAnalysis.map((a) => a._id);
-      setSelectedAnalysis(allAnalysisIds);
+    if (selectedExam && analysisIds.length > 0) {
+      setSelectedAnalysis(analysisIds);
     }
-  }, [filteredAnalysis, selectedExam]);
+  }, [analysisIds, selectedExam]);
 
   React.useEffect(() => {
-    if (filteredRooms.length > 0 && selectedExam) {
-      const allRoomIds = filteredRooms.map((r) => r._id || r.room_id);
-      setSelectedRooms(allRoomIds);
+    if (selectedExam && roomIds.length > 0) {
+      setSelectedRooms(roomIds);
     }
-  }, [filteredRooms, selectedExam]);
+  }, [roomIds, selectedExam]);
 
   React.useEffect(() => {
-    if (filteredServices.length > 0 && selectedExam) {
-      const allServiceIds = filteredServices.map((s) => s._id);
-      setSelectedServices(allServiceIds);
+    if (selectedExam && serviceIds.length > 0) {
+      setSelectedServices(serviceIds);
     }
-  }, [filteredServices, selectedExam]);
+  }, [serviceIds, selectedExam]);
 
   const formatNumberWithSpaces = (num: number) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -217,6 +211,7 @@ const NewBilling = ({
       setSelectedAnalysis([]);
       setSelectedRooms([]);
       setSelectedServices([]);
+      setServices([]);
     }
   }, [isInvoiceModalOpen]);
 
@@ -227,8 +222,9 @@ const NewBilling = ({
       return;
     }
 
+    // Validate general services
     if (services.length === 0) {
-      toast.error('Илтимос, камида битта хизмат қўшинг');
+      toast.error('Илтимос, камида битта умумий хизмат қўшинг');
       return;
     }
 
@@ -236,7 +232,13 @@ const NewBilling = ({
       (s) => !s.name.trim() || s.quantity <= 0 || s.unitPrice <= 0
     );
     if (invalidService) {
-      toast.error('Илтимос, барча хизматлар маълумотларини тўлдиринг');
+      if (!invalidService.name.trim()) {
+        toast.error('Илтимос, хизмат номини киритинг');
+      } else if (invalidService.quantity <= 0) {
+        toast.error('Илтимос, хизмат сонини тўғри киритинг');
+      } else if (invalidService.unitPrice <= 0) {
+        toast.error('Илтимос, хизмат нархини киритинг');
+      }
       return;
     }
 
@@ -417,193 +419,6 @@ const NewBilling = ({
             </Card>
           )}
 
-          {/* Services Table */}
-          {/* <div>
-            <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3'>
-              <Label className='text-base sm:text-lg font-semibold'>
-                Хизматлар
-              </Label>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={addService}
-                className='w-full sm:w-auto text-xs sm:text-sm'
-              >
-                <Plus className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
-                Хизмат қўшиш
-              </Button>
-            </div>
-
-            <div className='hidden md:block border rounded-lg overflow-hidden'>
-              <table className='w-full'>
-                <thead className='bg-muted'>
-                  <tr>
-                    <th className='text-left py-3 px-4 font-medium text-sm'>
-                      Хизмат номи
-                    </th>
-                    <th className='text-center py-3 px-4 font-medium text-sm'>
-                      Сони
-                    </th>
-                    <th className='text-right py-3 px-4 font-medium text-sm'>
-                      Нархи
-                    </th>
-                    <th className='text-right py-3 px-4 font-medium text-sm'>
-                      Жами
-                    </th>
-                    <th className='w-16'></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {services.map((service) => (
-                    <tr key={service.id} className='border-b'>
-                      <td className='py-2 px-4'>
-                        <Input
-                          value={service.name}
-                          onChange={(e) =>
-                            updateService(service.id, 'name', e.target.value)
-                          }
-                          placeholder='Хизмат номи...'
-                          className='text-sm'
-                        />
-                      </td>
-                      <td className='py-2 px-4'>
-                        <Input
-                          type='text'
-                          inputMode='numeric'
-                          min='1'
-                          value={service.quantity}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9]/g, '');
-                            updateService(
-                              service.id,
-                              'quantity',
-                              parseInt(value) || 1
-                            );
-                          }}
-                          className='w-20 mx-auto text-center text-sm'
-                        />
-                      </td>
-                      <td className='py-2 px-4'>
-                        <Input
-                          type='text'
-                          inputMode='numeric'
-                          value={formatNumberWithSpaces(service.unitPrice)}
-                          onChange={(e) => {
-                            const value = e.target.value
-                              .replace(/\s/g, '')
-                              .replace(/[^0-9]/g, '');
-                            updateService(
-                              service.id,
-                              'unitPrice',
-                              parseInt(value) || 0
-                            );
-                          }}
-                          className='text-right text-sm'
-                        />
-                      </td>
-                      <td className='py-2 px-4 text-right font-semibold text-sm'>
-                        {formatCurrency(service.total)}
-                      </td>
-                      <td className='py-2 px-4'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => removeService(service.id)}
-                          className='text-danger hover:text-danger'
-                        >
-                          ×
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className='md:hidden space-y-3'>
-              {services.map((service) => (
-                <Card key={service.id} className='p-3'>
-                  <div className='space-y-3'>
-                    <div className='flex items-start justify-between gap-2'>
-                      <Label className='text-xs text-muted-foreground'>
-                        Хизмат номи
-                      </Label>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        onClick={() => removeService(service.id)}
-                        className='text-danger hover:text-danger h-6 w-6 p-0 -mt-1'
-                      >
-                        ×
-                      </Button>
-                    </div>
-                    <Input
-                      value={service.name}
-                      onChange={(e) =>
-                        updateService(service.id, 'name', e.target.value)
-                      }
-                      placeholder='Хизмат номи...'
-                      className='text-sm'
-                    />
-
-                    <div className='grid grid-cols-2 gap-3'>
-                      <div>
-                        <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                          Сони
-                        </Label>
-                        <Input
-                          type='text'
-                          inputMode='numeric'
-                          min='1'
-                          value={service.quantity}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9]/g, '');
-                            updateService(
-                              service.id,
-                              'quantity',
-                              parseInt(value) || 1
-                            );
-                          }}
-                          className='text-sm'
-                        />
-                      </div>
-                      <div>
-                        <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                          Нархи
-                        </Label>
-                        <Input
-                          type='text'
-                          inputMode='numeric'
-                          value={formatNumberWithSpaces(service.unitPrice)}
-                          onChange={(e) => {
-                            const value = e.target.value
-                              .replace(/\s/g, '')
-                              .replace(/[^0-9]/g, '');
-                            updateService(
-                              service.id,
-                              'unitPrice',
-                              parseInt(value) || 0
-                            );
-                          }}
-                          className='text-sm'
-                        />
-                      </div>
-                    </div>
-
-                    <div className='pt-2 border-t flex justify-between items-center'>
-                      <span className='text-xs text-muted-foreground'>
-                        Жами:
-                      </span>
-                      <span className='font-semibold text-sm'>
-                        {formatCurrency(service.total)}
-                      </span>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div> */}
-
           {/* Analysis, Rooms, Services Input Fields */}
           {selectedExam && (
             <div className='space-y-4'>
@@ -615,11 +430,7 @@ const NewBilling = ({
                   </Label>
                 </div>
 
-                {isLoadingAnalysis ? (
-                  <div className='p-4 text-center'>
-                    <LoadingSpinner className='w-5 h-5 mx-auto' />
-                  </div>
-                ) : filteredAnalysis.length > 0 ? (
+                {analysisIds.length > 0 ? (
                   <div className='border rounded-lg overflow-hidden'>
                     {/* Desktop Table View */}
                     <div className='hidden md:block'>
@@ -644,33 +455,11 @@ const NewBilling = ({
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredAnalysis.map((analysis) => (
-                            <tr
-                              key={analysis._id}
-                              className='border-b last:border-0'
-                            >
-                              <td className='py-3 px-4 text-sm'>
-                                {analysis.analysis_type.name}
-                              </td>
-                              <td className='py-3 px-4 text-sm'>
-                                <span className='text-primary font-medium'>
-                                  {analysis.analysis_type.code}
-                                </span>
-                              </td>
-                              <td className='py-3 px-4 text-sm text-muted-foreground'>
-                                -
-                              </td>
-                              <td className='py-3 px-4'>
-                                <span className='inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 uppercase'>
-                                  {analysis.status}
-                                </span>
-                              </td>
-                              <td className='py-3 px-4 text-sm text-right text-muted-foreground'>
-                                {new Date(
-                                  analysis.created_at
-                                ).toLocaleDateString('uz-UZ')}
-                              </td>
-                            </tr>
+                          {selectedAnalysis.map((analysisId) => (
+                            <AnalysisItem
+                              key={analysisId}
+                              analysisId={analysisId}
+                            />
                           ))}
                         </tbody>
                       </table>
@@ -678,36 +467,12 @@ const NewBilling = ({
 
                     {/* Mobile Card View */}
                     <div className='md:hidden'>
-                      {filteredAnalysis.map((analysis, index) => (
-                        <div
-                          key={analysis._id}
-                          className={`p-4 ${
-                            index !== filteredAnalysis.length - 1
-                              ? 'border-b'
-                              : ''
-                          }`}
-                        >
-                          <div className='space-y-2'>
-                            <div className='flex justify-between items-start'>
-                              <div>
-                                <div className='font-semibold text-sm'>
-                                  {analysis.analysis_type.name}
-                                </div>
-                                <div className='text-xs text-primary font-medium mt-1'>
-                                  {analysis.analysis_type.code}
-                                </div>
-                              </div>
-                              <span className='inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 uppercase'>
-                                {analysis.status}
-                              </span>
-                            </div>
-                            <div className='text-xs text-muted-foreground'>
-                              {new Date(analysis.created_at).toLocaleDateString(
-                                'uz-UZ'
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                      {selectedAnalysis.map((analysisId) => (
+                        <AnalysisItem
+                          key={analysisId}
+                          analysisId={analysisId}
+                          isMobile
+                        />
                       ))}
                     </div>
                   </div>
@@ -726,7 +491,7 @@ const NewBilling = ({
                   </Label>
                 </div>
 
-                {filteredRooms.length > 0 ? (
+                {roomIds.length > 0 ? (
                   <div className='border rounded-lg overflow-hidden'>
                     {/* Desktop Table View */}
                     <div className='hidden md:block'>
@@ -737,7 +502,7 @@ const NewBilling = ({
                               Палата
                             </th>
                             <th className='text-center py-3 px-4 font-medium text-sm'>
-                              Қават
+                              Холат
                             </th>
                             <th className='text-center py-3 px-4 font-medium text-sm'>
                               Бошланиш
@@ -745,88 +510,56 @@ const NewBilling = ({
                             <th className='text-center py-3 px-4 font-medium text-sm'>
                               Тугаш
                             </th>
+                            <th className='text-center py-3 px-4 font-medium text-sm'>
+                              Кунлар
+                            </th>
                             <th className='text-right py-3 px-4 font-medium text-sm'>
                               Нархи
                             </th>
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredRooms.map((room) => (
-                            <tr
-                              key={room._id || room.room_id}
-                              className='border-b last:border-0'
-                            >
-                              <td className='py-3 px-4 text-sm'>
-                                {room.room_name}
-                              </td>
-                              <td className='py-3 px-4 text-sm text-center'>
-                                {room.floor_number}
-                              </td>
-                              <td className='py-3 px-4 text-sm text-center text-muted-foreground'>
-                                {room.start_date
-                                  ? new Date(
-                                      room.start_date
-                                    ).toLocaleDateString('uz-UZ')
-                                  : new Date().toLocaleDateString('uz-UZ')}
-                              </td>
-                              <td className='py-3 px-4 text-sm text-center'>
-                                {room.end_date ? (
-                                  new Date(room.end_date).toLocaleDateString(
-                                    'uz-UZ'
-                                  )
-                                ) : (
-                                  <span className='text-orange-600 font-medium'>
-                                    Давом этмоқда
-                                  </span>
-                                )}
-                              </td>
-                              <td className='py-3 px-4 text-sm text-right font-semibold'>
-                                {formatCurrency(room.room_price)}
-                              </td>
-                            </tr>
-                          ))}
+                          {selectedRooms.map((roomId) => {
+                            const roomData = selectedExam?.rooms?.find(
+                              (r: any) =>
+                                (typeof r.room_id === 'object'
+                                  ? r.room_id._id
+                                  : r.room_id) === roomId
+                            );
+                            return (
+                              <RoomItem
+                                key={roomId}
+                                roomId={roomId}
+                                checkInDate={roomData?.start_date}
+                                checkOutDate={roomData?.end_date}
+                                days={roomData?.days}
+                              />
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
 
                     {/* Mobile Card View */}
                     <div className='md:hidden'>
-                      {filteredRooms.map((room, index) => (
-                        <div
-                          key={room._id || room.room_id}
-                          className={`p-4 ${
-                            index !== filteredRooms.length - 1 ? 'border-b' : ''
-                          }`}
-                        >
-                          <div className='space-y-2'>
-                            <div className='flex justify-between items-start'>
-                              <div>
-                                <div className='font-semibold text-sm'>
-                                  {room.room_name}
-                                </div>
-                                <div className='text-xs text-muted-foreground mt-1'>
-                                  Қават: {room.floor_number}
-                                </div>
-                              </div>
-                              <span className='text-orange-600 font-medium text-xs'>
-                                Давом этмоқда
-                              </span>
-                            </div>
-                            <div className='flex justify-between items-center text-xs'>
-                              <span className='text-muted-foreground'>
-                                {room.start_date
-                                  ? new Date(
-                                      room.start_date
-                                    ).toLocaleDateString('uz-UZ')
-                                  : new Date().toLocaleDateString('uz-UZ')}
-                              </span>
-                              <span className='font-semibold'>
-                                {formatCurrency(room.room_price)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                      {selectedRooms.map((roomId) => {
+                        const roomData = selectedExam?.rooms?.find(
+                          (r: any) =>
+                            (typeof r.room_id === 'object'
+                              ? r.room_id._id
+                              : r.room_id) === roomId
+                        );
+                        return (
+                          <RoomItem
+                            key={roomId}
+                            roomId={roomId}
+                            checkInDate={roomData?.start_date}
+                            checkOutDate={roomData?.end_date}
+                            days={roomData?.days}
+                            isMobile
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 ) : (
@@ -844,11 +577,7 @@ const NewBilling = ({
                   </Label>
                 </div>
 
-                {isLoadingServices ? (
-                  <div className='p-4 text-center'>
-                    <LoadingSpinner className='w-5 h-5 mx-auto' />
-                  </div>
-                ) : filteredServices.length > 0 ? (
+                {serviceIds.length > 0 ? (
                   <div className='border rounded-lg overflow-hidden'>
                     {/* Desktop Table View */}
                     <div className='hidden md:block'>
@@ -857,6 +586,9 @@ const NewBilling = ({
                           <tr>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
                               Хизмат номи
+                            </th>
+                            <th className='text-left py-3 px-4 font-medium text-sm'>
+                              Код
                             </th>
                             <th className='text-center py-3 px-4 font-medium text-sm'>
                               Сони
@@ -870,60 +602,45 @@ const NewBilling = ({
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredServices.map((service) => (
-                            <tr
-                              key={service._id}
-                              className='border-b last:border-0'
-                            >
-                              <td className='py-3 px-4 text-sm'>
-                                {service.name}
-                              </td>
-                              <td className='py-3 px-4 text-sm text-center'>
-                                1
-                              </td>
-                              <td className='py-3 px-4 text-sm text-right'>
-                                {formatCurrency(service.price)}
-                              </td>
-                              <td className='py-3 px-4 text-sm text-right font-semibold'>
-                                {formatCurrency(service.price)}
-                              </td>
-                            </tr>
-                          ))}
+                          {selectedServices.map((serviceId) => {
+                            const serviceData = selectedExam?.services?.find(
+                              (s: any) =>
+                                (typeof s.service_type_id === 'object'
+                                  ? s.service_type_id._id
+                                  : s.service_type_id) === serviceId
+                            );
+                            return (
+                              <ServiceItem
+                                key={serviceId}
+                                serviceId={serviceId}
+                                quantity={serviceData?.quantity || 1}
+                                price={serviceData?.price}
+                              />
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
 
                     {/* Mobile Card View */}
                     <div className='md:hidden'>
-                      {filteredServices.map((service, index) => (
-                        <div
-                          key={service._id}
-                          className={`p-4 ${
-                            index !== filteredServices.length - 1
-                              ? 'border-b'
-                              : ''
-                          }`}
-                        >
-                          <div className='space-y-2'>
-                            <div className='font-semibold text-sm'>
-                              {service.name}
-                            </div>
-                            <div className='flex justify-between items-center text-xs'>
-                              <span className='text-muted-foreground'>
-                                Сони: 1
-                              </span>
-                              <div className='text-right'>
-                                <div className='text-muted-foreground'>
-                                  {formatCurrency(service.price)}
-                                </div>
-                                <div className='font-semibold'>
-                                  {formatCurrency(service.price)}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                      {selectedServices.map((serviceId) => {
+                        const serviceData = selectedExam?.services?.find(
+                          (s: any) =>
+                            (typeof s.service_type_id === 'object'
+                              ? s.service_type_id._id
+                              : s.service_type_id) === serviceId
+                        );
+                        return (
+                          <ServiceItem
+                            key={serviceId}
+                            serviceId={serviceId}
+                            quantity={serviceData?.quantity || 1}
+                            price={serviceData?.price}
+                            isMobile
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 ) : (
@@ -931,6 +648,206 @@ const NewBilling = ({
                     Хизматлар топилмади
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* General Services Section - Only show when examination is selected */}
+          {selectedExam && (
+            <div>
+              <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3'>
+                <Label className='text-base sm:text-lg font-semibold'>
+                  Умумий хизматлар
+                </Label>
+              </div>
+
+              {/* Desktop Table */}
+              <div className='hidden md:block border rounded-lg overflow-hidden'>
+                <table className='w-full'>
+                  <thead className='bg-muted'>
+                    <tr>
+                      <th className='text-left py-3 px-4 font-medium text-sm'>
+                        Хизмат номи
+                      </th>
+                      <th className='text-center py-3 px-4 font-medium text-sm'>
+                        Сони
+                      </th>
+                      <th className='text-right py-3 px-4 font-medium text-sm'>
+                        Нархи
+                      </th>
+                      <th className='text-right py-3 px-4 font-medium text-sm'>
+                        Жами
+                      </th>
+                      <th className='w-16'></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {services.map((service) => (
+                      <tr key={service.id} className='border-b'>
+                        <td className='py-2 px-4'>
+                          <Input
+                            value={service.name}
+                            onChange={(e) =>
+                              updateService(service.id, 'name', e.target.value)
+                            }
+                            placeholder='Хизмат номи...'
+                            className='text-sm'
+                          />
+                        </td>
+                        <td className='py-2 px-4'>
+                          <Input
+                            type='text'
+                            inputMode='numeric'
+                            min='1'
+                            value={service.quantity}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ''
+                              );
+                              updateService(
+                                service.id,
+                                'quantity',
+                                parseInt(value) || 0
+                              );
+                            }}
+                            className='w-20 mx-auto text-center text-sm'
+                          />
+                        </td>
+                        <td className='py-2 px-4'>
+                          <Input
+                            type='text'
+                            inputMode='numeric'
+                            value={formatNumberWithSpaces(service.unitPrice)}
+                            onChange={(e) => {
+                              const value = e.target.value
+                                .replace(/\s/g, '')
+                                .replace(/[^0-9]/g, '');
+                              updateService(
+                                service.id,
+                                'unitPrice',
+                                parseInt(value) || 0
+                              );
+                            }}
+                            className='text-right text-sm'
+                          />
+                        </td>
+                        <td className='py-2 px-4 text-right font-semibold text-sm'>
+                          {formatCurrency(service.total)}
+                        </td>
+                        <td className='py-2 px-4'>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => removeService(service.id)}
+                            className='text-white bg-red-500 hover:text-danger h-8 w-8 p-0'
+                          >
+                            ×
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className='text-center p-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={addService}
+                    className='w-full sm:w-auto text-xs sm:text-sm bg-blue-500 text-white'
+                  >
+                    <Plus className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
+                    Хизмат қўшиш
+                  </Button>
+                </div>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className='md:hidden space-y-3'>
+                {services.map((service) => (
+                  <Card key={service.id} className='p-3'>
+                    <div className='space-y-3'>
+                      <div>
+                        <Label className='text-xs text-muted-foreground mb-1.5 block'>
+                          Хизмат номи
+                        </Label>
+                        <Input
+                          value={service.name}
+                          onChange={(e) =>
+                            updateService(service.id, 'name', e.target.value)
+                          }
+                          placeholder='Хизмат номи...'
+                          className='text-sm'
+                        />
+                      </div>
+
+                      <div className='grid grid-cols-2 gap-3'>
+                        <div>
+                          <Label className='text-xs text-muted-foreground mb-1.5 block'>
+                            Сони
+                          </Label>
+                          <Input
+                            type='text'
+                            inputMode='numeric'
+                            min='1'
+                            value={service.quantity}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ''
+                              );
+                              updateService(
+                                service.id,
+                                'quantity',
+                                parseInt(value) || 1
+                              );
+                            }}
+                            className='text-sm'
+                          />
+                        </div>
+                        <div>
+                          <Label className='text-xs text-muted-foreground mb-1.5 block'>
+                            Нархи
+                          </Label>
+                          <Input
+                            type='text'
+                            inputMode='numeric'
+                            value={formatNumberWithSpaces(service.unitPrice)}
+                            onChange={(e) => {
+                              const value = e.target.value
+                                .replace(/\s/g, '')
+                                .replace(/[^0-9]/g, '');
+                              updateService(
+                                service.id,
+                                'unitPrice',
+                                parseInt(value) || 0
+                              );
+                            }}
+                            className='text-sm'
+                          />
+                        </div>
+                      </div>
+
+                      <div className='pt-2 min-w-52 border-t flex justify-between items-center'>
+                        <span className='text-xs text-muted-foreground'>
+                          Жами:
+                        </span>
+                        <span className='font-semibold text-sm'>
+                          {formatCurrency(service.total)}
+                        </span>
+                      </div>
+
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => removeService(service.id)}
+                        className='text-danger hover:text-danger w-full mt-2'
+                      >
+                        Ўчириш
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
