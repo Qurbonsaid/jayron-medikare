@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import {
   Document,
+  Font,
   Page,
   StyleSheet,
   Text,
@@ -10,13 +11,28 @@ import {
 import { Download } from 'lucide-react';
 import React from 'react';
 
+// Kirill harflarini qo'llab-quvvatlovchi shriftni ro'yxatdan o'tkazish
+Font.register({
+  family: 'Roboto',
+  fonts: [
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf',
+      fontWeight: 'normal',
+    },
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf',
+      fontWeight: 'bold',
+    },
+  ],
+});
+
 // PDF uchun stillar (yarim list A5)
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 15,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
     fontSize: 9,
     lineHeight: 1.2,
   },
@@ -230,9 +246,7 @@ const PrescriptionPDF: React.FC<PrescriptionPDFProps> = ({
 
         {/* Imzo */}
         <View style={styles.signature}>
-          <Text>
-            Shifokor:  {exam.doctor_id?.fullname || ''}
-          </Text>
+          <Text>Shifokor: {exam.doctor_id?.fullname || ''}</Text>
           <Text style={{ marginTop: 3 }}>Imzo: _________</Text>
           <Text style={{ marginTop: 3, fontSize: 7 }}>
             Telefon: {exam.doctor_id?.phone || "Ko'rsatilmagan"} | Qabul
@@ -494,13 +508,13 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
             <View style={styles.gridItem}>
               <Text style={styles.bold}>F.I.O:</Text>
               <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.patient_id?.fullname || "Noma`lum"}
+                {exam.patient_id?.fullname || 'Noma`lum'}
               </Text>
             </View>
             <View style={styles.gridItem}>
               <Text style={styles.bold}>Telefon:</Text>
               <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.patient_id?.phone || "Ko`rsatilmagan"}
+                {exam.patient_id?.phone || 'Ko`rsatilmagan'}
               </Text>
             </View>
             <View style={styles.gridItem}>
@@ -508,13 +522,13 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
               <Text style={{ fontSize: 9, marginTop: 2 }}>
                 {exam.patient_id?.birth_date
                   ? formatDate(exam.patient_id.birth_date)
-                  : "Ko`rsatilmagan"}
+                  : 'Ko`rsatilmagan'}
               </Text>
             </View>
             <View style={styles.gridItem}>
               <Text style={styles.bold}>Manzil:</Text>
               <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.patient_id?.address || "Ko`rsatilmagan"}
+                {exam.patient_id?.address || 'Ko`rsatilmagan'}
               </Text>
             </View>
           </View>
@@ -529,19 +543,19 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
             <View style={styles.gridItem}>
               <Text style={styles.bold}>F.I.O:</Text>
               <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.doctor_id?.fullname || "Noma`lum"}
+                {exam.doctor_id?.fullname || 'Noma`lum'}
               </Text>
             </View>
             <View style={styles.gridItem}>
               <Text style={styles.bold}>Telefon:</Text>
               <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.doctor_id?.phone || "Ko`rsatilmagan"}
+                {exam.doctor_id?.phone || 'Ko`rsatilmagan'}
               </Text>
             </View>
             <View style={styles.gridItem}>
               <Text style={styles.bold}>Mutaxassislik:</Text>
               <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.doctor_id?.specialization || "Ko`rsatilmagan"}
+                {exam.doctor_id?.specialization || 'Ko`rsatilmagan'}
               </Text>
             </View>
           </View>
@@ -581,7 +595,7 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                 lineHeight: 1.4,
               }}
             >
-              {exam.complaints || "Ko``rsatilmagan"}
+              {exam.complaints || 'Ko``rsatilmagan'}
             </Text>
           </View>
 
@@ -609,7 +623,7 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                 lineHeight: 1.4,
               }}
             >
-              {exam.description || "Ko`rsatilmagan"}
+              {exam.description || 'Ko`rsatilmagan'}
             </Text>
           </View>
         </View>
@@ -635,13 +649,13 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                   <View style={styles.gridItem}>
                     <Text style={styles.bold}>Xona nomi:</Text>
                     <Text style={{ fontSize: 9, marginTop: 2 }}>
-                      {room.room_name || "Noma`lum"}
+                      {room.room_name || 'Noma`lum'}
                     </Text>
                   </View>
                   <View style={styles.gridItem}>
                     <Text style={styles.bold}>Qavat:</Text>
                     <Text style={{ fontSize: 9, marginTop: 2 }}>
-                      {room.floor_number || "Noma`lum"}
+                      {room.floor_number || 'Noma`lum'}
                     </Text>
                   </View>
                   <View style={styles.gridItem}>
@@ -649,7 +663,7 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                     <Text style={{ fontSize: 9, marginTop: 2 }}>
                       {room.room_price
                         ? `${room.room_price.toLocaleString()} so'm`
-                        : "Noma`lum"}
+                        : 'Noma`lum'}
                     </Text>
                   </View>
                   <View style={styles.gridItem}>
@@ -657,7 +671,7 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                     <Text style={{ fontSize: 9, marginTop: 2 }}>
                       {room.start_date
                         ? formatDate(room.start_date)
-                        : "Noma`lum"}
+                        : 'Noma`lum'}
                       {room.end_date && ` - ${formatDate(room.end_date)}`}
                     </Text>
                   </View>
@@ -712,7 +726,7 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                 typeof service.service_type_id === 'object' &&
                 service.service_type_id
                   ? service.service_type_id.name
-                  : "Noma`lum";
+                  : 'Noma`lum';
               const serviceStatus: Record<string, string> = {
                 pending: 'Kutilmoqda',
                 active: 'Faol',
@@ -751,6 +765,237 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                     <Text style={styles.tableCell}>
                       {serviceStatus[service.status] || service.status}
                     </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Retseptlar (agar mavjud bo'lsa) */}
+        {exam.prescriptions && exam.prescriptions.length > 0 && (
+          <View style={[styles.tableContainer, { marginTop: 8 }]}>
+            <Text style={styles.sectionTitle}>
+              RETSEPTLAR ({exam.prescriptions.length} ta)
+            </Text>
+
+            {/* Jadval sarlavhasi */}
+            <View
+              style={[
+                styles.tableRow,
+                styles.tableHeader,
+                {
+                  borderTopWidth: 1,
+                  borderTopColor: '#000',
+                  borderTopStyle: 'solid',
+                  borderLeftWidth: 1,
+                  borderLeftColor: '#000',
+                  borderLeftStyle: 'solid',
+                },
+              ]}
+            >
+              <View style={[styles.tableCol, { flex: 0.3 }]}>
+                <Text style={styles.tableCell}>#</Text>
+              </View>
+              <View style={[styles.tableCol, { flex: 1.5 }]}>
+                <Text style={styles.tableCell}>Dori nomi</Text>
+              </View>
+              <View style={[styles.tableCol, { flex: 0.8 }]}>
+                <Text style={styles.tableCell}>Dozasi</Text>
+              </View>
+              <View style={[styles.tableCol, { flex: 0.6 }]}>
+                <Text style={styles.tableCell}>Kuniga</Text>
+              </View>
+              <View style={[styles.tableCol, { flex: 0.6 }]}>
+                <Text style={styles.tableCell}>Muddati</Text>
+              </View>
+              <View style={[styles.tableColLast, { flex: 1.2 }]}>
+                <Text style={styles.tableCell}>Ko'rsatmalar</Text>
+              </View>
+            </View>
+
+            {/* Jadval qatorlari */}
+            {exam.prescriptions.map((prescription: any, index: number) => {
+              const medication = prescription.medication_id;
+              const medicationName =
+                typeof medication === 'object' && medication
+                  ? medication.name
+                  : "Noma'lum";
+              const dosage =
+                typeof medication === 'object' && medication
+                  ? `${medication.dosage || ''} ${
+                      medication.dosage_unit || ''
+                    }`.trim()
+                  : '';
+
+              return (
+                <View
+                  key={prescription._id || index}
+                  style={[
+                    styles.tableRow,
+                    {
+                      borderLeftWidth: 1,
+                      borderLeftColor: '#000',
+                      borderLeftStyle: 'solid',
+                    },
+                  ]}
+                >
+                  <View style={[styles.tableCol, { flex: 0.3 }]}>
+                    <Text style={styles.tableCell}>{index + 1}</Text>
+                  </View>
+                  <View style={[styles.tableCol, { flex: 1.5 }]}>
+                    <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                      {medicationName}
+                    </Text>
+                  </View>
+                  <View style={[styles.tableCol, { flex: 0.8 }]}>
+                    <Text style={styles.tableCell}>{dosage || '-'}</Text>
+                  </View>
+                  <View style={[styles.tableCol, { flex: 0.6 }]}>
+                    <Text style={styles.tableCell}>
+                      {prescription.frequency} marta
+                    </Text>
+                  </View>
+                  <View style={[styles.tableCol, { flex: 0.6 }]}>
+                    <Text style={styles.tableCell}>
+                      {prescription.duration} kun
+                    </Text>
+                  </View>
+                  <View style={[styles.tableColLast, { flex: 1.2 }]}>
+                    <Text
+                      style={[
+                        styles.tableCell,
+                        { textAlign: 'left', fontSize: 5 },
+                      ]}
+                    >
+                      {prescription.instructions || '-'}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Analizlar (agar mavjud bo'lsa) */}
+        {exam.analyses && exam.analyses.length > 0 && (
+          <View style={[styles.tableContainer, { marginTop: 8 }]}>
+            <Text style={styles.sectionTitle}>
+              TAHLILLAR ({exam.analyses.length} ta)
+            </Text>
+
+            {/* Jadval sarlavhasi */}
+            <View
+              style={[
+                styles.tableRow,
+                styles.tableHeader,
+                {
+                  borderTopWidth: 1,
+                  borderTopColor: '#000',
+                  borderTopStyle: 'solid',
+                  borderLeftWidth: 1,
+                  borderLeftColor: '#000',
+                  borderLeftStyle: 'solid',
+                },
+              ]}
+            >
+              <View style={[styles.tableCol, { flex: 0.3 }]}>
+                <Text style={styles.tableCell}>#</Text>
+              </View>
+              <View style={[styles.tableCol, { flex: 1.2 }]}>
+                <Text style={styles.tableCell}>Tahlil turi</Text>
+              </View>
+              <View style={[styles.tableCol, { flex: 1.2 }]}>
+                <Text style={styles.tableCell}>Parametr</Text>
+              </View>
+              <View style={[styles.tableCol, { flex: 0.8 }]}>
+                <Text style={styles.tableCell}>Natija</Text>
+              </View>
+              <View style={[styles.tableCol, { flex: 0.8 }]}>
+                <Text style={styles.tableCell}>Norma</Text>
+              </View>
+              <View style={[styles.tableColLast, { flex: 0.7 }]}>
+                <Text style={styles.tableCell}>Holati</Text>
+              </View>
+            </View>
+
+            {/* Jadval qatorlari */}
+            {exam.analyses.map((analysis: any, index: number) => {
+              const paramType = analysis.analysis_parameter_type;
+              const paramValue = analysis.analysis_parameter_value;
+              const isNewStructure = paramType && typeof paramType === 'object';
+
+              // Tahlil turi nomi
+              const analysisTypeName = isNewStructure
+                ? (typeof analysis.analysis_type === 'object'
+                    ? analysis.analysis_type?.name
+                    : analysis.analysis_type) || "Noma'lum"
+                : (typeof analysis.analysis_type === 'object'
+                    ? analysis.analysis_type?.name
+                    : analysis.analysis_type) || "Noma'lum";
+
+              // Parametr nomi
+              const parameterName = isNewStructure
+                ? paramType?.name || "Noma'lum"
+                : '-';
+
+              // Natija qiymati
+              const resultValue = isNewStructure
+                ? paramValue || '-'
+                : analysis.level || '-';
+
+              // Norma diapazoni
+              const normalRange =
+                isNewStructure && paramType
+                  ? `${paramType.min_value || ''} - ${
+                      paramType.max_value || ''
+                    } ${paramType.unit || ''}`.trim()
+                  : '-';
+
+              // Holat
+              const statusMap: Record<string, string> = {
+                pending: 'Kutilmoqda',
+                active: 'Faol',
+                completed: 'Tayyor',
+              };
+              const status =
+                statusMap[analysis.status] || analysis.status || '-';
+
+              return (
+                <View
+                  key={analysis._id || index}
+                  style={[
+                    styles.tableRow,
+                    {
+                      borderLeftWidth: 1,
+                      borderLeftColor: '#000',
+                      borderLeftStyle: 'solid',
+                    },
+                  ]}
+                >
+                  <View style={[styles.tableCol, { flex: 0.3 }]}>
+                    <Text style={styles.tableCell}>{index + 1}</Text>
+                  </View>
+                  <View style={[styles.tableCol, { flex: 1.2 }]}>
+                    <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                      {analysisTypeName}
+                    </Text>
+                  </View>
+                  <View style={[styles.tableCol, { flex: 1.2 }]}>
+                    <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                      {parameterName}
+                    </Text>
+                  </View>
+                  <View style={[styles.tableCol, { flex: 0.8 }]}>
+                    <Text style={styles.tableCell}>{resultValue}</Text>
+                  </View>
+                  <View style={[styles.tableCol, { flex: 0.8 }]}>
+                    <Text style={[styles.tableCell, { fontSize: 5 }]}>
+                      {normalRange}
+                    </Text>
+                  </View>
+                  <View style={[styles.tableColLast, { flex: 0.7 }]}>
+                    <Text style={styles.tableCell}>{status}</Text>
                   </View>
                 </View>
               );
@@ -891,5 +1136,544 @@ const AllPrescriptionsDownloadButton: React.FC<
   );
 };
 
-export { AllPrescriptionsDownloadButton, ExaminationInfoDownloadButton };
+// Xizmatlar uchun PDF komponenti
+interface ServicesPDFProps {
+  exam: any;
+}
+
+const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
+  const formatDate = (date: Date | string): string => {
+    const dateObj = new Date(date);
+    return dateObj.toLocaleDateString('uz-UZ', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const getDiagnosis = (): string => {
+    if (!exam.diagnosis) return "Ko'rsatilmagan";
+    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
+    return exam.diagnosis.name;
+  };
+
+  // Jami narxni hisoblash
+  const getTotalPrice = (): number => {
+    if (!exam.services || exam.services.length === 0) return 0;
+    return exam.services.reduce((total: number, service: any) => {
+      return total + (service.price || 0) * (service.quantity || 1);
+    }, 0);
+  };
+
+  return (
+    <Document>
+      <Page size='A4' style={styles.page}>
+        {/* Sarlavha */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.clinicName}>Klinika "Jayron medservis"</Text>
+          </View>
+          <View style={styles.headerCenter}>
+            <Text style={styles.documentTitle}>XIZMATLAR RO'YXATI</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <Text style={styles.date}>{formatDate(exam.created_at)}</Text>
+          </View>
+        </View>
+
+        {/* Bemor ma'lumotlari */}
+        <View style={styles.patientInfo}>
+          <Text style={styles.bold}>
+            Bemor: {exam.patient_id?.fullname || "Noma'lum"}
+          </Text>
+          <Text style={{ marginBottom: '2px' }}>
+            Telefon: {exam.patient_id?.phone || "Ko'rsatilmagan"}
+          </Text>
+          <Text style={{ marginBottom: '2px' }}>
+            Shifokor: {exam.doctor_id?.fullname || "Noma'lum"}
+          </Text>
+          <Text style={{ marginBottom: '2px' }}>Diagnoz: {getDiagnosis()}</Text>
+        </View>
+
+        {/* Xizmatlar jadvali */}
+        <View style={styles.tableContainer}>
+          <Text style={styles.sectionTitle}>
+            Xizmatlar ({exam.services?.length || 0} ta)
+          </Text>
+
+          {/* Jadval sarlavhasi */}
+          <View
+            style={[
+              styles.tableRow,
+              styles.tableHeader,
+              {
+                borderTopWidth: 1,
+                borderTopColor: '#000',
+                borderTopStyle: 'solid',
+                borderLeftWidth: 1,
+                borderLeftColor: '#000',
+                borderLeftStyle: 'solid',
+              },
+            ]}
+          >
+            <View style={[styles.tableCol, { flex: 0.3 }]}>
+              <Text style={styles.tableCell}>#</Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 2 }]}>
+              <Text style={styles.tableCell}>Xizmat nomi</Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 0.6 }]}>
+              <Text style={styles.tableCell}>Miqdor</Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 1 }]}>
+              <Text style={styles.tableCell}>Narxi</Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 1 }]}>
+              <Text style={styles.tableCell}>Jami</Text>
+            </View>
+            <View style={[styles.tableColLast, { flex: 0.8 }]}>
+              <Text style={styles.tableCell}>Holati</Text>
+            </View>
+          </View>
+
+          {/* Jadval qatorlari */}
+          {exam.services?.map((service: any, index: number) => {
+            const serviceName =
+              typeof service.service_type_id === 'object' &&
+              service.service_type_id
+                ? service.service_type_id.name
+                : "Noma'lum";
+            const serviceStatus: Record<string, string> = {
+              pending: 'Kutilmoqda',
+              active: 'Faol',
+              completed: 'Yakunlangan',
+            };
+            const itemTotal = (service.price || 0) * (service.quantity || 1);
+
+            return (
+              <View
+                key={service._id || index}
+                style={[
+                  styles.tableRow,
+                  {
+                    borderLeftWidth: 1,
+                    borderLeftColor: '#000',
+                    borderLeftStyle: 'solid',
+                  },
+                ]}
+              >
+                <View style={[styles.tableCol, { flex: 0.3 }]}>
+                  <Text style={styles.tableCell}>{index + 1}</Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 2 }]}>
+                  <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                    {serviceName}
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 0.6 }]}>
+                  <Text style={styles.tableCell}>{service.quantity || 1}</Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 1 }]}>
+                  <Text style={styles.tableCell}>
+                    {service.price?.toLocaleString() || '-'} so'm
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 1 }]}>
+                  <Text style={styles.tableCell}>
+                    {itemTotal.toLocaleString()} so'm
+                  </Text>
+                </View>
+                <View style={[styles.tableColLast, { flex: 0.8 }]}>
+                  <Text style={styles.tableCell}>
+                    {serviceStatus[service.status] || service.status}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+
+          {/* Jami qator */}
+          <View
+            style={[
+              styles.tableRow,
+              styles.tableHeader,
+              {
+                borderLeftWidth: 1,
+                borderLeftColor: '#000',
+                borderLeftStyle: 'solid',
+              },
+            ]}
+          >
+            <View style={[styles.tableCol, { flex: 0.3 }]}>
+              <Text style={styles.tableCell}></Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 2 }]}>
+              <Text
+                style={[
+                  styles.tableCell,
+                  { textAlign: 'right', fontWeight: 'bold' },
+                ]}
+              >
+                JAMI:
+              </Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 0.6 }]}>
+              <Text style={styles.tableCell}></Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 1 }]}>
+              <Text style={styles.tableCell}></Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 1 }]}>
+              <Text style={[styles.tableCell, { fontWeight: 'bold' }]}>
+                {getTotalPrice().toLocaleString()} so'm
+              </Text>
+            </View>
+            <View style={[styles.tableColLast, { flex: 0.8 }]}>
+              <Text style={styles.tableCell}></Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Imzo */}
+        <View style={styles.signature}>
+          <Text>
+            Shifokor: {exam.doctor_id?.fullname || '_________________________'}
+          </Text>
+          <Text style={{ marginTop: 3 }}>Imzo: _________</Text>
+          <Text style={{ marginTop: 3, fontSize: 7 }}>
+            Telefon: {exam.doctor_id?.phone || "Ko'rsatilmagan"} | Qabul
+            kunlari: Dushanba-Shanba
+          </Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
+// Xizmatlar uchun PDF yuklab olish komponenti
+interface ServicesDownloadButtonProps {
+  exam: any;
+}
+
+const ServicesDownloadButton: React.FC<ServicesDownloadButtonProps> = ({
+  exam,
+}) => {
+  const [isGenerating, setIsGenerating] = React.useState(false);
+
+  const handleDownloadServices = async () => {
+    if (!exam.services || exam.services.length === 0) {
+      alert('Xizmatlar mavjud emas');
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+
+      const blob = await pdf(<ServicesPDF exam={exam} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // Fayl nomini yaratish
+      const patientName = exam.patient_id?.fullname || 'bemor';
+      const cleanName = patientName.replace(/\s+/g, '_');
+      const date = new Date().toLocaleDateString('uz-UZ').replace(/\//g, '-');
+      link.download = `Xizmatlar_${cleanName}_${date}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('PDF yaratishda xatolik:', error);
+      alert(
+        'Xizmatlar yuklab olishda xatolik yuz berdi. Iltimos, qaytadan urinib koʼring.'
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <Button
+      variant='outline'
+      size='sm'
+      onClick={handleDownloadServices}
+      disabled={isGenerating || !exam.services || exam.services.length === 0}
+      className='flex items-center gap-2'
+    >
+      <Download className='h-4 w-4' />
+      {isGenerating ? 'Yuklanmoqda...' : 'PDF Yuklab olish'}
+    </Button>
+  );
+};
+
+// Неврологик статус uchun PDF komponenti
+interface NeurologicStatusPDFProps {
+  exam: any;
+  neurologic: any;
+}
+
+const neurologicFieldLabels: Record<string, string> = {
+  meningeal_symptoms: 'Менингеальные симптомы',
+  i_para_n_olfactorius: 'I пара – n.olfactorius',
+  ii_para_n_opticus: 'II пара – n. opticus',
+  iii_para_n_oculomotorius:
+    'III, IV, VI пары – n. oculomotorius, n. trochlearis, n. abducens',
+  iv_para_n_trochlearis: 'V пара – n.trigeminus',
+  v_para_n_trigeminus: 'VII пара – n. facialis',
+  vi_para_n_abducens: 'VIII пара – n. vestibulocochlearis',
+  vii_para_n_fascialis: 'IX, X пара – n. glossopharingeus, n. vagus',
+  viii_para_n_vestibulocochlearis: 'XI пара – n. accessorius',
+  ix_para_n_glossopharyngeus: 'XII пара – n. hypoglossus',
+  x_para_n_vagus: 'Симптомы орального автоматизма',
+  xi_para_n_accessorius: 'Двигательная система',
+  xii_para_n_hypoglossus: 'Чувствительная сфера',
+  motor_system: 'Координаторная сфера',
+  sensory_sphere: 'Высшие мозговые функции',
+  coordination_sphere: 'Синдромологический диагноз, обоснование',
+  higher_brain_functions: 'Топический диагноз и его обоснование',
+  syndromic_diagnosis_justification: 'Синдромологический диагноз',
+  topical_diagnosis_justification: 'Топический диагноз',
+};
+
+// Неврологик статус maydonlari tartibi
+const neurologicFieldOrder = [
+  'meningeal_symptoms',
+  'i_para_n_olfactorius',
+  'ii_para_n_opticus',
+  'iii_para_n_oculomotorius',
+  'iv_para_n_trochlearis',
+  'v_para_n_trigeminus',
+  'vi_para_n_abducens',
+  'vii_para_n_fascialis',
+  'viii_para_n_vestibulocochlearis',
+  'ix_para_n_glossopharyngeus',
+  'x_para_n_vagus',
+  'xi_para_n_accessorius',
+  'xii_para_n_hypoglossus',
+  'motor_system',
+  'sensory_sphere',
+  'coordination_sphere',
+  'higher_brain_functions',
+  'syndromic_diagnosis_justification',
+  'topical_diagnosis_justification',
+];
+
+const NeurologicStatusPDF: React.FC<NeurologicStatusPDFProps> = ({
+  exam,
+  neurologic,
+}) => {
+  const formatDate = (date: Date | string): string => {
+    const dateObj = new Date(date);
+    return dateObj.toLocaleDateString('uz-UZ', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const getDiagnosis = (): string => {
+    if (!exam.diagnosis) return "Ko'rsatilmagan";
+    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
+    return exam.diagnosis.name;
+  };
+
+  // Yoshni hisoblash
+  const getAge = (): string => {
+    if (!exam.patient_id?.birth_date) return "Noma'lum";
+    const birthDate = new Date(exam.patient_id.birth_date);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return `${age} yosh`;
+  };
+
+  return (
+    <Document>
+      <Page size='A4' style={styles.page}>
+        {/* Sarlavha */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.clinicName}>Klinika "Jayron medservis"</Text>
+          </View>
+          <View style={styles.headerCenter}>
+            <Text style={styles.documentTitle}>НЕВРОЛОГИК СТАТУС</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <Text style={styles.date}>
+              {formatDate(neurologic.created_at || exam.created_at)}
+            </Text>
+          </View>
+        </View>
+
+        {/* Bemor ma'lumotlari */}
+        <View style={styles.patientInfo}>
+          <View style={styles.grid}>
+            <View style={styles.gridItem}>
+              <Text style={styles.bold}>Bemor F.I.O:</Text>
+              <Text style={{ fontSize: 9, marginTop: 2 }}>
+                {exam.patient_id?.fullname || "Noma'lum"}
+              </Text>
+            </View>
+            <View style={styles.gridItem}>
+              <Text style={styles.bold}>Yoshi:</Text>
+              <Text style={{ fontSize: 9, marginTop: 2 }}>{getAge()}</Text>
+            </View>
+            <View style={styles.gridItem}>
+              <Text style={styles.bold}>Telefon:</Text>
+              <Text style={{ fontSize: 9, marginTop: 2 }}>
+                {exam.patient_id?.phone || "Ko'rsatilmagan"}
+              </Text>
+            </View>
+            <View style={styles.gridItem}>
+              <Text style={styles.bold}>Manzil:</Text>
+              <Text style={{ fontSize: 9, marginTop: 2 }}>
+                {exam.patient_id?.address || "Ko'rsatilmagan"}
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.gridItem, styles.fullWidth, { marginTop: 4 }]}>
+            <Text style={styles.bold}>Diagnoz:</Text>
+            <Text style={{ fontSize: 9, marginTop: 2 }}>{getDiagnosis()}</Text>
+          </View>
+          <View style={[styles.gridItem, styles.fullWidth, { marginTop: 4 }]}>
+            <Text style={styles.bold}>Shifokor:</Text>
+            <Text style={{ fontSize: 9, marginTop: 2 }}>
+              {exam.doctor_id?.fullname || "Noma'lum"}
+              {exam.doctor_id?.specialization &&
+                ` (${exam.doctor_id.specialization})`}
+            </Text>
+          </View>
+        </View>
+
+        {/* Неврологик статус ma'lumotlari */}
+        <View style={[styles.patientInfo, { marginTop: 8 }]}>
+          <Text style={[styles.sectionTitle, { marginBottom: 6 }]}>
+            НЕВРОЛОГИК ТЕКШИРУВ
+          </Text>
+
+          {neurologicFieldOrder.map((field) => {
+            const value = neurologic[field];
+            if (!value) return null;
+            return (
+              <View
+                key={field}
+                style={{
+                  marginBottom: 6,
+                  paddingBottom: 4,
+                  borderBottomWidth: 0.5,
+                  borderBottomColor: '#e0e0e0',
+                  borderBottomStyle: 'solid',
+                }}
+              >
+                <Text style={[styles.bold, { fontSize: 8, color: '#333' }]}>
+                  {neurologicFieldLabels[field] || field}:
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 9,
+                    marginTop: 2,
+                    textAlign: 'justify',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {value}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Imzo */}
+        <View style={styles.signature}>
+          <Text>
+            Shifokor: {exam.doctor_id?.fullname || '_________________________'}
+          </Text>
+          <Text style={{ marginTop: 3 }}>Imzo: _________</Text>
+          <Text style={{ marginTop: 3, fontSize: 7 }}>
+            Telefon: {exam.doctor_id?.phone || "Ko'rsatilmagan"} | Qabul
+            kunlari: Dushanba-Shanba
+          </Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
+// Неврологик статус uchun PDF yuklab olish komponenti
+interface NeurologicStatusDownloadButtonProps {
+  exam: any;
+  neurologic: any;
+}
+
+const NeurologicStatusDownloadButton: React.FC<
+  NeurologicStatusDownloadButtonProps
+> = ({ exam, neurologic }) => {
+  const [isGenerating, setIsGenerating] = React.useState(false);
+
+  const handleDownloadNeurologicStatus = async () => {
+    if (!neurologic) {
+      alert('Неврологик статус mavjud emas');
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+
+      const blob = await pdf(
+        <NeurologicStatusPDF exam={exam} neurologic={neurologic} />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // Fayl nomini yaratish
+      const patientName = exam.patient_id?.fullname || 'bemor';
+      const cleanName = patientName.replace(/\s+/g, '_');
+      const date = new Date().toLocaleDateString('uz-UZ').replace(/\//g, '-');
+      link.download = `Nevrologik_Status_${cleanName}_${date}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('PDF yaratishda xatolik:', error);
+      alert(
+        'Неврологик статус yuklab olishda xatolik yuz berdi. Iltimos, qaytadan urinib koʼring.'
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <Button
+      variant='outline'
+      size='sm'
+      onClick={handleDownloadNeurologicStatus}
+      disabled={isGenerating || !neurologic}
+      className='flex items-center gap-2'
+    >
+      <Download className='h-4 w-4' />
+      {isGenerating ? 'Yuklanmoqda...' : 'PDF Yuklab olish'}
+    </Button>
+  );
+};
+
+export {
+  AllPrescriptionsDownloadButton,
+  ExaminationInfoDownloadButton,
+  ServicesDownloadButton,
+  NeurologicStatusDownloadButton,
+};
 export default AllPrescriptionsDownloadButton;
