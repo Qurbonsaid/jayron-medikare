@@ -646,35 +646,6 @@ const Prescription = () => {
           </div>
         )}
 
-        {/* Header */}
-        {!isLoading && (
-          <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3'>
-            {patient && (
-              <>
-                <div>
-                  <h1 className='text-xl sm:text-2xl md:text-3xl font-bold text-foreground'>
-                    Рецепт Ёзиш
-                  </h1>
-                  <p className='text-muted-foreground mt-1 text-sm sm:text-base'>
-                    Янги рецепт яратиш
-                  </p>
-                </div>
-                <div className='flex gap-2 sm:gap-3 w-full sm:w-auto'>
-                  <Button
-                    variant='outline'
-                    onClick={handlePrint}
-                    className='flex-1 sm:flex-none text-sm'
-                  >
-                    <Printer className='mr-2 h-3 w-3 sm:h-4 sm:w-4' />
-                    <span className='hidden sm:inline'>Чоп Этиш</span>
-                    <span className='sm:hidden'>Чоп</span>
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
         {/* Examination Selection */}
         {!isLoading && !selectedExaminationId ? (
           <Card className='mb-4 sm:mb-6'>

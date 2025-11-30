@@ -86,7 +86,6 @@ const styles = StyleSheet.create({
   },
   signature: {
     marginTop: 8,
-    borderTop: '1pt solid #000',
     paddingTop: 5,
     fontSize: 8,
   },
@@ -116,6 +115,9 @@ const styles = StyleSheet.create({
   tableColLast: {
     flex: 1,
     padding: 2,
+    borderRightWidth: 1,
+    borderRightColor: '#000',
+    borderRightStyle: 'solid',
   },
   tableCell: {
     fontSize: 6,
@@ -137,126 +139,6 @@ const styles = StyleSheet.create({
     marginRight: 0,
   },
 });
-
-// Bitta retsept uchun PDF komponenti
-interface PrescriptionPDFProps {
-  exam: any;
-  prescription: any;
-  index: number;
-}
-
-const PrescriptionPDF: React.FC<PrescriptionPDFProps> = ({
-  exam,
-  prescription,
-  index,
-}) => {
-  // Sana formatini o'zgartirish
-  const formatDate = (date: Date | string): string => {
-    const dateObj = new Date(date);
-    return dateObj.toLocaleDateString('uz-UZ', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
-
-  // Diagnozni olish
-  const getDiagnosis = (): string => {
-    if (!exam.diagnosis) return "Ko'rsatilmagan";
-    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
-    return exam.diagnosis.name;
-  };
-
-  // Dori nomini olish
-  const getMedicationName = (medication: any): string => {
-    if (typeof medication === 'string') return medication;
-    return `${medication.name} ${medication.dosage}${
-      medication.dosage_unit || ''
-    }`;
-  };
-
-  return (
-    <Document>
-      <Page size='A5' style={styles.page}>
-        {/* Sarlavha */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.clinicName}>Klinika "Jayron medservis"</Text>
-          </View>
-          <View style={styles.headerCenter}>
-            <Text style={styles.documentTitle}>RETSEPT</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <Text style={styles.date}>{formatDate(exam.created_at)}</Text>
-          </View>
-        </View>
-
-        {/* Bemor ma'lumotlari */}
-        <View style={styles.patientInfo}>
-          <Text style={styles.bold}>
-            Bemor: {exam.patient_id?.fullname || "Noma'lum"}
-          </Text>
-          <Text style={{ marginBottom: '2px' }}>
-            Telefon: {exam.patient_id?.phone || "Ko'rsatilmagan"}
-          </Text>
-          <Text style={{ marginBottom: '2px' }}>
-            Shifokor: {exam.doctor_id?.fullname || "Noma'lum"}
-          </Text>
-          <Text style={{ marginBottom: '2px' }}>Diagnoz: {getDiagnosis()}</Text>
-        </View>
-
-        {/* Retsept ma'lumotlari */}
-        <View>
-          <Text style={styles.sectionTitle}>Retsept #{index + 1}</Text>
-
-          <View style={styles.grid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.bold}>Dori:</Text>
-              <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {getMedicationName(prescription.medication_id)}
-              </Text>
-            </View>
-
-            <View style={styles.gridItem}>
-              <Text style={styles.bold}>Qabul qilish:</Text>
-              <Text style={{ fontSize: 9, marginTop: 2 }}>
-                Kuniga {prescription.frequency} marta
-              </Text>
-            </View>
-
-            <View style={styles.gridItem}>
-              <Text style={styles.bold}>Muddati:</Text>
-              <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {prescription.duration} kun
-              </Text>
-            </View>
-
-            {prescription.instructions && (
-              <View style={[styles.gridItem, styles.fullWidth]}>
-                <Text style={styles.bold}>Qo'shimcha ko'rsatmalar:</Text>
-                <Text
-                  style={{ fontSize: 8, marginTop: 2, textAlign: 'justify' }}
-                >
-                  {prescription.instructions}
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Imzo */}
-        <View style={styles.signature}>
-          <Text>Shifokor: {exam.doctor_id?.fullname || ''}</Text>
-          <Text style={{ marginTop: 3 }}>Imzo: _________</Text>
-          <Text style={{ marginTop: 3, fontSize: 7 }}>
-            Telefon: {exam.doctor_id?.phone || "Ko'rsatilmagan"} | Qabul
-            kunlari: Dushanba-Shanba
-          </Text>
-        </View>
-      </Page>
-    </Document>
-  );
-};
 
 // Barcha retseptlar uchun jadval ko'rinishida PDF komponenti
 interface AllPrescriptionsPDFProps {
@@ -283,14 +165,6 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
     if (!exam.diagnosis) return "Ko'rsatilmagan";
     if (typeof exam.diagnosis === 'string') return exam.diagnosis;
     return exam.diagnosis.name;
-  };
-
-  // Dori nomini olish
-  const getMedicationName = (medication: any): string => {
-    if (typeof medication === 'string') return medication;
-    return `${medication.name} ${medication.dosage || ''}${
-      medication.dosage_unit || ''
-    }`.trim();
   };
 
   return (
@@ -732,7 +606,6 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                 active: 'Faol',
                 completed: 'Yakunlangan',
               };
-
               return (
                 <View
                   key={service._id || index}
@@ -827,7 +700,6 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                       medication.dosage_unit || ''
                     }`.trim()
                   : '';
-
               return (
                 <View
                   key={prescription._id || index}
@@ -1673,7 +1545,7 @@ const NeurologicStatusDownloadButton: React.FC<
 export {
   AllPrescriptionsDownloadButton,
   ExaminationInfoDownloadButton,
-  ServicesDownloadButton,
   NeurologicStatusDownloadButton,
+  ServicesDownloadButton,
 };
 export default AllPrescriptionsDownloadButton;
