@@ -1415,7 +1415,6 @@ interface NeurologicStatusPDFProps {
   neurologic: any;
 }
 
-// Неврологик статус maydonlari uchun labellar
 const neurologicFieldLabels: Record<string, string> = {
   meningeal_symptoms: 'Менингеальные симптомы',
   i_para_n_olfactorius: 'I пара – n.olfactorius',
