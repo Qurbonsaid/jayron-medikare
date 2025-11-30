@@ -59,7 +59,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ViewMedicalImage } from '../Radiology/components';
-import AllPrescriptionsDownloadButton, { ExaminationInfoDownloadButton } from './components/ExaminationPDF';
+import AllPrescriptionsDownloadButton, {
+  ExaminationInfoDownloadButton,
+  NeurologicStatusDownloadButton,
+  ServicesDownloadButton,
+} from './components/ExaminationPDF';
 
 // Tana qismlari uchun o'zbek nomlari
 const bodyPartLabels: Record<string, string> = {
@@ -876,7 +880,7 @@ const ExaminationDetail = () => {
               className='py-2 sm:py-3 text-xs sm:text-sm'
               disabled={isEditMode}
             >
-              Неврологик
+              Неврологик Статус
             </TabsTrigger>
           </TabsList>
 
@@ -1309,15 +1313,27 @@ const ExaminationDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle className='flex items-center justify-between'>
-                  <span>Хизматлар</span>
-                  <Button
-                    size='sm'
-                    onClick={() => setIsAddingService(true)}
-                    disabled={isAddingService}
-                  >
-                    <Plus className='w-4 h-4 mr-2' />
-                    Хизмат Қўшиш
-                  </Button>
+                  <div className='flex items-center gap-2'>
+                    <span>Хизматлар</span>
+                    {exam.services && exam.services.length > 0 && (
+                      <span className='text-sm font-normal text-muted-foreground'>
+                        ({exam.services.length} та)
+                      </span>
+                    )}
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    {exam.services && exam.services.length > 0 && (
+                      <ServicesDownloadButton exam={exam} />
+                    )}
+                    <Button
+                      size='sm'
+                      onClick={() => setIsAddingService(true)}
+                      disabled={isAddingService}
+                    >
+                      <Plus className='w-4 h-4 mr-2' />
+                      Хизмат Қўшиш
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -2368,6 +2384,10 @@ const ExaminationDetail = () => {
                                       </span>
                                     </div>
                                     <div className='flex gap-2'>
+                                      <NeurologicStatusDownloadButton
+                                        exam={exam}
+                                        neurologic={neurologic}
+                                      />
                                       <Button
                                         variant='ghost'
                                         size='sm'

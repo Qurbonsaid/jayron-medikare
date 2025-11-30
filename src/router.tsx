@@ -20,7 +20,7 @@ import Rooms from "./pages/Rooms/Rooms";
 import Medicine from "./pages/Medicine/Medicine";
 import RoomDetail from "./pages/RoomDetail/RoomDetail";
 import ExaminationDetail from "./pages/Examination/ExaminationDetail";
-import Service from "./pages/Examination/Service/Service";
+import Service from "./pages/Examination/Service";
 import Billing from "./pages/Billing/Billing";
 import Disease from "./pages/Examination/Disease";
 import { Navigate } from "react-router-dom";
