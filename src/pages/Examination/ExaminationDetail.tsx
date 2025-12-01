@@ -11,6 +11,12 @@ import {
   useUpdateServiceFromExaminationMutation,
 } from '@/app/api/examinationApi/examinationApi';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
+import {
+  useCreateNeurologicStatusMutation,
+  useDeleteNeurologicStatusMutation,
+  useGetAllNeurologicStatusQuery,
+  useUpdateNeurologicStatusMutation,
+} from '@/app/api/neurologicApi/neurologicApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,6 +44,7 @@ import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import {
   AlertTriangle,
   ArrowLeft,
+  Brain,
   CheckCircle2,
   Edit,
   Eye,
@@ -52,6 +59,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ViewMedicalImage } from '../Radiology/components';
+import AllPrescriptionsDownloadButton, {
+  ExaminationInfoDownloadButton,
+  NeurologicStatusDownloadButton,
+  ServicesDownloadButton,
+} from './components/ExaminationPDF';
 
 // Tana qismlari uchun o'zbek nomlari
 const bodyPartLabels: Record<string, string> = {
@@ -67,6 +79,11 @@ const bodyPartLabels: Record<string, string> = {
   [BodyPartConstants.SHOULDER]: 'Елка',
   [BodyPartConstants.HAND]: 'Кафт',
   [BodyPartConstants.FOOT]: 'Тобан',
+};
+
+const roomType = {
+  stasionar: 'Стасионар',
+  ambulator: 'Амбулатор',
 };
 
 const ExaminationDetail = () => {
@@ -105,6 +122,55 @@ const ExaminationDetail = () => {
   });
   const [medicationSearch, setMedicationSearch] = useState('');
 
+  // Neurologic status states
+  const [isAddingNeurologic, setIsAddingNeurologic] = useState(false);
+  const [editingNeurologicId, setEditingNeurologicId] = useState<string | null>(
+    null
+  );
+  const [neurologicForm, setNeurologicForm] = useState({
+    meningeal_symptoms: '',
+    i_para_n_olfactorius: '',
+    ii_para_n_opticus: '',
+    iii_para_n_oculomotorius: '',
+    iv_para_n_trochlearis: '',
+    v_para_n_trigeminus: '',
+    vi_para_n_abducens: '',
+    vii_para_n_fascialis: '',
+    viii_para_n_vestibulocochlearis: '',
+    ix_para_n_glossopharyngeus: '',
+    x_para_n_vagus: '',
+    xi_para_n_accessorius: '',
+    xii_para_n_hypoglossus: '',
+    motor_system: '',
+    sensory_sphere: '',
+    coordination_sphere: '',
+    higher_brain_functions: '',
+    syndromic_diagnosis_justification: '',
+    topical_diagnosis_justification: '',
+  });
+
+  const initialNeurologicForm = {
+    meningeal_symptoms: '',
+    i_para_n_olfactorius: '',
+    ii_para_n_opticus: '',
+    iii_para_n_oculomotorius: '',
+    iv_para_n_trochlearis: '',
+    v_para_n_trigeminus: '',
+    vi_para_n_abducens: '',
+    vii_para_n_fascialis: '',
+    viii_para_n_vestibulocochlearis: '',
+    ix_para_n_glossopharyngeus: '',
+    x_para_n_vagus: '',
+    xi_para_n_accessorius: '',
+    xii_para_n_hypoglossus: '',
+    motor_system: '',
+    sensory_sphere: '',
+    coordination_sphere: '',
+    higher_brain_functions: '',
+    syndromic_diagnosis_justification: '',
+    topical_diagnosis_justification: '',
+  };
+
   // Fetch examination details
   const {
     data: examData,
@@ -139,6 +205,18 @@ const ExaminationDetail = () => {
     search: medicationSearch || undefined,
   });
 
+  // Fetch neurologic status
+  const { data: neurologicData, refetch: refetchNeurologic } =
+    useGetAllNeurologicStatusQuery(
+      {
+        page: 1,
+        limit: 100,
+        examination_id: id || '',
+      },
+      { skip: !id }
+    );
+  const neurologicStatuses = neurologicData?.data || [];
+
   const [updateExam, { isLoading: isUpdating }] = useUpdateExamMutation();
   const [deleteExam, { isLoading: isDeleting }] = useDeleteExamMutation();
   const [completeExam, { isLoading: isCompleting }] =
@@ -153,6 +231,12 @@ const ExaminationDetail = () => {
     useRemoveServiceFromExaminationMutation();
   const [updatePrescription, { isLoading: isUpdatingPrescription }] =
     useUpdatePrescriptionMutation();
+  const [createNeurologic, { isLoading: isCreatingNeurologic }] =
+    useCreateNeurologicStatusMutation();
+  const [updateNeurologic, { isLoading: isUpdatingNeurologic }] =
+    useUpdateNeurologicStatusMutation();
+  const [deleteNeurologic, { isLoading: isDeletingNeurologic }] =
+    useDeleteNeurologicStatusMutation();
   const handleRequest = useHandleRequest();
 
   // Update form when exam changes
@@ -502,6 +586,131 @@ const ExaminationDetail = () => {
     });
   };
 
+  // Neurologic status handlers
+  const neurologicFieldLabels: Record<string, string> = {
+    meningeal_symptoms: 'Менингеальные симптомы',
+    i_para_n_olfactorius: 'I пара – n.olfactorius',
+    ii_para_n_opticus: 'II пара – n. opticus',
+    iii_para_n_oculomotorius:
+      'III, IV, VI пары – n. oculomotorius, n. trochlearis, n. abducens',
+    iv_para_n_trochlearis: 'V пара – n.trigeminus',
+    v_para_n_trigeminus: 'VII пара – n. facialis',
+    vi_para_n_abducens: 'VIII пара – n. vestibulocochlearis',
+    vii_para_n_fascialis: 'IX, X пара – n. glossopharingeus, n. vagus',
+    viii_para_n_vestibulocochlearis: 'XI пара – n. accessorius',
+    ix_para_n_glossopharyngeus: 'XII пара – n. hypoglossus',
+    x_para_n_vagus: 'Симптомы орального автоматизма',
+    xi_para_n_accessorius: 'Двигательная система',
+    xii_para_n_hypoglossus: 'Чувствительная сфера',
+    motor_system: 'Координаторная сфера',
+    sensory_sphere: 'Высшие мозговые функции',
+    coordination_sphere: 'Синдромологический диагноз, обоснование',
+    higher_brain_functions: 'Топический диагноз и его обоснование',
+    syndromic_diagnosis_justification: 'Синдромологический диагноз',
+    topical_diagnosis_justification: 'Топический диагноз',
+  };
+
+  const handleAddNeurologic = async () => {
+    await handleRequest({
+      request: async () => {
+        const res = await createNeurologic({
+          examination_id: exam._id,
+          ...neurologicForm,
+        }).unwrap();
+        return res;
+      },
+      onSuccess: () => {
+        toast.success('Неврологик статус муваффақиятли қўшилди');
+        setIsAddingNeurologic(false);
+        setNeurologicForm(initialNeurologicForm);
+        refetchNeurologic();
+      },
+      onError: (error) => {
+        toast.error(
+          error?.data?.error?.msg || 'Неврологик статусни қўшишда хатолик'
+        );
+      },
+    });
+  };
+
+  const handleUpdateNeurologic = async (neurologicId: string) => {
+    await handleRequest({
+      request: async () => {
+        const res = await updateNeurologic({
+          id: neurologicId,
+          ...neurologicForm,
+        }).unwrap();
+        return res;
+      },
+      onSuccess: () => {
+        toast.success('Неврологик статус муваффақиятли янгиланди');
+        setEditingNeurologicId(null);
+        setNeurologicForm(initialNeurologicForm);
+        refetchNeurologic();
+      },
+      onError: (error) => {
+        toast.error(
+          error?.data?.error?.msg || 'Неврологик статусни янгилашда хатолик'
+        );
+      },
+    });
+  };
+
+  const handleDeleteNeurologic = async (neurologicId: string) => {
+    if (!window.confirm('Бу неврологик статусни ўчиришни хоҳлайсизми?')) {
+      return;
+    }
+
+    await handleRequest({
+      request: async () => {
+        const res = await deleteNeurologic(neurologicId).unwrap();
+        return res;
+      },
+      onSuccess: () => {
+        toast.success('Неврологик статус муваффақиятли ўчирилди');
+        refetchNeurologic();
+      },
+      onError: (error) => {
+        toast.error(
+          error?.data?.error?.msg || 'Неврологик статусни ўчиришда хатолик'
+        );
+      },
+    });
+  };
+
+  const startEditNeurologic = (neurologic: any) => {
+    setEditingNeurologicId(neurologic._id);
+    setNeurologicForm({
+      meningeal_symptoms: neurologic.meningeal_symptoms || '',
+      i_para_n_olfactorius: neurologic.i_para_n_olfactorius || '',
+      ii_para_n_opticus: neurologic.ii_para_n_opticus || '',
+      iii_para_n_oculomotorius: neurologic.iii_para_n_oculomotorius || '',
+      iv_para_n_trochlearis: neurologic.iv_para_n_trochlearis || '',
+      v_para_n_trigeminus: neurologic.v_para_n_trigeminus || '',
+      vi_para_n_abducens: neurologic.vi_para_n_abducens || '',
+      vii_para_n_fascialis: neurologic.vii_para_n_fascialis || '',
+      viii_para_n_vestibulocochlearis:
+        neurologic.viii_para_n_vestibulocochlearis || '',
+      ix_para_n_glossopharyngeus: neurologic.ix_para_n_glossopharyngeus || '',
+      x_para_n_vagus: neurologic.x_para_n_vagus || '',
+      xi_para_n_accessorius: neurologic.xi_para_n_accessorius || '',
+      xii_para_n_hypoglossus: neurologic.xii_para_n_hypoglossus || '',
+      motor_system: neurologic.motor_system || '',
+      sensory_sphere: neurologic.sensory_sphere || '',
+      coordination_sphere: neurologic.coordination_sphere || '',
+      higher_brain_functions: neurologic.higher_brain_functions || '',
+      syndromic_diagnosis_justification:
+        neurologic.syndromic_diagnosis_justification || '',
+      topical_diagnosis_justification:
+        neurologic.topical_diagnosis_justification || '',
+    });
+  };
+
+  const cancelEditNeurologic = () => {
+    setEditingNeurologicId(null);
+    setNeurologicForm(initialNeurologicForm);
+  };
+
   if (isLoading) {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
@@ -532,8 +741,9 @@ const ExaminationDetail = () => {
       <main className='container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
         {/* Patient Info Card */}
         <Card className='mb-6'>
-          <CardHeader>
+          <CardHeader className='flex flex-row items-center justify-between'>
             <CardTitle>Бемор Маълумотлари</CardTitle>
+            <ExaminationInfoDownloadButton exam={exam} />
           </CardHeader>
           <CardContent>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
@@ -553,6 +763,12 @@ const ExaminationDetail = () => {
                 <Label className='text-muted-foreground'>Сана</Label>
                 <p className='font-medium mt-1'>
                   {new Date(exam.created_at).toLocaleDateString('uz-UZ')}
+                </p>
+              </div>
+              <div>
+                <Label className='text-muted-foreground'>Тури</Label>
+                <p className='font-medium mt-1'>
+                  {roomType[exam.treatment_type]}
                 </p>
               </div>
             </div>
@@ -603,7 +819,7 @@ const ExaminationDetail = () => {
                   ? 'Якунланмоқда...'
                   : exam.status === 'completed'
                   ? 'Якунланган'
-                  : 'Кўрикни Якунлаш'}
+                  : 'Якунлаш'}
               </Button>
             </div>
           </CardContent>
@@ -624,7 +840,7 @@ const ExaminationDetail = () => {
           }}
           className='space-y-6'
         >
-          <TabsList className='grid w-full grid-cols-5 h-auto gap-1'>
+          <TabsList className='grid w-full grid-cols-3 sm:grid-cols-6 h-auto gap-1'>
             <TabsTrigger
               value='examination'
               className='py-2 sm:py-3 text-xs sm:text-sm'
@@ -658,6 +874,13 @@ const ExaminationDetail = () => {
               disabled={isEditMode}
             >
               Тасвирлар
+            </TabsTrigger>
+            <TabsTrigger
+              value='neurologic'
+              className='py-2 sm:py-3 text-xs sm:text-sm'
+              disabled={isEditMode}
+            >
+              Неврологик Статус
             </TabsTrigger>
           </TabsList>
 
@@ -840,11 +1063,16 @@ const ExaminationDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle className='flex items-center justify-between'>
-                  <span>Рецептлар</span>
+                  <div className='flex items-center gap-2'>
+                    <span>Рецептлар</span>
+                    {exam.prescriptions && exam.prescriptions.length > 0 && (
+                      <span className='text-sm font-normal text-muted-foreground'>
+                        ({exam.prescriptions.length} та)
+                      </span>
+                    )}
+                  </div>
                   {exam.prescriptions && exam.prescriptions.length > 0 && (
-                    <span className='text-sm font-normal text-muted-foreground'>
-                      ({exam.prescriptions.length} та)
-                    </span>
+                    <AllPrescriptionsDownloadButton exam={exam} />
                   )}
                 </CardTitle>
               </CardHeader>
@@ -1085,15 +1313,27 @@ const ExaminationDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle className='flex items-center justify-between'>
-                  <span>Хизматлар</span>
-                  <Button
-                    size='sm'
-                    onClick={() => setIsAddingService(true)}
-                    disabled={isAddingService}
-                  >
-                    <Plus className='w-4 h-4 mr-2' />
-                    Хизмат Қўшиш
-                  </Button>
+                  <div className='flex items-center gap-2'>
+                    <span>Хизматлар</span>
+                    {exam.services && exam.services.length > 0 && (
+                      <span className='text-sm font-normal text-muted-foreground'>
+                        ({exam.services.length} та)
+                      </span>
+                    )}
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    {exam.services && exam.services.length > 0 && (
+                      <ServicesDownloadButton exam={exam} />
+                    )}
+                    <Button
+                      size='sm'
+                      onClick={() => setIsAddingService(true)}
+                      disabled={isAddingService}
+                    >
+                      <Plus className='w-4 h-4 mr-2' />
+                      Хизмат Қўшиш
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1996,6 +2236,232 @@ const ExaminationDetail = () => {
                     </p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Neurologic Status Tab */}
+          <TabsContent value='neurologic'>
+            <Card>
+              <CardContent>
+                <div className='py-6'>
+                  {/* Add Neurologic Form */}
+                  {isAddingNeurologic && (
+                    <Card className='border-2 border-primary/20 bg-primary/5'>
+                      <CardContent className='pt-4'>
+                        <div className='space-y-4'>
+                          <h3 className='font-semibold text-lg mb-4'>
+                            Янги Неврологик Статус
+                          </h3>
+                          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                            {Object.keys(neurologicForm).map((field) => (
+                              <div key={field} className='space-y-2'>
+                                <Label className='text-sm font-medium'>
+                                  {neurologicFieldLabels[field] || field}
+                                </Label>
+                                <Textarea
+                                  placeholder={`${
+                                    neurologicFieldLabels[field] || field
+                                  } киритинг...`}
+                                  value={
+                                    neurologicForm[
+                                      field as keyof typeof neurologicForm
+                                    ]
+                                  }
+                                  onChange={(e) =>
+                                    setNeurologicForm({
+                                      ...neurologicForm,
+                                      [field]: e.target.value,
+                                    })
+                                  }
+                                  className='min-h-20 resize-y'
+                                  rows={3}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          <div className='flex gap-2 justify-end pt-4'>
+                            <Button
+                              variant='outline'
+                              onClick={() => {
+                                setIsAddingNeurologic(false);
+                                setNeurologicForm(initialNeurologicForm);
+                              }}
+                              disabled={isCreatingNeurologic}
+                            >
+                              <X className='w-4 h-4 mr-2' />
+                              Бекор қилиш
+                            </Button>
+                            <Button
+                              onClick={handleAddNeurologic}
+                              disabled={isCreatingNeurologic}
+                            >
+                              <Save className='w-4 h-4 mr-2' />
+                              {isCreatingNeurologic
+                                ? 'Сақланмоқда...'
+                                : 'Сақлаш'}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Neurologic Status List */}
+                  {neurologicStatuses.length > 0
+                    ? neurologicStatuses.map(
+                        (neurologic: any, index: number) => (
+                          <Card
+                            key={neurologic._id}
+                            className='border border-primary/10'
+                          >
+                            <CardContent className='pt-4'>
+                              {editingNeurologicId === neurologic._id ? (
+                                <div className='space-y-4'>
+                                  <h3 className='font-semibold text-lg mb-4'>
+                                    Таҳрирлаш
+                                  </h3>
+                                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                                    {Object.keys(neurologicForm).map(
+                                      (field) => (
+                                        <div key={field} className='space-y-2'>
+                                          <Label className='text-sm font-medium'>
+                                            {neurologicFieldLabels[field] ||
+                                              field}
+                                          </Label>
+                                          <Textarea
+                                            placeholder={`${
+                                              neurologicFieldLabels[field] ||
+                                              field
+                                            } киритинг...`}
+                                            value={
+                                              neurologicForm[
+                                                field as keyof typeof neurologicForm
+                                              ]
+                                            }
+                                            onChange={(e) =>
+                                              setNeurologicForm({
+                                                ...neurologicForm,
+                                                [field]: e.target.value,
+                                              })
+                                            }
+                                            className='min-h-20 resize-y'
+                                            rows={3}
+                                          />
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                  <div className='flex gap-2 justify-end pt-4'>
+                                    <Button
+                                      variant='outline'
+                                      onClick={cancelEditNeurologic}
+                                      disabled={isUpdatingNeurologic}
+                                    >
+                                      <X className='w-4 h-4 mr-2' />
+                                      Бекор қилиш
+                                    </Button>
+                                    <Button
+                                      onClick={() =>
+                                        handleUpdateNeurologic(neurologic._id)
+                                      }
+                                      disabled={isUpdatingNeurologic}
+                                    >
+                                      <Save className='w-4 h-4 mr-2' />
+                                      {isUpdatingNeurologic
+                                        ? 'Сақланмоқда...'
+                                        : 'Сақлаш'}
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className='flex items-center justify-between mb-4'>
+                                    <div className='flex items-center gap-2'>
+                                      <Brain className='w-5 h-5 text-primary' />
+                                      <span className='text-sm font-medium text-primary'>
+                                        Неврологик Статус #{index + 1}
+                                      </span>
+                                    </div>
+                                    <div className='flex gap-2'>
+                                      <NeurologicStatusDownloadButton
+                                        exam={exam}
+                                        neurologic={neurologic}
+                                      />
+                                      <Button
+                                        variant='ghost'
+                                        size='sm'
+                                        onClick={() =>
+                                          startEditNeurologic(neurologic)
+                                        }
+                                        disabled={editingNeurologicId !== null}
+                                      >
+                                        <Edit className='h-4 w-4' />
+                                      </Button>
+                                      <Button
+                                        variant='ghost'
+                                        size='sm'
+                                        onClick={() =>
+                                          handleDeleteNeurologic(neurologic._id)
+                                        }
+                                        disabled={isDeletingNeurologic}
+                                        className='text-destructive hover:text-destructive hover:bg-destructive/10'
+                                      >
+                                        <Trash2 className='h-4 w-4' />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                                    {Object.keys(initialNeurologicForm).map(
+                                      (field) => {
+                                        const value = neurologic[field];
+                                        if (!value) return null;
+                                        return (
+                                          <div
+                                            key={field}
+                                            className='bg-muted/50 p-3 rounded-lg'
+                                          >
+                                            <Label className='text-xs text-muted-foreground block mb-1'>
+                                              {neurologicFieldLabels[field] ||
+                                                field}
+                                            </Label>
+                                            <p className='text-sm font-medium whitespace-pre-wrap'>
+                                              {value}
+                                            </p>
+                                          </div>
+                                        );
+                                      }
+                                    )}
+                                  </div>
+                                  {neurologic.created_at && (
+                                    <div className='mt-4 pt-3 border-t border-primary/10'>
+                                      <p className='text-xs text-muted-foreground'>
+                                        Яратилган:{' '}
+                                        {new Date(
+                                          neurologic.created_at
+                                        ).toLocaleString('uz-UZ')}
+                                      </p>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )
+                      )
+                    : !isAddingNeurologic && (
+                        <div className='text-center py-8'>
+                          <Brain className='w-12 h-12 text-muted-foreground mx-auto mb-4' />
+                          <p className='text-muted-foreground mb-4'>
+                            Ҳали неврологик статус қўшилмаган
+                          </p>
+                          <Button onClick={() => setIsAddingNeurologic(true)}>
+                            <Plus className='w-4 h-4 mr-2' />
+                            Неврологик Статус Қўшиш
+                          </Button>
+                        </div>
+                      )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

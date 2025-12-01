@@ -425,7 +425,7 @@ const NewVisit = () => {
                           <button
                             type='button'
                             onClick={() => setTreatmentType('ambulator')}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                               treatmentType === 'ambulator'
                                 ? 'bg-primary text-white shadow-md'
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -436,7 +436,7 @@ const NewVisit = () => {
                           <button
                             type='button'
                             onClick={() => setTreatmentType('stasionar')}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                               treatmentType === 'stasionar'
                                 ? 'bg-primary text-white shadow-md'
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'

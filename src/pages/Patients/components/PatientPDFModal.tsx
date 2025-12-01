@@ -188,27 +188,6 @@ const PatientPDFModal = ({
             </div>
           </div>
 
-          {/* Passport Info */}
-          <div className='space-y-4'>
-            <h2 className='text-xl font-bold text-gray-800 border-b border-gray-300 pb-2'>
-              Паспорт маълумотлари
-            </h2>
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <p className='text-sm text-gray-600 mb-1'>Паспорт серияси:</p>
-                <p className='font-semibold text-gray-800'>
-                  {patient.passport.series}
-                </p>
-              </div>
-              <div>
-                <p className='text-sm text-gray-600 mb-1'>Паспорт рақами:</p>
-                <p className='font-semibold text-gray-800'>
-                  {patient.passport.number}
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Allergies */}
           {patient.allergies && patient.allergies.length > 0 && (
             <div className='space-y-4'>
