@@ -18,18 +18,18 @@ import {
 } from '@/components/ui/sidebar';
 import { menuCategories, systemMenu } from '@/constants/Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
-
-
 export function AppSidebar() {
-  const { open, setOpen, openMobile, setOpenMobile, isMobile: isMobileContext } = useSidebar();
+  const {
+    open,
+    setOpen,
+    openMobile,
+    setOpenMobile,
+    isMobile: isMobileContext,
+  } = useSidebar();
   const isMobile = useIsMobile();
   const prevPathRef = useRef<string>();
 
@@ -133,7 +133,9 @@ export function AppSidebar() {
         </Link>
       </div>
 
-      <SidebarContent className={open ? 'px-2 py-4' : 'px-1 py-2 gap-0'}>
+      <SidebarContent
+        className={open ? 'px-2 py-4' : 'px-1 py-0 gap-0 overflow-y-auto'}
+      >
         <Button
           variant='ghost'
           size='icon'
@@ -148,7 +150,7 @@ export function AppSidebar() {
         </Button>
         {/* Main Categories */}
         {menuCategories.map((category) => (
-          <SidebarGroup key={category.id} className={open ? 'mb-2' : ''}>
+          <SidebarGroup key={category.id} className={open ? 'mb-2' : 'py-0'}>
             {open ? (
               <Collapsible
                 open={openCategories[category.id]}
@@ -194,7 +196,7 @@ export function AppSidebar() {
                 </CollapsibleContent>
               </Collapsible>
             ) : (
-              <SidebarMenu className='space-y-1'>
+              <SidebarMenu>
                 {category.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
@@ -204,9 +206,9 @@ export function AppSidebar() {
                     >
                       <NavLink
                         to={item.url}
-                        className='group flex items-center justify-center h-10'
+                        className='group flex items-center justify-center h-8'
                       >
-                        <item.icon className='w-7 h-7' />
+                        <item.icon className='w-5 h-5' />
                         <span>{item.title}</span>
                       </NavLink>
                     </SidebarMenuButton>
@@ -216,14 +218,37 @@ export function AppSidebar() {
             )}
           </SidebarGroup>
         ))}
+
+        {/* System Settings - yopiq holatda scroll ichida */}
+        {!open && (
+          <SidebarGroup className='py-0 border-t pt-1'>
+            <SidebarMenu className='space-y-0.5'>
+              {systemMenu.items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                  >
+                    <NavLink
+                      to={item.url}
+                      className='group flex items-center justify-center h-8'
+                    >
+                      <item.icon className='w-5 h-5' />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
-      {/* System Settings at Bottom */}
-      <SidebarFooter
-        className={open ? 'px-2 py-4 border-t' : 'px-1 py-2 border-t'}
-      >
-        <SidebarGroup>
-          {open ? (
+      {/* System Settings - ochiq holatda fixed bottom */}
+      {open && (
+        <SidebarFooter className='px-2 py-4 border-t'>
+          <SidebarGroup>
             <Collapsible
               open={openCategories[systemMenu.id]}
               onOpenChange={() => toggleCategory(systemMenu.id)}
@@ -257,7 +282,7 @@ export function AppSidebar() {
                           isActive={isActive(item.url)}
                         >
                           <NavLink to={item.url} className='group'>
-                            <item.icon className='w-7 h-7' />
+                            <item.icon className='w-5 h-5' />
                             <span>{item.title}</span>
                           </NavLink>
                         </SidebarMenuButton>
@@ -267,29 +292,9 @@ export function AppSidebar() {
                 </SidebarGroupContent>
               </CollapsibleContent>
             </Collapsible>
-          ) : (
-            <SidebarMenu className='space-y-1'>
-              {systemMenu.items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
-                    <NavLink
-                      to={item.url}
-                      className='group flex items-center justify-center h-10'
-                    >
-                      <item.icon className='w-7 h-7' />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          )}
-        </SidebarGroup>
-      </SidebarFooter>
+          </SidebarGroup>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }

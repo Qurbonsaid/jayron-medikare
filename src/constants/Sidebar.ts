@@ -34,7 +34,6 @@ export const menuCategories = [
     items: [
       { title: 'Янги кўрик', url: '/new-visit', icon: FileEdit },
       { title: 'Кўриклар', url: '/visits', icon: Calendar },
-      // { title: 'Навбатлар', url: '/appointments', icon: Calendar },
       { title: 'Рецепт ёзиш', url: '/prescription', icon: Pill },
       { title: 'Касалликлар', url: '/disease', icon: HeartPulse },
       { title: 'Хизматлар', url: '/service', icon: ClipboardCheck },
@@ -83,6 +82,6 @@ export const systemMenu = {
   items: [
     { title: 'Созламалар', url: '/settings', icon: Settings },
     { title: 'Профил', url: '/profile', icon: User },
-    { title: 'Рухсатлар', url: '/permission', icon: Shield },
+    { title: 'Рухсатлар', url: '/permissions', icon: Shield },
   ],
 };
