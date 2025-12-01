@@ -1,7 +1,6 @@
 import Appointments from "@/pages/Appointments/Appointments";
 // import Dashboard from "@/pages/Dashboard";
 import Inpatient from "@/pages/Inpatient/Inpatient";
-import InpatientCalendar from "@/pages/Inpatient/InpatientCalendar";
 import LabResults from "@/pages/Diagnostika/LabResults";
 import PatientPortal from "@/pages/PatientPortal";
 import PatientProfile from "@/pages/Patients/PatientProfile";
@@ -24,7 +23,8 @@ import Service from "./pages/Examination/Service";
 import Billing from "./pages/Billing/Billing";
 import Disease from "./pages/Examination/Disease";
 import { Navigate } from "react-router-dom";
-import Medication from './pages/Examination/Medication'
+import Medication from "./pages/Examination/Medication";
+import { RoomsList, RoomCalendar } from "./pages/InpatientCalendar";
 
 export const routers = [
   { path: "/dashboard", element: <Navigate to={"/patients"} /> },
@@ -42,7 +42,8 @@ export const routers = [
   { path: "/analysisById/:id", element: <AnalysisParamsModal /> },
   { path: "/lab-order", element: <LabOrder /> },
   { path: "/inpatient", element: <Inpatient /> },
-  { path: "/inpatient-calendar", element: <InpatientCalendar /> },
+  { path: "/inpatient-calendar", element: <RoomsList /> },
+  { path: "/inpatient-calendar/:roomId", element: <RoomCalendar /> },
   { path: "/inpatient/:id", element: <Rooms /> },
   { path: "/room/:id", element: <RoomDetail /> },
   { path: "/medicine", element: <Medicine /> },
@@ -97,9 +98,9 @@ export const navigator = [
     title: "Касалликлар",
   },
   {
-    path:"/medication",
-    to:null,
-    title:"Дори-дармонлар",
+    path: "/medication",
+    to: null,
+    title: "Дори-дармонлар",
   },
   {
     path: "/service",
@@ -135,6 +136,11 @@ export const navigator = [
     path: "/inpatient-calendar",
     to: null,
     title: "Стационар Календари",
+  },
+  {
+    path: "/inpatient-calendar/:roomId",
+    to: "/inpatient-calendar",
+    title: "Хона Календари",
   },
   {
     path: "/inpatient/:id",

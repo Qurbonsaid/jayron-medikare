@@ -9,6 +9,7 @@ export enum API_TAGS {
   BILLING = "Billing",
   CORPUS = "CORPUS",
   ROOM = "ROOM",
+  BOOKING = "BOOKING",
   SERVICE='service',
   IMAGING_TYPE = "ImagingType",
   MEDICAL_IMAGE = "MedicalImage",
