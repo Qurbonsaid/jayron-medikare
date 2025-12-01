@@ -1,6 +1,5 @@
 import {
   BarChart3,
-  Beaker,
   BedDouble,
   Calendar,
   CirclePlus,
@@ -19,6 +18,7 @@ import {
   Users,
   Wallet,
   CalendarDays,
+  Shield,
 } from 'lucide-react';
 export const menuCategories = [
   {
@@ -83,5 +83,6 @@ export const systemMenu = {
   items: [
     { title: 'Созламалар', url: '/settings', icon: Settings },
     { title: 'Профил', url: '/profile', icon: User },
+    { title: 'Рухсатлар', url: '/permission', icon: Shield },
   ],
 };

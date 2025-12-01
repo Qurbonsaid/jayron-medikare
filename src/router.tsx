@@ -24,6 +24,7 @@ import Visits from './pages/Examination/Visits';
 import Medicine from './pages/Medicine/Medicine';
 import RoomDetail from './pages/RoomDetail/RoomDetail';
 import Rooms from './pages/Rooms/Rooms';
+import Permissions from './pages/Tizim/Permissions';
 import Profil from './pages/Tizim/Profil';
 
 export const routers = [
@@ -52,6 +53,7 @@ export const routers = [
   { path: '/radiology', element: <Radiology /> },
   { path: '/settings', element: <Settings /> },
   { path: '/profile', element: <Profil /> },
+  { path: '/permissions', element: <Permissions /> },
   { path: '/patient-portal', element: <PatientPortal /> },
 ];
 
@@ -193,6 +195,20 @@ export const navigator = [
     path: '/profile',
     to: null,
     title: 'Профил',
+  },
+  {
+    path: '/permissions',
+    to: null,
+    title: (
+      <div className='flex items-center gap-4'>
+        <div>
+          <h1 className='text-xl font-bold'>Рухсатлар</h1>
+          <p className='text-sm text-muted-foreground'>
+            Тизим рухсатларини бошқариш
+          </p>
+        </div>
+      </div>
+    ),
   },
   {
     path: '/patient-portal',

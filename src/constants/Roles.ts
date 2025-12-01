@@ -1,7 +1,8 @@
-export const RoleConstants = {
-   ADMIN: 'admin',
-   CEO: 'ceo',
-   DOCTOR: 'doctor',
-   NURSE: 'nurse',
-   RECEPTIONIST: 'receptionist',
-} as const
+export enum RoleConstants {
+   CEO = 'ceo',
+   ADMIN = 'admin',
+   DOCTOR = 'doctor',
+   NURSE = 'nurse',
+   RECEPTIONIST = 'receptionist',
+   PHARMACIST = 'pharmacist'
+}

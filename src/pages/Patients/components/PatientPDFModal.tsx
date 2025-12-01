@@ -197,21 +197,32 @@ const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
 
       {/* Bemor asosiy ma'lumotlari */}
       <View style={styles.patientInfo}>
-        <Text style={styles.bold}>Bemor: {patient.fullname || "Noma'lum"}</Text>
-        <Text style={{ marginBottom: 1 }}>
-          Bemor ID: {patient.patient_id || "Ko'rsatilmagan"}
+        {/* To'liq ism - kattaroq va alohida qator */}
+        <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>
+          {patient.fullname || "Noma'lum"}
         </Text>
-        <Text style={{ marginBottom: 1 }}>
-          Tug'ilgan sana: {formatDate(patient.date_of_birth)}
-        </Text>
-        <Text style={{ marginBottom: 1 }}>
-          Jinsi: {patient.gender === 'male' ? 'Erkak' : 'Ayol'}
-        </Text>
+
+        {/* Qisqa ma'lumotlar - bir qatorda */}
+        <View
+          style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 2 }}
+        >
+          <Text style={{ width: '25%', fontSize: 8 }}>
+            ID: {patient.patient_id || '-'}
+          </Text>
+          <Text style={{ width: '25%', fontSize: 8 }}>
+            Tug'ilgan: {formatDate(patient.date_of_birth)}
+          </Text>
+          <Text style={{ width: '25%', fontSize: 8 }}>
+            Jinsi: {patient.gender === 'male' ? 'Erkak' : 'Ayol'}
+          </Text>
+          <Text style={{ width: '25%', fontSize: 8 }}>
+            Email: {patient.email || '-'}
+          </Text>
+        </View>
+
+        {/* Telefon va manzil */}
         <Text style={{ marginBottom: 1 }}>
           Telefon: {patient.phone || "Ko'rsatilmagan"}
-        </Text>
-        <Text style={{ marginBottom: 1 }}>
-          Email: {patient.email || "Ko'rsatilmagan"}
         </Text>
         <Text>Manzil: {patient.address || "Ko'rsatilmagan"}</Text>
       </View>
@@ -224,27 +235,26 @@ const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
         </View>
       )}
 
-      {/* Diagnoz */}
-      {patient.diagnosis && (
-        <View style={styles.infoBox}>
-          <Text style={styles.bold}>Diagnoz:</Text>
-          {patient.diagnosis.diagnosis_id?.name && (
-            <Text>
-              {patient.diagnosis.diagnosis_id.name}
-              {patient.diagnosis.diagnosis_id.code &&
-                ` (${patient.diagnosis.diagnosis_id.code})`}
-            </Text>
-          )}
-          {patient.diagnosis.description && (
-            <Text>{patient.diagnosis.description}</Text>
-          )}
-          {patient.diagnosis.doctor_id?.fullname && (
-            <Text style={{ fontSize: 7, marginTop: 2 }}>
-              Shifokor: {patient.diagnosis.doctor_id.fullname}
-            </Text>
-          )}
-        </View>
-      )}
+      {/* Diagnoz - faqat shifokor va diagnoz bo'lsa ko'rsatiladi */}
+      {patient.diagnosis &&
+        (patient.diagnosis.doctor_id?.fullname ||
+          patient.diagnosis.diagnosis_id?.name) && (
+          <View style={styles.infoBox}>
+            <Text style={styles.bold}>Hozirgi diagnoz:</Text>
+            {patient.diagnosis.diagnosis_id?.name && (
+              <Text>
+                {patient.diagnosis.diagnosis_id.name}
+                {patient.diagnosis.diagnosis_id.code &&
+                  ` (${patient.diagnosis.diagnosis_id.code})`}
+              </Text>
+            )}
+            {patient.diagnosis.doctor_id?.fullname && (
+              <Text style={{ fontSize: 8, marginTop: 2 }}>
+                Shifokor: {patient.diagnosis.doctor_id.fullname}
+              </Text>
+            )}
+          </View>
+        )}
 
       {/* Doimiy dorilar */}
       {patient.regular_medications &&
