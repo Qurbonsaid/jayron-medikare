@@ -6,11 +6,439 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import { Download, Printer } from 'lucide-react';
-import { useRef } from 'react';
+import {
+  Document,
+  Font,
+  Page,
+  pdf,
+  StyleSheet,
+  Text,
+  View,
+} from '@react-pdf/renderer';
+import { Download } from 'lucide-react';
+import React from 'react';
 import { toast } from 'sonner';
+
+// Kirill harflarini qo'llab-quvvatlovchi shriftni ro'yxatdan o'tkazish
+Font.register({
+  family: 'Roboto',
+  fonts: [
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf',
+      fontWeight: 'normal',
+    },
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf',
+      fontWeight: 'bold',
+    },
+  ],
+});
+
+// PDF uchun stillar (ExaminationPDF bilan bir xil)
+const styles = StyleSheet.create({
+  page: {
+    flexDirection: 'column',
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    fontFamily: 'Roboto',
+    fontSize: 9,
+    lineHeight: 1.2,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    borderBottom: '1pt solid #000',
+    paddingBottom: 3,
+    width: '100%',
+  },
+  headerLeft: {
+    flex: 1,
+    textAlign: 'left',
+  },
+  headerCenter: {
+    flex: 1,
+    textAlign: 'center',
+  },
+  headerRight: {
+    flex: 1,
+    textAlign: 'right',
+  },
+  clinicName: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  documentTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  date: {
+    fontSize: 9,
+  },
+  patientInfo: {
+    marginBottom: 6,
+    padding: 3,
+    backgroundColor: '#f8f9fa',
+  },
+  sectionTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginBottom: 2,
+    backgroundColor: '#e9ecef',
+    padding: 2,
+  },
+  bold: {
+    fontWeight: 'bold',
+    marginBottom: 1,
+  },
+  signature: {
+    marginTop: 8,
+    paddingTop: 5,
+    fontSize: 8,
+  },
+  tableContainer: {
+    marginBottom: 5,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+    borderBottomStyle: 'solid',
+    alignItems: 'center',
+    minHeight: 16,
+  },
+  tableHeader: {
+    backgroundColor: '#f0f0f0',
+    fontWeight: 'bold',
+  },
+  tableCol: {
+    flex: 1,
+    padding: 2,
+    borderRightWidth: 1,
+    borderRightColor: '#000',
+    borderRightStyle: 'solid',
+  },
+  tableColLast: {
+    flex: 1,
+    padding: 2,
+    borderRightWidth: 1,
+    borderRightColor: '#000',
+    borderRightStyle: 'solid',
+  },
+  tableCell: {
+    fontSize: 7,
+    textAlign: 'center',
+    flexWrap: 'wrap',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 4,
+  },
+  gridItem: {
+    width: '48%',
+    marginBottom: 4,
+    marginRight: '2%',
+  },
+  alertBox: {
+    backgroundColor: '#fee2e2',
+    borderLeftWidth: 3,
+    borderLeftColor: '#ef4444',
+    borderLeftStyle: 'solid',
+    padding: 4,
+    marginBottom: 5,
+  },
+  infoBox: {
+    backgroundColor: '#e0f2fe',
+    borderLeftWidth: 3,
+    borderLeftColor: '#0284c7',
+    borderLeftStyle: 'solid',
+    padding: 4,
+    marginBottom: 5,
+  },
+});
+
+// Sana formatini o'zgartirish
+const formatDate = (date: Date | string): string => {
+  if (!date) return "Ko'rsatilmagan";
+  const dateObj = new Date(date);
+  return dateObj.toLocaleDateString('uz-UZ', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
+// PDF hujjat komponenti
+interface PatientPDFDocumentProps {
+  patient: any;
+  exams?: any[];
+}
+
+const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
+  patient,
+  exams = [],
+}) => (
+  <Document>
+    <Page size='A4' style={styles.page}>
+      {/* Sarlavha */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.clinicName}>Klinika "Jayron medservis"</Text>
+        </View>
+        <View style={styles.headerCenter}>
+          <Text style={styles.documentTitle}>BEMOR MA'LUMOTLARI</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <Text style={styles.date}>{formatDate(new Date())}</Text>
+        </View>
+      </View>
+
+      {/* Bemor asosiy ma'lumotlari */}
+      <View style={styles.patientInfo}>
+        {/* To'liq ism - kattaroq va alohida qator */}
+        <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 4 }}>
+          {patient.fullname || "Noma'lum"}
+        </Text>
+
+        {/* Qisqa ma'lumotlar - bir qatorda */}
+        <View
+          style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 2 }}
+        >
+          <Text style={{ width: '25%', fontSize: 8 }}>
+            ID: {patient.patient_id || '-'}
+          </Text>
+          <Text style={{ width: '25%', fontSize: 8 }}>
+            Tug'ilgan: {formatDate(patient.date_of_birth)}
+          </Text>
+          <Text style={{ width: '25%', fontSize: 8 }}>
+            Jinsi: {patient.gender === 'male' ? 'Erkak' : 'Ayol'}
+          </Text>
+          <Text style={{ width: '25%', fontSize: 8 }}>
+            Email: {patient.email || '-'}
+          </Text>
+        </View>
+
+        {/* Telefon va manzil */}
+        <Text style={{ marginBottom: 1 }}>
+          Telefon: {patient.phone || "Ko'rsatilmagan"}
+        </Text>
+        <Text>Manzil: {patient.address || "Ko'rsatilmagan"}</Text>
+      </View>
+
+      {/* Allergiyalar */}
+      {patient.allergies && patient.allergies.length > 0 && (
+        <View style={styles.alertBox}>
+          <Text style={[styles.bold, { color: '#dc2626' }]}>ALLERGIYALAR:</Text>
+          <Text>{patient.allergies.join(', ')}</Text>
+        </View>
+      )}
+
+      {/* Diagnoz - faqat shifokor va diagnoz bo'lsa ko'rsatiladi */}
+      {patient.diagnosis &&
+        (patient.diagnosis.doctor_id?.fullname ||
+          patient.diagnosis.diagnosis_id?.name) && (
+          <View style={styles.infoBox}>
+            <Text style={styles.bold}>Hozirgi diagnoz:</Text>
+            {patient.diagnosis.diagnosis_id?.name && (
+              <Text>
+                {patient.diagnosis.diagnosis_id.name}
+                {patient.diagnosis.diagnosis_id.code &&
+                  ` (${patient.diagnosis.diagnosis_id.code})`}
+              </Text>
+            )}
+            {patient.diagnosis.doctor_id?.fullname && (
+              <Text style={{ fontSize: 8, marginTop: 2 }}>
+                Shifokor: {patient.diagnosis.doctor_id.fullname}
+              </Text>
+            )}
+          </View>
+        )}
+
+      {/* Doimiy dorilar */}
+      {patient.regular_medications &&
+        patient.regular_medications.length > 0 && (
+          <View style={styles.tableContainer}>
+            <Text style={styles.sectionTitle}>
+              Doimiy dorilar ({patient.regular_medications.length} ta)
+            </Text>
+            <View
+              style={[
+                styles.tableRow,
+                styles.tableHeader,
+                {
+                  borderTopWidth: 1,
+                  borderTopColor: '#000',
+                  borderTopStyle: 'solid',
+                  borderLeftWidth: 1,
+                  borderLeftColor: '#000',
+                  borderLeftStyle: 'solid',
+                },
+              ]}
+            >
+              <View style={[styles.tableCol, { flex: 0.3 }]}>
+                <Text style={styles.tableCell}>#</Text>
+              </View>
+              <View style={[styles.tableCol, { flex: 1.5 }]}>
+                <Text style={styles.tableCell}>Dori nomi</Text>
+              </View>
+              <View style={[styles.tableColLast, { flex: 1.2 }]}>
+                <Text style={styles.tableCell}>Qabul tartibi</Text>
+              </View>
+            </View>
+            {patient.regular_medications.map((med: any, idx: number) => (
+              <View
+                key={med._id || idx}
+                style={[
+                  styles.tableRow,
+                  {
+                    borderLeftWidth: 1,
+                    borderLeftColor: '#000',
+                    borderLeftStyle: 'solid',
+                  },
+                ]}
+              >
+                <View style={[styles.tableCol, { flex: 0.3 }]}>
+                  <Text style={styles.tableCell}>{idx + 1}</Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 1.5 }]}>
+                  <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                    {med.medicine}
+                  </Text>
+                </View>
+                <View style={[styles.tableColLast, { flex: 1.2 }]}>
+                  <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                    {med.schedule}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+      {/* Ro'yxatga olish ma'lumotlari */}
+      <View style={styles.patientInfo}>
+        <Text style={styles.bold}>Ro'yxatga olish:</Text>
+        <Text style={{ marginBottom: 1 }}>
+          Ro'yxatdan o'tgan: {formatDate(patient.created_at)}
+        </Text>
+        <Text>Oxirgi yangilanish: {formatDate(patient.updated_at)}</Text>
+      </View>
+
+      {/* Ko'riklar jadvali */}
+      {exams && exams.length > 0 && (
+        <View style={styles.tableContainer}>
+          <Text style={styles.sectionTitle}>
+            Ko'riklar tarixi ({exams.length} ta)
+          </Text>
+          <View
+            style={[
+              styles.tableRow,
+              styles.tableHeader,
+              {
+                borderTopWidth: 1,
+                borderTopColor: '#000',
+                borderTopStyle: 'solid',
+                borderLeftWidth: 1,
+                borderLeftColor: '#000',
+                borderLeftStyle: 'solid',
+              },
+            ]}
+          >
+            <View style={[styles.tableCol, { flex: 0.3 }]}>
+              <Text style={styles.tableCell}>#</Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 0.8 }]}>
+              <Text style={styles.tableCell}>Sana</Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 1.2 }]}>
+              <Text style={styles.tableCell}>Shifokor</Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 0.6 }]}>
+              <Text style={styles.tableCell}>Holat</Text>
+            </View>
+            <View style={[styles.tableColLast, { flex: 1.5 }]}>
+              <Text style={styles.tableCell}>Diagnoz</Text>
+            </View>
+          </View>
+          {exams.slice(0, 10).map((exam: any, idx: number) => {
+            const getDiagnosis = () => {
+              if (!exam.diagnosis) return '-';
+              if (typeof exam.diagnosis === 'string') return exam.diagnosis;
+              return (
+                exam.diagnosis.diagnosis_id?.name ||
+                exam.diagnosis.description ||
+                '-'
+              );
+            };
+            const getStatus = () => {
+              const statuses: Record<string, string> = {
+                completed: 'Tugallangan',
+                active: 'Faol',
+                inactive: 'Faol emas',
+              };
+              return statuses[exam.status] || exam.status || '-';
+            };
+            return (
+              <View
+                key={exam._id || idx}
+                style={[
+                  styles.tableRow,
+                  {
+                    borderLeftWidth: 1,
+                    borderLeftColor: '#000',
+                    borderLeftStyle: 'solid',
+                  },
+                ]}
+              >
+                <View style={[styles.tableCol, { flex: 0.3 }]}>
+                  <Text style={styles.tableCell}>{idx + 1}</Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 0.8 }]}>
+                  <Text style={styles.tableCell}>
+                    {formatDate(exam.created_at)}
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 1.2 }]}>
+                  <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                    {exam.doctor_id?.fullname || "Noma'lum"}
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 0.6 }]}>
+                  <Text style={styles.tableCell}>{getStatus()}</Text>
+                </View>
+                <View style={[styles.tableColLast, { flex: 1.5 }]}>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { textAlign: 'left', fontSize: 6 },
+                    ]}
+                  >
+                    {getDiagnosis()}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+          {exams.length > 10 && (
+            <Text style={{ fontSize: 7, textAlign: 'center', marginTop: 2 }}>
+              ... va yana {exams.length - 10} ta ko'rik
+            </Text>
+          )}
+        </View>
+      )}
+
+      {/* Imzo */}
+      <View style={styles.signature}>
+        <Text>Ushbu hujjat avtomatik tarzda tuzilgan</Text>
+        <Text style={{ marginTop: 2 }}>
+          {new Date().getFullYear()} Jayron MediKare
+        </Text>
+      </View>
+    </Page>
+  </Document>
+);
 
 interface PatientPDFModalProps {
   open: boolean;
@@ -25,446 +453,75 @@ const PatientPDFModal = ({
   patient,
   exams = [],
 }: PatientPDFModalProps) => {
-  const pdfRef = useRef<HTMLDivElement>(null);
+  const [isGenerating, setIsGenerating] = React.useState(false);
 
   const generatePDF = async () => {
-    if (!pdfRef.current) return;
-
-    try {
-      toast.loading('PDF тайёрланмоқда...');
-
-      const canvas = await html2canvas(pdfRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 10;
-
-      pdf.addImage(
-        imgData,
-        'PNG',
-        imgX,
-        imgY,
-        imgWidth * ratio,
-        imgHeight * ratio
-      );
-
-      // Download PDF
-      pdf.save(`${patient.fullname}_malumotlari.pdf`);
-      toast.dismiss();
-      toast.success('PDF муваффақиятли юкланди!');
-    } catch (error) {
-      toast.dismiss();
-      toast.error('PDF яратишда хато юз берди');
-      console.error('PDF generation error:', error);
-    }
-  };
-
-  const handlePrint = () => {
-    if (!pdfRef.current) return;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Чоп этиш учун popup ochishga ruxsat bering');
+    if (!patient) {
+      toast.error("Bemor ma'lumotlari topilmadi");
       return;
     }
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${patient.fullname} - Бемор маълумотлари</title>
-          <style>
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              padding: 20px;
-              line-height: 1.6;
-            }
-            @media print {
-              body {
-                padding: 10mm;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          ${pdfRef.current.innerHTML}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    try {
+      setIsGenerating(true);
+      toast.loading('PDF tayyorlanmoqda...');
 
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
+      const blob = await pdf(
+        <PatientPDFDocument patient={patient} exams={exams} />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      const patientName = patient.fullname || 'bemor';
+      const cleanName = patientName.replace(/\s+/g, '_');
+      const date = new Date().toLocaleDateString('uz-UZ').replace(/\//g, '-');
+      link.download = `Bemor_${cleanName}_${date}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(url);
+      toast.dismiss();
+      toast.success('PDF muvaffaqiyatli yuklandi!');
+    } catch (error) {
+      console.error('PDF yaratishda xatolik:', error);
+      toast.dismiss();
+      toast.error('PDF yaratishda xatolik yuz berdi');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
+      <DialogContent className='max-w-md'>
         <DialogHeader>
-          <DialogTitle>Бемор маълумотлари - PDF кўриниши</DialogTitle>
+          <DialogTitle>Bemor ma'lumotlari - PDF</DialogTitle>
         </DialogHeader>
 
-        <div
-          ref={pdfRef}
-          className='bg-white p-8 space-y-6'
-          style={{ color: '#000' }}
-        >
-          {/* Header */}
-          <div className='text-center border-b-2 border-gray-800 pb-4'>
-            <h1 className='text-3xl font-bold text-gray-800 mb-2'>
-              БЕМОР МАЪЛУМОТЛАРИ
-            </h1>
-            <p className='text-sm text-gray-600'>
-              Тайёрланган сана: {new Date().toLocaleDateString('uz-UZ')}
-            </p>
-          </div>
-
-          {/* Patient Basic Info */}
-          <div className='space-y-4'>
-            <h2 className='text-xl font-bold text-gray-800 border-b border-gray-300 pb-2'>
-              Асосий маълумотлар
-            </h2>
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <p className='text-sm text-gray-600 mb-1'>Тўлиқ исми:</p>
-                <p className='font-semibold text-gray-800'>
-                  {patient.fullname}
-                </p>
-              </div>
-              <div>
-                <p className='text-sm text-gray-600 mb-1'>Бемор ID:</p>
-                <p className='font-semibold text-gray-800'>
-                  {patient.patient_id}
-                </p>
-              </div>
-              <div>
-                <p className='text-sm text-gray-600 mb-1'>Туғилган сана:</p>
-                <p className='font-semibold text-gray-800'>
-                  {new Date(patient.date_of_birth).toLocaleDateString('uz-UZ')}
-                </p>
-              </div>
-              <div>
-                <p className='text-sm text-gray-600 mb-1'>Жинси:</p>
-                <p className='font-semibold text-gray-800'>
-                  {patient.gender === 'male' ? 'Эркак' : 'Аёл'}
-                </p>
-              </div>
-              <div>
-                <p className='text-sm text-gray-600 mb-1'>Телефон:</p>
-                <p className='font-semibold text-gray-800'>{patient.phone}</p>
-              </div>
-              <div>
-                <p className='text-sm text-gray-600 mb-1'>Email:</p>
-                <p className='font-semibold text-gray-800 break-all'>
-                  {patient.email || 'Кўрсатилмаган'}
-                </p>
-              </div>
-              <div className='col-span-2'>
-                <p className='text-sm text-gray-600 mb-1'>Манзил:</p>
-                <p className='font-semibold text-gray-800'>{patient.address}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Allergies */}
-          {patient.allergies && patient.allergies.length > 0 && (
-            <div className='space-y-4'>
-              <h2 className='text-xl font-bold text-red-600 border-b border-red-300 pb-2'>
-                ⚠️ АЛЛЕРГИЯЛАР
-              </h2>
-              <div className='bg-red-50 border-2 border-red-400 rounded p-4'>
-                <p className='font-semibold text-red-800 text-lg'>
-                  {patient.allergies.join(', ')}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Diagnosis */}
-          {patient.diagnosis && (
-            <div className='space-y-4'>
-              <h2 className='text-xl font-bold text-gray-800 border-b border-gray-300 pb-2'>
-                Диагноз
-              </h2>
-              <div className='bg-blue-50 border-l-4 border-blue-500 rounded p-4'>
-                {patient.diagnosis.diagnosis_id?.name && (
-                  <p className='font-bold text-gray-800 mb-1'>
-                    {patient.diagnosis.diagnosis_id.name}
-                    {patient.diagnosis.diagnosis_id.code && (
-                      <span className='text-sm text-gray-600 ml-2'>
-                        ({patient.diagnosis.diagnosis_id.code})
-                      </span>
-                    )}
-                  </p>
-                )}
-                {patient.diagnosis.description && (
-                  <p className='font-medium text-gray-800 mb-2'>
-                    {patient.diagnosis.description}
-                  </p>
-                )}
-                {patient.diagnosis.diagnosis_id?.description && (
-                  <p className='text-sm text-gray-600 mb-2'>
-                    {patient.diagnosis.diagnosis_id.description}
-                  </p>
-                )}
-                {patient.diagnosis.doctor_id?.fullname && (
-                  <p className='text-sm text-gray-600'>
-                    Шифокор: {patient.diagnosis.doctor_id.fullname}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Regular Medications */}
-          {patient.regular_medications &&
-            patient.regular_medications.length > 0 && (
-              <div className='space-y-4'>
-                <h2 className='text-xl font-bold text-gray-800 border-b border-gray-300 pb-2'>
-                  Доимий дорилар
-                </h2>
-                <div className='space-y-3'>
-                  {patient.regular_medications.map((med: any, idx: number) => (
-                    <div
-                      key={med._id || idx}
-                      className='bg-gray-50 border border-gray-300 rounded p-3'
-                    >
-                      <p className='font-semibold text-gray-800'>
-                        {idx + 1}. {med.medicine}
-                      </p>
-                      <p className='text-sm text-gray-600 mt-1'>
-                        {med.schedule}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-          {/* Registration Info */}
-          <div className='space-y-4'>
-            <h2 className='text-xl font-bold text-gray-800 border-b border-gray-300 pb-2'>
-              Рўйхатга олиш маълумотлари
-            </h2>
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <p className='text-sm text-gray-600 mb-1'>
-                  Рўйхатдан ўтган сана:
-                </p>
-                <p className='font-semibold text-gray-800'>
-                  {new Date(patient.created_at).toLocaleDateString('uz-UZ')}
-                </p>
-              </div>
-              <div>
-                <p className='text-sm text-gray-600 mb-1'>
-                  Охирги янгиланган сана:
-                </p>
-                <p className='font-semibold text-gray-800'>
-                  {new Date(patient.updated_at).toLocaleString('uz-UZ')}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Patient Visits/Examinations */}
-          {exams && exams.length > 0 && (
-            <div className='space-y-4'>
-              <h2 className='text-xl font-bold text-gray-800 border-b border-gray-300 pb-2'>
-                Кўриклар тарихи ({exams.length} та)
-              </h2>
-              <div className='space-y-3'>
-                {exams.map((exam: any, idx: number) => (
-                  <div
-                    key={exam._id || idx}
-                    className='bg-gray-50 border border-gray-300 rounded p-4'
-                  >
-                    <div className='flex justify-between items-start mb-3'>
-                      <div>
-                        <p className='font-bold text-gray-800 text-lg'>
-                          Кўрик #{idx + 1}
-                        </p>
-                        <p className='text-sm text-gray-600'>
-                          {new Date(exam.created_at).toLocaleDateString(
-                            'uz-UZ'
-                          )}
-                        </p>
-                      </div>
-                      <div className='text-right'>
-                        <span
-                          className={`inline-block px-3 py-1 rounded text-sm font-semibold ${
-                            exam.status === 'completed'
-                              ? 'bg-green-100 text-green-800'
-                              : exam.status === 'active'
-                              ? 'bg-blue-100 text-blue-800'
-                              : exam.status === 'inactive'
-                              ? 'bg-gray-200 text-gray-700'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {exam.status === 'completed'
-                            ? 'Тугалланган'
-                            : exam.status === 'active'
-                            ? 'Фаол'
-                            : exam.status === 'inactive'
-                            ? 'Фаол эмас'
-                            : 'Ўчирилган'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className='space-y-2'>
-                      <div className='grid grid-cols-2 gap-4'>
-                        <div>
-                          <p className='text-xs text-gray-600 mb-1'>Шифокор:</p>
-                          <p className='font-semibold text-gray-800'>
-                            {exam.doctor_id?.fullname || 'Номаълум'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className='text-xs text-gray-600 mb-1'>Бўлим:</p>
-                          <p className='font-semibold text-gray-800'>
-                            {exam.doctor_id?.section || '-'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {exam.complaints && (
-                        <div>
-                          <p className='text-xs text-gray-600 mb-1'>
-                            Шикоятлар:
-                          </p>
-                          <p className='text-sm text-gray-800 bg-white p-2 rounded border border-gray-200'>
-                            {exam.complaints}
-                          </p>
-                        </div>
-                      )}
-
-                      {exam.physical_examination && (
-                        <div>
-                          <p className='text-xs text-gray-600 mb-1'>
-                            Физик кўрик:
-                          </p>
-                          <p className='text-sm text-gray-800 bg-white p-2 rounded border border-gray-200'>
-                            {exam.physical_examination}
-                          </p>
-                        </div>
-                      )}
-
-                      {exam.diagnosis && (
-                        <div>
-                          <p className='text-xs text-gray-600 mb-1'>Диагноз:</p>
-                          <p className='text-sm text-gray-800 bg-blue-50 p-2 rounded border border-blue-200 font-medium'>
-                            {typeof exam.diagnosis === 'string'
-                              ? exam.diagnosis
-                              : exam.diagnosis.diagnosis_id?.name
-                              ? `${exam.diagnosis.diagnosis_id.name}${
-                                  exam.diagnosis.diagnosis_id.code
-                                    ? ` (${exam.diagnosis.diagnosis_id.code})`
-                                    : ''
-                                }`
-                              : exam.diagnosis.description ||
-                                'Диагноз белгиланмаган'}
-                          </p>
-                        </div>
-                      )}
-
-                      {exam.treatment_plan && (
-                        <div>
-                          <p className='text-xs text-gray-600 mb-1'>
-                            Даволаш режаси:
-                          </p>
-                          <p className='text-sm text-gray-800 bg-white p-2 rounded border border-gray-200'>
-                            {exam.treatment_plan}
-                          </p>
-                        </div>
-                      )}
-
-                      {exam.notes && (
-                        <div>
-                          <p className='text-xs text-gray-600 mb-1'>
-                            Қўшимча эслатмалар:
-                          </p>
-                          <p className='text-sm text-gray-800 bg-yellow-50 p-2 rounded border border-yellow-200'>
-                            {exam.notes}
-                          </p>
-                        </div>
-                      )}
-
-                      {exam.prescriptions && exam.prescriptions.length > 0 && (
-                        <div>
-                          <p className='text-xs text-gray-600 mb-1'>
-                            Рецептлар:
-                          </p>
-                          <div className='bg-white p-2 rounded border border-gray-200 space-y-1'>
-                            {exam.prescriptions.map(
-                              (prescription: any, pIdx: number) => (
-                                <div
-                                  key={pIdx}
-                                  className='text-sm text-gray-800 flex items-start gap-2'
-                                >
-                                  <span className='text-blue-600 font-bold'>
-                                    •
-                                  </span>
-                                  <span>
-                                    {prescription.medicine || prescription.name}{' '}
-                                    {prescription.dosage &&
-                                      `- ${prescription.dosage}`}
-                                    {prescription.frequency &&
-                                      ` (${prescription.frequency})`}
-                                  </span>
-                                </div>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className='text-center text-sm text-gray-500 pt-6 border-t border-gray-300'>
-            <p>Ушбу ҳужжат автоматик тарзда тузилган</p>
-            <p className='mt-1'>© {new Date().getFullYear()} Jayron MediKare</p>
-          </div>
+        <div className='py-4 text-center'>
+          <p className='text-muted-foreground mb-4'>
+            {patient?.fullname || 'Bemor'} uchun PDF hujjat yaratish
+          </p>
+          <p className='text-sm text-muted-foreground'>
+            Hujjatda bemor shaxsiy ma'lumotlari, allergiyalar, diagnoz, doimiy
+            dorilar va ko'riklar tarixi mavjud bo'ladi.
+          </p>
         </div>
 
         <DialogFooter className='gap-2'>
           <Button variant='outline' onClick={() => onOpenChange(false)}>
-            Ёпиш
+            Yopish
           </Button>
-          <Button variant='outline' onClick={handlePrint}>
-            <Printer className='w-4 h-4 mr-2' />
-            Чоп этиш
-          </Button>
-          <Button onClick={generatePDF} className='gradient-primary'>
+          <Button
+            onClick={generatePDF}
+            className='gradient-primary'
+            disabled={isGenerating}
+          >
             <Download className='w-4 h-4 mr-2' />
-            PDF юклаш
+            {isGenerating ? 'Yuklanmoqda...' : 'PDF yuklash'}
           </Button>
         </DialogFooter>
       </DialogContent>

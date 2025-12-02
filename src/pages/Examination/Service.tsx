@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { usePermission } from '@/hooks/usePermission';
 import { Edit, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -43,6 +44,7 @@ const initialFormState: FormState = {
 
 export default function Service() {
   const handleRequest = useHandleRequest();
+  const { canCreate, canUpdate, canDelete } = usePermission('service');
 
   const [page, setPage] = useState(1);
   const [limit] = useState(100);
@@ -176,12 +178,14 @@ export default function Service() {
             />
           </div>
 
-          <Button
-            className='bg-blue-600 hover:bg-blue-700 text-white'
-            onClick={() => setOpen(true)}
-          >
-            + Хизмат қўшиш
-          </Button>
+          {canCreate && (
+            <Button
+              className='bg-blue-600 hover:bg-blue-700 text-white'
+              onClick={() => setOpen(true)}
+            >
+              + Хизмат қўшиш
+            </Button>
+          )}
         </div>
       </header>
 
@@ -251,61 +255,65 @@ export default function Service() {
 
               {/* Actions */}
               <div className='flex gap-1.5 pt-2'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='flex-1 flex items-center justify-center gap-1 text-[11px] sm:text-xs py-1.5 h-7'
-                  onClick={() => handleEdit(service)}
-                >
-                  <Edit size={12} />
-                  Таҳрирлаш
-                </Button>
+                {canUpdate && (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='flex-1 flex items-center justify-center gap-1 text-[11px] sm:text-xs py-1.5 h-7'
+                    onClick={() => handleEdit(service)}
+                  >
+                    <Edit size={12} />
+                    Таҳрирлаш
+                  </Button>
+                )}
 
-                <Dialog
-                  open={deleteId === service._id}
-                  onOpenChange={(isOpen) => {
-                    if (!isOpen) setDeleteId(null);
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='flex-1 flex items-center justify-center gap-1 text-red-600 border-red-300 hover:bg-red-50 hover:text-red-600 text-[11px] sm:text-xs py-1.5 h-7'
-                      onClick={() => setDeleteId(service._id)}
-                      disabled={deleting}
-                    >
-                      <Trash2 size={12} />
-                      Ўчириш
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className='max-w-xs rounded-xl'>
-                    <DialogTitle className='text-sm'>
-                      Хизматни ўчириш
-                    </DialogTitle>
-                    <p className='text-xs text-muted-foreground'>
-                      Ростан ҳам ушбу хизматни ўчирмоқчимисиз?
-                    </p>
-                    <DialogFooter className='flex justify-end gap-2 pt-2'>
+                {canDelete && (
+                  <Dialog
+                    open={deleteId === service._id}
+                    onOpenChange={(isOpen) => {
+                      if (!isOpen) setDeleteId(null);
+                    }}
+                  >
+                    <DialogTrigger asChild>
                       <Button
                         variant='outline'
                         size='sm'
-                        className='h-7 text-xs'
-                        onClick={() => setDeleteId(null)}
-                      >
-                        Йўқ
-                      </Button>
-                      <Button
-                        size='sm'
-                        className='bg-red-600 text-white h-7 text-xs'
-                        onClick={() => handleDelete(service._id)}
+                        className='flex-1 flex items-center justify-center gap-1 text-red-600 border-red-300 hover:bg-red-50 hover:text-red-600 text-[11px] sm:text-xs py-1.5 h-7'
+                        onClick={() => setDeleteId(service._id)}
                         disabled={deleting}
                       >
-                        {deleting ? 'Ўчирилмоқда...' : 'Ҳа'}
+                        <Trash2 size={12} />
+                        Ўчириш
                       </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                    </DialogTrigger>
+                    <DialogContent className='max-w-xs rounded-xl'>
+                      <DialogTitle className='text-sm'>
+                        Хизматни ўчириш
+                      </DialogTitle>
+                      <p className='text-xs text-muted-foreground'>
+                        Ростан ҳам ушбу хизматни ўчирмоқчимисиз?
+                      </p>
+                      <DialogFooter className='flex justify-end gap-2 pt-2'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          className='h-7 text-xs'
+                          onClick={() => setDeleteId(null)}
+                        >
+                          Йўқ
+                        </Button>
+                        <Button
+                          size='sm'
+                          className='bg-red-600 text-white h-7 text-xs'
+                          onClick={() => handleDelete(service._id)}
+                          disabled={deleting}
+                        >
+                          {deleting ? 'Ўчирилмоқда...' : 'Ҳа'}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
             </div>
           </Card>
@@ -375,54 +383,58 @@ export default function Service() {
                     </td>
                     <td className='px-3 xl:px-5 py-3 xl:py-4'>
                       <div className='flex justify-center gap-3'>
-                        <Button
-                          size='icon'
-                          variant='outline'
-                          className='h-7 w-7'
-                          onClick={() => handleEdit(service)}
-                        >
-                          <Edit size={16} />
-                        </Button>
+                        {canUpdate && (
+                          <Button
+                            size='icon'
+                            variant='outline'
+                            className='h-7 w-7'
+                            onClick={() => handleEdit(service)}
+                          >
+                            <Edit size={16} />
+                          </Button>
+                        )}
 
-                        <Dialog
-                          open={deleteId === service._id}
-                          onOpenChange={(isOpen) => {
-                            if (!isOpen) setDeleteId(null);
-                          }}
-                        >
-                          <DialogTrigger asChild>
-                            <Button
-                              size='icon'
-                              variant='outline'
-                              className='h-7 w-7 text-red-500 border-red-300 hover:bg-red-50 hover:text-red-500'
-                              onClick={() => setDeleteId(service._id)}
-                              disabled={deleting}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className='max-w-xs rounded-xl'>
-                            <DialogTitle>Хизматни ўчириш</DialogTitle>
-                            <p className='text-sm text-muted-foreground'>
-                              Ростан ҳам ушбу хизматни ўчирмоқчимисиз?
-                            </p>
-                            <DialogFooter className='flex justify-end gap-2'>
+                        {canDelete && (
+                          <Dialog
+                            open={deleteId === service._id}
+                            onOpenChange={(isOpen) => {
+                              if (!isOpen) setDeleteId(null);
+                            }}
+                          >
+                            <DialogTrigger asChild>
                               <Button
+                                size='icon'
                                 variant='outline'
-                                onClick={() => setDeleteId(null)}
-                              >
-                                Йўқ
-                              </Button>
-                              <Button
-                                className='bg-red-600 text-white'
-                                onClick={() => handleDelete(service._id)}
+                                className='h-7 w-7 text-red-500 border-red-300 hover:bg-red-50 hover:text-red-500'
+                                onClick={() => setDeleteId(service._id)}
                                 disabled={deleting}
                               >
-                                {deleting ? 'Ўчирилмоқда...' : 'Ҳа'}
+                                <Trash2 size={16} />
                               </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                            </DialogTrigger>
+                            <DialogContent className='max-w-xs rounded-xl'>
+                              <DialogTitle>Хизматни ўчириш</DialogTitle>
+                              <p className='text-sm text-muted-foreground'>
+                                Ростан ҳам ушбу хизматни ўчирмоқчимисиз?
+                              </p>
+                              <DialogFooter className='flex justify-end gap-2'>
+                                <Button
+                                  variant='outline'
+                                  onClick={() => setDeleteId(null)}
+                                >
+                                  Йўқ
+                                </Button>
+                                <Button
+                                  className='bg-red-600 text-white'
+                                  onClick={() => handleDelete(service._id)}
+                                  disabled={deleting}
+                                >
+                                  {deleting ? 'Ўчирилмоқда...' : 'Ҳа'}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        )}
                       </div>
                     </td>
                   </tr>

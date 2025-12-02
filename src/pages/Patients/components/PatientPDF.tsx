@@ -1,247 +1,434 @@
+import { Button } from '@/components/ui/button';
+import {
+  Document,
+  Font,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+  pdf,
+} from '@react-pdf/renderer';
+import { Download } from 'lucide-react';
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { toast } from 'sonner';
 
-// Agar kerak bo'lsa, shriftlarni yuklash
-// Font.register({ family: 'Arial', src: '/path/to/font.ttf' });
+// Kirill harflarini qo'llab-quvvatlovchi shriftni ro'yxatdan o'tkazish
+Font.register({
+  family: 'Roboto',
+  fonts: [
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf',
+      fontWeight: 'normal',
+    },
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf',
+      fontWeight: 'bold',
+    },
+  ],
+});
 
-// Styllarni aniqlash
+// PDF uchun stillar
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 30,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
+    fontSize: 10,
+    lineHeight: 1.4,
   },
   header: {
-    fontSize: 10,
-    marginBottom: 10,
-    borderBottom: '1pt solid black',
-    paddingBottom: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+    borderBottom: '2pt solid #000',
+    paddingBottom: 10,
   },
-  title: {
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    textAlign: 'right',
+  },
+  clinicName: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 10,
+  },
+  documentTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom: 15,
+    backgroundColor: '#f0f0f0',
+    padding: 8,
   },
   section: {
-    marginBottom: 10,
+    marginBottom: 12,
+    padding: 10,
+    backgroundColor: '#fafafa',
+    borderRadius: 4,
   },
-  subsection: {
-    marginLeft: 10,
-    marginBottom: 5,
-  },
-  bold: {
+  sectionTitle: {
+    fontSize: 12,
     fontWeight: 'bold',
+    marginBottom: 8,
+    borderBottom: '1pt solid #ccc',
+    paddingBottom: 4,
+    color: '#333',
   },
-  underline: {
-    textDecoration: 'underline',
+  row: {
+    flexDirection: 'row',
+    marginBottom: 4,
   },
-  patientInfo: {
-    fontSize: 10,
-    lineHeight: 1.5,
-  }
+  label: {
+    width: '35%',
+    fontWeight: 'bold',
+    color: '#555',
+  },
+  value: {
+    width: '65%',
+    color: '#000',
+  },
+  fullRow: {
+    marginBottom: 4,
+  },
+  alertBox: {
+    backgroundColor: '#fee2e2',
+    borderLeft: '4pt solid #ef4444',
+    padding: 8,
+    marginBottom: 8,
+  },
+  alertTitle: {
+    fontWeight: 'bold',
+    color: '#dc2626',
+    marginBottom: 4,
+  },
+  infoBox: {
+    backgroundColor: '#e0f2fe',
+    borderLeft: '4pt solid #0284c7',
+    padding: 8,
+    marginBottom: 8,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 30,
+    right: 30,
+    textAlign: 'center',
+    fontSize: 8,
+    color: '#666',
+    borderTop: '1pt solid #ccc',
+    paddingTop: 10,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  gridItem: {
+    width: '50%',
+    marginBottom: 6,
+  },
 });
 
+// Sana formatini o'zgartirish
+const formatDate = (date: Date | string): string => {
+  if (!date) return "Ko'rsatilmagan";
+  const dateObj = new Date(date);
+  return dateObj.toLocaleDateString('uz-UZ', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
 // PDF hujjat komponenti
-const MedicalDocument = () => (
+interface PatientPDFDocumentProps {
+  patient: any;
+  exams?: any[];
+}
+
+const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
+  patient,
+  exams = [],
+}) => (
   <Document>
-    <Page size="A4" style={styles.page}>
-      {/* Sarlavha va shtamp qismi */}
+    <Page size='A4' style={styles.page}>
+      {/* Sarlavha */}
       <View style={styles.header}>
-        <Text>O'zRSSV 26.06.2006y №287-sonli</Text>
-        <Text>buyruq bilan tasdiqlangan O'zRSSV</Text>
-        <Text style={{textAlign: 'center', marginTop: 5}}>nevrologiya va fizioterapiya klinikasi</Text>
-        <Text style={{textAlign: 'center', fontWeight: 'bold'}}>027-X shaklidagi Tibbiy xujjat</Text>
-        <Text style={{textAlign: 'center'}}>Kasallik tarixidan namuna N591</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.clinicName}>Klinika "Jayron medservis"</Text>
+          <Text style={{ fontSize: 8, color: '#666' }}>
+            Tibbiy axborot tizimi
+          </Text>
+        </View>
+        <View style={styles.headerRight}>
+          <Text style={{ fontSize: 9 }}>Sana: {formatDate(new Date())}</Text>
+        </View>
       </View>
 
-      {/* Bemor ma'lumotlari */}
+      {/* Hujjat sarlavhasi */}
+      <Text style={styles.documentTitle}>BEMOR MA'LUMOTLARI</Text>
+
+      {/* Asosiy ma'lumotlar */}
       <View style={styles.section}>
-        <Text style={styles.bold}>Bemor: Boymatova Muhabbat 1974yil</Text>
-        <Text style={styles.bold}>Yashash Joyi: Termiz shahri Tuproqqo'rg'on mahallasi</Text>
-        <Text>Shifoxonaga tushgan kuni: 03.11.2025 yil</Text>
-        <Text>Shifoxonadan javob berilgan kuni: 08.11.2025yil</Text>
+        <Text style={styles.sectionTitle}>Shaxsiy ma'lumotlar</Text>
+        <View style={styles.grid}>
+          <View style={styles.gridItem}>
+            <View style={styles.row}>
+              <Text style={styles.label}>To'liq ismi:</Text>
+              <Text style={styles.value}>{patient.fullname || "Noma'lum"}</Text>
+            </View>
+          </View>
+          <View style={styles.gridItem}>
+            <View style={styles.row}>
+              <Text style={styles.label}>Bemor ID:</Text>
+              <Text style={styles.value}>
+                {patient.patient_id || "Ko'rsatilmagan"}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.gridItem}>
+            <View style={styles.row}>
+              <Text style={styles.label}>Tug'ilgan sana:</Text>
+              <Text style={styles.value}>
+                {formatDate(patient.date_of_birth)}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.gridItem}>
+            <View style={styles.row}>
+              <Text style={styles.label}>Jinsi:</Text>
+              <Text style={styles.value}>
+                {patient.gender === 'male' ? 'Erkak' : 'Ayol'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.gridItem}>
+            <View style={styles.row}>
+              <Text style={styles.label}>Telefon:</Text>
+              <Text style={styles.value}>
+                {patient.phone || "Ko'rsatilmagan"}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.gridItem}>
+            <View style={styles.row}>
+              <Text style={styles.label}>Email:</Text>
+              <Text style={styles.value}>
+                {patient.email || "Ko'rsatilmagan"}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <View style={styles.fullRow}>
+          <View style={styles.row}>
+            <Text style={styles.label}>Manzil:</Text>
+            <Text style={styles.value}>
+              {patient.address || "Ko'rsatilmagan"}
+            </Text>
+          </View>
+        </View>
       </View>
 
-      {/* Diagnozlar */}
+      {/* Allergiyalar */}
+      {patient.allergies && patient.allergies.length > 0 && (
+        <View style={styles.alertBox}>
+          <Text style={styles.alertTitle}>⚠ ALLERGIYALAR</Text>
+          <Text>{patient.allergies.join(', ')}</Text>
+        </View>
+      )}
+
+      {/* Diagnoz */}
+      {patient.diagnosis && (
+        <View style={styles.infoBox}>
+          <Text style={{ fontWeight: 'bold', marginBottom: 4 }}>Diagnoz:</Text>
+          {patient.diagnosis.diagnosis_id?.name && (
+            <Text>
+              {patient.diagnosis.diagnosis_id.name}
+              {patient.diagnosis.diagnosis_id.code &&
+                ` (${patient.diagnosis.diagnosis_id.code})`}
+            </Text>
+          )}
+          {patient.diagnosis.description && (
+            <Text style={{ marginTop: 2 }}>
+              {patient.diagnosis.description}
+            </Text>
+          )}
+          {patient.diagnosis.doctor_id?.fullname && (
+            <Text style={{ fontSize: 8, marginTop: 4, color: '#666' }}>
+              Shifokor: {patient.diagnosis.doctor_id.fullname}
+            </Text>
+          )}
+        </View>
+      )}
+
+      {/* Dorimiy dorilar */}
+      {patient.regular_medications &&
+        patient.regular_medications.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Doimiy dorilar</Text>
+            {patient.regular_medications.map((med: any, idx: number) => (
+              <View key={med._id || idx} style={{ marginBottom: 4 }}>
+                <Text>
+                  {idx + 1}. {med.medicine} - {med.schedule}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+      {/* Ro'yxatga olish ma'lumotlari */}
       <View style={styles.section}>
-        <Text style={styles.bold}>Klinik tashxis: Insultdan so'ngi asoratlar chap tomonlama gemiparez.</Text>
-        <Text style={styles.bold}>Yondosh: DE-libocqich, asteno-nevrotik sindrom va xotiraning sustlashganligi.</Text>
+        <Text style={styles.sectionTitle}>Ro'yxatga olish</Text>
+        <View style={styles.grid}>
+          <View style={styles.gridItem}>
+            <View style={styles.row}>
+              <Text style={styles.label}>Ro'yxatdan o'tgan:</Text>
+              <Text style={styles.value}>{formatDate(patient.created_at)}</Text>
+            </View>
+          </View>
+          <View style={styles.gridItem}>
+            <View style={styles.row}>
+              <Text style={styles.label}>Oxirgi yangilanish:</Text>
+              <Text style={styles.value}>{formatDate(patient.updated_at)}</Text>
+            </View>
+          </View>
+        </View>
       </View>
 
-      {/* Bemor shikoyatlari */}
-      <View style={styles.section}>
-        <Text style={styles.bold}>Bemorning qabul qilishda shikoyati:</Text>
-        <Text style={styles.subsection}>
-          Bemor so'zidan bosh o'g'rig'i, ko'ngil aynishi, xotirasi past, uyqusizlik, 
-          qo'llarda qaltirash bezovta bo'lib turishi, bo'yin ko'krak bel sohasida og'riq, 
-          kuchsiz ifodalangan umumiy darmonsizlik. Chap qo'l va oyoqda harakat cheklanganligi.
+      {/* Ko'riklar soni */}
+      {exams && exams.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            Ko'riklar tarixi ({exams.length} ta)
+          </Text>
+          {exams.slice(0, 5).map((exam: any, idx: number) => (
+            <View
+              key={exam._id || idx}
+              style={{
+                marginBottom: 6,
+                paddingBottom: 6,
+                borderBottom:
+                  idx < Math.min(exams.length, 5) - 1
+                    ? '1pt solid #eee'
+                    : 'none',
+              }}
+            >
+              <View style={styles.row}>
+                <Text style={{ fontWeight: 'bold', width: '20%' }}>
+                  #{idx + 1}
+                </Text>
+                <Text style={{ width: '30%' }}>
+                  {formatDate(exam.created_at)}
+                </Text>
+                <Text style={{ width: '50%' }}>
+                  Shifokor: {exam.doctor_id?.fullname || "Noma'lum"}
+                </Text>
+              </View>
+              {exam.diagnosis && (
+                <Text style={{ fontSize: 9, color: '#666', marginLeft: 10 }}>
+                  Diagnoz:{' '}
+                  {typeof exam.diagnosis === 'string'
+                    ? exam.diagnosis
+                    : exam.diagnosis.diagnosis_id?.name ||
+                      exam.diagnosis.description ||
+                      '-'}
+                </Text>
+              )}
+            </View>
+          ))}
+          {exams.length > 5 && (
+            <Text style={{ fontSize: 8, color: '#666', textAlign: 'center' }}>
+              ... va yana {exams.length - 5} ta ko'rik
+            </Text>
+          )}
+        </View>
+      )}
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Text>
+          Ushbu hujjat avtomatik tarzda tuzilgan | {new Date().getFullYear()}{' '}
+          Jayron MediKare
         </Text>
-      </View>
-
-      {/* Anamnez */}
-      <View style={styles.section}>
-        <Text style={styles.bold}>Anamnez:</Text>
-        <Text style={styles.subsection}>
-          Bemorning aytishicha bir necha yildan beri kasal hisoblaydi. Qon bosimini 
-          ko'tarilishiga, asabiylashish, stress bilan bog'laydi. Ilgari bir necha marta 
-          ambulator va statsionar ravishda davolangan.
-        </Text>
-      </View>
-
-      {/* Hayot tarixi */}
-      <View style={styles.section}>
-        <Text style={styles.bold}>Anamnesis vitae:</Text>
-        <Text style={styles.subsection}>
-          Bemorning ilgari yuqumli va somatik kasalliklar bilan og'rimagan. 
-          Zararli odatlari yo'q. Oilaviy sharoiti qulay. Dori va oziq ovqatlarga 
-          allergik holati kuzatilmagan.
-        </Text>
-      </View>
-
-      {/* Ob'ektiv status */}
-      <View style={styles.section}>
-        <Text style={styles.bold}>Status praesens objectives:</Text>
-        <Text style={styles.subsection}>
-          Umumiy ahvoli o'rta, hushi o'zida, holati to'shakli, teri va ko'rinib 
-          turadigan shilliq qavatlari oqimtir rangda, puls 76 ta ritmik. 
-          AQB 140/90, sm, ustki chegarada. Yurak tonlari aniq. O'pkasida 
-          vezikulyar nafas eshitiladi. Qorin yumshoq, og'rigsiz, jigar va 
-          taloq normada. Siyishi va najasi normada.
-        </Text>
-      </View>
-
-      {/* Nevrologik status */}
-      <View style={styles.section}>
-        <Text style={styles.bold}>Status nevrologus:</Text>
-        <Text style={styles.subsection}>
-          Bosh perkussiyada og'rigsiz. Dansig-Kunakova Simptomi ikki tomonlama manfiy. D=S.
-          I Juft Kamfora hidini ajratishi to'g'ri. II Juft ko'ruv o'tkirligi o'zgargan. 
-          Ko'zlarda III-IV-VI faolajlik. Gorachilar dumaloq, chap tomonlama gorizantal 
-          nistagm, anizokoriya yo'q. Fotoreaksiya saqlangan. D=S. V juft Valle nuqtalari 
-          og'rigsiz. Yuzda yuzaki sezgi saqlangan. Chaynov muskullari ikki tomonlama 5 ballga teng.
-        </Text>
-      </View>
-    </Page>
-
-    {/* Ikkinchi sahifa */}
-    <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
-        <Text style={styles.bold}>Davom:</Text>
-        <Text style={styles.subsection}>
-          VII juft Yuzi asimmetrik, chap tomonlama markaziy faolajlik. 
-          VIII. Eshitish pasaymagan, Shovqinlar yo'q IX-X juft yutish saqlangan. 
-          Yumshoq tanglay asimmetrik fonatsiyada qisqaradi. Tilcha o'rta chiziqda, qiyshaymagan.
-          XI Juft Yelkalarni ko'taradi, boshi qiyshaymagan. XII Juft til o'rta chiziqda, qiyshaymagan. 
-          Tilda atrofiya, fibrilyar, fastikulyar tortilishlar yo'q.
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.bold}>Harakat sistemasi:</Text>
-        <Text style={styles.subsection}>
-          Chap tomonlama spastik gemiparez. Mushak kuchi o'ng qo'lda distalda 3 ball, 
-          proksimalda 4 ball, o'ng oyoqda proksimalda 3 ball, proksimalda 4 ball.
-          Pay reflekslari BR, TR chaqiriladi, PR, AR-chaqiriladi, chap tarafda kuchaygan. 
-          Mushaklar tonusi gipertonusda, atrofiya holati aniq emas. 
-          Patologik reflekslar Marinesko-Rodovich va Babinskiy reflekslari ikki tomonlama musbat.
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.bold}>Sezgi sferasi:</Text>
-        <Text style={styles.subsection}>buzilmagan</Text>
-        
-        <Text style={styles.bold}>Meningial simptomlar:</Text>
-        <Text style={styles.subsection}>manfiy</Text>
-        
-        <Text style={styles.bold}>Miyacha:</Text>
-        <Text style={styles.subsection}>
-          BBSlari o'ng qo'lda to'g'ri bajaradi, chap qo'lda bajara olmaydi. 
-          TTS bajara olmaydi. Adioxokinez chap qo'l ortda qoladi, dizmetriya aniq emas. 
-          Romberg holatida tura oladi.
-        </Text>
-      </View>
-
-      {/* Davolanish */}
-      <View style={styles.section}>
-        <Text style={styles.bold}>Davolanish:</Text>
-        <Text style={styles.subsection}>
-          Ekvator 10/5 Itab x2 marta ovqatdan so'ng har doim
-          Furasemid 2.0 mushak orasiga kumora (20% - 10.0) v/i ga N5.
-          Deprecc 20mg ln x lm ertalab 9:00da N16 kun.
-          Prosulpin 50mg lt x lm obedda 13:00da N10
-          Adep 30mg V4 t x lm kechqurum 20:00da N1 oy.
-          Naklafen 3.0 mushak orasiga N5
-        </Text>
-      </View>
-
-      {/* Fizioterapiya */}
-      <View style={styles.section}>
-        <Text style={styles.bold}>Fizioterapiya:</Text>
-        <Text style={styles.subsection}>
-          Zinda bosh bo'yin bel sohasiga. Massaj Bosh bo'yin bel quri oyoq soxalariga.
-          Dorsanval bosh soxasiga. Ultrazuvuk indametatsin maz bilan belga.
-          Almag-02 ko'krak umurtgalariga.
-        </Text>
-      </View>
-
-      {/* Tavsiyalar */}
-      <View style={styles.section}>
-        <Text style={styles.bold}>Tavsiya:</Text>
-        <Text style={styles.subsection}>
-          1. ekvator 10/5 mg Itab 2 mahal har kuni
-          2. trombopol 75 mg Itab 1 mahal kechqurum har kuni
-          3. prosulpin 200mg V2 tab 1 mahal tushlik vaqtida 15 kun
-          Yashash joyida nevrolog nazorati.
-        </Text>
-      </View>
-
-      {/* Imzolar */}
-      <View style={[styles.section, {marginTop: 30}]}>
-        <Text>Boshvrach: Ubaydullayev.S.B.</Text>
-        <Text>Bo'lim boshlig'i: Axmedov. B. U.</Text>
-        <Text>Davolovchi vrach: Ubaydullaev S.B.</Text>
       </View>
     </Page>
   </Document>
 );
 
-interface Props {
-  className ?: string;
-  children?:React.ReactNode;
+// PDF yuklab olish tugmasi komponenti
+interface PatientPDFButtonProps {
+  patient: any;
+  exams?: any[];
+  variant?: 'default' | 'outline' | 'ghost';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+  className?: string;
 }
 
-const PDFGenerator = ({className='px-4 py-3 text-[14px] bg-blue-500 text-white border-none rounded-[5px] cursor-pointer',children='PDF Yuklab Olish'}:Props) => {
-  const generatePDF = async () => {
-    const { pdf } = await import("@react-pdf/renderer");
-    const blob = await pdf(<MedicalDocument />).toBlob();
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'Tibbiy_Xujjat_Boymatova_Muhabbat.pdf';
-    link.click();
-    URL.revokeObjectURL(url);
+const PatientPDFButton: React.FC<PatientPDFButtonProps> = ({
+  patient,
+  exams = [],
+  variant = 'outline',
+  size = 'sm',
+  className = '',
+}) => {
+  const [isGenerating, setIsGenerating] = React.useState(false);
+
+  const handleDownload = async () => {
+    if (!patient) {
+      toast.error("Bemor ma'lumotlari topilmadi");
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      toast.loading('PDF tayyorlanmoqda...');
+
+      const blob = await pdf(
+        <PatientPDFDocument patient={patient} exams={exams} />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // Fayl nomini yaratish
+      const patientName = patient.fullname || 'bemor';
+      const cleanName = patientName.replace(/\s+/g, '_');
+      const date = new Date().toLocaleDateString('uz-UZ').replace(/\//g, '-');
+      link.download = `Bemor_${cleanName}_${date}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(url);
+      toast.dismiss();
+      toast.success('PDF muvaffaqiyatli yuklandi!');
+    } catch (error) {
+      console.error('PDF yaratishda xatolik:', error);
+      toast.dismiss();
+      toast.error('PDF yaratishda xatolik yuz berdi');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
-      <button 
-        onClick={generatePDF}
-        // style={{
-        //   padding: '10px 20px',
-        //   fontSize: '16px',
-        //   backgroundColor: '#4CAF50',
-        //   color: 'white',
-        //   border: 'none',
-        //   borderRadius: '5px',
-        //   cursor: 'pointer'
-        // }}
-        className={className}
-      >
-        {children}
-      </button>
+    <Button
+      variant={variant}
+      size={size}
+      className={`flex-1 sm:flex-none ${className}`}
+      onClick={handleDownload}
+      disabled={isGenerating}
+    >
+      <Download className='w-4 h-4 sm:mr-2' />
+      <span className='hidden sm:inline'>
+        {isGenerating ? 'Yuklanmoqda...' : 'PDF yuklash'}
+      </span>
+    </Button>
   );
 };
 
-export default PDFGenerator;
+export default PatientPDFButton;
