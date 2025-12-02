@@ -36,10 +36,11 @@ import { useGetRoomsFromRoomApiQuery } from "@/app/api/roomApi";
 import { useCreateBookingMutation, useGetAvailableRoomsQuery } from "@/app/api/bookingApi";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
 import { toast } from "sonner";
-import { Calendar, User, Home, Search, Save, AlertCircle } from "lucide-react";
+import { Calendar, User, Home, Search, Save, AlertCircle, UserPlus } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { QuickAddPatientModal } from "./QuickAddPatientModal";
 
 interface BookingModalProps {
   open: boolean;
@@ -63,6 +64,7 @@ export const BookingModal = ({
   const [note, setNote] = useState<string>("");
   const [searchPatient, setSearchPatient] = useState<string>("");
   const [openPatientPopover, setOpenPatientPopover] = useState(false);
+  const [showQuickAddPatient, setShowQuickAddPatient] = useState(false);
 
   const handleRequest = useHandleRequest();
 
@@ -73,7 +75,7 @@ export const BookingModal = ({
       setStartDate(start.toISOString().split("T")[0]);
       
       const end = new Date(start);
-      end.setDate(end.getDate() + 7); // Default 7 days
+      end.setDate(end.getDate() + 7); // Default 7 kun (15-22 = 8 kun, 15-21 = 7 kun)
       setEndDate(end.toISOString().split("T")[0]);
     }
   }, [open, defaultStartDate]);
@@ -130,14 +132,21 @@ export const BookingModal = ({
       return;
     }
 
+    // Vaqtlarni to'g'ri o'rnatish (timezone muammosiz):
+    // Boshlanish: kunning boshi (00:00:00)
+    // Tugash: kunning oxiri (23:59:59)
+    // Masalan: 15-15 dekabr = 15T00:00:00 dan 15T23:59:59 gacha
+    const startAt = `${startDate}T00:00:00.000Z`;
+    const endAt = `${endDate}T23:59:59.999Z`;
+
     await handleRequest({
       request: async () =>
         await createBooking({
           patient_id: selectedPatientId,
           room_id: selectedRoomId,
           corpus_id: corpusId,
-          start_at: new Date(startDate).toISOString(),
-          end_at: new Date(endDate).toISOString(),
+          start_at: startAt,
+          end_at: endAt,
           note: note || undefined,
         }).unwrap(),
       onSuccess: () => {
@@ -170,7 +179,21 @@ export const BookingModal = ({
     (r) => r._id === selectedRoomId
   );
 
+  // Handle patient created from quick add modal
+  const handlePatientCreated = (patientId: string) => {
+    setShowQuickAddPatient(false);
+    
+    if (patientId) {
+      // Bemor ID ni o'rnatish
+      setSelectedPatientId(patientId);
+      // Patient popover ni yopish
+      setOpenPatientPopover(false);
+      toast.success("Бемор автоматик танланди, энди броньни давом эттиринг!");
+    }
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -186,10 +209,24 @@ export const BookingModal = ({
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Patient Selection */}
           <div className="space-y-2">
-            <Label htmlFor="patient" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Бемор <span className="text-red-500">*</span>
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="patient" className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Бемор <span className="text-red-500">*</span>
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowQuickAddPatient(true);
+                }}
+                className="text-xs"
+              >
+                <UserPlus className="w-3 h-3 mr-1" />
+                Янги бемор қўшиш
+              </Button>
+            </div>
             <Popover open={openPatientPopover} onOpenChange={setOpenPatientPopover}>
               <PopoverTrigger asChild>
                 <Button
@@ -380,6 +417,14 @@ export const BookingModal = ({
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Quick Add Patient Modal */}
+    <QuickAddPatientModal
+      open={showQuickAddPatient}
+      onOpenChange={setShowQuickAddPatient}
+      onPatientCreated={handlePatientCreated}
+    />
+    </>
   );
 };
 
