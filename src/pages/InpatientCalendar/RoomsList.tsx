@@ -57,7 +57,7 @@ const RoomsList = () => {
   );
 
   const handleRoomClick = (roomId: string) => {
-    navigate(`/inpatient-calendar/${roomId}`);
+    navigate(`/inpatient-calendar/${selectedCorpusId}/${roomId}`);
   };
 
   if (corpusesLoading) {

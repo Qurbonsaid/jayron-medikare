@@ -68,6 +68,7 @@ export const bookingApi = baseApi.injectEndpoints({
         const queryParams = new URLSearchParams();
 
         if (params.corpus_id) queryParams.append("corpus_id", params.corpus_id);
+        if (params.room_id) queryParams.append("room_id", params.room_id);
         if (params.start_date)
           queryParams.append("start_date", params.start_date);
         if (params.end_date) queryParams.append("end_date", params.end_date);

@@ -10,7 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { Booking } from "@/app/api/bookingApi/types";
 import { format } from "date-fns";
 import { uz } from "date-fns/locale";
-import { Calendar, User, Home, Phone, Mail, FileText, Clock } from "lucide-react";
+import {
+  Calendar,
+  User,
+  Home,
+  Phone,
+  Mail,
+  FileText,
+  Clock,
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface BookingDetailModalProps {
@@ -39,7 +47,7 @@ export const BookingDetailModal = ({
   const startDate = new Date(booking.start_at);
   const endDate = new Date(booking.end_at);
   const duration = Math.ceil(
-    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) + 1
   );
 
   return (
@@ -50,9 +58,7 @@ export const BookingDetailModal = ({
             <Calendar className="w-6 h-6 text-blue-600" />
             Бронь Тафсилотлари
           </DialogTitle>
-          <DialogDescription>
-            Бронь ҳақида тўлиқ маълумот
-          </DialogDescription>
+          <DialogDescription>Бронь ҳақида тўлиқ маълумот</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -100,7 +106,7 @@ export const BookingDetailModal = ({
                 Хона маълумотлари
               </h3>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs text-green-700 mb-1">Корпус</p>
                 <Badge variant="outline" className="bg-white">
@@ -113,19 +119,19 @@ export const BookingDetailModal = ({
                   {room?.room_name || "Номаълум"}
                 </p>
               </div>
-              <div>
+              {/* <div>
                 <p className="text-xs text-green-700 mb-1">Қават</p>
                 <p className="font-semibold text-green-900">
                   {room?.floor_number || "-"}-қават
                 </p>
-              </div>
+              </div> */}
               <div>
                 <p className="text-xs text-green-700 mb-1">Сиғим</p>
                 <p className="font-semibold text-green-900">
                   {room?.patient_capacity || "-"} жойлик
                 </p>
               </div>
-              <div className="col-span-2">
+              <div>
                 <p className="text-xs text-green-700 mb-1">Нарх</p>
                 <p className="font-semibold text-green-900">
                   {room?.room_price.toLocaleString() || "-"} сўм/кун
@@ -140,9 +146,7 @@ export const BookingDetailModal = ({
           <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
             <div className="flex items-center gap-2 mb-3">
               <Clock className="w-5 h-5 text-purple-600" />
-              <h3 className="font-bold text-lg text-purple-900">
-                Бронь даври
-              </h3>
+              <h3 className="font-bold text-lg text-purple-900">Бронь даври</h3>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
@@ -165,9 +169,7 @@ export const BookingDetailModal = ({
               </div>
               <div>
                 <p className="text-xs text-purple-700 mb-1">Давомийлиги</p>
-                <p className="font-semibold text-purple-900">
-                  {duration} кун
-                </p>
+                <p className="font-semibold text-purple-900">{duration} кун</p>
                 <p className="text-xs text-purple-600">
                   {Math.floor(duration / 7)} ҳафта {duration % 7} кун
                 </p>

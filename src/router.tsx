@@ -43,7 +43,7 @@ export const routers = [
   { path: "/lab-order", element: <LabOrder /> },
   { path: "/inpatient", element: <Inpatient /> },
   { path: "/inpatient-calendar", element: <RoomsList /> },
-  { path: "/inpatient-calendar/:roomId", element: <RoomCalendar /> },
+  { path: "/inpatient-calendar/:corpusId/:roomId", element: <RoomCalendar /> },
   { path: "/inpatient/:id", element: <Rooms /> },
   { path: "/room/:id", element: <RoomDetail /> },
   { path: "/medicine", element: <Medicine /> },
@@ -138,7 +138,7 @@ export const navigator = [
     title: "Стационар Календари",
   },
   {
-    path: "/inpatient-calendar/:roomId",
+    path: "/inpatient-calendar/:corpusId/:roomId",
     to: "/inpatient-calendar",
     title: "Хона Календари",
   },
