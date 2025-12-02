@@ -91,7 +91,7 @@ export const navigator = [
     ),
   },
   {
-    path: '/visits',
+    path: '/examinations',
     to: null,
     title: 'Кўриклар',
   },
