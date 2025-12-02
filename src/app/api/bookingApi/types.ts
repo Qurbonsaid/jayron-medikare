@@ -95,6 +95,7 @@ export type AvailableRoom = {
 
 export type GetAvailableRoomsParams = {
   corpus_id?: string;
+  room_id?: string;
   start_date?: string;
   end_date?: string;
 };
