@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { usePermission } from '@/hooks/usePermission';
 import { format } from 'date-fns';
 import { FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -74,10 +75,11 @@ const getBillingStatusBadge = (status: string) => {
 };
 
 export const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
-  };
+  return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
+};
 
 const Billing = () => {
+  const { canCreate } = usePermission('billing');
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedBillingId, setSelectedBillingId] = useState<string | null>(
@@ -85,17 +87,13 @@ const Billing = () => {
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  
-  
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { data, isLoading } = useGetAllBillingQuery({});
 
   const invoices = data?.data || [];
-
-  
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
@@ -130,15 +128,17 @@ const Billing = () => {
       {/* Main Content */}
       <main className='container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6'>
         {/* Add Button */}
-        <div className='mb-4 sm:mb-6 text-right'>
-          <Button
-            onClick={() => setIsInvoiceModalOpen(true)}
-            className='w-full sm:w-auto text-sm'
-          >
-            <Plus className='w-4 h-4 mr-2' />
-            Янги ҳисоб-фактура
-          </Button>
-        </div>
+        {canCreate && (
+          <div className='mb-4 sm:mb-6 text-right'>
+            <Button
+              onClick={() => setIsInvoiceModalOpen(true)}
+              className='w-full sm:w-auto text-sm'
+            >
+              <Plus className='w-4 h-4 mr-2' />
+              Янги ҳисоб-фактура
+            </Button>
+          </div>
+        )}
         {/* Filters */}
         <Card className='p-3 sm:p-4 mb-4 sm:mb-6'>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4'>

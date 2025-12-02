@@ -26,6 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { usePermission } from '@/hooks/usePermission';
 import { Eye, FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -37,6 +38,7 @@ import ExamFilter from './components/ExamFilter';
 import VisitDetail from './components/VisitDetail';
 
 const Visits = () => {
+  const { canCreate } = usePermission('examination');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -193,13 +195,15 @@ const Visits = () => {
               Барча кўрикларни кўриш ва бошқариш
             </p>
           </div>
-          <Button
-            className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
-            onClick={() => navigate('/new-visit')}
-          >
-            <Plus className='w-4 h-4 mr-2' />
-            Янги Кўрик
-          </Button>
+          {canCreate && (
+            <Button
+              className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
+              onClick={() => navigate('/new-visit')}
+            >
+              <Plus className='w-4 h-4 mr-2' />
+              Янги Кўрик
+            </Button>
+          )}
         </div>
 
         {/* Search and Filters */}

@@ -21,14 +21,12 @@ interface GetAllPermissionsRes {
 interface UpdatePermission {
   id: string;
   body: {
-    permissions: Array<
-      {
-        collection_name: string;
-        create: boolean;
-        read: boolean;
-        update: boolean;
-        delete: boolean;
-      }
-    >;
+    permissions: Array<{
+      _id: string;
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+    }>;
   };
 }

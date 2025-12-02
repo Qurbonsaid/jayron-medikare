@@ -34,6 +34,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RoleConstants } from '@/constants/Roles';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { usePermission } from '@/hooks/usePermission';
 import { Edit, Plus, Shield, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -72,11 +73,15 @@ const PermissionCard = ({
   roleLabels,
   onEdit,
   onDelete,
+  canUpdate,
+  canDelete,
 }: {
   permission: PermissionData;
   roleLabels: Record<RoleConstants, string>;
   onEdit: (permission: PermissionData) => void;
   onDelete: (permission: PermissionData) => void;
+  canUpdate: boolean;
+  canDelete: boolean;
 }) => (
   <Card>
     <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -85,18 +90,26 @@ const PermissionCard = ({
         <Badge variant='outline'>{permission.role}</Badge>
       </div>
       <div className='flex gap-2'>
-        <Button variant='outline' size='sm' onClick={() => onEdit(permission)}>
-          <Edit className='mr-2 h-4 w-4' />
-          Таҳрирлаш
-        </Button>
-        <Button
-          variant='destructive'
-          size='sm'
-          onClick={() => onDelete(permission)}
-        >
-          <Trash2 className='mr-2 h-4 w-4' />
-          Ўчириш
-        </Button>
+        {canUpdate && (
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => onEdit(permission)}
+          >
+            <Edit className='mr-2 h-4 w-4' />
+            Таҳрирлаш
+          </Button>
+        )}
+        {canDelete && (
+          <Button
+            variant='destructive'
+            size='sm'
+            onClick={() => onDelete(permission)}
+          >
+            <Trash2 className='mr-2 h-4 w-4' />
+            Ўчириш
+          </Button>
+        )}
       </div>
     </CardHeader>
     <CardContent>
@@ -146,6 +159,7 @@ const PermissionCard = ({
 
 const Permissions = () => {
   const handleRequest = useHandleRequest();
+  const { canCreate, canUpdate, canDelete } = usePermission('permissions');
 
   // State
   const [activeTab, setActiveTab] = useState<string>('all');
@@ -220,7 +234,7 @@ const Permissions = () => {
           id: selectedPermission._id,
           body: {
             permissions: editingPermissions.map((p) => ({
-              collection_name: p.collection_name,
+              _id: p._id,
               create: p.create,
               read: p.read,
               update: p.update,
@@ -271,6 +285,46 @@ const Permissions = () => {
     });
   };
 
+  // Bir qatordagi barcha checkboxlarni yoqish/o'chirish
+  const handleRowAllChange = (index: number, value: boolean) => {
+    setEditingPermissions((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        create: value,
+        read: value,
+        update: value,
+        delete: value,
+      };
+      return updated;
+    });
+  };
+
+  // Bir qatordagi barcha checkboxlar yoqilganmi tekshirish
+  const isRowAllChecked = (perm: Permission) => {
+    return perm.create && perm.read && perm.update && perm.delete;
+  };
+
+  // Barcha checkboxlarni yoqish/o'chirish
+  const handleToggleAll = (value: boolean) => {
+    setEditingPermissions((prev) =>
+      prev.map((perm) => ({
+        ...perm,
+        create: value,
+        read: value,
+        update: value,
+        delete: value,
+      }))
+    );
+  };
+
+  // Barcha checkboxlar yoqilganmi tekshirish
+  const isAllChecked = () => {
+    return editingPermissions.every(
+      (perm) => perm.create && perm.read && perm.update && perm.delete
+    );
+  };
+
   // Tanlangan rol bo'yicha filtrlash
   const getPermissionByRole = (role: string) => {
     if (role === 'all') return permissionsData?.data;
@@ -292,13 +346,15 @@ const Permissions = () => {
             </p>
           </div>
         </div>
-        <Button
-          onClick={() => setIsCreateModalOpen(true)}
-          disabled={availableRoles.length === 0}
-        >
-          <Plus className='mr-2 h-4 w-4' />
-          Янги рухсат
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            disabled={availableRoles.length === 0}
+          >
+            <Plus className='mr-2 h-4 w-4' />
+            Янги рухсат
+          </Button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -345,6 +401,8 @@ const Permissions = () => {
                   roleLabels={roleLabels}
                   onEdit={handleEditClick}
                   onDelete={handleDeleteClick}
+                  canUpdate={canUpdate}
+                  canDelete={canDelete}
                 />
               ))}
             </div>
@@ -370,6 +428,8 @@ const Permissions = () => {
                       roleLabels={roleLabels}
                       onEdit={handleEditClick}
                       onDelete={handleDeleteClick}
+                      canUpdate={canUpdate}
+                      canDelete={canDelete}
                     />
                   )
                 )}
@@ -440,6 +500,7 @@ const Permissions = () => {
                   <TableHead className='text-center'>Ўқиш</TableHead>
                   <TableHead className='text-center'>Янгилаш</TableHead>
                   <TableHead className='text-center'>Ўчириш</TableHead>
+                  <TableHead className='text-center'>Барчаси</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -496,10 +557,29 @@ const Permissions = () => {
                         }
                       />
                     </TableCell>
+                    <TableCell className='text-center'>
+                      <Checkbox
+                        checked={isRowAllChecked(perm)}
+                        onCheckedChange={(checked) =>
+                          handleRowAllChange(index, checked as boolean)
+                        }
+                      />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            <div className='mt-4 flex justify-end'>
+              <Button
+                type='button'
+                variant={isAllChecked() ? 'destructive' : 'default'}
+                onClick={() => handleToggleAll(!isAllChecked())}
+              >
+                {isAllChecked()
+                  ? 'Рухсатни олиб ташлаш'
+                  : 'Барчасига рухсат бериш'}
+              </Button>
+            </div>
           </div>
           <DialogFooter>
             <Button variant='outline' onClick={() => setIsEditModalOpen(false)}>

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/sidebar';
 import { menuCategories, systemMenu } from '@/constants/Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePermissions } from '@/hooks/usePermissions';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
@@ -32,6 +33,20 @@ export function AppSidebar() {
   } = useSidebar();
   const isMobile = useIsMobile();
   const prevPathRef = useRef<string>();
+  const { canRead, isLoading: permissionsLoading } = usePermissions();
+
+  // Filter menu items based on read permission
+  const filteredMenuCategories = menuCategories
+    .map((category) => ({
+      ...category,
+      items: category.items.filter((item) => canRead(item.permission)),
+    }))
+    .filter((category) => category.items.length > 0);
+
+  const filteredSystemMenu = {
+    ...systemMenu,
+    items: systemMenu.items.filter((item) => canRead(item.permission)),
+  };
 
   const location = useLocation();
   const currentPath = location.pathname;
@@ -64,7 +79,7 @@ export function AppSidebar() {
 
       // Find which category contains the current route and open it by default
       const defaultOpen: Record<string, boolean> = {};
-      [...menuCategories, systemMenu].forEach((category) => {
+      [...filteredMenuCategories, filteredSystemMenu].forEach((category) => {
         const hasActiveItem = category.items.some((item) =>
           currentPath.startsWith(item.url)
         );
@@ -149,55 +164,92 @@ export function AppSidebar() {
           )}
         </Button>
         {/* Main Categories */}
-        {menuCategories.map((category) => (
-          <SidebarGroup key={category.id} className={open ? 'mb-2' : 'py-0'}>
-            {open ? (
-              <Collapsible
-                open={openCategories[category.id]}
-                onOpenChange={() => toggleCategory(category.id)}
-              >
-                <SidebarGroupLabel asChild>
-                  <CollapsibleTrigger className='w-full hover:bg-accent rounded-md transition-smooth group'>
-                    <div className='flex items-center justify-between w-full py-2'>
-                      <div className='flex items-center gap-3'>
-                        <category.icon className='w-[18px] h-[18px] text-muted-foreground' />
-                        <span className='text-[12px] font-semibold text-muted-foreground uppercase tracking-wide'>
-                          {category.title}
-                        </span>
+        {filteredMenuCategories.map((category) => {
+          const CategoryIcon = category.icon;
+          return (
+            <SidebarGroup key={category.id} className={open ? 'mb-2' : 'py-0'}>
+              {open ? (
+                <Collapsible
+                  open={openCategories[category.id]}
+                  onOpenChange={() => toggleCategory(category.id)}
+                >
+                  <SidebarGroupLabel asChild>
+                    <CollapsibleTrigger className='w-full hover:bg-accent rounded-md transition-smooth group'>
+                      <div className='flex items-center justify-between w-full py-2'>
+                        <div className='flex items-center gap-3'>
+                          <CategoryIcon className='w-[18px] h-[18px] text-muted-foreground' />
+                          <span className='text-[12px] font-semibold text-muted-foreground uppercase tracking-wide'>
+                            {category.title}
+                          </span>
+                        </div>
+                        <ChevronDown
+                          className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
+                            openCategories[category.id]
+                              ? 'rotate-180'
+                              : 'rotate-0'
+                          }`}
+                        />
                       </div>
-                      <ChevronDown
-                        className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
-                          openCategories[category.id]
-                            ? 'rotate-180'
-                            : 'rotate-0'
-                        }`}
-                      />
-                    </div>
-                  </CollapsibleTrigger>
-                </SidebarGroupLabel>
-                <CollapsibleContent>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {category.items.map((item) => (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={isActive(item.url)}
+                    </CollapsibleTrigger>
+                  </SidebarGroupLabel>
+                  <CollapsibleContent>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {category.items.map((item) => {
+                          const ItemIcon = item.icon;
+                          return (
+                            <SidebarMenuItem key={item.title}>
+                              <SidebarMenuButton
+                                asChild
+                                isActive={isActive(item.url)}
+                              >
+                                <NavLink to={item.url} className='group'>
+                                  <ItemIcon className='w-5 h-5' />
+                                  <span>{item.title}</span>
+                                </NavLink>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          );
+                        })}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              ) : (
+                <SidebarMenu>
+                  {category.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive(item.url)}
+                          tooltip={item.title}
+                        >
+                          <NavLink
+                            to={item.url}
+                            className='group flex items-center justify-center h-8'
                           >
-                            <NavLink to={item.url} className='group'>
-                              <item.icon className='w-5 h-5' />
-                              <span>{item.title}</span>
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </Collapsible>
-            ) : (
-              <SidebarMenu>
-                {category.items.map((item) => (
+                            <ItemIcon className='w-5 h-5' />
+                            <span>{item.title}</span>
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              )}
+            </SidebarGroup>
+          );
+        })}
+
+        {/* System Settings - yopiq holatda scroll ichida */}
+        {!open && filteredSystemMenu.items.length > 0 && (
+          <SidebarGroup className='py-0 border-t pt-1'>
+            <SidebarMenu className='space-y-0.5'>
+              {filteredSystemMenu.items.map((item) => {
+                const ItemIcon = item.icon;
+                return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
@@ -208,93 +260,76 @@ export function AppSidebar() {
                         to={item.url}
                         className='group flex items-center justify-center h-8'
                       >
-                        <item.icon className='w-5 h-5' />
+                        <ItemIcon className='w-5 h-5' />
                         <span>{item.title}</span>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            )}
-          </SidebarGroup>
-        ))}
-
-        {/* System Settings - yopiq holatda scroll ichida */}
-        {!open && (
-          <SidebarGroup className='py-0 border-t pt-1'>
-            <SidebarMenu className='space-y-0.5'>
-              {systemMenu.items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
-                    <NavLink
-                      to={item.url}
-                      className='group flex items-center justify-center h-8'
-                    >
-                      <item.icon className='w-5 h-5' />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                );
+              })}
             </SidebarMenu>
           </SidebarGroup>
         )}
       </SidebarContent>
 
       {/* System Settings - ochiq holatda fixed bottom */}
-      {open && (
-        <SidebarFooter className='px-2 py-4 border-t'>
-          <SidebarGroup>
-            <Collapsible
-              open={openCategories[systemMenu.id]}
-              onOpenChange={() => toggleCategory(systemMenu.id)}
-            >
-              <SidebarGroupLabel asChild>
-                <CollapsibleTrigger className='w-full hover:bg-accent rounded-md transition-smooth group'>
-                  <div className='flex items-center justify-between w-full py-2'>
-                    <div className='flex items-center gap-3'>
-                      <systemMenu.icon className='w-[18px] h-[18px] text-muted-foreground' />
-                      <span className='text-[12px] font-semibold text-muted-foreground uppercase tracking-wide'>
-                        {systemMenu.title}
-                      </span>
-                    </div>
-                    <ChevronDown
-                      className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
-                        openCategories[systemMenu.id]
-                          ? 'rotate-180'
-                          : 'rotate-0'
-                      }`}
-                    />
-                  </div>
-                </CollapsibleTrigger>
-              </SidebarGroupLabel>
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {systemMenu.items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive(item.url)}
-                        >
-                          <NavLink to={item.url} className='group'>
-                            <item.icon className='w-5 h-5' />
-                            <span>{item.title}</span>
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </Collapsible>
-          </SidebarGroup>
-        </SidebarFooter>
-      )}
+      {open &&
+        filteredSystemMenu.items.length > 0 &&
+        (() => {
+          const SystemIcon = filteredSystemMenu.icon;
+          return (
+            <SidebarFooter className='px-2 py-4 border-t'>
+              <SidebarGroup>
+                <Collapsible
+                  open={openCategories[filteredSystemMenu.id]}
+                  onOpenChange={() => toggleCategory(filteredSystemMenu.id)}
+                >
+                  <SidebarGroupLabel asChild>
+                    <CollapsibleTrigger className='w-full hover:bg-accent rounded-md transition-smooth group'>
+                      <div className='flex items-center justify-between w-full py-2'>
+                        <div className='flex items-center gap-3'>
+                          <SystemIcon className='w-[18px] h-[18px] text-muted-foreground' />
+                          <span className='text-[12px] font-semibold text-muted-foreground uppercase tracking-wide'>
+                            {filteredSystemMenu.title}
+                          </span>
+                        </div>
+                        <ChevronDown
+                          className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
+                            openCategories[filteredSystemMenu.id]
+                              ? 'rotate-180'
+                              : 'rotate-0'
+                          }`}
+                        />
+                      </div>
+                    </CollapsibleTrigger>
+                  </SidebarGroupLabel>
+                  <CollapsibleContent>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {filteredSystemMenu.items.map((item) => {
+                          const ItemIcon = item.icon;
+                          return (
+                            <SidebarMenuItem key={item.title}>
+                              <SidebarMenuButton
+                                asChild
+                                isActive={isActive(item.url)}
+                              >
+                                <NavLink to={item.url} className='group'>
+                                  <ItemIcon className='w-5 h-5' />
+                                  <span>{item.title}</span>
+                                </NavLink>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          );
+                        })}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </SidebarGroup>
+            </SidebarFooter>
+          );
+        })()}
     </Sidebar>
   );
 }
