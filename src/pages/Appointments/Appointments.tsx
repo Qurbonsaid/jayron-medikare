@@ -7,6 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { doctors, statusOptions } from '@/constants/doctors';
+import { usePermission } from '@/hooks/usePermission';
 import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import DayView from './components/DayView';
@@ -15,7 +17,6 @@ import NewAppointment, {
   AppointmentFormData,
 } from './components/NewAppointment';
 import WeekView from './components/WeekView';
-import { doctors, statusOptions } from '@/constants/doctors';
 
 interface Appointment {
   day: number;
@@ -28,6 +29,7 @@ interface Appointment {
 }
 
 const Appointments = () => {
+  const { canCreate } = usePermission('appointments');
   const [view, setView] = useState<'day' | 'week' | 'month'>('week');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
@@ -215,14 +217,14 @@ const Appointments = () => {
                     >
                       Барча шифокорлар
                     </SelectItem>
-                    {doctors.map(i => (
-                    <SelectItem
-                      key={i.username}
-                      value={i.username}
-                      className='text-[11px] sm:text-xs lg:text-sm'
-                    >
-                      {i.fullName}
-                    </SelectItem>
+                    {doctors.map((i) => (
+                      <SelectItem
+                        key={i.username}
+                        value={i.username}
+                        className='text-[11px] sm:text-xs lg:text-sm'
+                      >
+                        {i.fullName}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -235,14 +237,14 @@ const Appointments = () => {
                     <SelectValue placeholder='Ҳолат' />
                   </SelectTrigger>
                   <SelectContent>
-                    {statusOptions.map(i => (
-                    <SelectItem
-                      key={i.value}
-                      value={i.value}
-                      className='text-[11px] sm:text-xs lg:text-sm'
-                    >
-                      {i.label}
-                    </SelectItem>
+                    {statusOptions.map((i) => (
+                      <SelectItem
+                        key={i.value}
+                        value={i.value}
+                        className='text-[11px] sm:text-xs lg:text-sm'
+                      >
+                        {i.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -310,14 +312,16 @@ const Appointments = () => {
         )}
 
         {/* Floating Action Button */}
-        <Button
-          size='lg'
-          onClick={() => setIsNewAppointmentOpen(true)}
-          className='fixed bottom-4 right-4 sm:bottom-6 sm:right-6 lg:bottom-8 lg:right-8 rounded-full w-14 h-14 sm:w-15 sm:h-15 lg:w-16 lg:h-16 gradient-primary shadow-lg hover:shadow-xl active:scale-90 transition-all duration-150 z-50 touch-manipulation'
-          aria-label='Янги навбат қўшиш'
-        >
-          <Plus className='w-6 h-6 sm:w-6 sm:h-6 lg:w-7 lg:h-7 stroke-[2.5]' />
-        </Button>
+        {canCreate && (
+          <Button
+            size='lg'
+            onClick={() => setIsNewAppointmentOpen(true)}
+            className='fixed bottom-4 right-4 sm:bottom-6 sm:right-6 lg:bottom-8 lg:right-8 rounded-full w-14 h-14 sm:w-15 sm:h-15 lg:w-16 lg:h-16 gradient-primary shadow-lg hover:shadow-xl active:scale-90 transition-all duration-150 z-50 touch-manipulation'
+            aria-label='Янги навбат қўшиш'
+          >
+            <Plus className='w-6 h-6 sm:w-6 sm:h-6 lg:w-7 lg:h-7 stroke-[2.5]' />
+          </Button>
+        )}
 
         {/* New Appointment Modal */}
         <NewAppointment

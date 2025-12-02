@@ -21,14 +21,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { usePermission } from '@/hooks/usePermission';
 import { Eye, Filter, Phone, Search, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewPatient from './components/NewPatient';
-import PDFGenerator from './components/PatientPDF';
 
 const Patients = () => {
   const navigate = useNavigate();
+  const { canCreate } = usePermission('patients');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewPatient, setShowNewPatient] = useState(false);
   const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female'>(
@@ -134,12 +135,14 @@ const Patients = () => {
               Барча беморларни кўриш ва бошқариш
             </p>
           </div>
-          <Button
-            className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
-            onClick={() => setShowNewPatient(true)}
-          >
-            + Янги Бемор
-          </Button>
+          {canCreate && (
+            <Button
+              className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
+              onClick={() => setShowNewPatient(true)}
+            >
+              + Янги Бемор
+            </Button>
+          )}
         </div>
 
         {/* Search and Filters */}
