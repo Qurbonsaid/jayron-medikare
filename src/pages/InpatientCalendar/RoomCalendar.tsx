@@ -278,7 +278,7 @@ const RoomCalendar = () => {
             <div className="grid grid-cols-8 gap-0 sticky top-0 bg-white z-10">
               <div className="col-span-1 bg-blue-500 text-white p-4 border-b-2 border-r-2 border-white">
                 <div className="space-y-2">
-                  <p className="font-extrabold text-xl">{roomData.room_name}</p>
+                  <p className="font-extrabold text-xl">{roomData?.room_name}</p>
                   <div className="text-sm font-semibold space-y-1.5">
                     <div className="flex items-center">
                       <span>Сиғим: {totalBeds}</span>

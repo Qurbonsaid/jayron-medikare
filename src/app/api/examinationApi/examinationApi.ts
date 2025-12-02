@@ -3,22 +3,24 @@ import { CreateExamReq, ExamResponse } from '.'
 import { baseApi } from '../baseApi'
 import { PATHS } from './path'
 import {
+	addImagesRes,
 	AllExamReq,
 	AllExamRes,
+	createPrescriptionDays,
 	createPrescriptionReq,
-	MutationRes,
+	CreateService,
+	createServiceDays,
+	deletePrescriptionReq,
 	ExamRes,
+	imageReq,
+	MutationRes,
+	RemoveService,
+	reomveimagesRes,
+	takeMedicine,
+	takeService,
 	UpdateExamReq,
 	updatePrescriptionReq,
-	deletePrescriptionReq,
-	addImagesRes,
-	imageReq,
-	reomveimagesRes,
-	createPrescriptionDays,
-	takeMedicine,
-	CreateService,
 	UpdateService,
-	RemoveService,
 } from './types'
 
 export const examinationApi = baseApi.injectEndpoints({
@@ -39,10 +41,7 @@ export const examinationApi = baseApi.injectEndpoints({
 			}),
 			providesTags: [API_TAGS.EXAMS, API_TAGS.PRESCRIPTION, API_TAGS.IMAGES],
 		}),
-		createPrescriptionDays: builder.mutation<
-			void,
-			createPrescriptionDays
-		>({
+		createPrescriptionDays: builder.mutation<void, createPrescriptionDays>({
 			query: ({ id, prescriptionId, data }) => ({
 				url: `${PATHS.UPDATE_EXAM}${id}/prescription/${prescriptionId}`,
 				method: 'PATCH',
@@ -50,10 +49,7 @@ export const examinationApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: [API_TAGS.EXAMS],
 		}),
-		takeMedicine: builder.mutation<
-			void,
-			takeMedicine
-		>({
+		takeMedicine: builder.mutation<void, takeMedicine>({
 			query: ({ id, prescriptionId, day }) => ({
 				url: `${PATHS.TAKE_MEDICINE}${id}/prescription/${prescriptionId}/day/${day}`,
 				method: 'PATCH',
@@ -100,8 +96,7 @@ export const examinationApi = baseApi.injectEndpoints({
 		}),
 		updatePrescription: builder.mutation<MutationRes, updatePrescriptionReq>({
 			query: ({ id, prescription_id, body }) => ({
-				url:
-					PATHS.UPDATE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
+				url: PATHS.UPDATE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
 				method: 'PATCH',
 				body,
 			}),
@@ -109,8 +104,7 @@ export const examinationApi = baseApi.injectEndpoints({
 		}),
 		deletePrescription: builder.mutation<MutationRes, deletePrescriptionReq>({
 			query: ({ id, prescription_id }) => ({
-				url:
-					PATHS.DELETE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
+				url: PATHS.DELETE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
 				method: 'DELETE',
 			}),
 			invalidatesTags: [API_TAGS.PRESCRIPTION],
@@ -137,26 +131,44 @@ export const examinationApi = baseApi.injectEndpoints({
 
 		//service
 
-		addServiceToExamination: builder.mutation<MutationRes,CreateService>({
-			query : ({id,body}) =>({
+		addServiceToExamination: builder.mutation<MutationRes, CreateService>({
+			query: ({ id, body }) => ({
 				url: PATHS.CREATE_EXAM + id + '/service',
 				method: 'POST',
-				body
-			})
+				body,
+			}),
+			invalidatesTags: [API_TAGS.EXAMS],
 		}),
-		updateServiceFromExamination: builder.mutation<MutationRes,UpdateService>({
-			query : ({id,service_id,body}) =>({
-				url: PATHS.UPDATE_EXAM + id + '/service/'+service_id,
+		updateServiceFromExamination: builder.mutation<MutationRes, UpdateService>({
+			query: ({ id, service_id, body }) => ({
+				url: PATHS.UPDATE_EXAM + id + '/service/' + service_id,
 				method: 'PATCH',
-				body
-			})
+				body,
+			}),
+			invalidatesTags: [API_TAGS.EXAMS],
 		}),
-		removeServiceFromExamination: builder.mutation<MutationRes,RemoveService>({
-			query : ({id,service_id}) =>({
-				url: PATHS.DELETE_EXAM + id + '/service/'+service_id,
+		removeServiceFromExamination: builder.mutation<MutationRes, RemoveService>({
+			query: ({ id, service_id }) => ({
+				url: PATHS.DELETE_EXAM + id + '/service/' + service_id,
 				method: 'DELETE',
-			})
-		})
+			}),
+			invalidatesTags: [API_TAGS.EXAMS],
+		}),
+		createServiceDays: builder.mutation<void, createServiceDays>({
+			query: ({ id, serviceId, data }) => ({
+				url: `${PATHS.UPDATE_EXAM}${id}/service/${serviceId}`,
+				method: 'PATCH',
+				body: data,
+			}),
+			invalidatesTags: [API_TAGS.EXAMS],
+		}),
+		takeService: builder.mutation<void, takeService>({
+			query: ({ id, serviceId, day }) => ({
+				url: `${PATHS.TAKE_MEDICINE}${id}/service/${serviceId}/day/${day}`,
+				method: 'PATCH',
+			}),
+			invalidatesTags: [API_TAGS.EXAMS],
+		}),
 	}),
 })
 
@@ -173,8 +185,10 @@ export const {
 	useRemoveImagesMutation,
 	useUpdateExamMutation,
 	useUpdatePrescriptionMutation,
-  useTakeMedicineMutation,
+	useTakeMedicineMutation,
 	useAddServiceToExaminationMutation,
 	useRemoveServiceFromExaminationMutation,
-	useUpdateServiceFromExaminationMutation
+	useUpdateServiceFromExaminationMutation,
+	useCreateServiceDaysMutation,
+	useTakeServiceMutation
 } = examinationApi
