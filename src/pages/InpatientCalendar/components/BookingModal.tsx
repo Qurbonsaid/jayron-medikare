@@ -98,6 +98,7 @@ export const BookingModal = ({
     useGetAvailableRoomsQuery(
       {
         corpus_id: corpusId,
+        room_id: roomId || undefined, // Agar roomId berilsa, faqat shu xonani olish
         start_date: startDate ? new Date(startDate).toISOString() : undefined,
         end_date: endDate ? new Date(endDate).toISOString() : undefined,
       },
@@ -124,8 +125,8 @@ export const BookingModal = ({
       return;
     }
 
-    if (new Date(startDate) >= new Date(endDate)) {
-      toast.error("Тугаш санаси бошланиш санасидан кейин бўлиши керак");
+    if (new Date(startDate) > new Date(endDate)) {
+      toast.error("Тугаш санаси бошланиш санасидан олдин бўлмаслиги керак");
       return;
     }
 
@@ -294,7 +295,7 @@ export const BookingModal = ({
                   <LoadingSpinner size="sm" text="Хоналар юкланмоқда..." />
                 </div>
               ) : availableRoomsData?.data && availableRoomsData.data.length > 0 ? (
-                <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
+                <Select value={selectedRoomId} onValueChange={setSelectedRoomId} disabled={!!roomId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Хонани танланг" />
                   </SelectTrigger>
@@ -330,35 +331,6 @@ export const BookingModal = ({
                   </AlertDescription>
                 </Alert>
               )}
-            </div>
-          )}
-
-          {/* Selected Room Info */}
-          {selectedRoom && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
-              <h4 className="font-semibold text-blue-900">Танланган хона:</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <span className="text-blue-700">Хона:</span>{" "}
-                  <strong>{selectedRoom.room_name}</strong>
-                </div>
-                <div>
-                  <span className="text-blue-700">Сиғими:</span>{" "}
-                  <strong>{selectedRoom.patient_capacity} жой</strong>
-                </div>
-                <div>
-                  <span className="text-blue-700">Бўш жойлар:</span>{" "}
-                  <strong className="text-green-600">
-                    {selectedRoom.available_beds}
-                  </strong>
-                </div>
-                <div>
-                  <span className="text-blue-700">Нарх:</span>{" "}
-                  <strong>
-                    {selectedRoom.room_price.toLocaleString()} сўм/кун
-                  </strong>
-                </div>
-              </div>
             </div>
           )}
 
