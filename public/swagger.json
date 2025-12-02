@@ -1200,11 +1200,6 @@
                             "format": "date-time",
                             "example": "2025-11-10T10:00:00Z",
                             "description": "Чиқиш санаси"
-                          },
-                          "bed_number": {
-                            "type": "integer",
-                            "example": 1,
-                            "description": "Ётоқ рақами (patient_capacity дан ошмаслиги керак)"
                           }
                         }
                       },
@@ -1401,11 +1396,6 @@
                             "format": "date-time",
                             "example": "2025-11-10T10:00:00Z",
                             "description": "Чиқиш санаси"
-                          },
-                          "bed_number": {
-                            "type": "integer",
-                            "example": 1,
-                            "description": "Ётоқ рақами (patient_capacity дан ошмаслиги керак)"
                           }
                         }
                       },
@@ -1495,9 +1485,15 @@
                       "type": "string",
                       "example": "64b8f1a2c3d4e5f6a7b8c9d1",
                       "description": "Patient ID to add to room"
+                    },
+                    "estimated_leave_time": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-11-30T10:00:00Z",
+                      "description": "Estimated time when patient will leave the room"
                     }
                   },
-                  "required": ["patient_id"]
+                  "required": ["patient_id", "estimated_leave_time"]
                 }
               }
             }
@@ -1559,6 +1555,502 @@
             },
             "404": {
               "description": "Room not found or patient not in room"
+            }
+          }
+        }
+      },
+      "/room/update-leave-time/{id}": {
+        "patch": {
+          "tags": ["Room"],
+          "summary": "Update estimated leave time for patient in room",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Room ID"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "patient_id": {
+                      "type": "string",
+                      "example": "64b8f1a2c3d4e5f6a7b8c9d1",
+                      "description": "Patient ID"
+                    },
+                    "estimated_leave_time": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-11-30T10:00:00Z",
+                      "description": "New estimated leave time"
+                    }
+                  },
+                  "required": ["patient_id", "estimated_leave_time"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Estimated leave time updated successfully"
+            },
+            "404": {
+              "description": "Room or patient not found"
+            }
+          }
+        }
+      },
+      "/booking/create": {
+        "post": {
+          "tags": ["Booking"],
+          "summary": "Create a new booking",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "patient_id": {
+                      "type": "string",
+                      "example": "64b8f1a2c3d4e5f6a7b8c9d1",
+                      "description": "Бемор ID"
+                    },
+                    "room_id": {
+                      "type": "string",
+                      "example": "64b8f1a2c3d4e5f6a7b8c9d2",
+                      "description": "Хона ID"
+                    },
+                    "corpus_id": {
+                      "type": "string",
+                      "example": "64b8f1a2c3d4e5f6a7b8c9d0",
+                      "description": "Корпус ID"
+                    },
+                    "start_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-12-01T10:00:00Z",
+                      "description": "Бронь бошланиш санаси"
+                    },
+                    "end_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-12-05T10:00:00Z",
+                      "description": "Бронь тугаш санаси"
+                    },
+                    "note": {
+                      "type": "string",
+                      "example": "Махсус диета керак",
+                      "description": "Қўшимча маълумот"
+                    }
+                  },
+                  "required": [
+                    "patient_id",
+                    "room_id",
+                    "corpus_id",
+                    "start_at",
+                    "end_at"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Booking created successfully"
+            },
+            "400": {
+              "description": "start_at must be before end_at / Xona bu vaqt oralig'ida to'liq band"
+            },
+            "404": {
+              "description": "Patient, Room or Corpus not found"
+            }
+          }
+        }
+      },
+      "/booking/get-all": {
+        "get": {
+          "tags": ["Booking"],
+          "summary": "Get all bookings with filters",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "query",
+              "name": "start_date",
+              "schema": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-12-01T00:00:00Z"
+              },
+              "description": "Бронларни филтрлаш учун бошланиш санаси (overlap)"
+            },
+            {
+              "in": "query",
+              "name": "end_date",
+              "schema": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-12-31T23:59:59Z"
+              },
+              "description": "Бронларни филтрлаш учун тугаш санаси (overlap)"
+            },
+            {
+              "in": "query",
+              "name": "room_id",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Хона ID бўйича филтрлаш"
+            },
+            {
+              "in": "query",
+              "name": "corpus_id",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Корпус ID бўйича филтрлаш"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Bookings retrieved successfully"
+            }
+          }
+        }
+      },
+      "/booking/get-by-patient/:patient_id": {
+        "get": {
+          "tags": ["Booking"],
+          "summary": "Bemorning barcha bronlarini olish",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "patient_id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Bemor ID",
+              "example": "64b8f1a2c3d4e5f6a7b8c9d1"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Bemorning bronlari muvaffaqiyatli olindi",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Bronlar muvaffaqiyatli olindi"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "patient_id": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string"
+                                },
+                                "first_name": {
+                                  "type": "string"
+                                },
+                                "last_name": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "room_id": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string"
+                                },
+                                "room_name": {
+                                  "type": "string"
+                                },
+                                "patient_capacity": {
+                                  "type": "integer"
+                                },
+                                "floor_number": {
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            "corpus_id": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string"
+                                },
+                                "corpus_number": {
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            "start_at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2025-12-01T10:00:00Z"
+                            },
+                            "end_at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2025-12-05T10:00:00Z"
+                            },
+                            "note": {
+                              "type": "string",
+                              "example": "Maxsus dieta kerak"
+                            },
+                            "created_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "updated_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/booking/available-rooms": {
+        "get": {
+          "tags": ["Booking"],
+          "summary": "Get all rooms with availability information",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "query",
+              "name": "corpus_id",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Корпус ID бўйича филтрлаш"
+            },
+            {
+              "in": "query",
+              "name": "start_date",
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "description": "Мавжудликни текшириш учун бошланиш санаси"
+            },
+            {
+              "in": "query",
+              "name": "end_date",
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "description": "Мавжудликни текшириш учун тугаш санаси"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Available rooms retrieved successfully - барча хоналар қайтарилади",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Available rooms retrieved successfully"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "room_name": {
+                              "type": "string"
+                            },
+                            "room_price": {
+                              "type": "number"
+                            },
+                            "corpus_id": {
+                              "type": "object"
+                            },
+                            "patient_capacity": {
+                              "type": "integer"
+                            },
+                            "current_occupied": {
+                              "type": "integer",
+                              "description": "Хозир хонада турган беморлар сони (Room.patients.length)"
+                            },
+                            "booking_count": {
+                              "type": "integer",
+                              "description": "Кўрсатилган вақт оралиғидаги бронлар сони"
+                            },
+                            "real_patient_count": {
+                              "type": "integer",
+                              "description": "Кўрсатилган вақт оралиғидаги реал беморлар сони"
+                            },
+                            "available_beds": {
+                              "type": "integer",
+                              "description": "Бўш ётоқлар сони: capacity - booking_count - real_patient_count"
+                            },
+                            "floor_number": {
+                              "type": "integer"
+                            },
+                            "description": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/booking/update/:id": {
+        "put": {
+          "tags": ["Booking"],
+          "summary": "Update booking",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Booking ID"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "start_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-12-02T10:00:00Z"
+                    },
+                    "end_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-12-06T10:00:00Z"
+                    },
+                    "note": {
+                      "type": "string",
+                      "example": "Янгиланган маълумот"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Booking updated successfully"
+            },
+            "400": {
+              "description": "start_at must be before end_at / Xona bu vaqt oralig'ida to'liq band"
+            },
+            "404": {
+              "description": "Booking not found"
+            }
+          }
+        }
+      },
+      "/booking/delete/:id": {
+        "delete": {
+          "tags": ["Booking"],
+          "summary": "Delete booking",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Booking ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Booking deleted successfully"
+            },
+            "404": {
+              "description": "Booking not found"
             }
           }
         }
@@ -2048,7 +2540,12 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["patient_id", "doctor_id", "complaints"],
+                  "required": [
+                    "patient_id",
+                    "doctor_id",
+                    "complaints",
+                    "treatment_type"
+                  ],
                   "properties": {
                     "patient_id": {
                       "type": "string",
@@ -2065,6 +2562,11 @@
                     "complaints": {
                       "type": "string",
                       "example": "Headache, fever"
+                    },
+                    "treatment_type": {
+                      "type": "string",
+                      "enum": ["stasionar", "ambulator"],
+                      "example": "STASIONAR"
                     }
                   }
                 }
@@ -2133,6 +2635,32 @@
                   "completed",
                   "deleted"
                 ]
+              },
+              "required": false
+            },
+            {
+              "name": "is_roomed",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["true", "false"]
+              },
+              "required": false
+            },
+            {
+              "name": "room_name",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false
+            },
+            {
+              "name": "treatment_type",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["stasionar", "ambulator"]
               },
               "required": false
             }
@@ -2261,20 +2789,15 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "medication",
-                    "dosage",
+                    "medication_id",
                     "frequency",
                     "duration",
                     "instructions"
                   ],
                   "properties": {
-                    "medication": {
+                    "medication_id": {
                       "type": "string",
-                      "example": "Paracetamol"
-                    },
-                    "dosage": {
-                      "type": "integer",
-                      "example": 500
+                      "example": "656a2b1c3d4e5f6789012345"
                     },
                     "frequency": {
                       "type": "integer",
@@ -2332,11 +2855,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "medication": {
+                    "medication_id": {
                       "type": "string"
-                    },
-                    "dosage": {
-                      "type": "integer"
                     },
                     "frequency": {
                       "type": "integer"
@@ -2390,6 +2910,50 @@
             },
             "404": {
               "description": "Examination or Prescription not found"
+            }
+          }
+        }
+      },
+      "/examination/take/{id}/prescription/{prescription_id}/day/{day}": {
+        "patch": {
+          "tags": ["Examination"],
+          "summary": "Mark a prescription dose as taken for a day — Allowed roles: ceo, doctor, nurse",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "prescription_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "day",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Prescription day updated successfully"
+            },
+            "400": {
+              "description": "Invalid day parameter | Maximum frequency reached for this day | Cannot take prescription on a completed examination"
+            },
+            "404": {
+              "description": "Examination or Prescription or Day not found"
             }
           }
         }
@@ -4195,6 +4759,726 @@
           }
         }
       },
+      "/report/patient": {
+        "get": {
+          "tags": ["Report"],
+          "summary": "Get patient report — Allowed roles: ceo, receptionist",
+          "description": "Bemorlar hisobotini interval (daily, weekly, monthly, yearly) bo'yicha olish. Jami bemorlar, faol va nofaol bemorlar soni.",
+          "parameters": [
+            {
+              "name": "interval",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "enum": ["daily", "weekly", "monthly", "quarterly", "yearly"],
+                "example": "daily"
+              },
+              "description": "Hisobot intervali (daily, weekly, monthly, yearly)"
+            },
+            {
+              "name": "page",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 1,
+                "minimum": 1
+              },
+              "description": "Sahifa raqami (pagination)"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 10,
+                "minimum": 1,
+                "maximum": 100
+              },
+              "description": "Sahifadagi elementlar soni (pagination)"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Bemorlar hisoboti muvaffaqiyatli qaytarildi",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Patient report generated successfully"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "object",
+                              "properties": {
+                                "year": {
+                                  "type": "integer",
+                                  "example": 2025
+                                },
+                                "month": {
+                                  "type": "integer",
+                                  "example": 11
+                                },
+                                "week": {
+                                  "type": "integer",
+                                  "example": 45
+                                },
+                                "day": {
+                                  "type": "integer",
+                                  "example": 6
+                                }
+                              }
+                            },
+                            "totalPatients": {
+                              "type": "number",
+                              "example": 120
+                            },
+                            "activePatients": {
+                              "type": "number",
+                              "example": 85
+                            },
+                            "inactivePatients": {
+                              "type": "number",
+                              "example": 35
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Xato so'rov",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": false
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Invalid interval"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/report/examination": {
+        "get": {
+          "tags": ["Report"],
+          "summary": "Get examination report — Allowed roles: ceo, receptionist",
+          "description": "Tekshiruvlar hisobotini interval (daily, weekly, monthly, yearly) bo'yicha olish. Jami tekshiruvlar soni va umumiy summa.",
+          "parameters": [
+            {
+              "name": "interval",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "enum": ["daily", "weekly", "monthly", "quarterly", "yearly"],
+                "example": "daily"
+              },
+              "description": "Hisobot intervali (daily, weekly, monthly, yearly)"
+            },
+            {
+              "name": "page",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 1,
+                "minimum": 1
+              },
+              "description": "Sahifa raqami (pagination)"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 10,
+                "minimum": 1,
+                "maximum": 100
+              },
+              "description": "Sahifadagi elementlar soni (pagination)"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Tekshiruvlar hisoboti muvaffaqiyatli qaytarildi",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Examination report generated successfully"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "object",
+                              "properties": {
+                                "year": {
+                                  "type": "integer",
+                                  "example": 2025
+                                },
+                                "month": {
+                                  "type": "integer",
+                                  "example": 11
+                                },
+                                "week": {
+                                  "type": "integer",
+                                  "example": 45
+                                },
+                                "day": {
+                                  "type": "integer",
+                                  "example": 6
+                                }
+                              }
+                            },
+                            "totalExaminations": {
+                              "type": "number",
+                              "example": 75
+                            },
+                            "totalAmount": {
+                              "type": "number",
+                              "example": 3750000
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Xato so'rov",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": false
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Invalid interval"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/report/analysis": {
+        "get": {
+          "tags": ["Report"],
+          "summary": "Get analysis report — Allowed roles: ceo, receptionist",
+          "description": "Analizlar hisobotini interval (daily, weekly, monthly, yearly) bo'yicha olish. Jami analizlar soni va umumiy summa.",
+          "parameters": [
+            {
+              "name": "interval",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "enum": ["daily", "weekly", "monthly", "quarterly", "yearly"],
+                "example": "daily"
+              },
+              "description": "Hisobot intervali (daily, weekly, monthly, yearly)"
+            },
+            {
+              "name": "page",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 1,
+                "minimum": 1
+              },
+              "description": "Sahifa raqami (pagination)"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 10,
+                "minimum": 1,
+                "maximum": 100
+              },
+              "description": "Sahifadagi elementlar soni (pagination)"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Analizlar hisoboti muvaffaqiyatli qaytarildi",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Analysis report generated successfully"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "object",
+                              "properties": {
+                                "year": {
+                                  "type": "integer",
+                                  "example": 2025
+                                },
+                                "month": {
+                                  "type": "integer",
+                                  "example": 11
+                                },
+                                "week": {
+                                  "type": "integer",
+                                  "example": 45
+                                },
+                                "day": {
+                                  "type": "integer",
+                                  "example": 6
+                                }
+                              }
+                            },
+                            "totalAnalyses": {
+                              "type": "number",
+                              "example": 150
+                            },
+                            "totalAmount": {
+                              "type": "number",
+                              "example": 2250000
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Xato so'rov",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": false
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Invalid interval"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/report/diagnosis": {
+        "get": {
+          "tags": ["Report"],
+          "summary": "Get diagnosis report — Allowed roles: ceo, doctor",
+          "description": "Diagnosis bo'yicha examination statistikasi. Har bir diagnosis uchun examination soni va foiz ko'rsatkichi.",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "Diagnosis hisoboti muvaffaqiyatli qaytarildi",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Diagnosis report generated successfully"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "totalExaminations": {
+                            "type": "number",
+                            "example": 250
+                          },
+                          "diagnosisStats": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "diagnosis_id": {
+                                  "type": "string",
+                                  "example": "507f1f77bcf86cd799439011",
+                                  "nullable": true
+                                },
+                                "diagnosis_name": {
+                                  "type": "string",
+                                  "example": "Hypertension"
+                                },
+                                "diagnosis_code": {
+                                  "type": "string",
+                                  "example": "I10"
+                                },
+                                "diagnosis_description": {
+                                  "type": "string",
+                                  "example": "Essential (primary) hypertension"
+                                },
+                                "count": {
+                                  "type": "number",
+                                  "example": 45
+                                },
+                                "percentage": {
+                                  "type": "number",
+                                  "example": 18
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Xato so'rov",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": false
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Error generating diagnosis report"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/report/doctor": {
+        "get": {
+          "tags": ["Report"],
+          "summary": "Get doctor examination report — Allowed roles: ceo",
+          "description": "Shifokorlar bo'yicha ko'rik statistikasi. Har bir shifokor nechta ko'rik ko'rganligini interval (daily, weekly, monthly, yearly) bo'yicha ko'rsatadi.",
+          "parameters": [
+            {
+              "name": "interval",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "enum": ["daily", "weekly", "monthly", "quarterly", "yearly"],
+                "example": "daily"
+              },
+              "description": "Hisobot intervali (daily, weekly, monthly, yearly)"
+            },
+            {
+              "name": "page",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 1,
+                "minimum": 1
+              },
+              "description": "Sahifa raqami (pagination)"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "example": 10,
+                "minimum": 1,
+                "maximum": 100
+              },
+              "description": "Sahifadagi elementlar soni (pagination)"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Shifokorlar hisoboti muvaffaqiyatli qaytarildi",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Doctor report generated successfully"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "object",
+                              "properties": {
+                                "doctor_id": {
+                                  "type": "string",
+                                  "example": "507f1f77bcf86cd799439011"
+                                },
+                                "year": {
+                                  "type": "integer",
+                                  "example": 2025
+                                },
+                                "month": {
+                                  "type": "integer",
+                                  "example": 11
+                                },
+                                "week": {
+                                  "type": "integer",
+                                  "example": 45
+                                },
+                                "day": {
+                                  "type": "integer",
+                                  "example": 6
+                                }
+                              }
+                            },
+                            "doctor_id": {
+                              "type": "string",
+                              "example": "507f1f77bcf86cd799439011"
+                            },
+                            "doctor_name": {
+                              "type": "string",
+                              "example": "Dr. John Smith"
+                            },
+                            "doctor_phone": {
+                              "type": "string",
+                              "example": "+998901234567"
+                            },
+                            "doctor_email": {
+                              "type": "string",
+                              "example": "doctor@example.com"
+                            },
+                            "totalExaminations": {
+                              "type": "number",
+                              "example": 35
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Xato so'rov",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": false
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Error generating doctor report"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/report/room": {
+        "get": {
+          "tags": ["Report"],
+          "summary": "Get room report — Allowed roles: ceo, receptionist",
+          "description": "Xonalar va yotoqlar bandligi hisoboti. Jami xonalar, yotoqlar, band va bo'sh yotoqlar statistikasi.",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "Xonalar hisoboti muvaffaqiyatli qaytarildi",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Room report generated successfully"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "summary": {
+                            "type": "object",
+                            "properties": {
+                              "totalRooms": {
+                                "type": "number",
+                                "example": 10
+                              },
+                              "totalBeds": {
+                                "type": "number",
+                                "example": 40
+                              },
+                              "occupiedBeds": {
+                                "type": "number",
+                                "example": 28
+                              },
+                              "availableBeds": {
+                                "type": "number",
+                                "example": 12
+                              },
+                              "occupancyRate": {
+                                "type": "number",
+                                "example": 70
+                              }
+                            }
+                          },
+                          "rooms": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "507f1f77bcf86cd799439011"
+                                },
+                                "room_name": {
+                                  "type": "string",
+                                  "example": "Room 101"
+                                },
+                                "room_price": {
+                                  "type": "number",
+                                  "example": 150000
+                                },
+                                "patient_capacity": {
+                                  "type": "number",
+                                  "example": 4
+                                },
+                                "patient_occupied": {
+                                  "type": "number",
+                                  "example": 3
+                                },
+                                "available_beds": {
+                                  "type": "number",
+                                  "example": 1
+                                },
+                                "occupancy_rate": {
+                                  "type": "number",
+                                  "example": 75
+                                },
+                                "status": {
+                                  "type": "string",
+                                  "example": "active"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Xato so'rov",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": false
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Error generating room report"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "/diagnosis/create": {
         "post": {
           "tags": ["Diagnosis"],
@@ -5225,6 +6509,221 @@
           }
         }
       },
+      "/medication/create": {
+        "post": {
+          "tags": ["Medication"],
+          "summary": "Create a new medication",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "Paracetamol"
+                    },
+                    "form": {
+                      "type": "string",
+                      "enum": ["solid", "liquid", "injection", "topical"],
+                      "example": "solid",
+                      "description": "One of: solid, liquid, injection, topical"
+                    },
+                    "dosage": {
+                      "type": "string",
+                      "example": "500 mg"
+                    },
+                    "is_active": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  },
+                  "required": ["name", "form"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Medication created successfully"
+            }
+          }
+        }
+      },
+      "/medication/get-all": {
+        "get": {
+          "tags": ["Medication"],
+          "summary": "Get all medications with pagination",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "form",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["solid", "liquid", "injection", "topical"],
+                "example": "solid"
+              },
+              "description": "One of: solid, liquid, injection, topical"
+            },
+            {
+              "name": "is_active",
+              "in": "query",
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of medications"
+            }
+          }
+        }
+      },
+      "/medication/get-one/{id}": {
+        "get": {
+          "tags": ["Medication"],
+          "summary": "Get medication by ID",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Medication found"
+            },
+            "404": {
+              "description": "Medication not found"
+            }
+          }
+        }
+      },
+      "/medication/update/{id}": {
+        "put": {
+          "tags": ["Medication"],
+          "summary": "Update medication",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "form": {
+                      "type": "string",
+                      "enum": ["solid", "liquid", "injection", "topical"],
+                      "description": "One of: solid, liquid, injection, topical"
+                    },
+                    "dosage": {
+                      "type": "string"
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Medication updated successfully"
+            },
+            "404": {
+              "description": "Medication not found"
+            }
+          }
+        }
+      },
+      "/medication/delete/{id}": {
+        "delete": {
+          "tags": ["Medication"],
+          "summary": "Delete medication",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Medication deleted successfully"
+            },
+            "404": {
+              "description": "Medication not found"
+            }
+          }
+        }
+      },
       "/service-type/create": {
         "post": {
           "tags": ["ServiceType"],
@@ -5645,6 +7144,337 @@
             },
             "404": {
               "description": "Service type not found"
+            }
+          }
+        }
+      },
+      "/neurological-status/create": {
+        "post": {
+          "tags": ["Neurological Status"],
+          "summary": "Create a new neurological status — Allowed roles: ceo, doctor",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "examination_id",
+                    "meningeal_symptoms",
+                    "i_para_n_olfactorius",
+                    "ii_para_n_opticus",
+                    "iii_para_n_oculomotorius",
+                    "iv_para_n_trochlearis",
+                    "v_para_n_trigeminus",
+                    "vi_para_n_abducens",
+                    "vii_para_n_fascialis",
+                    "viii_para_n_vestibulocochlearis",
+                    "ix_para_n_glossopharyngeus",
+                    "x_para_n_vagus",
+                    "xi_para_n_accessorius",
+                    "xii_para_n_hypoglossus",
+                    "motor_system",
+                    "sensory_sphere",
+                    "coordination_sphere",
+                    "higher_brain_functions",
+                    "syndromic_diagnosis_justification",
+                    "topical_diagnosis_justification"
+                  ],
+                  "properties": {
+                    "examination_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8b"
+                    },
+                    "meningeal_symptoms": {
+                      "type": "string",
+                      "example": "No meningeal signs detected"
+                    },
+                    "i_para_n_olfactorius": {
+                      "type": "string",
+                      "example": "Normal sense of smell"
+                    },
+                    "ii_para_n_opticus": {
+                      "type": "string",
+                      "example": "Visual acuity normal"
+                    },
+                    "iii_para_n_oculomotorius": {
+                      "type": "string",
+                      "example": "Pupillary reflexes normal"
+                    },
+                    "iv_para_n_trochlearis": {
+                      "type": "string",
+                      "example": "Eye movement normal"
+                    },
+                    "v_para_n_trigeminus": {
+                      "type": "string",
+                      "example": "Facial sensation intact"
+                    },
+                    "vi_para_n_abducens": {
+                      "type": "string",
+                      "example": "Lateral eye movement normal"
+                    },
+                    "vii_para_n_fascialis": {
+                      "type": "string",
+                      "example": "Facial muscle strength normal"
+                    },
+                    "viii_para_n_vestibulocochlearis": {
+                      "type": "string",
+                      "example": "Hearing and balance normal"
+                    },
+                    "ix_para_n_glossopharyngeus": {
+                      "type": "string",
+                      "example": "Gag reflex present"
+                    },
+                    "x_para_n_vagus": {
+                      "type": "string",
+                      "example": "Vocal cord function normal"
+                    },
+                    "xi_para_n_accessorius": {
+                      "type": "string",
+                      "example": "Shoulder shrug normal"
+                    },
+                    "xii_para_n_hypoglossus": {
+                      "type": "string",
+                      "example": "Tongue movement normal"
+                    },
+                    "motor_system": {
+                      "type": "string",
+                      "example": "Muscle strength 5/5 bilaterally"
+                    },
+                    "sensory_sphere": {
+                      "type": "string",
+                      "example": "All sensory modalities intact"
+                    },
+                    "coordination_sphere": {
+                      "type": "string",
+                      "example": "Finger-to-nose test normal"
+                    },
+                    "higher_brain_functions": {
+                      "type": "string",
+                      "example": "Alert and oriented x3"
+                    },
+                    "syndromic_diagnosis_justification": {
+                      "type": "string",
+                      "example": "Based on clinical presentation, patient shows signs of peripheral neuropathy"
+                    },
+                    "topical_diagnosis_justification": {
+                      "type": "string",
+                      "example": "Lesion likely located in the peripheral nervous system"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Neurological status created successfully"
+            },
+            "400": {
+              "description": "Neurological status already exists for this examination"
+            },
+            "404": {
+              "description": "Examination not found"
+            }
+          }
+        }
+      },
+      "/neurological-status/get-all": {
+        "get": {
+          "tags": ["Neurological Status"],
+          "summary": "Get all neurological statuses — Allowed roles: ceo, doctor, receptionist",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "required": false
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "required": false
+            },
+            {
+              "name": "examination_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of neurological statuses"
+            }
+          }
+        }
+      },
+      "/neurological-status/get-one/{id}": {
+        "get": {
+          "tags": ["Neurological Status"],
+          "summary": "Get one neurological status by ID — Allowed roles: ceo, doctor, receptionist",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Neurological status found"
+            },
+            "404": {
+              "description": "Neurological status not found"
+            }
+          }
+        }
+      },
+      "/neurological-status/update/{id}": {
+        "patch": {
+          "tags": ["Neurological Status"],
+          "summary": "Update a neurological status — Allowed roles: ceo, doctor",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "meningeal_symptoms": {
+                      "type": "string",
+                      "example": "No meningeal signs detected"
+                    },
+                    "i_para_n_olfactorius": {
+                      "type": "string",
+                      "example": "Normal sense of smell"
+                    },
+                    "ii_para_n_opticus": {
+                      "type": "string",
+                      "example": "Visual acuity normal"
+                    },
+                    "iii_para_n_oculomotorius": {
+                      "type": "string",
+                      "example": "Pupillary reflexes normal"
+                    },
+                    "iv_para_n_trochlearis": {
+                      "type": "string",
+                      "example": "Eye movement normal"
+                    },
+                    "v_para_n_trigeminus": {
+                      "type": "string",
+                      "example": "Facial sensation intact"
+                    },
+                    "vi_para_n_abducens": {
+                      "type": "string",
+                      "example": "Lateral eye movement normal"
+                    },
+                    "vii_para_n_fascialis": {
+                      "type": "string",
+                      "example": "Facial muscle strength normal"
+                    },
+                    "viii_para_n_vestibulocochlearis": {
+                      "type": "string",
+                      "example": "Hearing and balance normal"
+                    },
+                    "ix_para_n_glossopharyngeus": {
+                      "type": "string",
+                      "example": "Gag reflex present"
+                    },
+                    "x_para_n_vagus": {
+                      "type": "string",
+                      "example": "Vocal cord function normal"
+                    },
+                    "xi_para_n_accessorius": {
+                      "type": "string",
+                      "example": "Shoulder shrug normal"
+                    },
+                    "xii_para_n_hypoglossus": {
+                      "type": "string",
+                      "example": "Tongue movement normal"
+                    },
+                    "motor_system": {
+                      "type": "string",
+                      "example": "Muscle strength 5/5 bilaterally"
+                    },
+                    "sensory_sphere": {
+                      "type": "string",
+                      "example": "All sensory modalities intact"
+                    },
+                    "coordination_sphere": {
+                      "type": "string",
+                      "example": "Finger-to-nose test normal"
+                    },
+                    "higher_brain_functions": {
+                      "type": "string",
+                      "example": "Alert and oriented x3"
+                    },
+                    "syndromic_diagnosis_justification": {
+                      "type": "string",
+                      "example": "Based on clinical presentation, patient shows signs of peripheral neuropathy"
+                    },
+                    "topical_diagnosis_justification": {
+                      "type": "string",
+                      "example": "Lesion likely located in the peripheral nervous system"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Neurological status updated successfully"
+            },
+            "404": {
+              "description": "Neurological status not found"
+            }
+          }
+        }
+      },
+      "/neurological-status/delete/{id}": {
+        "delete": {
+          "tags": ["Neurological Status"],
+          "summary": "Delete a neurological status — Allowed roles: ceo, doctor",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Neurological status deleted successfully"
+            },
+            "404": {
+              "description": "Neurological status not found"
             }
           }
         }

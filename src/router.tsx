@@ -3,7 +3,6 @@ import Appointments from '@/pages/Appointments/Appointments';
 import LabOrder from '@/pages/Diagnostika/LabOrder';
 import LabResults from '@/pages/Diagnostika/LabResults';
 import Inpatient from '@/pages/Inpatient/Inpatient';
-import InpatientCalendar from '@/pages/Inpatient/InpatientCalendar';
 import PatientPortal from '@/pages/PatientPortal';
 import PatientProfile from '@/pages/Patients/PatientProfile';
 import Patients from '@/pages/Patients/Patients';
@@ -16,11 +15,11 @@ import AddDiagnostika from './pages/Diagnostika/AddDiagnostika';
 import AnalysisParamsModal from './pages/Diagnostika/AnalysisParamsModal';
 import Disease from './pages/Examination/Disease';
 import ExaminationDetail from './pages/Examination/ExaminationDetail';
+import Examinations from './pages/Examination/Examinations';
 import Medication from './pages/Examination/Medication';
 import NewVisit from './pages/Examination/NewVisit';
 import Prescription from './pages/Examination/Prescription';
 import Service from './pages/Examination/Service';
-import Examinations from './pages/Examination/Examinations';
 import Medicine from './pages/Medicine/Medicine';
 import RoomDetail from './pages/RoomDetail/RoomDetail';
 import Rooms from './pages/Rooms/Rooms';
@@ -43,7 +42,6 @@ export const routers = [
   { path: '/analysisById/:id', element: <AnalysisParamsModal /> },
   { path: '/lab-order', element: <LabOrder /> },
   { path: '/inpatient', element: <Inpatient /> },
-  { path: '/inpatient-calendar', element: <InpatientCalendar /> },
   { path: '/inpatient/:id', element: <Rooms /> },
   { path: '/room/:id', element: <RoomDetail /> },
   { path: '/medicine', element: <Medicine /> },
@@ -114,7 +112,7 @@ export const navigator = [
   },
   {
     path: '/examination/:id',
-    to: '/visits',
+    to: '/examinations',
     title: 'Кўрик Тафсилотлари',
   },
   {
@@ -136,11 +134,6 @@ export const navigator = [
     path: '/inpatient',
     to: null,
     title: 'Стационар',
-  },
-  {
-    path: '/inpatient-calendar',
-    to: null,
-    title: 'Стационар Календари',
   },
   {
     path: '/inpatient/:id',
