@@ -37,11 +37,12 @@ import EditVisit from './components/EditVisit';
 import ExamFilter from './components/ExamFilter';
 import VisitDetail from './components/VisitDetail';
 
-const Visits = () => {
+const Examinations = () => {
   const { canCreate } = usePermission('examination');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [treatmentTypeFilter, setTreatmentTypeFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -67,6 +68,10 @@ const Visits = () => {
     page: currentPage,
     limit: itemsPerPage,
     status: statusFilter !== 'all' ? (statusFilter as any) : undefined,
+    treatment_type:
+      treatmentTypeFilter !== 'all'
+        ? (treatmentTypeFilter as 'stasionar' | 'ambulator')
+        : undefined,
   });
 
   // Fetch all diagnosis
@@ -209,8 +214,11 @@ const Visits = () => {
         {/* Search and Filters */}
         <Card className='card-shadow mb-4 sm:mb-6'>
           <div className='p-4 sm:p-6'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
               <div className='sm:col-span-2'>
+                <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
+                  Қидирув
+                </label>
                 <div className='relative'>
                   <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground' />
                   <Input
@@ -223,6 +231,9 @@ const Visits = () => {
               </div>
 
               <div>
+                <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
+                  Статус
+                </label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
                     <SelectValue placeholder='Статус' />
@@ -231,9 +242,25 @@ const Visits = () => {
                     <SelectItem value='all'>Барчаси</SelectItem>
                     <SelectItem value='completed'>Тугалланган</SelectItem>
                     <SelectItem value='pending'>Тугалланмаган</SelectItem>
-                    {/* <SelectItem value='active'>Фаол</SelectItem>
-                    <SelectItem value='deleted'>Ўчирилганлар</SelectItem>
-                    <SelectItem value='inactive'>Фаол эмас</SelectItem> */}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
+                  Даволаш тури
+                </label>
+                <Select
+                  value={treatmentTypeFilter}
+                  onValueChange={setTreatmentTypeFilter}
+                >
+                  <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
+                    <SelectValue placeholder='Даволаш тури' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>Барчаси</SelectItem>
+                    <SelectItem value='ambulator'>Амбулатор</SelectItem>
+                    <SelectItem value='stasionar'>Стационар</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -277,9 +304,10 @@ const Visits = () => {
                     <TableHead>Бемор</TableHead>
                     <TableHead>Шифокор</TableHead>
                     <TableHead>Шикоят</TableHead>
+                    <TableHead>Тури</TableHead>
                     <TableHead>Статус</TableHead>
-                    <TableHead>Сана</TableHead>
-                    <TableHead className='text-right'>Ҳаракатлар</TableHead>
+                    <TableHead className='min-w-[120px]'>Сана</TableHead>
+                    <TableHead>Ҳаракатлар</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -303,6 +331,19 @@ const Visits = () => {
                       <TableCell>
                         <span className='text-sm line-clamp-2'>
                           {exam.complaints}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            exam.treatment_type === 'stasionar'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
+                          {exam.treatment_type === 'stasionar'
+                            ? 'Стационар'
+                            : 'Амбулатор'}
                         </span>
                       </TableCell>
                       <TableCell>{getStatusBadge(exam.status)}</TableCell>
@@ -506,4 +547,4 @@ const Visits = () => {
   );
 };
 
-export default Visits;
+export default Examinations;

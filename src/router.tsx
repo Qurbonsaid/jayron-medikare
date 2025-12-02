@@ -20,7 +20,7 @@ import Medication from './pages/Examination/Medication';
 import NewVisit from './pages/Examination/NewVisit';
 import Prescription from './pages/Examination/Prescription';
 import Service from './pages/Examination/Service';
-import Visits from './pages/Examination/Visits';
+import Examinations from './pages/Examination/Examinations';
 import Medicine from './pages/Medicine/Medicine';
 import RoomDetail from './pages/RoomDetail/RoomDetail';
 import Rooms from './pages/Rooms/Rooms';
@@ -32,10 +32,10 @@ export const routers = [
   { path: '/patients', element: <Patients /> },
   { path: '/patient/:id', element: <PatientProfile /> },
   { path: '/new-visit', element: <NewVisit /> },
-  { path: '/examination/:id', element: <ExaminationDetail /> },
   { path: '/appointments', element: <Appointments /> },
   { path: '/prescription', element: <Prescription /> },
-  { path: '/visits', element: <Visits /> },
+  { path: '/examinations', element: <Examinations /> },
+  { path: '/examination/:id', element: <ExaminationDetail /> },
   { path: '/disease', element: <Disease /> },
   { path: '/medication', element: <Medication /> },
   { path: '/service', element: <Service /> },

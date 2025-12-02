@@ -11,6 +11,27 @@ import {
 import { Download } from 'lucide-react';
 import React from 'react';
 
+// Telefon raqamini +998 91 123 45 67 formatiga o'zgartirish
+const formatPhone = (phone: string | undefined): string => {
+  if (!phone) return "Ko'rsatilmagan";
+  // Faqat raqamlarni olish
+  const digits = phone.replace(/\D/g, '');
+  // 998 bilan boshlanmasa, 998 qo'shish
+  const fullNumber = digits.startsWith('998') ? digits : `998${digits}`;
+  // Agar 12 ta raqam bo'lsa formatlash
+  if (fullNumber.length === 12) {
+    return `+${fullNumber.slice(0, 3)} ${fullNumber.slice(
+      3,
+      5
+    )} ${fullNumber.slice(5, 8)} ${fullNumber.slice(8, 10)} ${fullNumber.slice(
+      10,
+      12
+    )}`;
+  }
+  // Aks holda asl qiymatni qaytarish
+  return phone;
+};
+
 // Kirill harflarini qo'llab-quvvatlovchi shriftni ro'yxatdan o'tkazish
 Font.register({
   family: 'Roboto',
@@ -189,7 +210,7 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
             Bemor: {exam.patient_id?.fullname || "Noma'lum"}
           </Text>
           <Text style={{ marginBottom: '2px' }}>
-            Telefon: {exam.patient_id?.phone || "Ko'rsatilmagan"}
+            Telefon: {formatPhone(exam.patient_id?.phone)}
           </Text>
           <Text style={{ marginBottom: '2px' }}>Diagnoz: {getDiagnosis()}</Text>
         </View>
@@ -304,8 +325,8 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
           </Text>
           <Text style={{ marginTop: 3 }}>Imzo: _________</Text>
           <Text style={{ marginTop: 3, fontSize: 7 }}>
-            Telefon: {exam.doctor_id?.phone || "Ko'rsatilmagan"} | Qabul
-            kunlari: Dushanba-Shanba
+            Telefon: {formatPhone(exam.doctor_id?.phone)} | Qabul kunlari:
+            Dushanba-Shanba
           </Text>
         </View>
       </Page>
@@ -388,7 +409,7 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
             <View style={styles.gridItem}>
               <Text style={styles.bold}>Telefon:</Text>
               <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.patient_id?.phone || 'Ko`rsatilmagan'}
+                {formatPhone(exam.patient_id?.phone)}
               </Text>
             </View>
             <View style={styles.gridItem}>
@@ -423,7 +444,7 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
             <View style={styles.gridItem}>
               <Text style={styles.bold}>Telefon:</Text>
               <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.doctor_id?.phone || 'Ko`rsatilmagan'}
+                {formatPhone(exam.doctor_id?.phone)}
               </Text>
             </View>
             <View style={styles.gridItem}>
@@ -882,8 +903,8 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
           </Text>
           <Text style={{ marginTop: 3 }}>Imzo: _________</Text>
           <Text style={{ marginTop: 3, fontSize: 7 }}>
-            Telefon: {exam.doctor_id?.phone || "Ko'rsatilmagan"} | Qabul
-            kunlari: Dushanba-Shanba
+            Telefon: {formatPhone(exam.doctor_id?.phone)} | Qabul kunlari:
+            Dushanba-Shanba
           </Text>
         </View>
       </Page>
@@ -1059,7 +1080,7 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
             Bemor: {exam.patient_id?.fullname || "Noma'lum"}
           </Text>
           <Text style={{ marginBottom: '2px' }}>
-            Telefon: {exam.patient_id?.phone || "Ko'rsatilmagan"}
+            Telefon: {formatPhone(exam.patient_id?.phone)}
           </Text>
           <Text style={{ marginBottom: '2px' }}>
             Shifokor: {exam.doctor_id?.fullname || "Noma'lum"}
@@ -1213,8 +1234,8 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
           </Text>
           <Text style={{ marginTop: 3 }}>Imzo: _________</Text>
           <Text style={{ marginTop: 3, fontSize: 7 }}>
-            Telefon: {exam.doctor_id?.phone || "Ko'rsatilmagan"} | Qabul
-            kunlari: Dushanba-Shanba
+            Telefon: {formatPhone(exam.doctor_id?.phone)} | Qabul kunlari:
+            Dushanba-Shanba
           </Text>
         </View>
       </Page>
@@ -1471,8 +1492,8 @@ const NeurologicStatusPDF: React.FC<NeurologicStatusPDFProps> = ({
           </Text>
           <Text style={{ marginTop: 3 }}>Imzo: _________</Text>
           <Text style={{ marginTop: 3, fontSize: 7 }}>
-            Telefon: {exam.doctor_id?.phone || "Ko'rsatilmagan"} | Qabul
-            kunlari: Dushanba-Shanba
+            Telefon: {formatPhone(exam.doctor_id?.phone)} | Qabul kunlari:
+            Dushanba-Shanba
           </Text>
         </View>
       </Page>
