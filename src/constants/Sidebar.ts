@@ -63,7 +63,7 @@ export const menuCategories: MenuCategory[] = [
       },
       {
         title: 'Кўриклар',
-        url: '/visits',
+        url: '/examinations',
         icon: Calendar,
         permission: 'examination',
       },
