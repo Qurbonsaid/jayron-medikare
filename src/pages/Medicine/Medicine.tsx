@@ -1,20 +1,26 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import {
+	useCreatePrescriptionDaysMutation,
+	useCreateServiceDaysMutation,
+	useGetAllExamsQuery,
+	useTakeMedicineMutation,
+	useTakeServiceMutation,
+} from '@/app/api/examinationApi/examinationApi'
 import {
 	Accordion,
 	AccordionContent,
 	AccordionItem,
 	AccordionTrigger,
 } from '@/components/ui/accordion'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
 	Dialog,
 	DialogContent,
+	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogFooter,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import {
 	Pagination,
 	PaginationContent,
@@ -23,14 +29,11 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination'
-import { Check, Loader2, Search } from 'lucide-react'
-import {
-	useGetAllExamsQuery,
-	useCreatePrescriptionDaysMutation,
-	useTakeMedicineMutation,
-} from '@/app/api/examinationApi/examinationApi'
-import { toast } from 'sonner'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
+import { Check, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface Day {
 	_id: string
@@ -41,12 +44,34 @@ interface Day {
 
 interface Prescription {
 	_id: string
-	medication: string
-	dosage: number
+	medication_id:
+		| {
+				_id: string
+				name: string
+				dosage: number
+				dosage_unit: string
+		  }
+		| string
 	frequency: number
 	duration: number
 	instructions: string
 	days?: Day[]
+}
+
+interface Service {
+	service_type_id: {
+		_id: string
+		code: string
+		name: string
+		description: string
+	}
+	price: number
+	frequency: number
+	duration: number
+	status: string
+	notes: string
+	days?: Day[]
+	_id: string
 }
 
 interface Room {
@@ -62,6 +87,7 @@ interface ExamRecord {
 	patient_id: Patient
 	rooms: Room[]
 	prescriptions: Prescription[]
+	services: Service[]
 }
 
 const Medicine = () => {
@@ -71,16 +97,23 @@ const Medicine = () => {
 		open: boolean
 		recordId: string | null
 		prescriptionId: string | null
+		serviceId: string | null
 		day: string | null
+		type: 'medicine' | 'service'
 	}>({
 		open: false,
 		recordId: null,
 		prescriptionId: null,
+		serviceId: null,
 		day: null,
+		type: 'medicine',
 	})
 	const [processedPrescriptions, setProcessedPrescriptions] = useState<
 		Set<string>
 	>(new Set())
+	const [processedServices, setProcessedServices] = useState<Set<string>>(
+		new Set()
+	)
 
 	const itemsPerPage = 10
 
@@ -96,6 +129,8 @@ const Medicine = () => {
 	const [createPrescriptionDays] = useCreatePrescriptionDaysMutation()
 	const [takeMedicine, { isLoading: takingMedicine }] =
 		useTakeMedicineMutation()
+	const [createServiceDays] = useCreateServiceDaysMutation()
+	const [takeService, { isLoading: takingService }] = useTakeServiceMutation()
 	const handleRequest = useHandleRequest()
 
 	// Format date helper
@@ -131,8 +166,10 @@ const Medicine = () => {
 					id: recordId,
 					prescriptionId: prescription._id,
 					data: {
-						medication: prescription.medication,
-						dosage: prescription.dosage,
+						medication_id:
+							typeof prescription.medication_id === 'string'
+								? prescription.medication_id
+								: prescription.medication_id._id,
 						frequency: prescription.frequency,
 						duration: prescription.duration,
 						instructions: prescription.instructions,
@@ -151,38 +188,33 @@ const Medicine = () => {
 		})
 	}
 
-	const openConfirmModal = (
+	// Service accordion ochilganda days yaratish
+	const handleServiceAccordionChange = async (
 		recordId: string,
-		prescriptionId: string,
-		day: number
+		service: Service
 	) => {
-		setConfirmModal({ open: true, recordId, prescriptionId, day })
-	}
-
-	const handleConfirm = async () => {
-		if (
-			!confirmModal.recordId ||
-			!confirmModal.prescriptionId ||
-			!confirmModal.day
-		) {
+		if (service.days?.length > 0 || processedServices.has(service._id)) {
 			return
 		}
 
+		setProcessedServices(prev => new Set(prev).add(service._id))
+
 		await handleRequest({
 			request: () =>
-				takeMedicine({
-					id: confirmModal.recordId!,
-					prescriptionId: confirmModal.prescriptionId!,
-					day: confirmModal.day!,
+				createServiceDays({
+					id: recordId,
+					serviceId: service._id,
+					data: {
+						service_type_id: service.service_type_id._id,
+						price: service.price,
+						frequency: service.frequency,
+						duration: service.duration,
+						status: service.status,
+						notes: service.notes,
+					},
 				}),
 			onSuccess: () => {
-				toast.success('Дори қабул қилинди ✓')
-				setConfirmModal({
-					open: false,
-					recordId: null,
-					prescriptionId: null,
-					day: null,
-				})
+				toast.success('Хизмат кунлари яратилди')
 			},
 			onError: err => {
 				if (err?.data) {
@@ -192,6 +224,85 @@ const Medicine = () => {
 				}
 			},
 		})
+	}
+
+	const openConfirmModal = (
+		recordId: string,
+		prescriptionId: string | null,
+		serviceId: string | null,
+		day: number,
+		type: 'medicine' | 'service'
+	) => {
+		setConfirmModal({
+			open: true,
+			recordId,
+			prescriptionId,
+			serviceId,
+			day,
+			type,
+		})
+	}
+
+	const handleConfirm = async () => {
+		if (!confirmModal.recordId || !confirmModal.day) {
+			return
+		}
+
+		if (confirmModal.type === 'medicine' && confirmModal.prescriptionId) {
+			await handleRequest({
+				request: () =>
+					takeMedicine({
+						id: confirmModal.recordId!,
+						prescriptionId: confirmModal.prescriptionId!,
+						day: confirmModal.day!,
+					}),
+				onSuccess: () => {
+					toast.success('Дори қабул қилинди ✓')
+					setConfirmModal({
+						open: false,
+						recordId: null,
+						prescriptionId: null,
+						serviceId: null,
+						day: null,
+						type: 'medicine',
+					})
+				},
+				onError: err => {
+					if (err?.data) {
+						toast.error(err?.data?.error?.msg)
+					} else {
+						toast.error(err?.error?.msg || 'Хатолик юз берди')
+					}
+				},
+			})
+		} else if (confirmModal.type === 'service' && confirmModal.serviceId) {
+			await handleRequest({
+				request: () =>
+					takeService({
+						id: confirmModal.recordId!,
+						serviceId: confirmModal.serviceId!,
+						day: confirmModal.day!,
+					}),
+				onSuccess: () => {
+					toast.success('Хизмат бажарилди ✓')
+					setConfirmModal({
+						open: false,
+						recordId: null,
+						prescriptionId: null,
+						serviceId: null,
+						day: null,
+						type: 'medicine',
+					})
+				},
+				onError: err => {
+					if (err?.data) {
+						toast.error(err?.data?.error?.msg)
+					} else {
+						toast.error(err?.error?.msg || 'Хатолик юз берди')
+					}
+				},
+			})
+		}
 	}
 
 	// Room search handler
@@ -291,229 +402,500 @@ const Medicine = () => {
 									</AccordionTrigger>
 
 									<AccordionContent className='px-2 sm:px-4 pb-2 sm:pb-4'>
-										{record.prescriptions.length === 0 ? (
-											<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
-												Дорилар топилмади
-											</p>
-										) : (
-											<div className='space-y-2 sm:space-y-4 pt-2 sm:pt-3'>
-												{record.prescriptions.map(prescription => {
-													const isProcessing = processedPrescriptions.has(
-														prescription._id
-													)
-													const hasDays =
-														prescription.days && prescription.days.length > 0
+										<Tabs defaultValue='medicines' className='w-full'>
+											<TabsList className='grid w-full grid-cols-2 mb-4'>
+												<TabsTrigger value='medicines'>Дорилар</TabsTrigger>
+												<TabsTrigger value='services'>Хизматлар</TabsTrigger>
+											</TabsList>
 
-													return (
-														<Card
-															key={prescription._id}
-															className='border shadow-sm bg-card'
-														>
-															<CardHeader className='pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6'>
-																<div className='flex justify-between items-start gap-2'>
-																	<div className='flex-1 min-w-0'>
-																		<h4 className='font-semibold text-xs sm:text-sm md:text-base line-clamp-2'>
-																			{prescription.medication}
-																		</h4>
-																		<p className='text-xs font-medium text-muted-foreground mt-1'>
-																			КЎРСАТМАЛАР: {prescription.instructions}
-																		</p>
-																		<p className='text-xs text-muted-foreground mt-0.5'>
-																			Доза: {prescription.dosage}мг
-																		</p>
-																	</div>
-																</div>
-															</CardHeader>
-															<CardContent className='px-3 sm:px-6 pb-3 sm:pb-6'>
-																{/* Loading holati */}
-																{isProcessing && !hasDays && (
-																	<div className='flex items-center justify-center py-6 sm:py-8'>
-																		<Loader2 className='w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary' />
-																		<span className='ml-2 text-xs sm:text-sm text-muted-foreground'>
-																			Кунлар яратилмоқда...
-																		</span>
-																	</div>
-																)}
+											<TabsContent value='medicines'>
+												{record.prescriptions.length === 0 ? (
+													<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
+														Дорилар топилмади
+													</p>
+												) : (
+													<div className='space-y-2 sm:space-y-4 pt-2 sm:pt-3'>
+														{record.prescriptions.map(prescription => {
+															const isProcessing = processedPrescriptions.has(
+																prescription._id
+															)
+															const hasDays =
+																prescription.days &&
+																prescription.days.length > 0
 
-																{/* Days mavjud bo'lsa */}
-																{hasDays && (
-																	<>
-																		{/* Desktop - 5 columns */}
-																		<div className='hidden lg:grid lg:grid-cols-5 gap-2 xl:gap-3'>
-																			{prescription.days.map(day => {
-																				const taken = day.times || 0
-																				const total = prescription.frequency
-																				const isCompleted = taken >= total
-																				const lastDate = formatDate(day.date)
-
-																				return (
-																					<div
-																						key={day._id}
-																						className='flex flex-col items-center p-2 xl:p-3 border rounded-lg hover:bg-accent/50 transition-colors'
-																						onClick={() =>
-																							!isCompleted &&
-																							openConfirmModal(
-																								record._id,
-																								prescription._id,
-																								day.day
-																							)
-																						}
-																					>
-																						<p className='text-xs font-medium mb-1 text-center line-clamp-1'>
-																							Кун {day.day}
-																						</p>
-																						{lastDate && (
-																							<p className='text-[10px] text-black mb-1.5 text-center'>
-																								{isToday(day.date)
-																									? 'Bugun'
-																									: lastDate}
-																							</p>
-																						)}
-																						<button
-																							disabled={isCompleted}
-																							className={`text-base xl:text-lg font-bold transition-all ${
-																								isCompleted
-																									? 'text-green-600 cursor-default'
-																									: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
-																							}`}
-																						>
-																							{isCompleted ? (
-																								<div className='flex items-center justify-center w-7 h-7 xl:w-8 xl:h-8 bg-green-500 rounded-full'>
-																									<Check className='w-4 h-4 xl:w-5 xl:h-5 text-white' />
-																								</div>
-																							) : (
-																								<span>
-																									{taken}/{total}
-																								</span>
-																							)}
-																						</button>
-																					</div>
-																				)
-																			})}
+															return (
+																<Card
+																	key={prescription._id}
+																	className='border shadow-sm bg-card'
+																>
+																	<CardHeader className='pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6'>
+																		<div className='flex justify-between items-start gap-2'>
+																			<div className='flex-1 min-w-0'>
+																				<h4 className='font-semibold text-xs sm:text-sm md:text-base line-clamp-2'>
+																					{typeof prescription.medication_id ===
+																					'string'
+																						? prescription.medication_id
+																						: prescription.medication_id.name}
+																				</h4>
+																				<p className='text-xs font-medium text-muted-foreground mt-1'>
+																					КЎРСАТМАЛАР:{' '}
+																					{prescription.instructions}
+																				</p>
+																				<p className='text-xs text-muted-foreground mt-0.5'>
+																					Доза:{' '}
+																					{typeof prescription.medication_id ===
+																					'string'
+																						? 'N/A'
+																						: `${prescription.medication_id.dosage}${prescription.medication_id.dosage_unit}`}
+																				</p>
+																			</div>
 																		</div>
+																	</CardHeader>
+																	<CardContent className='px-3 sm:px-6 pb-3 sm:pb-6'>
+																		{/* Loading holati */}
+																		{isProcessing && !hasDays && (
+																			<div className='flex items-center justify-center py-6 sm:py-8'>
+																				<Loader2 className='w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary' />
+																				<span className='ml-2 text-xs sm:text-sm text-muted-foreground'>
+																					Кунлар яратилмоқда...
+																				</span>
+																			</div>
+																		)}
 
-																		{/* Tablet - 3 columns */}
-																		<div className='hidden sm:grid lg:hidden sm:grid-cols-3 md:grid-cols-4 gap-2'>
-																			{prescription.days.map(day => {
-																				const taken = day.times || 0
-																				const total = prescription.frequency
-																				const isCompleted = taken >= total
-																				const lastDate = formatDate(day.date)
+																		{/* Days mavjud bo'lsa */}
+																		{hasDays && (
+																			<>
+																				{/* Desktop - 5 columns */}
+																				<div className='hidden lg:grid lg:grid-cols-5 gap-2 xl:gap-3'>
+																					{prescription.days.map(day => {
+																						const taken = day.times || 0
+																						const total = prescription.frequency
+																						const isCompleted = taken >= total
+																						const lastDate = formatDate(
+																							day.date
+																						)
 
-																				return (
-																					<div
-																						key={day._id}
-																						className='flex flex-col items-center p-2 border rounded-lg hover:bg-accent/50 transition-colors'
-																						onClick={() =>
-																							!isCompleted &&
-																							openConfirmModal(
-																								record._id,
-																								prescription._id,
-																								day.day
-																							)
-																						}
-																					>
-																						<p className='text-xs font-medium mb-0.5 text-center line-clamp-1'>
-																							Кун {day.day}
-																						</p>
-																						{lastDate && (
-																							<p className='text-[10px] text-black mb-1 text-center'>
-																								{isToday(day.date)
-																									? 'Bugun'
-																									: lastDate}
-																							</p>
-																						)}
-																						<button
-																							disabled={isCompleted}
-																							className={`text-base font-bold transition-all ${
-																								isCompleted
-																									? 'text-green-600 cursor-default'
-																									: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
-																							}`}
-																						>
-																							{isCompleted ? (
-																								<div className='flex items-center justify-center w-7 h-7 bg-green-500 rounded-full'>
-																									<Check className='w-4 h-4 text-white' />
-																								</div>
-																							) : (
-																								<span>
-																									{taken}/{total}
-																								</span>
-																							)}
-																						</button>
-																					</div>
-																				)
-																			})}
-																		</div>
-
-																		{/* Mobile - 2 columns */}
-																		<div className='grid grid-cols-2 gap-2 sm:hidden'>
-																			{prescription.days.map(day => {
-																				const taken = day.times || 0
-																				const total = prescription.frequency
-																				const isCompleted = taken >= total
-																				const lastDate = formatDate(day.date)
-
-																				return (
-																					<div
-																						key={day._id}
-																						className='flex flex-col p-2 border rounded-lg active:bg-accent/50 transition-colors'
-																						onClick={() =>
-																							!isCompleted &&
-																							openConfirmModal(
-																								record._id,
-																								prescription._id,
-																								day.day
-																							)
-																						}
-																					>
-																						<div className='flex items-center justify-between mb-1'>
-																							<span className='text-xs font-medium'>
-																								Кун {day.day}
-																							</span>
-																							<button
-																								disabled={isCompleted}
-																								className={`text-sm font-bold transition-all flex-shrink-0 ${
-																									isCompleted
-																										? 'text-green-600'
-																										: 'text-primary active:scale-95'
-																								}`}
+																						return (
+																							<div
+																								key={day._id}
+																								className='flex flex-col items-center p-2 xl:p-3 border rounded-lg hover:bg-accent/50 transition-colors'
+																								onClick={() =>
+																									!isCompleted &&
+																									openConfirmModal(
+																										record._id,
+																										prescription._id,
+																										null,
+																										day.day,
+																										'medicine'
+																									)
+																								}
 																							>
-																								{isCompleted ? (
-																									<Check className='w-5 h-5 text-green-600' />
-																								) : (
-																									<span>
-																										{taken}/{total}
-																									</span>
+																								<p className='text-xs font-medium mb-1 text-center line-clamp-1'>
+																									Кун {day.day}
+																								</p>
+																								{lastDate && (
+																									<p className='text-[10px] text-black mb-1.5 text-center'>
+																										{isToday(day.date)
+																											? 'Bugun'
+																											: lastDate}
+																									</p>
 																								)}
-																							</button>
-																						</div>
-																						{lastDate && (
-																							<p className='text-[9px] text-black text-left'>
-																								{isToday(day.date)
-																									? 'Bugun'
-																									: lastDate}
-																							</p>
-																						)}
-																					</div>
-																				)
-																			})}
-																		</div>
-																	</>
-																)}
+																								<button
+																									disabled={isCompleted}
+																									className={`text-base xl:text-lg font-bold transition-all ${
+																										isCompleted
+																											? 'text-green-600 cursor-default'
+																											: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
+																									}`}
+																								>
+																									{isCompleted ? (
+																										<div className='flex items-center justify-center w-7 h-7 xl:w-8 xl:h-8 bg-green-500 rounded-full'>
+																											<Check className='w-4 h-4 xl:w-5 xl:h-5 text-white' />
+																										</div>
+																									) : (
+																										<span>
+																											{taken}/{total}
+																										</span>
+																									)}
+																								</button>
+																							</div>
+																						)
+																					})}
+																				</div>
 
-																{/* Days yo'q va processing ham yo'q */}
-																{!hasDays && !isProcessing && (
-																	<p className='text-xs sm:text-sm text-black text-center py-4'>
-																		Кунлар юкланмоқда...
-																	</p>
-																)}
-															</CardContent>
-														</Card>
-													)
-												})}
-											</div>
-										)}
+																				{/* Tablet - 3 columns */}
+																				<div className='hidden sm:grid lg:hidden sm:grid-cols-3 md:grid-cols-4 gap-2'>
+																					{prescription.days.map(day => {
+																						const taken = day.times || 0
+																						const total = prescription.frequency
+																						const isCompleted = taken >= total
+																						const lastDate = formatDate(
+																							day.date
+																						)
+
+																						return (
+																							<div
+																								key={day._id}
+																								className='flex flex-col items-center p-2 border rounded-lg hover:bg-accent/50 transition-colors'
+																								onClick={() =>
+																									!isCompleted &&
+																									openConfirmModal(
+																										record._id,
+																										prescription._id,
+																										null,
+																										day.day,
+																										'medicine'
+																									)
+																								}
+																							>
+																								<p className='text-xs font-medium mb-0.5 text-center line-clamp-1'>
+																									Кун {day.day}
+																								</p>
+																								{lastDate && (
+																									<p className='text-[10px] text-black mb-1 text-center'>
+																										{isToday(day.date)
+																											? 'Bugun'
+																											: lastDate}
+																									</p>
+																								)}
+																								<button
+																									disabled={isCompleted}
+																									className={`text-base font-bold transition-all ${
+																										isCompleted
+																											? 'text-green-600 cursor-default'
+																											: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
+																									}`}
+																								>
+																									{isCompleted ? (
+																										<div className='flex items-center justify-center w-7 h-7 bg-green-500 rounded-full'>
+																											<Check className='w-4 h-4 text-white' />
+																										</div>
+																									) : (
+																										<span>
+																											{taken}/{total}
+																										</span>
+																									)}
+																								</button>
+																							</div>
+																						)
+																					})}
+																				</div>
+
+																				{/* Mobile - 2 columns */}
+																				<div className='grid grid-cols-2 gap-2 sm:hidden'>
+																					{prescription.days.map(day => {
+																						const taken = day.times || 0
+																						const total = prescription.frequency
+																						const isCompleted = taken >= total
+																						const lastDate = formatDate(
+																							day.date
+																						)
+
+																						return (
+																							<div
+																								key={day._id}
+																								className='flex flex-col p-2 border rounded-lg active:bg-accent/50 transition-colors'
+																								onClick={() =>
+																									!isCompleted &&
+																									openConfirmModal(
+																										record._id,
+																										prescription._id,
+																										null,
+																										day.day,
+																										'medicine'
+																									)
+																								}
+																							>
+																								<div className='flex items-center justify-between mb-1'>
+																									<span className='text-xs font-medium'>
+																										Кун {day.day}
+																									</span>
+																									<button
+																										disabled={isCompleted}
+																										className={`text-sm font-bold transition-all flex-shrink-0 ${
+																											isCompleted
+																												? 'text-green-600'
+																												: 'text-primary active:scale-95'
+																										}`}
+																									>
+																										{isCompleted ? (
+																											<Check className='w-5 h-5 text-green-600' />
+																										) : (
+																											<span>
+																												{taken}/{total}
+																											</span>
+																										)}
+																									</button>
+																								</div>
+																								{lastDate && (
+																									<p className='text-[9px] text-black text-left'>
+																										{isToday(day.date)
+																											? 'Bugun'
+																											: lastDate}
+																									</p>
+																								)}
+																							</div>
+																						)
+																					})}
+																				</div>
+																			</>
+																		)}
+
+																		{/* Days yo'q va processing ham yo'q */}
+																		{!hasDays && !isProcessing && (
+																			<p className='text-xs sm:text-sm text-black text-center py-4'>
+																				Кунлар юкланмоқда...
+																			</p>
+																		)}
+																	</CardContent>
+																</Card>
+															)
+														})}
+													</div>
+												)}
+											</TabsContent>
+
+											<TabsContent value='services'>
+												{!record.services || record.services.length === 0 ? (
+													<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
+														Хизматлар топилмади
+													</p>
+												) : (
+													<div className='space-y-2 sm:space-y-4 pt-2 sm:pt-3'>
+														{record.services.map(service => {
+															const isProcessing = processedServices.has(
+																service._id
+															)
+															const hasDays =
+																service.days && service.days.length > 0
+
+															return (
+																<Card
+																	key={service._id}
+																	className='border shadow-sm bg-card'
+																>
+																	<CardHeader className='pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6'>
+																		<div className='flex justify-between items-start gap-2'>
+																			<div className='flex-1 min-w-0'>
+																				<h4 className='font-semibold text-xs sm:text-sm md:text-base line-clamp-2'>
+																					{service.service_type_id.name}
+																				</h4>
+																				{service.notes && (
+																					<p className='text-xs font-medium text-muted-foreground mt-1'>
+																						ИЗОҲ: {service.notes}
+																					</p>
+																				)}
+																				<p className='text-xs text-muted-foreground mt-0.5'>
+																					Нарх:{' '}
+																					{service.price?.toLocaleString()} сўм
+																				</p>
+																			</div>
+																		</div>
+																	</CardHeader>
+																	<CardContent className='px-3 sm:px-6 pb-3 sm:pb-6'>
+																		{/* Loading holati */}
+																		{isProcessing && !hasDays && (
+																			<div className='flex items-center justify-center py-6 sm:py-8'>
+																				<Loader2 className='w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary' />
+																				<span className='ml-2 text-xs sm:text-sm text-muted-foreground'>
+																					Кунлар яратилмоқда...
+																				</span>
+																			</div>
+																		)}
+
+																		{/* Days mavjud bo'lsa */}
+																		{hasDays && (
+																			<>
+																				{/* Desktop - 5 columns */}
+																				<div className='hidden lg:grid lg:grid-cols-5 gap-2 xl:gap-3'>
+																					{service.days.map(day => {
+																						const taken = day.times || 0
+																						const total = service.frequency
+																						const isCompleted = taken >= total
+																						const lastDate = formatDate(
+																							day.date
+																						)
+
+																						return (
+																							<div
+																								key={day._id}
+																								className='flex flex-col items-center p-2 xl:p-3 border rounded-lg hover:bg-accent/50 transition-colors'
+																								onClick={() =>
+																									!isCompleted &&
+																									openConfirmModal(
+																										record._id,
+																										null,
+																										service._id,
+																										day.day,
+																										'service'
+																									)
+																								}
+																							>
+																								<p className='text-xs font-medium mb-1 text-center line-clamp-1'>
+																									Кун {day.day}
+																								</p>
+																								{lastDate && (
+																									<p className='text-[10px] text-black mb-1.5 text-center'>
+																										{isToday(day.date)
+																											? 'Bugun'
+																											: lastDate}
+																									</p>
+																								)}
+																								<button
+																									disabled={isCompleted}
+																									className={`text-base xl:text-lg font-bold transition-all ${
+																										isCompleted
+																											? 'text-green-600 cursor-default'
+																											: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
+																									}`}
+																								>
+																									{isCompleted ? (
+																										<div className='flex items-center justify-center w-7 h-7 xl:w-8 xl:h-8 bg-green-500 rounded-full'>
+																											<Check className='w-4 h-4 xl:w-5 xl:h-5 text-white' />
+																										</div>
+																									) : (
+																										<span>
+																											{taken}/{total}
+																										</span>
+																									)}
+																								</button>
+																							</div>
+																						)
+																					})}
+																				</div>
+
+																				{/* Tablet - 3 columns */}
+																				<div className='hidden sm:grid lg:hidden sm:grid-cols-3 md:grid-cols-4 gap-2'>
+																					{service.days.map(day => {
+																						const taken = day.times || 0
+																						const total = service.frequency
+																						const isCompleted = taken >= total
+																						const lastDate = formatDate(
+																							day.date
+																						)
+
+																						return (
+																							<div
+																								key={day._id}
+																								className='flex flex-col items-center p-2 border rounded-lg hover:bg-accent/50 transition-colors'
+																								onClick={() =>
+																									!isCompleted &&
+																									openConfirmModal(
+																										record._id,
+																										null,
+																										service._id,
+																										day.day,
+																										'service'
+																									)
+																								}
+																							>
+																								<p className='text-xs font-medium mb-0.5 text-center line-clamp-1'>
+																									Кун {day.day}
+																								</p>
+																								{lastDate && (
+																									<p className='text-[10px] text-black mb-1 text-center'>
+																										{isToday(day.date)
+																											? 'Bugun'
+																											: lastDate}
+																									</p>
+																								)}
+																								<button
+																									disabled={isCompleted}
+																									className={`text-base font-bold transition-all ${
+																										isCompleted
+																											? 'text-green-600 cursor-default'
+																											: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
+																									}`}
+																								>
+																									{isCompleted ? (
+																										<div className='flex items-center justify-center w-7 h-7 bg-green-500 rounded-full'>
+																											<Check className='w-4 h-4 text-white' />
+																										</div>
+																									) : (
+																										<span>
+																											{taken}/{total}
+																										</span>
+																									)}
+																								</button>
+																							</div>
+																						)
+																					})}
+																				</div>
+
+																				{/* Mobile - 2 columns */}
+																				<div className='grid grid-cols-2 gap-2 sm:hidden'>
+																					{service.days.map(day => {
+																						const taken = day.times || 0
+																						const total = service.frequency
+																						const isCompleted = taken >= total
+																						const lastDate = formatDate(
+																							day.date
+																						)
+
+																						return (
+																							<div
+																								key={day._id}
+																								className='flex flex-col p-2 border rounded-lg active:bg-accent/50 transition-colors'
+																								onClick={() =>
+																									!isCompleted &&
+																									openConfirmModal(
+																										record._id,
+																										null,
+																										service._id,
+																										day.day,
+																										'service'
+																									)
+																								}
+																							>
+																								<div className='flex items-center justify-between mb-1'>
+																									<span className='text-xs font-medium'>
+																										Кун {day.day}
+																									</span>
+																									<button
+																										disabled={isCompleted}
+																										className={`text-sm font-bold transition-all flex-shrink-0 ${
+																											isCompleted
+																												? 'text-green-600'
+																												: 'text-primary active:scale-95'
+																										}`}
+																									>
+																										{isCompleted ? (
+																											<Check className='w-5 h-5 text-green-600' />
+																										) : (
+																											<span>
+																												{taken}/{total}
+																											</span>
+																										)}
+																									</button>
+																								</div>
+																								{lastDate && (
+																									<p className='text-[9px] text-black text-left'>
+																										{isToday(day.date)
+																											? 'Bugun'
+																											: lastDate}
+																									</p>
+																								)}
+																							</div>
+																						)
+																					})}
+																				</div>
+																			</>
+																		)}
+
+																		{/* Days yo'q va processing ham yo'q */}
+																		{!hasDays && !isProcessing && (
+																			<p className='text-xs sm:text-sm text-black text-center py-4'>
+																				Кунлар юкланмоқда...
+																			</p>
+																		)}
+																	</CardContent>
+																</Card>
+															)
+														})}
+													</div>
+												)}
+											</TabsContent>
+										</Tabs>
 									</AccordionContent>
 								</AccordionItem>
 							))}
@@ -594,7 +976,9 @@ const Medicine = () => {
 						open: false,
 						recordId: null,
 						prescriptionId: null,
+						serviceId: null,
 						day: null,
+						type: 'medicine',
 					})
 				}
 			>
@@ -605,7 +989,9 @@ const Medicine = () => {
 						</DialogTitle>
 					</DialogHeader>
 					<p className='text-sm sm:text-base text-muted-foreground py-3 sm:py-4'>
-						Бемор дорини ичдими?
+						{confirmModal.type === 'medicine'
+							? 'Бемор дорини ичдими?'
+							: 'Хизмат бажарилдими?'}
 					</p>
 					<DialogFooter className='flex gap-2 sm:gap-3'>
 						<Button
@@ -615,20 +1001,22 @@ const Medicine = () => {
 									open: false,
 									recordId: null,
 									prescriptionId: null,
+									serviceId: null,
 									day: null,
+									type: 'medicine',
 								})
 							}
-							disabled={takingMedicine}
+							disabled={takingMedicine || takingService}
 							className='flex-1 sm:flex-none text-sm'
 						>
 							Йўқ
 						</Button>
 						<Button
 							onClick={handleConfirm}
-							disabled={takingMedicine}
+							disabled={takingMedicine || takingService}
 							className='flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-sm'
 						>
-							{takingMedicine ? (
+							{takingMedicine || takingService ? (
 								<Loader2 className='w-4 h-4 animate-spin' />
 							) : (
 								'Ҳа'
