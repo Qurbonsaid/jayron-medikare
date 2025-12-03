@@ -199,17 +199,17 @@ const RoomCalendar = () => {
     // Bugungi kunni olish
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     // Tanlangan kunni olish
     const selectedDay = new Date(day);
     selectedDay.setHours(0, 0, 0, 0);
-    
+
     // Agar o'tgan kun bo'lsa - xabar berish
     if (selectedDay < today) {
       toast.error("Ўтган санага бронь қилиб бўлмайди");
       return;
     }
-    
+
     // Sanani to'g'ri formatda o'tkazish (timezone muammosiz)
     const year = day.getFullYear();
     const month = String(day.getMonth() + 1).padStart(2, "0");
@@ -277,17 +277,21 @@ const RoomCalendar = () => {
           </div>
         </Card>
 
-        <Button onClick={() => {
-          // Haftaning boshidan yoki bugundan (qaysi katta bo'lsa)
-          const today = new Date();
-          const startDate = weekStart > today ? weekStart : today;
-          
-          const year = startDate.getFullYear();
-          const month = String(startDate.getMonth() + 1).padStart(2, "0");
-          const day = String(startDate.getDate()).padStart(2, "0");
-          setSelectedDate(`${year}-${month}-${day}`);
-          setShowBookingModal(true);
-        }}>Yangi bron</Button>
+        <Button
+          onClick={() => {
+            // Haftaning boshidan yoki bugundan (qaysi katta bo'lsa)
+            const today = new Date();
+            const startDate = weekStart > today ? weekStart : today;
+
+            const year = startDate.getFullYear();
+            const month = String(startDate.getMonth() + 1).padStart(2, "0");
+            const day = String(startDate.getDate()).padStart(2, "0");
+            setSelectedDate(`${year}-${month}-${day}`);
+            setShowBookingModal(true);
+          }}
+        >
+          Yangi bron
+        </Button>
       </div>
 
       {/* Calendar Grid */}
@@ -302,7 +306,9 @@ const RoomCalendar = () => {
             <div className="grid grid-cols-8 gap-0 sticky top-0 bg-white z-10">
               <div className="col-span-1 bg-blue-500 text-white p-4 border-b-2 border-r-2 border-white">
                 <div className="space-y-2">
-                  <p className="font-extrabold text-xl">{roomData?.room_name}</p>
+                  <p className="font-extrabold text-xl">
+                    {roomData?.room_name}
+                  </p>
                   <div className="text-sm font-semibold space-y-1.5">
                     <div className="flex items-center">
                       <span>Сиғим: {totalBeds}</span>
@@ -371,14 +377,22 @@ const RoomCalendar = () => {
 
               // Har bir bronni o'z bed_number ga joylashtirish
               weekBookings.forEach((booking) => {
-                if (booking.bed_number && booking.bed_number > 0 && booking.bed_number <= roomData.patient_capacity) {
+                if (
+                  booking.bed_number &&
+                  booking.bed_number > 0 &&
+                  booking.bed_number <= roomData.patient_capacity
+                ) {
                   bedGroups[booking.bed_number - 1].push(booking);
                 }
               });
 
               // Har bir joydagi bronlarni created_at bo'yicha tartiblash
-              bedGroups.forEach(bed => {
-                bed.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+              bedGroups.forEach((bed) => {
+                bed.sort(
+                  (a, b) =>
+                    new Date(a.created_at).getTime() -
+                    new Date(b.created_at).getTime()
+                );
               });
 
               // Availability ma'lumotlari
@@ -517,9 +531,17 @@ const RoomCalendar = () => {
                                         : "Номаълум"}
                                     </p>
                                     <p className="text-sm font-semibold text-gray-800 mt-1">
-                                      {activeBooking.start_at.split("T")[0].split("-")[2]}{" "}
+                                      {
+                                        activeBooking.start_at
+                                          .split("T")[0]
+                                          .split("-")[2]
+                                      }{" "}
                                       -{" "}
-                                      {activeBooking.end_at.split("T")[0].split("-")[2]}
+                                      {
+                                        activeBooking.end_at
+                                          .split("T")[0]
+                                          .split("-")[2]
+                                      }
                                     </p>
                                     <p className="text-xs font-medium text-gray-700 mt-0.5">
                                       {activeBooking.status === "active"
@@ -563,6 +585,12 @@ const RoomCalendar = () => {
                                         ? "Одам бор"
                                         : "Бронь"}
                                     </p>
+
+                                    {activeBooking?.note && (
+                                      <p className="text-sm">
+                                        {activeBooking?.note}
+                                      </p>
+                                    )}
                                   </div>
                                 </TooltipContent>
                               </Tooltip>

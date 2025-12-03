@@ -130,13 +130,13 @@ export const QuickAddPatientModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <UserPlus className="w-6 h-6 text-green-600" />
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="space-y-2 sm:space-y-3">
+          <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
+            <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
             Янги Бемор Қўшиш
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm sm:text-base">
             Тезкор бемор қўшиш - асосий маълумотлар
           </DialogDescription>
         </DialogHeader>
@@ -144,7 +144,7 @@ export const QuickAddPatientModal = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Full Name */}
           <div className="space-y-2">
-            <Label htmlFor="fullname">
+            <Label htmlFor="fullname" className="text-sm sm:text-base">
               Исм-фамилия <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -159,12 +159,13 @@ export const QuickAddPatientModal = ({
                 setFullname(value);
               }}
               required
+              className="text-sm sm:text-base h-10 sm:h-11"
             />
           </div>
 
           {/* Phone */}
           <div className="space-y-2">
-            <Label htmlFor="phone">
+            <Label htmlFor="phone" className="text-sm sm:text-base">
               Телефон <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -190,28 +191,29 @@ export const QuickAddPatientModal = ({
                 setPhone(value);
               }}
               required
+              className="text-sm sm:text-base h-10 sm:h-11"
             />
           </div>
 
           {/* Gender and Date of Birth */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="gender">
+              <Label htmlFor="gender" className="text-sm sm:text-base">
                 Жинси <span className="text-red-500">*</span>
               </Label>
               <Select value={gender} onValueChange={(value: "male" | "female") => setGender(value)}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm sm:text-base h-10 sm:h-11">
                   <SelectValue placeholder="Жинсни танланг" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="male">Эркак</SelectItem>
-                  <SelectItem value="female">Аёл</SelectItem>
+                  <SelectItem value="male" className="text-sm sm:text-base">Эркак</SelectItem>
+                  <SelectItem value="female" className="text-sm sm:text-base">Аёл</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="date_of_birth">
+              <Label htmlFor="date_of_birth" className="text-sm sm:text-base">
                 Туғилган сана <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -221,13 +223,14 @@ export const QuickAddPatientModal = ({
                 onChange={(e) => setDateOfBirth(e.target.value)}
                 max={format(new Date(), "yyyy-MM-dd")}
                 required
+                className="text-sm sm:text-base h-10 sm:h-11"
               />
             </div>
           </div>
 
           {/* Address */}
           <div className="space-y-2">
-            <Label htmlFor="address">
+            <Label htmlFor="address" className="text-sm sm:text-base">
               Манзил <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -236,12 +239,13 @@ export const QuickAddPatientModal = ({
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               required
+              className="text-sm sm:text-base h-10 sm:h-11"
             />
           </div>
 
           {/* Passport */}
           <div className="space-y-2">
-            <Label>Паспорт маълумотлари <span className="text-red-500">*</span></Label>
+            <Label className="text-sm sm:text-base">Паспорт маълумотлари <span className="text-red-500">*</span></Label>
             <div className="grid grid-cols-5 gap-2">
               <div className="col-span-2">
                 <Input
@@ -255,6 +259,7 @@ export const QuickAddPatientModal = ({
                     setPassportSeries(value);
                   }}
                   required
+                  className="text-sm sm:text-base h-10 sm:h-11 text-center font-semibold"
                 />
               </div>
               <div className="col-span-3">
@@ -267,13 +272,14 @@ export const QuickAddPatientModal = ({
                     setPassportNumber(value);
                   }}
                   required
+                  className="text-sm sm:text-base h-10 sm:h-11 font-mono"
                 />
               </div>
             </div>
           </div>
 
           {/* Footer */}
-          <DialogFooter className="gap-2">
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"
@@ -282,19 +288,20 @@ export const QuickAddPatientModal = ({
                 onOpenChange(false);
               }}
               disabled={isLoading}
+              className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
             >
               Бекор қилиш
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-gradient-to-r from-green-600 to-emerald-600"
+              className="bg-gradient-to-r from-green-600 to-emerald-600 w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
             >
               {isLoading ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <Save className="w-4 h-4 mr-2" />
+                  <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
                   Сақлаш ва Давом Этиш
                 </>
               )}
