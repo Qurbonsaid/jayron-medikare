@@ -196,6 +196,20 @@ const RoomCalendar = () => {
 
   // Bo'sh katak bosilganda - yangi bron ochish
   const handleEmptyCellClick = (day: Date) => {
+    // Bugungi kunni olish
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Tanlangan kunni olish
+    const selectedDay = new Date(day);
+    selectedDay.setHours(0, 0, 0, 0);
+    
+    // Agar o'tgan kun bo'lsa - xabar berish
+    if (selectedDay < today) {
+      toast.error("Ўтган санага бронь қилиб бўлмайди");
+      return;
+    }
+    
     // Sanani to'g'ri formatda o'tkazish (timezone muammosiz)
     const year = day.getFullYear();
     const month = String(day.getMonth() + 1).padStart(2, "0");
@@ -263,7 +277,17 @@ const RoomCalendar = () => {
           </div>
         </Card>
 
-        <Button onClick={() => setShowBookingModal(true)}>Yangi bron</Button>
+        <Button onClick={() => {
+          // Haftaning boshidan yoki bugundan (qaysi katta bo'lsa)
+          const today = new Date();
+          const startDate = weekStart > today ? weekStart : today;
+          
+          const year = startDate.getFullYear();
+          const month = String(startDate.getMonth() + 1).padStart(2, "0");
+          const day = String(startDate.getDate()).padStart(2, "0");
+          setSelectedDate(`${year}-${month}-${day}`);
+          setShowBookingModal(true);
+        }}>Yangi bron</Button>
       </div>
 
       {/* Calendar Grid */}
@@ -331,7 +355,7 @@ const RoomCalendar = () => {
               })}
             </div>
 
-            {/* Beds Grid - availability ma'lumotlaridan foydalanish */}
+            {/* Beds Grid - bed_number asosida guruhlash */}
             {(() => {
               const allBookings = bookingsData?.data || [];
               const weekBookings = allBookings.filter((booking) => {
@@ -339,8 +363,23 @@ const RoomCalendar = () => {
                 return bookingDays.some((hasBooking) => hasBooking);
               });
 
-              // Bronlarni joylar bo'yicha guruhlash
-              const bedGroups = assignBookingsToBeds(weekBookings);
+              // Bronlarni bed_number bo'yicha guruhlash
+              const bedGroups: Booking[][] = Array.from(
+                { length: roomData.patient_capacity },
+                () => []
+              );
+
+              // Har bir bronni o'z bed_number ga joylashtirish
+              weekBookings.forEach((booking) => {
+                if (booking.bed_number && booking.bed_number > 0 && booking.bed_number <= roomData.patient_capacity) {
+                  bedGroups[booking.bed_number - 1].push(booking);
+                }
+              });
+
+              // Har bir joydagi bronlarni created_at bo'yicha tartiblash
+              bedGroups.forEach(bed => {
+                bed.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+              });
 
               // Availability ma'lumotlari
               const availability = roomData.availability || [];
