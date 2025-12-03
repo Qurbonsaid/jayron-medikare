@@ -207,23 +207,23 @@ export const BookingModal = ({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-blue-600" />
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="space-y-2 sm:space-y-3">
+          <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
+            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             Янги Бронь Яратиш
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm sm:text-base">
             Беморни танлаб, хона ва саналарни белгиланг
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Patient Selection */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="patient" className="flex items-center gap-2">
-                <User className="w-4 h-4" />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <Label htmlFor="patient" className="flex items-center gap-2 text-sm sm:text-base">
+                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Бемор <span className="text-red-500">*</span>
               </Label>
               <Button
@@ -233,7 +233,7 @@ export const BookingModal = ({
                 onClick={() => {
                   setShowQuickAddPatient(true);
                 }}
-                className="text-xs"
+                className="text-xs w-full sm:w-auto"
               >
                 <UserPlus className="w-3 h-3 mr-1" />
                 Янги бемор қўшиш
@@ -244,11 +244,11 @@ export const BookingModal = ({
                 <Button
                   variant="outline"
                   role="combobox"
-                  className="w-full justify-between h-auto min-h-[56px]"
+                  className="w-full justify-between h-auto min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
                 >
                   {selectedPatient ? (
-                    <div className="flex flex-col items-start">
-                      <span className="font-semibold">
+                    <div className="flex flex-col items-start gap-0.5">
+                      <span className="font-semibold text-sm sm:text-base">
                         {selectedPatient.fullname}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -256,22 +256,23 @@ export const BookingModal = ({
                       </span>
                     </div>
                   ) : (
-                    <span className="flex items-center gap-2">
-                      <Search className="w-4 h-4" />
+                    <span className="flex items-center gap-2 text-sm sm:text-base">
+                      <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       Беморни қидириш...
                     </span>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[500px] p-0" align="start">
+              <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[500px] p-0" align="start">
                 <Command shouldFilter={false}>
                   <CommandInput
                     placeholder="Исм, телефон орқали қидириш..."
                     value={searchPatient}
                     onValueChange={setSearchPatient}
+                    className="text-sm sm:text-base"
                   />
-                  <CommandList>
-                    <CommandEmpty>
+                  <CommandList className="max-h-[200px] sm:max-h-[300px]">
+                    <CommandEmpty className="text-sm sm:text-base py-4">
                       {patientsLoading ? "Юкланмоқда..." : "Бемор топилмади"}
                     </CommandEmpty>
                     <CommandGroup>
@@ -283,13 +284,13 @@ export const BookingModal = ({
                             setSelectedPatientId(patient._id);
                             setOpenPatientPopover(false);
                           }}
-                          className="py-3"
+                          className="py-2 sm:py-3"
                         >
                           <div className="flex flex-col">
-                            <span className="font-semibold">
+                            <span className="font-semibold text-sm sm:text-base">
                               {patient.fullname}
                             </span>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-xs sm:text-sm text-muted-foreground">
                               {patient.phone}
                             </span>
                           </div>
@@ -303,9 +304,9 @@ export const BookingModal = ({
           </div>
 
           {/* Date Range */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start_date">
+              <Label htmlFor="start_date" className="text-sm sm:text-base">
                 Бошланиш санаси <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -315,10 +316,11 @@ export const BookingModal = ({
                 onChange={(e) => setStartDate(e.target.value)}
                 required
                 min={new Date().toISOString().split("T")[0]}
+                className="text-sm sm:text-base h-10 sm:h-11"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="end_date">
+              <Label htmlFor="end_date" className="text-sm sm:text-base">
                 Тугаш санаси <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -328,6 +330,7 @@ export const BookingModal = ({
                 onChange={(e) => setEndDate(e.target.value)}
                 required
                 min={startDate || new Date().toISOString().split("T")[0]}
+                className="text-sm sm:text-base h-10 sm:h-11"
               />
             </div>
           </div>
@@ -335,24 +338,24 @@ export const BookingModal = ({
           {/* Room Selection */}
           {startDate && endDate && (
             <div className="space-y-2">
-              <Label htmlFor="room" className="flex items-center gap-2">
-                <Home className="w-4 h-4" />
+              <Label htmlFor="room" className="flex items-center gap-2 text-sm sm:text-base">
+                <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Хона <span className="text-red-500">*</span>
               </Label>
               {roomsLoading ? (
-                <div className="p-4 text-center">
+                <div className="p-3 sm:p-4 text-center">
                   <LoadingSpinner size="sm" text="Хоналар юкланмоқда..." />
                 </div>
               ) : availableRoomsData?.data && availableRoomsData.data.length > 0 ? (
                 <Select value={selectedRoomId} onValueChange={setSelectedRoomId} disabled={!!roomId}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-sm sm:text-base h-10 sm:h-11">
                     <SelectValue placeholder="Хонани танланг" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableRoomsData.data.map((room) => (
-                      <SelectItem key={room._id} value={room._id}>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="font-semibold">{room.room_name}</span>
+                      <SelectItem key={room._id} value={room._id} className="py-2 sm:py-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 w-full">
+                          <span className="font-semibold text-sm sm:text-base">{room.room_name}</span>
                           <div className="flex items-center gap-2">
                             <Badge
                               variant={
@@ -360,6 +363,7 @@ export const BookingModal = ({
                                   ? "default"
                                   : "destructive"
                               }
+                              className="text-xs"
                             >
                               {room.available_beds} бўш
                             </Badge>
@@ -373,9 +377,9 @@ export const BookingModal = ({
                   </SelectContent>
                 </Select>
               ) : (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
+                <Alert className="py-3">
+                  <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <AlertDescription className="text-xs sm:text-sm">
                     Танланган вақт оралиғида бўш хоналар йўқ
                   </AlertDescription>
                 </Alert>
@@ -385,23 +389,25 @@ export const BookingModal = ({
 
           {/* Note */}
           <div className="space-y-2">
-            <Label htmlFor="note">Изоҳ (ихтиёрий)</Label>
+            <Label htmlFor="note" className="text-sm sm:text-base">Изоҳ (ихтиёрий)</Label>
             <Textarea
               id="note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Махсус диета, аллергия ва бошқа маълумотлар..."
               rows={3}
+              className="text-sm sm:text-base resize-none"
             />
           </div>
 
           {/* Footer */}
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isCreating}
+              className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
             >
               Бекор қилиш
             </Button>
@@ -414,13 +420,13 @@ export const BookingModal = ({
                 !startDate ||
                 !endDate
               }
-              className="bg-gradient-to-r from-blue-600 to-indigo-600"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
             >
               {isCreating ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <Save className="w-4 h-4 mr-2" />
+                  <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
                   Сақлаш
                 </>
               )}
