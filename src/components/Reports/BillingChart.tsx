@@ -1,8 +1,7 @@
+import { REPORT_DATE_FILTER } from '@/app/api/report/types'
 import { Card } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { DollarSign } from 'lucide-react'
-import { DateRangeFilter } from './DateRangeFilter'
-import { REPORT_DATE_FILTER } from '@/app/api/report/types'
 import {
 	Bar,
 	BarChart,
@@ -13,6 +12,7 @@ import {
 	XAxis,
 	YAxis,
 } from 'recharts'
+import { DateRangeFilter } from './DateRangeFilter'
 
 interface BillingChartProps {
 	data: {
@@ -26,7 +26,12 @@ interface BillingChartProps {
 	onIntervalChange: (interval: REPORT_DATE_FILTER) => void
 }
 
-export const BillingChart = ({ data, isLoading, interval, onIntervalChange }: BillingChartProps) => {
+export const BillingChart = ({
+	data,
+	isLoading,
+	interval,
+	onIntervalChange,
+}: BillingChartProps) => {
 	const formatCurrency = (value: number) => {
 		return new Intl.NumberFormat('uz-UZ').format(value) + ' сўм'
 	}
@@ -38,7 +43,21 @@ export const BillingChart = ({ data, isLoading, interval, onIntervalChange }: Bi
 		return `${year}`
 	}
 
-	const chartData = data.map(item => ({
+	// Sort data by date (oldest to newest)
+	const sortedData = [...data].sort((a, b) => {
+		const aYear = a._id.year
+		const aMonth = a._id.month || 1
+		const aDay = a._id.day || 1
+		const bYear = b._id.year
+		const bMonth = b._id.month || 1
+		const bDay = b._id.day || 1
+		return (
+			new Date(aYear, aMonth - 1, aDay).getTime() -
+			new Date(bYear, bMonth - 1, bDay).getTime()
+		)
+	})
+
+	const chartData = sortedData.map(item => ({
 		name: formatDate(item),
 		Жами: item.totalAmount,
 		Тўланган: item.paidAmount,
@@ -54,13 +73,13 @@ export const BillingChart = ({ data, isLoading, interval, onIntervalChange }: Bi
 	}
 
 	return (
-		<Card className="p-4 sm:p-6">
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-				<h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-					<DollarSign className="w-5 h-5 text-green-600" />
+		<Card className='p-4 sm:p-6'>
+			<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4'>
+				<h3 className='text-base sm:text-lg font-semibold flex items-center gap-2'>
+					<DollarSign className='w-5 h-5 text-green-600' />
 					Молиявий ҳисобот
 				</h3>
-				<div className="w-full sm:w-48">
+				<div className='w-full sm:w-48'>
 					<DateRangeFilter value={interval} onChange={onIntervalChange} />
 				</div>
 			</div>
