@@ -127,7 +127,19 @@ export const BookingModal = ({
       return;
     }
 
-    if (new Date(startDate) > new Date(endDate)) {
+    // Bugungi kunni olish (faqat sana, vaqtsiz)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split("T")[0];
+
+    // Boshlanish sanasi bugundan oldin bo'lmasligi kerak
+    if (startDate < todayStr) {
+      toast.error("Ўтган санага бронь қилиб бўлмайди");
+      return;
+    }
+
+    // Tugash sanasi boshlanish sanasidan oldin bo'lmasligi kerak
+    if (endDate < startDate) {
       toast.error("Тугаш санаси бошланиш санасидан олдин бўлмаслиги керак");
       return;
     }

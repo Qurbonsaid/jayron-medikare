@@ -27,6 +27,7 @@ export type Booking = {
   corpus_id: BookingCorpus | string;
   start_at: string; // ISO date string
   end_at: string; // ISO date string
+  bed_number?: number; // Joy raqami (backend dan keladi)
   note?: string;
   status?: string;
   created_at: string;
