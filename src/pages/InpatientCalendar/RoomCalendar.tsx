@@ -478,15 +478,9 @@ const RoomCalendar = () => {
                                         : "Номаълум"}
                                     </p>
                                     <p className="text-sm font-semibold text-gray-800 mt-1">
-                                      {format(
-                                        parseISO(activeBooking.start_at),
-                                        "dd"
-                                      )}{" "}
+                                      {activeBooking.start_at.split("T")[0].split("-")[2]}{" "}
                                       -{" "}
-                                      {format(
-                                        parseISO(activeBooking.end_at),
-                                        "dd"
-                                      )}
+                                      {activeBooking.end_at.split("T")[0].split("-")[2]}
                                     </p>
                                     <p className="text-xs font-medium text-gray-700 mt-0.5">
                                       {activeBooking.status === "active"

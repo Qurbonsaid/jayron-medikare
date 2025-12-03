@@ -75,7 +75,7 @@ export const BookingModal = ({
       setStartDate(start.toISOString().split("T")[0]);
       
       const end = new Date(start);
-      end.setDate(end.getDate() + 7); // Default 7 kun (15-22 = 8 kun, 15-21 = 7 kun)
+      end.setDate(end.getDate() + 6); // Default 7 kun: 15-21 = 21-15+1 = 7
       setEndDate(end.toISOString().split("T")[0]);
     }
   }, [open, defaultStartDate]);
