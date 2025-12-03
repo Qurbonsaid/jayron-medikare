@@ -1033,6 +1033,17 @@ const Prescription = () => {
                               type='number'
                               placeholder='Даволаш муддати'
                               value={med.duration}
+                              	onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
                               onChange={(e) =>
                                 updateMedication(
                                   med.id,
@@ -1056,6 +1067,17 @@ const Prescription = () => {
                               type='number'
                               placeholder='Қабул қилиш'
                               value={med.frequency}
+                              	onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
                               onChange={(e) =>
                                 updateMedication(
                                   med.id,
@@ -1179,6 +1201,17 @@ const Prescription = () => {
                                         type='number'
                                         placeholder='Даволаш муддати'
                                         value={editPrescriptionForm.duration}
+                                        	onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
                                         onChange={(e) =>
                                           setEditPrescriptionForm({
                                             ...editPrescriptionForm,
@@ -1195,6 +1228,17 @@ const Prescription = () => {
                                         type='number'
                                         placeholder='Қабул қилиш'
                                         value={editPrescriptionForm.frequency}
+                                        	onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
                                         onChange={(e) =>
                                           setEditPrescriptionForm({
                                             ...editPrescriptionForm,
@@ -1450,6 +1494,17 @@ const Prescription = () => {
                                 min='1'
                                 placeholder='Кун'
                                 value={srv.duration}
+                                	onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
                                 onChange={(e) => {
                                   const val = e.target.value;
                                   updateServiceField(
@@ -1475,6 +1530,17 @@ const Prescription = () => {
                                 min='1'
                                 placeholder='Кунига'
                                 value={srv.frequency}
+                                	onKeyDown={e => {
+											if (
+												e.key === ',' ||
+												e.key === 'e' ||
+												e.key === 'E' ||
+												e.key === '+' ||
+												e.key === '-'
+											) {
+												e.preventDefault()
+											}
+										}}
                                 onChange={(e) => {
                                   const val = e.target.value;
                                   updateServiceField(

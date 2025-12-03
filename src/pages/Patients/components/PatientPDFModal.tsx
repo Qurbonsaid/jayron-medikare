@@ -13,7 +13,7 @@ import {
   pdf,
   StyleSheet,
   Text,
-  View,
+  View
 } from '@react-pdf/renderer';
 import { Download } from 'lucide-react';
 import React from 'react';

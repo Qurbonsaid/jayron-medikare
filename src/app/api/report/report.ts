@@ -4,6 +4,7 @@ import { REPORT_DATE_FILTER } from './types'
 import {
 	AnalysisReportResponse,
 	BillingResponse,
+	BloodPressureReportResponse,
 	DiagnosisReportResponse,
 	DoctorReportResponse,
 	ExaminationReportResponse,
@@ -102,6 +103,20 @@ export const ReportApi = baseApi.injectEndpoints({
 				method: 'GET',
 			}),
 		}),
+		getBloodPressure: builder.query<
+			BloodPressureReportResponse,
+			{ interval: REPORT_DATE_FILTER; page?: number; limit?: number }
+		>({
+			query: ({ interval, page = 1, limit = 10 }) => ({
+				url: `${PATHS.BLOOD_PRESSURE}`,
+				method: 'GET',
+				params: {
+					interval,
+					page,
+					limit,
+				},
+			}),
+		}),
 	}),
 })
 
@@ -114,4 +129,5 @@ export const {
 	useGetDiagnosisQuery,
 	useGetAllDoctorsQuery,
 	useGetAllRoomsQuery,
+	useGetBloodPressureQuery,
 } = ReportApi
