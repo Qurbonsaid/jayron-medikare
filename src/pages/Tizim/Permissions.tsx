@@ -49,6 +49,34 @@ const roleLabels: Record<RoleConstants, string> = {
   [RoleConstants.PHARMACIST]: 'Фармацевт',
 };
 
+// Kolleksiya nomlari uchun o'zbek tilidagi tarjimalar
+const collectionLabels: Record<string, string> = {
+  patient: 'Бемор',
+  examination: 'Кўрик',
+  doctor: 'Шифокор',
+  nurse: 'Ҳамшира',
+  user: 'Фойдаланувчи',
+  analysis: 'Таҳлил',
+  analysis_parameter: 'Таҳлил натижалари',
+  patient_analysis: 'Кўрик таҳлили',
+  imaging_type: 'Тасвирлаш турлари',
+  medical_image: 'Тиббий тасвир',
+  corpus: 'Корпус',
+  room: 'Хона',
+  billing: 'Ҳисоб-китоб',
+  diagnosis: 'Ташхис',
+  service_type: 'Хизмат тури',
+  medication: 'Дори дармон',
+  booking: 'Олдиндан банд қилиш',
+  neurological_status: 'Неврологик ҳолати',
+};
+
+// Kolleksiya nomini o'zbek tiliga tarjima qilish
+const getCollectionLabel = (collectionName: string): string => {
+  const lowerName = collectionName.toLowerCase();
+  return collectionLabels[lowerName] || collectionName;
+};
+
 // Permission turi
 interface Permission {
   _id: string;
@@ -127,7 +155,7 @@ const PermissionCard = ({
           {permission.permissions.map((perm) => (
             <TableRow key={perm._id}>
               <TableCell className='font-medium'>
-                {perm.collection_name}
+                {getCollectionLabel(perm.collection_name)}
               </TableCell>
               <TableCell className='text-center'>
                 <Badge variant={perm.create ? 'default' : 'secondary'}>
@@ -281,6 +309,44 @@ const Permissions = () => {
     setEditingPermissions((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
+
+      // Booking read true bo'lganda corpus read ham auto true bo'lsin
+      const currentCollection = updated[index].collection_name.toLowerCase();
+      if (
+        currentCollection === 'booking' &&
+        field === 'read' &&
+        value === true
+      ) {
+        const corpusIndex = updated.findIndex(
+          (p) => p.collection_name.toLowerCase() === 'corpus'
+        );
+        if (corpusIndex !== -1) {
+          updated[corpusIndex] = { ...updated[corpusIndex], read: true };
+        }
+      }
+
+      // Examination read true bo'lganda diagnosis, service_type, medication, neurological_status ham auto true bo'lsin
+      if (
+        currentCollection === 'examination' &&
+        field === 'read' &&
+        value === true
+      ) {
+        const relatedCollections = [
+          'diagnosis',
+          'service_type',
+          'medication',
+          'neurological_status',
+        ];
+        relatedCollections.forEach((collName) => {
+          const relatedIndex = updated.findIndex(
+            (p) => p.collection_name.toLowerCase() === collName
+          );
+          if (relatedIndex !== -1) {
+            updated[relatedIndex] = { ...updated[relatedIndex], read: true };
+          }
+        });
+      }
+
       return updated;
     });
   };
@@ -296,6 +362,39 @@ const Permissions = () => {
         update: value,
         delete: value,
       };
+
+      // Booking barcha true bo'lganda corpus read ham auto true bo'lsin
+      const currentCollection = updated[index].collection_name.toLowerCase();
+      if (currentCollection === 'booking' && value === true) {
+        const corpusIndex = updated.findIndex(
+          (p) => p.collection_name.toLowerCase() === 'corpus'
+        );
+        if (corpusIndex !== -1) {
+          updated[corpusIndex] = {
+            ...updated[corpusIndex],
+            read: true,
+          };
+        }
+      }
+
+      // Examination barcha true bo'lganda diagnosis, service_type, medication, neurological_status read ham auto true bo'lsin
+      if (currentCollection === 'examination' && value === true) {
+        const relatedCollections = [
+          'diagnosis',
+          'service_type',
+          'medication',
+          'neurological_status',
+        ];
+        relatedCollections.forEach((collName) => {
+          const relatedIndex = updated.findIndex(
+            (p) => p.collection_name.toLowerCase() === collName
+          );
+          if (relatedIndex !== -1) {
+            updated[relatedIndex] = { ...updated[relatedIndex], read: true };
+          }
+        });
+      }
+
       return updated;
     });
   };
@@ -504,69 +603,88 @@ const Permissions = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {editingPermissions.map((perm, index) => (
-                  <TableRow key={perm._id || index}>
-                    <TableCell className='font-medium'>
-                      {perm.collection_name}
-                    </TableCell>
-                    <TableCell className='text-center'>
-                      <Checkbox
-                        checked={perm.create}
-                        onCheckedChange={(checked) =>
-                          handlePermissionChange(
-                            index,
-                            'create',
-                            checked as boolean
-                          )
-                        }
-                      />
-                    </TableCell>
-                    <TableCell className='text-center'>
-                      <Checkbox
-                        checked={perm.read}
-                        onCheckedChange={(checked) =>
-                          handlePermissionChange(
-                            index,
-                            'read',
-                            checked as boolean
-                          )
-                        }
-                      />
-                    </TableCell>
-                    <TableCell className='text-center'>
-                      <Checkbox
-                        checked={perm.update}
-                        onCheckedChange={(checked) =>
-                          handlePermissionChange(
-                            index,
-                            'update',
-                            checked as boolean
-                          )
-                        }
-                      />
-                    </TableCell>
-                    <TableCell className='text-center'>
-                      <Checkbox
-                        checked={perm.delete}
-                        onCheckedChange={(checked) =>
-                          handlePermissionChange(
-                            index,
-                            'delete',
-                            checked as boolean
-                          )
-                        }
-                      />
-                    </TableCell>
-                    <TableCell className='text-center'>
-                      <Checkbox
-                        checked={isRowAllChecked(perm)}
-                        onCheckedChange={(checked) =>
-                          handleRowAllChange(index, checked as boolean)
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {editingPermissions.map((perm, index) => {
+                  const isCorpus =
+                    perm.collection_name.toLowerCase() === 'corpus';
+                  const bookingPerm = editingPermissions.find(
+                    (p) => p.collection_name.toLowerCase() === 'booking'
+                  );
+                  const isBookingEnabled = bookingPerm?.read;
+
+                  return (
+                    <TableRow
+                      key={perm._id || index}
+                      className={
+                        isCorpus && isBookingEnabled ? 'bg-blue-50' : ''
+                      }
+                    >
+                      <TableCell className='font-medium'>
+                        {getCollectionLabel(perm.collection_name)}
+                        {isCorpus && isBookingEnabled && (
+                          <span className='ml-2 text-xs text-blue-600'>
+                            (Банд қилиш билан боғлиқ)
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className='text-center'>
+                        <Checkbox
+                          checked={perm.create}
+                          onCheckedChange={(checked) =>
+                            handlePermissionChange(
+                              index,
+                              'create',
+                              checked as boolean
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className='text-center'>
+                        <Checkbox
+                          checked={perm.read}
+                          onCheckedChange={(checked) =>
+                            handlePermissionChange(
+                              index,
+                              'read',
+                              checked as boolean
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className='text-center'>
+                        <Checkbox
+                          checked={perm.update}
+                          onCheckedChange={(checked) =>
+                            handlePermissionChange(
+                              index,
+                              'update',
+                              checked as boolean
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className='text-center'>
+                        <Checkbox
+                          checked={perm.delete}
+                          onCheckedChange={(checked) =>
+                            handlePermissionChange(
+                              index,
+                              'delete',
+                              checked as boolean
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className='text-center'>
+                        <Checkbox
+                          checked={isRowAllChecked(perm)}
+                          onCheckedChange={(checked) =>
+                            handleRowAllChange(index, checked as boolean)
+                          }
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
             <div className='mt-4 flex justify-end'>

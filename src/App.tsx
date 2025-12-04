@@ -3,6 +3,8 @@ import { KeyboardShortcutsDialog } from '@/components/ui/keyboard-shortcuts-dial
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { PermissionRoute } from '@/hooks/Router/PermissionRoute';
+import { PrivateRoute } from '@/hooks/Router/PrivateRouter';
 import { useGlobalShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import Login from '@/pages/Login/Login';
 import NotFound from '@/pages/NotFound';
@@ -11,7 +13,6 @@ import { Provider } from 'react-redux';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import store from './app/store';
 import { AppLayout } from './components/AppLayout';
-import { PrivateRoute } from './hooks/Router/PrivateRouter';
 import { routers } from './router';
 
 function RoutesContent() {
@@ -37,11 +38,17 @@ function RoutesContent() {
 
         {/* Protected Routes */}
         <Route element={<PrivateRoute />}>
-          {routers.map(({ path, element }) => (
+          {routers.map(({ path, element, permission }) => (
             <Route
               key={path}
               path={path}
-              element={<AppLayout>{element}</AppLayout>}
+              element={
+                <AppLayout>
+                  <PermissionRoute permission={permission}>
+                    {element}
+                  </PermissionRoute>
+                </AppLayout>
+              }
             />
           ))}
         </Route>
