@@ -296,3 +296,28 @@ export interface RemoveService {
 	id: string
 	service_id: string
 }
+
+export interface AddDailyCheckupReq {
+	id: string
+	body: {
+		blood_pressure: {
+			systolic: number
+			diastolic: number
+		}
+		notes: string
+	}
+	checkup_id?: string
+}
+
+export interface GetAlldailyCheckup {
+	success: boolean
+	data: {
+		date: string
+		blood_pressure: {
+			systolic: number
+			diastolic: number
+		}
+		notes: string
+		_id: string
+	}[]
+}

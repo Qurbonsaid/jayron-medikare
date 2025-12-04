@@ -56,21 +56,40 @@ export const UpdateBookingModal = ({
       return;
     }
 
-    if (new Date(startDate) >= new Date(endDate)) {
-      toast.error("Тугаш санаси бошланиш санасидан кейин бўлиши керак");
+    // Bugungi kunni olish (faqat sana, vaqtsiz)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split("T")[0];
+
+    // Boshlanish sanasi bugundan oldin bo'lmasligi kerak
+    if (startDate < todayStr) {
+      toast.error("Ўтган санага ўзгартириб бўлмайди");
+      return;
+    }
+
+    // Tugash sanasi boshlanish sanasidan oldin bo'lmasligi kerak
+    if (endDate < startDate) {
+      toast.error("Тугаш санаси бошланиш санасидан олдин бўлмаслиги керак");
       return;
     }
 
     await handleRequest({
-      request: async () =>
-        await updateBooking({
+      request: async () => {
+        // Vaqtlarni to'g'ri o'rnatish (timezone muammosiz):
+        // Boshlanish: kunning boshi (00:00:00)
+        // Tugash: kunning oxiri (23:59:59)
+        const startAt = `${startDate}T00:00:00.000Z`;
+        const endAt = `${endDate}T23:59:59.999Z`;
+        
+        return await updateBooking({
           id: booking._id,
           body: {
-            start_at: new Date(startDate).toISOString(),
-            end_at: new Date(endDate).toISOString(),
+            start_at: startAt,
+            end_at: endAt,
             note: note || undefined,
           },
-        }).unwrap(),
+        }).unwrap();
+      },
       onSuccess: () => {
         toast.success("Бронь муваффақиятли янгиланди");
         onOpenChange(false);

@@ -141,3 +141,23 @@ export interface RoomReportResponse {
 		occupancyRate: number
 	}
 }
+
+export interface BloodPressureReportResponse {
+	success: boolean
+	data: {
+		_id: {
+			year: number
+			month?: number
+			day?: number
+		}
+		date: string
+		blood_pressure: {
+			systolic: number
+			diastolic: number
+		}
+		notes: string
+		patient_id: string
+		examination_id: string
+	}[]
+	pagination: Pagination
+}

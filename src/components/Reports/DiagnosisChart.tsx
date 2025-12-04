@@ -35,7 +35,7 @@ const COLORS = [
 
 export const DiagnosisChart = ({ data, isLoading }: DiagnosisChartProps) => {
 	const chartData = data.map(item => ({
-		name: `${item.diagnosis_name} (${item.diagnosis_code})`,
+		name: `${item.diagnosis_name} ${item.diagnosis_code ? `(${item.diagnosis_code})` : ''}`,
 		value: item.count,
 		percentage: item.percentage,
 	}))

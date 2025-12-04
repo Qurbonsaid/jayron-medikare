@@ -39,7 +39,21 @@ export const PatientChart = ({
 		return `${year}`
 	}
 
-	const chartData = data.map(item => ({
+	// Sort data by date (oldest to newest)
+	const sortedData = [...data].sort((a, b) => {
+		const aYear = a._id.year
+		const aMonth = a._id.month || 1
+		const aDay = a._id.day || 1
+		const bYear = b._id.year
+		const bMonth = b._id.month || 1
+		const bDay = b._id.day || 1
+		return (
+			new Date(aYear, aMonth - 1, aDay).getTime() -
+			new Date(bYear, bMonth - 1, bDay).getTime()
+		)
+	})
+
+	const chartData = sortedData.map(item => ({
 		name: formatDate(item),
 		Жами: item.totalPatients,
 		Актив: item.activePatients,

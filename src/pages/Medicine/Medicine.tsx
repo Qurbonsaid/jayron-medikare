@@ -1,9 +1,13 @@
 import {
+	useAddDailyCheckupMutation,
 	useCreatePrescriptionDaysMutation,
 	useCreateServiceDaysMutation,
+	useDeleteDailyCheckupMutation,
 	useGetAllExamsQuery,
+	useGetDailyCheckupQuery,
 	useTakeMedicineMutation,
 	useTakeServiceMutation,
+	useUpdateDailyCheckupMutation,
 } from '@/app/api/examinationApi/examinationApi'
 import {
 	Accordion,
@@ -31,7 +35,7 @@ import {
 } from '@/components/ui/pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
-import { Check, Loader2 } from 'lucide-react'
+import { Activity, Check, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -114,6 +118,26 @@ const Medicine = () => {
 	const [processedServices, setProcessedServices] = useState<Set<string>>(
 		new Set()
 	)
+	const [selectedRecordForBP, setSelectedRecordForBP] = useState<string | null>(
+		null
+	)
+	const [bpDialogOpen, setBpDialogOpen] = useState(false)
+	const [editingBP, setEditingBP] = useState<{
+		id: string
+		systolic: number
+		diastolic: number
+		notes: string
+	} | null>(null)
+	const [bpForm, setBpForm] = useState({
+		systolic: '',
+		diastolic: '',
+		notes: '',
+	})
+	const [deleteBPModal, setDeleteBPModal] = useState<{
+		open: boolean
+		recordId: string | null
+		checkupId: string | null
+	}>({ open: false, recordId: null, checkupId: null })
 
 	const itemsPerPage = 10
 
@@ -131,6 +155,11 @@ const Medicine = () => {
 		useTakeMedicineMutation()
 	const [createServiceDays] = useCreateServiceDaysMutation()
 	const [takeService, { isLoading: takingService }] = useTakeServiceMutation()
+	const [addDailyCheckup, { isLoading: addingBP }] =
+		useAddDailyCheckupMutation()
+	const [updateDailyCheckup, { isLoading: updatingBP }] =
+		useUpdateDailyCheckupMutation()
+	const [deleteDailyCheckup] = useDeleteDailyCheckupMutation()
 	const handleRequest = useHandleRequest()
 
 	// Format date helper
@@ -310,6 +339,111 @@ const Medicine = () => {
 		setCurrentPage(1) // Reset to first page on search
 	}
 
+	// Blood pressure handlers
+	const openBPDialog = (recordId: string) => {
+		setSelectedRecordForBP(recordId)
+		setBpDialogOpen(true)
+		setEditingBP(null)
+		setBpForm({ systolic: '', diastolic: '', notes: '' })
+	}
+
+	const openEditBPDialog = (
+		recordId: string,
+		checkupId: string,
+		systolic: number,
+		diastolic: number,
+		notes: string
+	) => {
+		setSelectedRecordForBP(recordId)
+		setEditingBP({ id: checkupId, systolic, diastolic, notes })
+		setBpForm({
+			systolic: systolic.toString(),
+			diastolic: diastolic.toString(),
+			notes: notes || '',
+		})
+		setBpDialogOpen(true)
+	}
+
+	const closeBPDialog = () => {
+		setBpDialogOpen(false)
+		setEditingBP(null)
+		setBpForm({ systolic: '', diastolic: '', notes: '' })
+		setSelectedRecordForBP(null)
+	}
+
+	const handleBPSubmit = async () => {
+		if (!selectedRecordForBP) return
+
+		const systolic = parseInt(bpForm.systolic)
+		const diastolic = parseInt(bpForm.diastolic)
+
+		if (!systolic || !diastolic || systolic <= 0 || diastolic <= 0) {
+			toast.error('Илтимос, тўғри қийматлар киритинг')
+			return
+		}
+
+		const data = {
+			blood_pressure: { systolic, diastolic },
+			notes: bpForm.notes,
+		}
+
+		if (editingBP) {
+			await handleRequest({
+				request: () =>
+					updateDailyCheckup({
+						id: selectedRecordForBP,
+						checkup_id: editingBP.id,
+						body: data,
+					}),
+				onSuccess: () => {
+					toast.success('Қон босими янгиланди')
+					closeBPDialog()
+				},
+				onError: err => {
+					toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
+				},
+			})
+		} else {
+			await handleRequest({
+				request: () =>
+					addDailyCheckup({
+						id: selectedRecordForBP,
+						body: data,
+					}),
+				onSuccess: () => {
+					toast.success('Қон босими қўшилди')
+					closeBPDialog()
+				},
+				onError: err => {
+					toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
+				},
+			})
+		}
+	}
+
+	const handleDeleteBP = (recordId: string, checkupId: string) => {
+		setDeleteBPModal({ open: true, recordId, checkupId })
+	}
+
+	const confirmDeleteBP = async () => {
+		if (!deleteBPModal.recordId || !deleteBPModal.checkupId) return
+
+		await handleRequest({
+			request: () =>
+				deleteDailyCheckup({
+					id: deleteBPModal.recordId!,
+					checkup_id: deleteBPModal.checkupId!,
+				}),
+			onSuccess: () => {
+				toast.success('Қон босими ўчирилди')
+				setDeleteBPModal({ open: false, recordId: null, checkupId: null })
+			},
+			onError: err => {
+				toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
+			},
+		})
+	}
+
 	if (isLoading) {
 		return (
 			<div className='min-h-screen bg-background flex items-center justify-center'>
@@ -403,11 +537,13 @@ const Medicine = () => {
 
 									<AccordionContent className='px-2 sm:px-4 pb-2 sm:pb-4'>
 										<Tabs defaultValue='medicines' className='w-full'>
-											<TabsList className='grid w-full grid-cols-2 mb-4'>
+											<TabsList className='grid w-full grid-cols-3 mb-4'>
 												<TabsTrigger value='medicines'>Дорилар</TabsTrigger>
 												<TabsTrigger value='services'>Хизматлар</TabsTrigger>
-											</TabsList>
-
+												<TabsTrigger value='bloodpressure'>
+													Қон босими
+												</TabsTrigger>
+											</TabsList>{' '}
 											<TabsContent value='medicines'>
 												{record.prescriptions.length === 0 ? (
 													<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
@@ -654,7 +790,6 @@ const Medicine = () => {
 													</div>
 												)}
 											</TabsContent>
-
 											<TabsContent value='services'>
 												{!record.services || record.services.length === 0 ? (
 													<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
@@ -895,6 +1030,14 @@ const Medicine = () => {
 													</div>
 												)}
 											</TabsContent>
+											<TabsContent value='bloodpressure'>
+												<BloodPressureTab
+													recordId={record._id}
+													onAdd={() => openBPDialog(record._id)}
+													onEdit={openEditBPDialog}
+													onDelete={handleDeleteBP}
+												/>
+											</TabsContent>
 										</Tabs>
 									</AccordionContent>
 								</AccordionItem>
@@ -1025,6 +1168,274 @@ const Medicine = () => {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			{/* Blood Pressure Dialog */}
+			<Dialog open={bpDialogOpen} onOpenChange={closeBPDialog}>
+				<DialogContent className='max-w-[90vw] sm:max-w-md'>
+					<DialogHeader>
+						<DialogTitle className='text-base sm:text-lg'>
+							{editingBP ? 'Қон босимини таҳрирлаш' : 'Қон босимини қўшиш'}
+						</DialogTitle>
+					</DialogHeader>
+					<div className='space-y-4 py-4'>
+						<div className='space-y-2'>
+							<label className='text-sm font-medium'>Систолик (yuqori)</label>
+							<Input
+								type='number'
+								placeholder='120'
+								value={bpForm.systolic}
+								onKeyDown={e => {
+									if (
+										e.key === ',' ||
+										e.key === 'e' ||
+										e.key === 'E' ||
+										e.key === '+' ||
+										e.key === '-'
+									) {
+										e.preventDefault()
+									}
+								}}
+								onChange={e =>
+									setBpForm({ ...bpForm, systolic: e.target.value })
+								}
+							/>
+						</div>
+						<div className='space-y-2'>
+							<label className='text-sm font-medium'>Диастолик (pastki)</label>
+							<Input
+								type='number'
+								placeholder='80'
+								onKeyDown={e => {
+									if (
+										e.key === ',' ||
+										e.key === 'e' ||
+										e.key === 'E' ||
+										e.key === '+' ||
+										e.key === '-'
+									) {
+										e.preventDefault()
+									}
+								}}
+								value={bpForm.diastolic}
+								onChange={e =>
+									setBpForm({ ...bpForm, diastolic: e.target.value })
+								}
+							/>
+						</div>
+						<div className='space-y-2'>
+							<label className='text-sm font-medium'>Изоҳ (optional)</label>
+							<Input
+								placeholder='Изоҳ...'
+								value={bpForm.notes}
+								onChange={e => setBpForm({ ...bpForm, notes: e.target.value })}
+							/>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button variant='outline' onClick={closeBPDialog}>
+							Бекор қилиш
+						</Button>
+						<Button
+							onClick={handleBPSubmit}
+							disabled={addingBP || updatingBP}
+							className='bg-green-600 hover:bg-green-700'
+						>
+							{addingBP || updatingBP ? (
+								<Loader2 className='w-4 h-4 animate-spin' />
+							) : editingBP ? (
+								'Янгилаш'
+							) : (
+								'Қўшиш'
+							)}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Delete Blood Pressure Confirmation Dialog */}
+			<Dialog
+				open={deleteBPModal.open}
+				onOpenChange={open =>
+					!open &&
+					setDeleteBPModal({ open: false, recordId: null, checkupId: null })
+				}
+			>
+				<DialogContent className='max-w-[90vw] sm:max-w-sm'>
+					<DialogHeader>
+						<DialogTitle className='text-base sm:text-lg'>
+							Тасдиқлаш
+						</DialogTitle>
+					</DialogHeader>
+					<p className='text-sm sm:text-base text-muted-foreground py-3 sm:py-4'>
+						Қон босими маълумотини ўчирмоқчимисиз?
+					</p>
+					<DialogFooter className='flex gap-2 sm:gap-3'>
+						<Button
+							variant='outline'
+							onClick={() =>
+								setDeleteBPModal({
+									open: false,
+									recordId: null,
+									checkupId: null,
+								})
+							}
+							className='flex-1 sm:flex-none text-sm'
+						>
+							Йўқ
+						</Button>
+						<Button
+							onClick={confirmDeleteBP}
+							className='flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-sm'
+						>
+							Ҳа
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		</div>
+	)
+}
+
+// Blood Pressure Tab Component
+interface BloodPressureTabProps {
+	recordId: string
+	onAdd: () => void
+	onEdit: (
+		recordId: string,
+		checkupId: string,
+		systolic: number,
+		diastolic: number,
+		notes: string
+	) => void
+	onDelete: (recordId: string, checkupId: string) => void
+}
+
+const BloodPressureTab = ({
+	recordId,
+	onAdd,
+	onEdit,
+	onDelete,
+}: BloodPressureTabProps) => {
+	const { data, isLoading } = useGetDailyCheckupQuery(recordId)
+
+	const formatDateTime = (dateString: string) => {
+		const date = new Date(dateString)
+		return date.toLocaleDateString('uz-UZ', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+		})
+	}
+
+	const getBPStatus = (systolic: number, diastolic: number) => {
+		if (systolic < 120 && diastolic < 80) {
+			return { label: 'Нормал', color: 'text-green-600 bg-green-50' }
+		} else if (systolic < 140 && diastolic < 90) {
+			return { label: 'Юқорилаш', color: 'text-yellow-600 bg-yellow-50' }
+		} else {
+			return { label: 'Юқори', color: 'text-red-600 bg-red-50' }
+		}
+	}
+
+	if (isLoading) {
+		return (
+			<div className='flex items-center justify-center py-8'>
+				<Loader2 className='w-6 h-6 animate-spin text-primary' />
+			</div>
+		)
+	}
+
+	const checkups = data?.data || []
+
+	return (
+		<div className='space-y-3'>
+			<div className='flex justify-between items-center'>
+				<h3 className='text-sm font-semibold flex items-center gap-2'>
+					<Activity className='w-4 h-4' />
+					Қон босими тарихи
+				</h3>
+				<Button size='sm' onClick={onAdd} className='h-8'>
+					<Plus className='w-4 h-4 mr-1' />
+					Қўшиш
+				</Button>
+			</div>
+
+			{checkups.length === 0 ? (
+				<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
+					Қон босими маълумотлари топилмади
+				</p>
+			) : (
+				<div className='space-y-2'>
+					{checkups.map(checkup => {
+						const status = getBPStatus(
+							checkup.blood_pressure.systolic,
+							checkup.blood_pressure.diastolic
+						)
+
+						return (
+							<Card key={checkup._id} className='border shadow-sm'>
+								<CardContent className='p-3 sm:p-4'>
+									<div className='flex justify-between items-start gap-2'>
+										<div className='flex-1'>
+											<div className='flex items-center gap-2 mb-2'>
+												<div className='text-lg sm:text-xl font-bold text-primary'>
+													{checkup.blood_pressure.systolic}/
+													{checkup.blood_pressure.diastolic}
+													<span className='text-xs text-muted-foreground ml-1'>
+														mmHg
+													</span>
+												</div>
+												{/* <span
+													className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.color}`}
+												>
+													{status.label}
+												</span> */}
+											</div>
+											<p className='text-xs text-muted-foreground'>
+												{formatDateTime(checkup.date)}
+											</p>
+											{checkup.notes && (
+												<p className='text-xs text-muted-foreground mt-1'>
+													<span className='font-medium'>Изоҳ:</span>{' '}
+													{checkup.notes}
+												</p>
+											)}
+										</div>
+										<div className='flex gap-1'>
+											<Button
+												size='sm'
+												variant='ghost'
+												className='h-8 w-8 p-0'
+												onClick={() =>
+													onEdit(
+														recordId,
+														checkup._id,
+														checkup.blood_pressure.systolic,
+														checkup.blood_pressure.diastolic,
+														checkup.notes
+													)
+												}
+											>
+												<Pencil className='w-3.5 h-3.5' />
+											</Button>
+											<Button
+												size='sm'
+												variant='ghost'
+												className='h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50'
+												onClick={() => onDelete(recordId, checkup._id)}
+											>
+												<Trash2 className='w-3.5 h-3.5' />
+											</Button>
+										</div>
+									</div>
+								</CardContent>
+							</Card>
+						)
+					})}
+				</div>
+			)}
 		</div>
 	)
 }

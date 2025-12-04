@@ -21,6 +21,28 @@ export type CreatePatientReq = {
 export type PatientRes = {
   success: boolean;
   message?: string;
+  data: {
+    _id: string;
+    patient_id: string;
+    fullname: string;
+    phone: string;
+    gender: 'male' | 'female';
+    date_of_birth: string;
+    address?: string;
+    email?: string;
+    allergies?: string[];
+    regular_medications?: {
+      medicine: string;
+      schedule: string;
+      _id: string;
+    }[];
+    passport: {
+      series: string;
+      number: string;
+    };
+    created_at: Date;
+    updated_at: Date;
+  };
   error?: {
     statusCode: number;
     statusMsg: string;
