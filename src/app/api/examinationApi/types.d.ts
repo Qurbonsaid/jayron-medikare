@@ -170,9 +170,6 @@ export interface MutationRes {
 	}
 }
 
-export const status =
-	'active' | 'inactive' | 'pending' | 'completed' | 'deleted'
-
 export type UpdateExamReq = {
 	id: string
 	body: {
