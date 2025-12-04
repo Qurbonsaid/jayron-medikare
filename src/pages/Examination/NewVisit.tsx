@@ -250,7 +250,7 @@ const NewVisit = () => {
       },
       onSuccess: () => {
         toast.success('Кўрик муваффақиятли яратилди');
-        navigate('/visits');
+        navigate('/examinations');
       },
       onError: (error) => {
         toast.error(error?.data?.error?.msg || 'Хатолик юз берди');

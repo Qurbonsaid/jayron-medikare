@@ -1,7 +1,8 @@
+import { RoleConstants } from '@/constants/Roles';
 import React from 'react';
 
 interface Props {
-  role:'admin'|'ceo'|'doctor'|'nurse'|'receptionist';
+  role:RoleConstants;
   allowed:string[]
   children: React.ReactNode;
 }
