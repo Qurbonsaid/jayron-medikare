@@ -10,10 +10,6 @@ interface PermissionResult {
   isLoading: boolean;
 }
 
-/**
- * Hook to check user permissions for a specific collection/page
- * @param collectionName - The name of the collection to check permissions for (e.g., 'patients', 'disease', 'medicine')
- */
 export const usePermission = (collectionName: string): PermissionResult => {
   const { data: userData, isLoading: userLoading } = useMeQuery();
   const userRole = userData?.data?.role;
@@ -46,7 +42,10 @@ export const usePermission = (collectionName: string): PermissionResult => {
   }
 
   // Find the permission for this specific collection
-  const rolePermission = permissionData.data[0];
+  // API data ni to'g'ridan-to'g'ri object yoki array sifatida qaytarishi mumkin
+  const rolePermission = Array.isArray(permissionData.data)
+    ? permissionData.data[0]
+    : permissionData.data;
   const collectionPermission = rolePermission?.permissions?.find(
     (p) => p.collection_name.toLowerCase() === collectionName.toLowerCase()
   );
