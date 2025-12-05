@@ -4,6 +4,7 @@ import { AllPatientRes } from "@/app/api/patientApi/types";
 import { useAddPatientRoomMutation } from "@/app/api/roomApi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { formatPhoneNumber } from "@/lib/utils";
 import {
   Command,
   CommandEmpty,
@@ -50,6 +51,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
     search: searchQuery,
     status: "pending",
     is_roomed: false,
+    treatment_type: "stasionar",
   });
 
   const [addPatientRoom, { isLoading: isAddPatientLoading }] =
@@ -94,68 +96,68 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
                 variant="outline"
                 role="combobox"
                 aria-expanded={openPopover}
-                className="w-full justify-between h-12 sm:h-14 text-sm sm:text-base"
+                className="w-full justify-between h-auto min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
               >
                 {selectedPatient ? (
-                  <div className="flex flex-col items-start w-full">
-                    <span className="font-medium text-sm sm:text-base text-primary">
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="font-semibold text-sm sm:text-base">
                       {selectedPatient.patient_id.fullname}
                     </span>
-                    <span className="text-xs sm:text-sm text-muted-foreground">
-                      {selectedPatient.patient_id.phone}
+                    <span className="text-xs text-muted-foreground">
+                      {formatPhoneNumber(selectedPatient.patient_id.phone)}
                     </span>
                   </div>
                 ) : (
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 text-sm sm:text-base">
                     <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="truncate">Беморни қидириш...</span>
+                    Беморни қидириш...
                   </span>
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent
-              className="w-[calc(100vw-2rem)] sm:w-[600px] md:w-[700px] lg:w-[910px] p-0"
-              align="start"
-              side="bottom"
-            >
-              <Command shouldFilter={false}>
+            <PopoverContent className="w-full sm:w-[500px] p-0" align="start">
+              <Command shouldFilter={false} className="w-full">
                 <CommandInput
                   placeholder="Исм, ID ёки телефон орқали қидириш..."
                   value={searchQuery}
                   onValueChange={setSearchQuery}
                   className="text-sm sm:text-base"
                 />
-                <CommandList>
-                  <CommandEmpty className="p-4 text-sm sm:text-base">
-                    Бемор топилмади
+                <CommandList className="max-h-[300px] overflow-y-auto">
+                  <CommandEmpty className="text-sm sm:text-base py-6">
+                    {isLoading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <span>Юкланмоқда...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <span>Бемор топилмади</span>
+                      </div>
+                    )}
                   </CommandEmpty>
                   <CommandGroup>
-                    {isLoading ? (
-                      <CommandItem disabled className="py-3 justify-center">
-                        Юкланмоқда...
-                      </CommandItem>
-                    ) : (
-                      examinations?.data.map((e) => (
-                        <CommandItem
-                          key={e._id}
-                          value={e._id}
-                          onSelect={() => {
-                            setSelectedPatient(e);
-                            setOpenPopover(false);
-                          }}
-                          className="py-3"
-                        >
-                          <div className="flex flex-col w-full">
-                            <span className="font-medium text-sm sm:text-base">
+                    {!isLoading && examinations?.data.map((e) => (
+                      <CommandItem
+                        key={e._id}
+                        value={e._id}
+                        onSelect={() => {
+                          setSelectedPatient(e);
+                          setOpenPopover(false);
+                        }}
+                        className="py-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <div className="flex flex-col flex-1">
+                            <span className="font-semibold text-sm sm:text-base">
                               {e.patient_id.fullname}
                             </span>
                             <span className="text-xs sm:text-sm text-muted-foreground">
-                              {e.patient_id.phone}
+                              {formatPhoneNumber(e.patient_id.phone)}
                             </span>
                           </div>
-                        </CommandItem>
-                      ))
-                    )}
+                        </div>
+                      </CommandItem>
+                    ))}
                   </CommandGroup>
                 </CommandList>
               </Command>

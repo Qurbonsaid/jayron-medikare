@@ -1,6 +1,7 @@
 import { useGetOneRoomQuery } from "@/app/api/roomApi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { formatNumber, formatPhoneNumber } from "@/lib/utils";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Tooltip,
@@ -83,8 +84,7 @@ const RoomDetail = () => {
                   </h3>
 
                   <p className="mt-1 text-lg font-semibold">
-                    {room?.data.room_price.toLocaleString() || "бeлгиланмаган"}{" "}
-                    so'm
+                    {formatNumber(room?.data.room_price)} so'm
                   </p>
                 </div>
                 <div>
@@ -227,7 +227,7 @@ const RoomDetail = () => {
                             <span>{patientData?.fullname}</span>
                           </div>
                           <span className="text-sm font-semibold">
-                            Tel: <strong>{patientData?.phone}</strong>
+                            Tel: <strong>{formatPhoneNumber(patientData?.phone)}</strong>
                           </span>
 
                           <span className="text-sm font-semibold">

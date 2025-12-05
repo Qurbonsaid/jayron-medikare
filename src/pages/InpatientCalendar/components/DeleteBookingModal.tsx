@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useDeleteBookingMutation } from "@/app/api/bookingApi";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
 import { toast } from "sonner";
+import { formatPhoneNumber } from "@/lib/utils";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Booking } from "@/app/api/bookingApi/types";
@@ -87,7 +88,7 @@ export const DeleteBookingModal = ({
             <div>
               <span className="text-gray-600">Телефон:</span>{" "}
               <strong className="text-gray-900">
-                {patient?.phone || "-"}
+                {formatPhoneNumber(patient?.phone)}
               </strong>
             </div>
             <div>

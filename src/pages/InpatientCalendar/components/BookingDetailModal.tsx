@@ -10,12 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Booking } from "@/app/api/bookingApi/types";
 import { format } from "date-fns";
 import { uz } from "date-fns/locale";
+import { formatPhoneNumber, formatNumber } from "@/lib/utils";
 import {
   Calendar,
   User,
   Home,
   Phone,
-  Mail,
   FileText,
   Clock,
 } from "lucide-react";
@@ -81,18 +81,9 @@ export const BookingDetailModal = ({
                 <p className="text-xs text-blue-700 mb-1">Телефон</p>
                 <p className="font-semibold text-blue-900 flex items-center gap-1">
                   <Phone className="w-3 h-3" />
-                  {patient?.phone || "-"}
+                  {formatPhoneNumber(patient?.phone)}
                 </p>
               </div>
-              {patient?.email && (
-                <div className="col-span-2">
-                  <p className="text-xs text-blue-700 mb-1">Email</p>
-                  <p className="font-semibold text-blue-900 flex items-center gap-1">
-                    <Mail className="w-3 h-3" />
-                    {patient.email}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
@@ -134,7 +125,7 @@ export const BookingDetailModal = ({
               <div>
                 <p className="text-xs text-green-700 mb-1">Нарх</p>
                 <p className="font-semibold text-green-900">
-                  {room?.room_price.toLocaleString() || "-"} сўм/кун
+                  {formatNumber(room?.room_price)} сўм/кун
                 </p>
               </div>
             </div>
