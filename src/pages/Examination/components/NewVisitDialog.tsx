@@ -1,8 +1,14 @@
-import { useCreateExamMutation } from '@/app/api/examinationApi/examinationApi';
+import {
+  useAddServiceToExaminationMutation,
+  useCreateExamMutation,
+  useCreatePrescriptionMutation,
+} from '@/app/api/examinationApi/examinationApi';
+import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import {
   useGetAllPatientQuery,
   useGetPatientByIdQuery,
 } from '@/app/api/patientApi/patientApi';
+import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { useGetUsersQuery } from '@/app/api/userApi/userApi';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Popover,
@@ -36,7 +43,17 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { Activity, FileText, Search, User, UserCog } from 'lucide-react';
+import {
+  Activity,
+  FileText,
+  Pill,
+  Plus,
+  Search,
+  Stethoscope,
+  Trash2,
+  User,
+  UserCog,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { calculateAge } from './calculateAge';
@@ -62,6 +79,32 @@ const NewVisitDialog = ({
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showErrors, setShowErrors] = useState(false);
+  const [treatmentType, setTreatmentType] = useState<'ambulator' | 'stasionar'>(
+    'ambulator'
+  );
+
+  // Prescription states
+  interface MedicationItem {
+    id: string;
+    medication_id: string;
+    additionalInfo: string;
+    frequency: string;
+    duration: string;
+    instructions: string;
+  }
+  const [medications, setMedications] = useState<MedicationItem[]>([]);
+  const [medicationSearch, setMedicationSearch] = useState('');
+
+  // Service states
+  interface ServiceItem {
+    id: string;
+    service_id: string;
+    frequency: number;
+    duration: number;
+    notes: string;
+  }
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [serviceSearch, setServiceSearch] = useState('');
 
   // Fetch all patients for search
   const { data: patientsData } = useGetAllPatientQuery({
@@ -82,7 +125,26 @@ const NewVisitDialog = ({
   });
 
   const [createExam, { isLoading: isCreating }] = useCreateExamMutation();
+  const [createPrescription] = useCreatePrescriptionMutation();
+  const [addServiceToExam] = useAddServiceToExaminationMutation();
   const handleRequest = useHandleRequest();
+
+  // Fetch medications
+  const { data: medicationsData } = useGetAllMedicationsQuery({
+    page: 1,
+    limit: 100,
+    search: medicationSearch || undefined,
+  });
+
+  // Fetch services
+  const { data: servicesData } = useGetAllServiceQuery({
+    page: 1,
+    limit: 100,
+    search: serviceSearch || undefined,
+  } as any);
+
+  const availableMedications = medicationsData?.data || [];
+  const availableServices = servicesData?.data || [];
 
   const patients = patientsData?.data || [];
   const doctors = doctorsData?.data || [];
@@ -112,6 +174,11 @@ const NewVisitDialog = ({
         setSelectedDoctorId('');
         setSearchQuery('');
         setShowErrors(false);
+        setTreatmentType('ambulator');
+        setMedications([]);
+        setServices([]);
+        setMedicationSearch('');
+        setServiceSearch('');
       }, 200);
     }
   }, [open]);
@@ -139,6 +206,65 @@ const NewVisitDialog = ({
     );
   });
 
+  // Medication handlers
+  const addMedication = () => {
+    setMedications([
+      ...medications,
+      {
+        id: Date.now().toString(),
+        medication_id: '',
+        additionalInfo: '',
+        frequency: '',
+        duration: '',
+        instructions: '',
+      },
+    ]);
+  };
+
+  const updateMedication = (
+    id: string,
+    field: keyof MedicationItem,
+    value: string
+  ) => {
+    setMedications(
+      medications.map((med) =>
+        med.id === id ? { ...med, [field]: value } : med
+      )
+    );
+  };
+
+  const removeMedication = (id: string) => {
+    setMedications(medications.filter((med) => med.id !== id));
+  };
+
+  // Service handlers
+  const addService = () => {
+    setServices([
+      ...services,
+      {
+        id: Date.now().toString(),
+        service_id: '',
+        frequency: 1,
+        duration: 1,
+        notes: '',
+      },
+    ]);
+  };
+
+  const updateService = (
+    id: string,
+    field: keyof ServiceItem,
+    value: string | number
+  ) => {
+    setServices(
+      services.map((srv) => (srv.id === id ? { ...srv, [field]: value } : srv))
+    );
+  };
+
+  const removeService = (id: string) => {
+    setServices(services.filter((srv) => srv.id !== id));
+  };
+
   const handleSave = async () => {
     setShowErrors(true);
 
@@ -161,6 +287,7 @@ const NewVisitDialog = ({
           patient_id: selectedPatientId,
           doctor_id: selectedDoctorId,
           complaints: subjective,
+          treatment_type: treatmentType,
         };
         if (description.trim()) {
           request.description = description;
@@ -168,7 +295,52 @@ const NewVisitDialog = ({
         const res = await createExam(request).unwrap();
         return res;
       },
-      onSuccess: () => {
+      onSuccess: async (data: any) => {
+        const examId = data?.data?._id;
+
+        // Save prescriptions
+        for (const med of medications) {
+          if (med.medication_id) {
+            try {
+              await createPrescription({
+                id: examId,
+                body: {
+                  medication_id: med.medication_id,
+                  frequency: parseInt(med.frequency) || 1,
+                  duration: parseInt(med.duration) || 1,
+                  instructions: med.instructions,
+                },
+              }).unwrap();
+            } catch (error) {
+              console.error('Рецепт сақлашда хатолик:', error);
+            }
+          }
+        }
+
+        // Save services
+        for (const srv of services) {
+          if (srv.service_id) {
+            const serviceDetails = availableServices.find(
+              (s: any) => s._id === srv.service_id
+            );
+            try {
+              await addServiceToExam({
+                id: examId,
+                body: {
+                  service_type_id: srv.service_id,
+                  price: serviceDetails?.price || 0,
+                  frequency: srv.frequency,
+                  duration: srv.duration,
+                  status: 'pending',
+                  notes: srv.notes,
+                },
+              }).unwrap();
+            } catch (error) {
+              console.error('Хизмат сақлашда хатолик:', error);
+            }
+          }
+        }
+
         toast.success('Кўрик муваффақиятли яратилди');
         onOpenChange(false);
         onSuccess?.();
@@ -276,36 +448,71 @@ const NewVisitDialog = ({
                 </div>
               </div>
 
-              {/* Doctor Selection */}
-              <div className='space-y-2'>
-                <Label className='flex items-center gap-2'>
-                  <UserCog className='w-4 h-4 text-primary' />
-                  Шифокорни танланг
-                </Label>
-                <Select
-                  value={selectedDoctorId}
-                  onValueChange={setSelectedDoctorId}
-                >
-                  <SelectTrigger
-                    className={`h-12 ${
-                      showErrors && !selectedDoctorId ? 'border-red-500' : ''
-                    }`}
+              {/* Doctor Selection and Treatment Type in one row */}
+              <div className='flex items-end gap-4'>
+                <div className='flex-1 space-y-2'>
+                  <Label className='flex items-center gap-2'>
+                    <UserCog className='w-4 h-4 text-primary' />
+                    Шифокорни танланг
+                  </Label>
+                  <Select
+                    value={selectedDoctorId}
+                    onValueChange={setSelectedDoctorId}
                   >
-                    <SelectValue placeholder='Шифокорни танланг...' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {doctors.map((doctor: any) => (
-                      <SelectItem key={doctor._id} value={doctor._id}>
-                        <div className='flex flex-col'>
-                          <span className='font-medium'>{doctor.fullname}</span>
-                          <span className='text-xs text-muted-foreground'>
-                            {doctor.email}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <SelectTrigger
+                      className={`h-12 ${
+                        showErrors && !selectedDoctorId ? 'border-red-500' : ''
+                      }`}
+                    >
+                      <SelectValue placeholder='Шифокорни танланг...' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {doctors.map((doctor: any) => (
+                        <SelectItem key={doctor._id} value={doctor._id}>
+                          <div className='flex flex-col'>
+                            <span className='font-medium'>
+                              {doctor.fullname}
+                            </span>
+                            <span className='text-xs text-muted-foreground'>
+                              {doctor.section ||
+                                'Мутахассислик кўрсатилмаган'}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className='space-y-2'>
+                  <Label className='flex items-center gap-2'>
+                    <Stethoscope className='w-4 h-4 text-primary' />
+                    Даволаш тури
+                  </Label>
+                  <div className='grid grid-cols-2 gap-1 border-2 border-blue-500 rounded-xl p-1'>
+                    <button
+                      type='button'
+                      onClick={() => setTreatmentType('ambulator')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        treatmentType === 'ambulator'
+                          ? 'bg-primary text-white shadow-md'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      Амбулатор
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => setTreatmentType('stasionar')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        treatmentType === 'stasionar'
+                          ? 'bg-primary text-white shadow-md'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      Стационар
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Subjective - Complaints */}
@@ -336,6 +543,282 @@ const NewVisitDialog = ({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
+              </div>
+
+              {/* Prescriptions Section */}
+              <div className='space-y-3 border rounded-lg p-4 bg-muted/30'>
+                <div className='flex items-center justify-between'>
+                  <Label className='flex items-center gap-2'>
+                    <Pill className='w-4 h-4 text-primary' />
+                    Рецептлар (Дорилар)
+                  </Label>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={addMedication}
+                    className='gap-1'
+                  >
+                    <Plus className='w-4 h-4' />
+                    Дори қўшиш
+                  </Button>
+                </div>
+
+                {medications.length === 0 ? (
+                  <p className='text-sm text-muted-foreground text-center py-4'>
+                    Дорилар қўшилмаган
+                  </p>
+                ) : (
+                  <div className='space-y-3'>
+                    {medications.map((med) => (
+                      <div
+                        key={med.id}
+                        className='p-3 bg-background rounded-lg border space-y-2'
+                      >
+                        {/* First row: Dori, Qo'shimchalar, Trash */}
+                        <div className='flex items-center gap-2'>
+                          <div className='flex-1 min-w-0'>
+                            <Label className='text-xs mb-1 block'>Дори</Label>
+                            <Select
+                              value={med.medication_id}
+                              onValueChange={(value) =>
+                                updateMedication(med.id, 'medication_id', value)
+                              }
+                            >
+                              <SelectTrigger className='h-9'>
+                                <SelectValue placeholder='Дорини танланг...' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableMedications.map((m: any) => (
+                                  <SelectItem key={m._id} value={m._id}>
+                                    {m.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className='flex-1 min-w-0'>
+                            <Label className='text-xs mb-1 block'>
+                              Қўшимчалар
+                            </Label>
+                            <Input
+                              placeholder='Қўшимча маълумот...'
+                              className='h-9'
+                              value={med.additionalInfo}
+                              onChange={(e) =>
+                                updateMedication(
+                                  med.id,
+                                  'additionalInfo',
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                          <div className='shrink-0 flex items-center pt-5'>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              className='h-9 w-9 text-red-500 hover:text-red-600 hover:bg-red-50'
+                              onClick={() => removeMedication(med.id)}
+                            >
+                              <Trash2 className='w-4 h-4' />
+                            </Button>
+                          </div>
+                        </div>
+                        {/* Second row: Marta, Kun, Qo'llanish */}
+                        <div className='flex items-center gap-2'>
+                          <div className='w-20 shrink-0'>
+                            <Label className='text-xs mb-1 block'>
+                              Марта/кун
+                            </Label>
+                            <Input
+                              type='number'
+                              placeholder='3'
+                              className='h-9'
+                              min={0}
+                              value={med.frequency}
+                              onChange={(e) =>
+                                updateMedication(
+                                  med.id,
+                                  'frequency',
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                          <div className='w-20 shrink-0'>
+                            <Label className='text-xs mb-1 block'>Кун</Label>
+                            <Input
+                              type='number'
+                              placeholder='7'
+                              className='h-9'
+                              min={0}
+                              value={med.duration}
+                              onChange={(e) =>
+                                updateMedication(
+                                  med.id,
+                                  'duration',
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                          <div className='flex-1 min-w-0'>
+                            <Label className='text-xs mb-1 block'>
+                              Қўлланиш
+                            </Label>
+                            <Input
+                              placeholder='Овқатдан кейин...'
+                              className='h-9'
+                              value={med.instructions}
+                              onChange={(e) =>
+                                updateMedication(
+                                  med.id,
+                                  'instructions',
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Services Section */}
+              <div className='space-y-3 border rounded-lg p-4 bg-muted/30'>
+                <div className='flex items-center justify-between'>
+                  <Label className='flex items-center gap-2'>
+                    <Activity className='w-4 h-4 text-primary' />
+                    Хизматлар
+                  </Label>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={addService}
+                    className='gap-1'
+                  >
+                    <Plus className='w-4 h-4' />
+                    Хизмат қўшиш
+                  </Button>
+                </div>
+
+                {services.length === 0 ? (
+                  <p className='text-sm text-muted-foreground text-center py-4'>
+                    Хизматлар қўшилмаган
+                  </p>
+                ) : (
+                  <div className='space-y-3'>
+                    {services.map((srv) => (
+                      <div
+                        key={srv.id}
+                        className='flex items-center gap-2 p-3 bg-background rounded-lg border'
+                      >
+                        <div className='flex-1 min-w-0'>
+                          <Label className='text-xs mb-1 block'>Хизмат</Label>
+                          <Select
+                            value={srv.service_id}
+                            onValueChange={(value) =>
+                              updateService(srv.id, 'service_id', value)
+                            }
+                          >
+                            <SelectTrigger className='h-9'>
+                              <SelectValue placeholder='Хизматни танланг...' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableServices.map((s: any) => (
+                                <SelectItem key={s._id} value={s._id}>
+                                  <span>{s.name}</span>
+                                  <span className='ml-2 text-muted-foreground'>
+                                    (
+                                    {new Intl.NumberFormat('uz-UZ').format(
+                                      s.price
+                                    )}{' '}
+                                    сўм)
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className='w-32 shrink-0'>
+                          <Label className='text-xs mb-1 block'>Марта</Label>
+                          <Select
+                            value={srv.frequency.toString()}
+                            onValueChange={(value) =>
+                              updateService(
+                                srv.id,
+                                'frequency',
+                                parseFloat(value)
+                              )
+                            }
+                          >
+                            <SelectTrigger className='h-9'>
+                              <SelectValue placeholder='Танланг...' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='1'>1 марта</SelectItem>
+                              <SelectItem value='2'>2 марта</SelectItem>
+                              <SelectItem value='3'>3 марта</SelectItem>
+                              <SelectItem value='0.5'>
+                                2 кунда бир марта
+                              </SelectItem>
+                              <SelectItem value='0.33'>
+                                3 кунда бир марта
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className='w-20 shrink-0'>
+                          <Label className='text-xs mb-1 block'>Кун</Label>
+                          <Input
+                            type='number'
+                            placeholder='1'
+                            className='h-9'
+                            min={0}
+                            value={srv.duration}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '' || parseFloat(value) >= 0) {
+                                updateService(
+                                  srv.id,
+                                  'duration',
+                                  parseFloat(value) || 0
+                                );
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className='flex-1 min-w-0'>
+                          <Label className='text-xs mb-1 block'>Изоҳ</Label>
+                          <Input
+                            placeholder='Изоҳ...'
+                            className='h-9'
+                            value={srv.notes}
+                            onChange={(e) =>
+                              updateService(srv.id, 'notes', e.target.value)
+                            }
+                          />
+                        </div>
+                        <div className='shrink-0 flex items-center pt-5'>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            className='h-9 w-9 text-red-500 hover:text-red-600 hover:bg-red-50'
+                            onClick={() => removeService(srv.id)}
+                          >
+                            <Trash2 className='w-4 h-4' />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}

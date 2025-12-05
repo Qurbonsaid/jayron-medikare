@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 interface Medication {
   id: string;
   medication_id: string;
+  additionalInfo: string;
   frequency: string;
   duration: string;
   instructions: string;
@@ -273,6 +274,7 @@ const Prescription = () => {
     const newMed: Medication = {
       id: Date.now().toString(),
       medication_id: '',
+      additionalInfo: '',
       frequency: '',
       duration: '',
       instructions: '',
@@ -922,7 +924,6 @@ const Prescription = () => {
                   onClick={addMedication}
                   size='sm'
                   className='w-full sm:w-auto text-xs sm:text-sm'
-                  disabled={medications.length > 0 || services.length > 0}
                 >
                   <Plus className='mr-2 h-3 w-3 sm:h-4 sm:w-4' />
                   Дори Қўшиш
@@ -966,155 +967,182 @@ const Prescription = () => {
                             <Trash2 className='h-4 w-4' />
                           </Button>
                         </div>
-                        <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-                          <div className='sm:col-span-2'>
-                            <Label className='text-xs sm:text-sm'>
-                              Дори <span className='text-red-500'>*</span>
-                            </Label>
-                            <Select
-                              value={med.medication_id}
-                              onValueChange={(value) =>
-                                updateMedication(med.id, 'medication_id', value)
-                              }
-                            >
-                              <SelectTrigger
+                        <div className='space-y-3 sm:space-y-4'>
+                          {/* First row: Dori and Qo'shimcha */}
+                          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+                            <div>
+                              <Label className='text-xs sm:text-sm'>
+                                Дори <span className='text-red-500'>*</span>
+                              </Label>
+                              <Select
+                                value={med.medication_id}
+                                onValueChange={(value) =>
+                                  updateMedication(
+                                    med.id,
+                                    'medication_id',
+                                    value
+                                  )
+                                }
+                              >
+                                <SelectTrigger
+                                  className={`text-sm mt-1 ${
+                                    formErrors.medications[med.id]
+                                      ?.medication_id
+                                      ? 'border-red-500 focus:ring-red-500'
+                                      : ''
+                                  }`}
+                                >
+                                  <SelectValue placeholder='Дорини танланг' />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <div className='p-2'>
+                                    <Input
+                                      placeholder='Дори қидириш...'
+                                      value={medicationSearch}
+                                      onChange={(e) =>
+                                        setMedicationSearch(e.target.value)
+                                      }
+                                      className='text-sm mb-2'
+                                    />
+                                  </div>
+                                  {medicationsData?.data &&
+                                  medicationsData.data.length > 0 ? (
+                                    medicationsData.data.map(
+                                      (medication: any) => (
+                                        <SelectItem
+                                          key={medication._id}
+                                          value={medication._id}
+                                        >
+                                          <div className='flex flex-col'>
+                                            <span className='font-medium'>
+                                              {medication.name}
+                                            </span>
+                                            <span className='text-xs text-muted-foreground'>
+                                              {medication.dosage}
+                                            </span>
+                                          </div>
+                                        </SelectItem>
+                                      )
+                                    )
+                                  ) : (
+                                    <div className='p-4 text-center text-sm text-muted-foreground'>
+                                      Дори топилмади
+                                    </div>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label className='text-xs sm:text-sm'>
+                                Қўшимча
+                              </Label>
+                              <Input
+                                placeholder='Қўшимча маълумот...'
+                                value={med.additionalInfo}
+                                onChange={(e) =>
+                                  updateMedication(
+                                    med.id,
+                                    'additionalInfo',
+                                    e.target.value
+                                  )
+                                }
+                                className='text-sm mt-1'
+                              />
+                            </div>
+                          </div>
+                          {/* Second row: Muddat, Qabul qilish, Ko'rsatmalar */}
+                          <div className='flex items-start gap-3'>
+                            <div className='w-28 shrink-0'>
+                              <Label className='text-xs sm:text-sm'>
+                                Муддат (кун){' '}
+                                <span className='text-red-500'>*</span>
+                              </Label>
+                              <Input
+                                type='number'
+                                placeholder='7'
+                                value={med.duration}
+                                onKeyDown={(e) => {
+                                  if (
+                                    e.key === ',' ||
+                                    e.key === 'e' ||
+                                    e.key === 'E' ||
+                                    e.key === '+' ||
+                                    e.key === '-'
+                                  ) {
+                                    e.preventDefault();
+                                  }
+                                }}
+                                onChange={(e) =>
+                                  updateMedication(
+                                    med.id,
+                                    'duration',
+                                    e.target.value
+                                  )
+                                }
                                 className={`text-sm mt-1 ${
-                                  formErrors.medications[med.id]?.medication_id
+                                  formErrors.medications[med.id]?.duration
                                     ? 'border-red-500 focus:ring-red-500'
                                     : ''
                                 }`}
-                              >
-                                <SelectValue placeholder='Дорини танланг' />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <div className='p-2'>
-                                  <Input
-                                    placeholder='Дори қидириш...'
-                                    value={medicationSearch}
-                                    onChange={(e) =>
-                                      setMedicationSearch(e.target.value)
-                                    }
-                                    className='text-sm mb-2'
-                                  />
-                                </div>
-                                {medicationsData?.data &&
-                                medicationsData.data.length > 0 ? (
-                                  medicationsData.data.map(
-                                    (medication: any) => (
-                                      <SelectItem
-                                        key={medication._id}
-                                        value={medication._id}
-                                      >
-                                        <div className='flex flex-col'>
-                                          <span className='font-medium'>
-                                            {medication.name}
-                                          </span>
-                                          <span className='text-xs text-muted-foreground'>
-                                            {medication.dosage}
-                                          </span>
-                                        </div>
-                                      </SelectItem>
-                                    )
+                              />
+                            </div>
+                            <div className='w-24 shrink-0'>
+                              <Label className='text-xs sm:text-sm'>
+                                Марта/кун{' '}
+                                <span className='text-red-500'>*</span>
+                              </Label>
+                              <Input
+                                type='number'
+                                placeholder='3'
+                                value={med.frequency}
+                                onKeyDown={(e) => {
+                                  if (
+                                    e.key === ',' ||
+                                    e.key === 'e' ||
+                                    e.key === 'E' ||
+                                    e.key === '+' ||
+                                    e.key === '-'
+                                  ) {
+                                    e.preventDefault();
+                                  }
+                                }}
+                                onChange={(e) =>
+                                  updateMedication(
+                                    med.id,
+                                    'frequency',
+                                    e.target.value
                                   )
-                                ) : (
-                                  <div className='p-4 text-center text-sm text-muted-foreground'>
-                                    Дори топилмади
-                                  </div>
-                                )}
-                              </SelectContent>
-                            </Select>
+                                }
+                                className={`text-sm mt-1 ${
+                                  formErrors.medications[med.id]?.frequency
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : ''
+                                }`}
+                              />
+                            </div>
+                            <div className='flex-1 min-w-0'>
+                              <Label className='text-xs sm:text-sm'>
+                                Қўшимча Кўрсатмалар{' '}
+                                <span className='text-red-500'>*</span>
+                              </Label>
+                              <Input
+                                value={med.instructions}
+                                onChange={(e) =>
+                                  updateMedication(
+                                    med.id,
+                                    'instructions',
+                                    e.target.value
+                                  )
+                                }
+                                placeholder='Овқатдан кейин...'
+                                className={`text-sm mt-1 ${
+                                  formErrors.medications[med.id]?.instructions
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : ''
+                                }`}
+                              />
+                            </div>
                           </div>
-                          <div>
-                            <Label className='text-xs sm:text-sm'>
-                              Муддати (кун){' '}
-                              <span className='text-red-500'>*</span>
-                            </Label>
-                            <Input
-                              type='number'
-                              placeholder='Даволаш муддати'
-                              value={med.duration}
-                              	onKeyDown={e => {
-											if (
-												e.key === ',' ||
-												e.key === 'e' ||
-												e.key === 'E' ||
-												e.key === '+' ||
-												e.key === '-'
-											) {
-												e.preventDefault()
-											}
-										}}
-                              onChange={(e) =>
-                                updateMedication(
-                                  med.id,
-                                  'duration',
-                                  e.target.value
-                                )
-                              }
-                              className={`text-sm mt-1 ${
-                                formErrors.medications[med.id]?.duration
-                                  ? 'border-red-500 focus:ring-red-500'
-                                  : ''
-                              }`}
-                            />
-                          </div>
-                          <div>
-                            <Label className='text-xs sm:text-sm'>
-                              Қабул Қилиш (кунига марта){' '}
-                              <span className='text-red-500'>*</span>
-                            </Label>
-                            <Input
-                              type='number'
-                              placeholder='Қабул қилиш'
-                              value={med.frequency}
-                              	onKeyDown={e => {
-											if (
-												e.key === ',' ||
-												e.key === 'e' ||
-												e.key === 'E' ||
-												e.key === '+' ||
-												e.key === '-'
-											) {
-												e.preventDefault()
-											}
-										}}
-                              onChange={(e) =>
-                                updateMedication(
-                                  med.id,
-                                  'frequency',
-                                  e.target.value
-                                )
-                              }
-                              className={`text-sm mt-1 ${
-                                formErrors.medications[med.id]?.frequency
-                                  ? 'border-red-500 focus:ring-red-500'
-                                  : ''
-                              }`}
-                            />
-                          </div>
-                        </div>
-                        <div className='mt-3 sm:mt-4'>
-                          <Label className='text-xs sm:text-sm'>
-                            Қўшимча Кўрсатмалар{' '}
-                            <span className='text-red-500'>*</span>
-                          </Label>
-                          <Textarea
-                            value={med.instructions}
-                            onChange={(e) =>
-                              updateMedication(
-                                med.id,
-                                'instructions',
-                                e.target.value
-                              )
-                            }
-                            placeholder='Ушбу дори учун махсус кўрсатмалар...'
-                            rows={2}
-                            className={`text-sm mt-1 resize-none ${
-                              formErrors.medications[med.id]?.instructions
-                                ? 'border-red-500 focus-visible:ring-red-500'
-                                : ''
-                            }`}
-                          />
                         </div>
                       </CardContent>
                     </Card>
@@ -1201,17 +1229,17 @@ const Prescription = () => {
                                         type='number'
                                         placeholder='Даволаш муддати'
                                         value={editPrescriptionForm.duration}
-                                        	onKeyDown={e => {
-											if (
-												e.key === ',' ||
-												e.key === 'e' ||
-												e.key === 'E' ||
-												e.key === '+' ||
-												e.key === '-'
-											) {
-												e.preventDefault()
-											}
-										}}
+                                        onKeyDown={(e) => {
+                                          if (
+                                            e.key === ',' ||
+                                            e.key === 'e' ||
+                                            e.key === 'E' ||
+                                            e.key === '+' ||
+                                            e.key === '-'
+                                          ) {
+                                            e.preventDefault();
+                                          }
+                                        }}
                                         onChange={(e) =>
                                           setEditPrescriptionForm({
                                             ...editPrescriptionForm,
@@ -1228,17 +1256,17 @@ const Prescription = () => {
                                         type='number'
                                         placeholder='Қабул қилиш'
                                         value={editPrescriptionForm.frequency}
-                                        	onKeyDown={e => {
-											if (
-												e.key === ',' ||
-												e.key === 'e' ||
-												e.key === 'E' ||
-												e.key === '+' ||
-												e.key === '-'
-											) {
-												e.preventDefault()
-											}
-										}}
+                                        onKeyDown={(e) => {
+                                          if (
+                                            e.key === ',' ||
+                                            e.key === 'e' ||
+                                            e.key === 'E' ||
+                                            e.key === '+' ||
+                                            e.key === '-'
+                                          ) {
+                                            e.preventDefault();
+                                          }
+                                        }}
                                         onChange={(e) =>
                                           setEditPrescriptionForm({
                                             ...editPrescriptionForm,
@@ -1384,7 +1412,6 @@ const Prescription = () => {
                   onClick={addService}
                   size='sm'
                   className='w-full sm:w-auto text-xs sm:text-sm'
-                  disabled={medications.length > 0 || services.length > 0}
                 >
                   <Plus className='mr-2 h-3 w-3 sm:h-4 sm:w-4' />
                   Хизмат Қўшиш
@@ -1491,27 +1518,29 @@ const Prescription = () => {
                               </Label>
                               <Input
                                 type='number'
-                                min='1'
+                                min={0}
                                 placeholder='Кун'
                                 value={srv.duration}
-                                	onKeyDown={e => {
-											if (
-												e.key === ',' ||
-												e.key === 'e' ||
-												e.key === 'E' ||
-												e.key === '+' ||
-												e.key === '-'
-											) {
-												e.preventDefault()
-											}
-										}}
+                                onKeyDown={(e) => {
+                                  if (
+                                    e.key === ',' ||
+                                    e.key === 'e' ||
+                                    e.key === 'E' ||
+                                    e.key === '+' ||
+                                    e.key === '-'
+                                  ) {
+                                    e.preventDefault();
+                                  }
+                                }}
                                 onChange={(e) => {
                                   const val = e.target.value;
-                                  updateServiceField(
-                                    srv.id,
-                                    'duration',
-                                    val === '' ? '' : parseInt(val)
-                                  );
+                                  if (val === '' || parseFloat(val) >= 0) {
+                                    updateServiceField(
+                                      srv.id,
+                                      'duration',
+                                      val === '' ? 0 : parseInt(val)
+                                    );
+                                  }
                                 }}
                                 className={`text-sm ${
                                   formErrors.services[srv.id]?.duration
@@ -1522,61 +1551,36 @@ const Prescription = () => {
                             </div>
                             <div className='space-y-2'>
                               <Label className='text-xs sm:text-sm'>
-                                Қабул Қилиш (кунига марта){' '}
-                                <span className='text-red-500'>*</span>
+                                Марта <span className='text-red-500'>*</span>
                               </Label>
-                              <Input
-                                type='number'
-                                min='1'
-                                placeholder='Кунига'
-                                value={srv.frequency}
-                                	onKeyDown={e => {
-											if (
-												e.key === ',' ||
-												e.key === 'e' ||
-												e.key === 'E' ||
-												e.key === '+' ||
-												e.key === '-'
-											) {
-												e.preventDefault()
-											}
-										}}
-                                onChange={(e) => {
-                                  const val = e.target.value;
+                              <Select
+                                value={srv.frequency.toString()}
+                                onValueChange={(value) =>
                                   updateServiceField(
                                     srv.id,
                                     'frequency',
-                                    val === '' ? '' : parseInt(val)
-                                  );
-                                }}
-                                className={`text-sm ${
-                                  formErrors.services[srv.id]?.frequency
-                                    ? 'border-red-500 focus:ring-red-500'
-                                    : ''
-                                }`}
-                              />
-                            </div>
-
-                            <div className='space-y-2'>
-                              <Label className='text-xs sm:text-sm'>
-                                Ҳолат
-                              </Label>
-                              <Select
-                                value={srv.status}
-                                onValueChange={(value) =>
-                                  updateServiceField(srv.id, 'status', value)
+                                    parseFloat(value)
+                                  )
                                 }
                               >
-                                <SelectTrigger className='text-sm'>
-                                  <SelectValue />
+                                <SelectTrigger
+                                  className={`text-sm ${
+                                    formErrors.services[srv.id]?.frequency
+                                      ? 'border-red-500 focus:ring-red-500'
+                                      : ''
+                                  }`}
+                                >
+                                  <SelectValue placeholder='Танланг...' />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value='pending'>
-                                    Кутилмоқда
+                                  <SelectItem value='1'>1 марта</SelectItem>
+                                  <SelectItem value='2'>2 марта</SelectItem>
+                                  <SelectItem value='3'>3 марта</SelectItem>
+                                  <SelectItem value='0.5'>
+                                    2 кунда бир марта
                                   </SelectItem>
-                                  <SelectItem value='active'>Актив</SelectItem>
-                                  <SelectItem value='completed'>
-                                    Якунланган
+                                  <SelectItem value='0.33'>
+                                    3 кунда бир марта
                                   </SelectItem>
                                 </SelectContent>
                               </Select>

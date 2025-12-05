@@ -10,6 +10,7 @@ import {
   useUpdatePrescriptionMutation,
   useUpdateServiceFromExaminationMutation,
 } from '@/app/api/examinationApi/examinationApi';
+import { status } from '@/app/api/examinationApi/types';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import {
   useCreateNeurologicStatusMutation,
@@ -64,7 +65,6 @@ import AllPrescriptionsDownloadButton, {
   NeurologicStatusDownloadButton,
   ServicesDownloadButton,
 } from './components/ExaminationPDF';
-import { status } from '@/app/api/examinationApi/types';
 
 // Tana qismlari uchun o'zbek nomlari
 const bodyPartLabels: Record<string, string> = {
@@ -131,47 +131,47 @@ const ExaminationDetail = () => {
     null
   );
   const [neurologicForm, setNeurologicForm] = useState({
-    meningeal_symptoms: '',
-    i_para_n_olfactorius: '',
-    ii_para_n_opticus: '',
-    iii_para_n_oculomotorius: '',
-    iv_para_n_trochlearis: '',
-    v_para_n_trigeminus: '',
-    vi_para_n_abducens: '',
-    vii_para_n_fascialis: '',
-    viii_para_n_vestibulocochlearis: '',
-    ix_para_n_glossopharyngeus: '',
-    x_para_n_vagus: '',
-    xi_para_n_accessorius: '',
-    xii_para_n_hypoglossus: '',
-    motor_system: '',
-    sensory_sphere: '',
-    coordination_sphere: '',
-    higher_brain_functions: '',
-    syndromic_diagnosis_justification: '',
-    topical_diagnosis_justification: '',
+    meningeal_symptoms: 'Yaxshi',
+    i_para_n_olfactorius: 'Yaxshi',
+    ii_para_n_opticus: 'Yaxshi',
+    iii_para_n_oculomotorius: 'Yaxshi',
+    iv_para_n_trochlearis: 'Yaxshi',
+    v_para_n_trigeminus: 'Yaxshi',
+    vi_para_n_abducens: 'Yaxshi',
+    vii_para_n_fascialis: 'Yaxshi',
+    viii_para_n_vestibulocochlearis: 'Yaxshi',
+    ix_para_n_glossopharyngeus: 'Yaxshi',
+    x_para_n_vagus: 'Yaxshi',
+    xi_para_n_accessorius: 'Yaxshi',
+    xii_para_n_hypoglossus: 'Yaxshi',
+    motor_system: 'Yaxshi',
+    sensory_sphere: 'Yaxshi',
+    coordination_sphere: 'Yaxshi',
+    higher_brain_functions: 'Yaxshi',
+    syndromic_diagnosis_justification: 'Yaxshi',
+    topical_diagnosis_justification: 'Yaxshi',
   });
 
   const initialNeurologicForm = {
-    meningeal_symptoms: '',
-    i_para_n_olfactorius: '',
-    ii_para_n_opticus: '',
-    iii_para_n_oculomotorius: '',
-    iv_para_n_trochlearis: '',
-    v_para_n_trigeminus: '',
-    vi_para_n_abducens: '',
-    vii_para_n_fascialis: '',
-    viii_para_n_vestibulocochlearis: '',
-    ix_para_n_glossopharyngeus: '',
-    x_para_n_vagus: '',
-    xi_para_n_accessorius: '',
-    xii_para_n_hypoglossus: '',
-    motor_system: '',
-    sensory_sphere: '',
-    coordination_sphere: '',
-    higher_brain_functions: '',
-    syndromic_diagnosis_justification: '',
-    topical_diagnosis_justification: '',
+    meningeal_symptoms: 'Yaxshi',
+    i_para_n_olfactorius: 'Yaxshi',
+    ii_para_n_opticus: 'Yaxshi',
+    iii_para_n_oculomotorius: 'Yaxshi',
+    iv_para_n_trochlearis: 'Yaxshi',
+    v_para_n_trigeminus: 'Yaxshi',
+    vi_para_n_abducens: 'Yaxshi',
+    vii_para_n_fascialis: 'Yaxshi',
+    viii_para_n_vestibulocochlearis: 'Yaxshi',
+    ix_para_n_glossopharyngeus: 'Yaxshi',
+    x_para_n_vagus: 'Yaxshi',
+    xi_para_n_accessorius: 'Yaxshi',
+    xii_para_n_hypoglossus: 'Yaxshi',
+    motor_system: 'Yaxshi',
+    sensory_sphere: 'Yaxshi',
+    coordination_sphere: 'Yaxshi',
+    higher_brain_functions: 'Yaxshi',
+    syndromic_diagnosis_justification: 'Yaxshi',
+    topical_diagnosis_justification: 'Yaxshi',
   };
 
   // Fetch examination details
@@ -787,8 +787,14 @@ const ExaminationDetail = () => {
                 </p>
               </div>
               <div>
-                <Label className='text-muted-foreground'>Тури</Label>
-                <p className='font-medium mt-1'>
+                <Label className='text-muted-foreground mr-5'>Тури :</Label>
+                <p
+                  className={`font-medium mt-1 inline-block px-2 py-0.5 rounded ${
+                    exam.treatment_type === 'stasionar'
+                      ? 'bg-green-300 text-green-900'
+                      : 'bg-red-300 text-red-900'
+                  }`}
+                >
                   {roomType[exam.treatment_type]}
                 </p>
               </div>
@@ -1464,32 +1470,6 @@ const ExaminationDetail = () => {
                                 }
                               />
                             </div>
-
-                            <div className='space-y-2'>
-                              <Label>Ҳолат</Label>
-                              <Select
-                                value={serviceForm.status}
-                                onValueChange={(value) =>
-                                  setServiceForm({
-                                    ...serviceForm,
-                                    status: value,
-                                  })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value='pending'>
-                                    Кутилмоқда
-                                  </SelectItem>
-                                  <SelectItem value='active'>Актив</SelectItem>
-                                  <SelectItem value='completed'>
-                                    Якунланган
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
                           </div>
                           <div className='space-y-2'>
                             <Label>Изоҳ</Label>
@@ -1622,34 +1602,6 @@ const ExaminationDetail = () => {
                                     }
                                   />
                                 </div>
-
-                                <div className='space-y-2'>
-                                  <Label>Ҳолат</Label>
-                                  <Select
-                                    value={serviceForm.status}
-                                    onValueChange={(value) =>
-                                      setServiceForm({
-                                        ...serviceForm,
-                                        status: value,
-                                      })
-                                    }
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value='active'>
-                                        Актив
-                                      </SelectItem>
-                                      <SelectItem value='pending'>
-                                        Кутилмоқда
-                                      </SelectItem>
-                                      <SelectItem value='completed'>
-                                        Якунланган
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
                               </div>
                               <div className='space-y-2'>
                                 <Label>Изоҳ</Label>
@@ -1760,28 +1712,6 @@ const ExaminationDetail = () => {
                                       service.duration
                                     ).toLocaleString()}{' '}
                                     сўм
-                                  </p>
-                                </div>
-                                <div>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Ҳолат
-                                  </Label>
-                                  <p className='font-semibold text-sm mt-1'>
-                                    {service.status === 'pending' ? (
-                                      <span className='bg-yellow-600 px-2 py-1 rounded-xl text-white'>
-                                        Кутилмоқда
-                                      </span>
-                                    ) : service.status === 'completed' ? (
-                                      <span className='bg-green-600 px-2 py-1 rounded-xl text-white'>
-                                        Якунланган
-                                      </span>
-                                    ) : service.status === 'cancelled' ? (
-                                      <span className='bg-red-600 px-2 py-1 rounded-xl text-white'>
-                                        Якунланган
-                                      </span>
-                                    ) : (
-                                      service.status
-                                    )}
                                   </p>
                                 </div>
                               </div>

@@ -118,7 +118,9 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
       email: 'info@artikmuratov.uz',
       address: "Palonchayev Pismadoin ko'chasi 4053-uy",
       allergies: ['Пенициллин', 'Аспирин'],
-      regular_medications: [{ medicine: 'nimadur', schedule: 'qachondir' }],
+      regular_medications: [
+        { medicine: 'Paratsetamol', schedule: 'Kuniga 2 mahal' },
+      ],
     },
   });
 
@@ -672,16 +674,22 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                             {field.value && field.value.length > 0 && (
                               <div className='flex flex-wrap gap-2 p-3 border-2 border-slate-400 rounded-md bg-slate-50'>
                                 {field.value.map((medication, index) => (
-                                  <Badge
+                                  <div
                                     key={index}
-                                    variant='secondary'
-                                    className='px-3 py-2 min-w-28 text-sm flex items-center justify-between gap-2 bg-primary/20 hover:bg-primary/20 text-primary border border-primary/30'
+                                    className='flex items-center gap-2 px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg'
                                   >
-                                    <div className='flex flex-col items-start'>
-                                      <span className='font-semibold'>
+                                    <div className='flex items-center justify-center w-6 h-6 bg-emerald-500 rounded-full'>
+                                      <span className='text-white font-bold text-xs'>
+                                        {medication.medicine
+                                          .charAt(0)
+                                          .toUpperCase()}
+                                      </span>
+                                    </div>
+                                    <div className='flex flex-col leading-tight'>
+                                      <span className='font-medium text-sm text-gray-800'>
                                         {medication.medicine}
                                       </span>
-                                      <span className='text-xs text-muted-foreground'>
+                                      <span className='text-[10px] text-emerald-600'>
                                         {medication.schedule}
                                       </span>
                                     </div>
@@ -693,11 +701,11 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                                         );
                                         field.onChange(newMeds);
                                       }}
-                                      className='hover:text-destructive transition-colors ml-2'
+                                      className='p-0.5 rounded hover:bg-red-100 text-gray-400 hover:text-red-500 transition-colors'
                                     >
-                                      <X className='w-5 h-5' />
+                                      <X className='w-3.5 h-3.5' />
                                     </button>
-                                  </Badge>
+                                  </div>
                                 ))}
                               </div>
                             )}
@@ -707,7 +715,6 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                                 placeholder='Дори номи (масалан: Аспирин)'
                                 value={medicineInput}
                                 onChange={(e) => {
-                                  // Faqat harflarni qoldirish (lotin, kirill va probel)
                                   const value = e.target.value.replace(
                                     /[^a-zA-Zа-яА-ЯўЎҚқҒғҲҳ\s'-]/g,
                                     ''
