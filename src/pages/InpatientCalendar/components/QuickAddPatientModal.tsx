@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { UserPlus, Save } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { format } from "date-fns";
+import { formatPhoneInput, cleanPhoneNumber } from "@/lib/utils";
 
 interface QuickAddPatientModalProps {
   open: boolean;
@@ -55,7 +56,8 @@ export const QuickAddPatientModal = ({
       return;
     }
 
-    if (!phone || phone.length < 13) {
+    const cleanedPhone = phone.replace(/\D/g, "");
+    if (!cleanedPhone || cleanedPhone.length !== 12) {
       toast.error("Телефон рақамини тўлиқ киритинг");
       return;
     }
@@ -87,7 +89,7 @@ export const QuickAddPatientModal = ({
 
     const submitData = {
       fullname: fullname.trim(),
-      phone: phone.replace(/\s/g, ""),
+      phone: cleanPhoneNumber(phone),
       gender: gender as "male" | "female",
       date_of_birth: dateOfBirth,
       address: address.trim(),
@@ -171,24 +173,15 @@ export const QuickAddPatientModal = ({
             <Input
               id="phone"
               placeholder="+998 90 123 45 67"
-              value={phone.replace(
-                /(\+998)(\d{2})(\d{3})(\d{2})(\d{2})/,
-                "$1 $2 $3 $4 $5"
-              )}
+              value={formatPhoneInput(phone)}
               onFocus={(e) => {
                 if (!phone || phone === "") {
                   setPhone("+998");
                 }
               }}
               onChange={(e) => {
-                let value = e.target.value.replace(/[^\d+]/g, "");
-                if (!value.startsWith("+998")) {
-                  value = "+998";
-                }
-                if (value.length > 13) {
-                  value = value.slice(0, 13);
-                }
-                setPhone(value);
+                const formatted = formatPhoneInput(e.target.value);
+                setPhone(formatted);
               }}
               required
               className="text-sm sm:text-base h-10 sm:h-11"

@@ -1,17 +1,22 @@
 import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetCorpusesQuery } from "@/app/api/corpusApi";
 import { useGetAvailableRoomsQuery } from "@/app/api/bookingApi";
 import { useNavigate } from "react-router-dom";
-import { Bed, Users, Building2, Calendar } from "lucide-react";
+import { Bed, Users, Building2, Calendar, Search } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { uz } from "date-fns/locale";
+import { PatientSearchModal, PatientBookingsModal } from "./components";
 
 const RoomsList = () => {
   const navigate = useNavigate();
   const [selectedCorpusId, setSelectedCorpusId] = useState<string>("");
+  const [showPatientSearch, setShowPatientSearch] = useState(false);
+  const [showPatientBookings, setShowPatientBookings] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
 
   // Sana intervalini memoize qilish (har safar yangi Date() yaratilmasligi uchun)
   const dateRange = useMemo(() => {
@@ -60,6 +65,16 @@ const RoomsList = () => {
     navigate(`/inpatient-calendar/${selectedCorpusId}/${roomId}`);
   };
 
+  const handlePatientSelect = (patientId: string) => {
+    setSelectedPatientId(patientId);
+    setShowPatientBookings(true);
+  };
+
+  const handleBackToSearch = () => {
+    setShowPatientBookings(false);
+    setShowPatientSearch(true);
+  };
+
   if (corpusesLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -71,14 +86,25 @@ const RoomsList = () => {
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header and Corpus Tabs */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">
-            Стационар Хоналар
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Хонани танланг ва брон қилиш учун календарга ўтинг
-          </p>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">
+              Стационар Хоналар
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Хонани танланг ва брон қилиш учун календарга ўтинг
+            </p>
+          </div>
+
+          {/* Patient Search Button */}
+          <Button
+            onClick={() => setShowPatientSearch(true)}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 w-full sm:w-auto"
+          >
+            <Search className="w-4 h-4 mr-2" />
+            Бемор Қидириш
+          </Button>
         </div>
 
         {/* Corpus Tabs */}
@@ -241,6 +267,20 @@ const RoomsList = () => {
           </div>
         </Card>
       )}
+
+      {/* Modals */}
+      <PatientSearchModal
+        open={showPatientSearch}
+        onOpenChange={setShowPatientSearch}
+        onPatientSelect={handlePatientSelect}
+      />
+
+      <PatientBookingsModal
+        open={showPatientBookings}
+        onOpenChange={setShowPatientBookings}
+        patientId={selectedPatientId}
+        onBack={handleBackToSearch}
+      />
     </div>
   );
 };

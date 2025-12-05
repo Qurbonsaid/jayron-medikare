@@ -3,7 +3,6 @@ export type BookingPatient = {
   _id: string;
   fullname: string;
   phone: string;
-  email?: string;
 };
 
 export type BookingRoom = {

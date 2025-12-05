@@ -26,6 +26,7 @@ import { useState, useRef, useEffect } from "react";
 import { BodyPartConstants } from "@/constants/BodyPart";
 import { useGetOneMedicalImageQuery } from "@/app/api/radiologyApi";
 import { SERVER_URL } from "@/constants/ServerUrl";
+import { formatPhoneNumber } from "@/lib/utils";
 
 // Tana qismlari uchun o'zbek nomlari
 const bodyPartLabels: Record<string, string> = {
@@ -459,7 +460,7 @@ export const ViewMedicalImage = ({
                             Телефон:
                           </span>
                           <span className="font-medium">
-                            {medicalImage?.patient_id?.phone || "-"}
+                            {formatPhoneNumber(medicalImage?.patient_id?.phone)}
                           </span>
                         </div>
                       </div>

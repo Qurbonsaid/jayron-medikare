@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,9 +22,11 @@ import {
   endOfWeek,
   parseISO,
   isWithinInterval,
+  isValid,
 } from "date-fns";
 import { uz } from "date-fns/locale";
 import { toast } from "sonner";
+import { formatPhoneNumber } from "@/lib/utils";
 import {
   BookingModal,
   UpdateBookingModal,
@@ -39,10 +41,28 @@ const RoomCalendar = () => {
     corpusId: string;
   }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [weekStart, setWeekStart] = useState<Date>(
-    startOfWeek(new Date(), { weekStartsOn: 1 })
-  );
+  // Get initial week start from URL param or default to current week
+  const getInitialWeekStart = () => {
+    const startDateParam = searchParams.get("startDate");
+    if (startDateParam) {
+      try {
+        // Parse date from URL (YYYY-MM-DD format)
+        const parsedDate = parseISO(startDateParam);
+        if (isValid(parsedDate)) {
+          // Return the start of the week containing this date
+          return startOfWeek(parsedDate, { weekStartsOn: 1 });
+        }
+      } catch (error) {
+        console.error("Error parsing startDate:", error);
+      }
+    }
+    // Default to current week
+    return startOfWeek(new Date(), { weekStartsOn: 1 });
+  };
+
+  const [weekStart, setWeekStart] = useState<Date>(getInitialWeekStart());
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -565,7 +585,7 @@ const RoomCalendar = () => {
                                       "object" &&
                                       activeBooking.patient_id.phone && (
                                         <p className="text-sm">
-                                          {activeBooking.patient_id.phone}
+                                          {formatPhoneNumber(activeBooking.patient_id.phone)}
                                         </p>
                                       )}
                                     <p className="text-sm">

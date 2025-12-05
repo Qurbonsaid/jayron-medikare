@@ -1,5 +1,6 @@
 import { useGetOneCorpusQuery } from "@/app/api/corpusApi";
 import { Button } from "@/components/ui/button";
+import { formatNumber } from "@/lib/utils";
 import {
   Building2,
   Edit,
@@ -343,7 +344,7 @@ const Rooms = () => {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        {room.room_price.toLocaleString()} сўм
+                        {formatNumber(room.room_price)} сўм
                       </TableCell>
 
                       <TableCell className="text-center">
@@ -466,7 +467,7 @@ const Rooms = () => {
                     </div>
                     <div className="space-y-2 mb-3">
                       <div className="flex items-center gap-2 text-xs sm:text-sm">
-                        <span>Хона нархи {room.room_price} сўм</span>
+                        <span>Хона нархи {formatNumber(room.room_price)} сўм</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs sm:text-sm">
                         <span>
