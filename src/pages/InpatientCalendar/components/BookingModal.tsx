@@ -34,6 +34,7 @@ import {
 import { useGetAllPatientQuery } from "@/app/api/patientApi";
 import { useGetRoomsFromRoomApiQuery } from "@/app/api/roomApi";
 import { useCreateBookingMutation, useGetAvailableRoomsQuery } from "@/app/api/bookingApi";
+import { formatPhoneNumber, formatNumber } from "@/lib/utils";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
 import { toast } from "sonner";
 import { Calendar, User, Home, Search, Save, AlertCircle, UserPlus } from "lucide-react";
@@ -252,7 +253,7 @@ export const BookingModal = ({
                         {selectedPatient.fullname}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {selectedPatient.phone}
+                        {formatPhoneNumber(selectedPatient.phone)}
                       </span>
                     </div>
                   ) : (
@@ -263,17 +264,25 @@ export const BookingModal = ({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[500px] p-0" align="start">
-                <Command shouldFilter={false}>
+              <PopoverContent className="w-full sm:w-[500px] p-0" align="start">
+                <Command shouldFilter={false} className="w-full">
                   <CommandInput
                     placeholder="Исм, телефон орқали қидириш..."
                     value={searchPatient}
                     onValueChange={setSearchPatient}
                     className="text-sm sm:text-base"
                   />
-                  <CommandList className="max-h-[200px] sm:max-h-[300px]">
-                    <CommandEmpty className="text-sm sm:text-base py-4">
-                      {patientsLoading ? "Юкланмоқда..." : "Бемор топилмади"}
+                  <CommandList className="max-h-[300px] overflow-y-auto">
+                    <CommandEmpty className="text-sm sm:text-base py-6">
+                      {patientsLoading ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <span>Юкланмоқда...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                          <span>Бемор топилмади</span>
+                        </div>
+                      )}
                     </CommandEmpty>
                     <CommandGroup>
                       {patientsData?.data.map((patient) => (
@@ -284,15 +293,17 @@ export const BookingModal = ({
                             setSelectedPatientId(patient._id);
                             setOpenPatientPopover(false);
                           }}
-                          className="py-2 sm:py-3"
+                          className="py-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/20"
                         >
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-sm sm:text-base">
-                              {patient.fullname}
-                            </span>
-                            <span className="text-xs sm:text-sm text-muted-foreground">
-                              {patient.phone}
-                            </span>
+                          <div className="flex items-center gap-3 w-full">
+                            <div className="flex flex-col flex-1">
+                              <span className="font-semibold text-sm sm:text-base">
+                                {patient.fullname}
+                              </span>
+                              <span className="text-xs sm:text-sm text-muted-foreground">
+                                {formatPhoneNumber(patient.phone)}
+                              </span>
+                            </div>
                           </div>
                         </CommandItem>
                       ))}
@@ -368,7 +379,7 @@ export const BookingModal = ({
                               {room.available_beds} бўш
                             </Badge>
                             <span className="text-xs text-muted-foreground">
-                              {room.room_price.toLocaleString()} сўм
+                              {formatNumber(room.room_price)} сўм
                             </span>
                           </div>
                         </div>

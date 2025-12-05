@@ -355,7 +355,7 @@ const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
       </View>
     </Page>
   </Document>
-);
+)
 
 // PDF yuklab olish tugmasi komponenti
 interface PatientPDFButtonProps {

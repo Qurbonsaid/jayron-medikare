@@ -79,7 +79,7 @@ export const roomApi = baseApi.injectEndpoints({
         method: "POST",
         body: { patient_id, estimated_leave_time },
       }),
-      invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM],
+      invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM, API_TAGS.EXAMS],
     }),
 
     removePatientRoom: builder.mutation<
@@ -91,7 +91,7 @@ export const roomApi = baseApi.injectEndpoints({
         method: "POST",
         body: { patient_id },
       }),
-      invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM],
+      invalidatesTags: [API_TAGS.CORPUS, API_TAGS.ROOM, API_TAGS.EXAMS],
     }),
 
     updateLeaveTime: builder.mutation<

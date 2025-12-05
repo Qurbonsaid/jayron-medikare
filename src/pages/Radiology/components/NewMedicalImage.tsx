@@ -84,7 +84,7 @@ const bodyPartOptions = [
 const MedicalImageSchema = z.object({
   examination_id: z.string().min(1, "Кўрикни танланг"),
   imaging_type_id: z.string().min(1, "Текшириш турини танланг"),
-  image_paths: z.array(z.string()).min(1, "Камида 1 та тасвир юкланг"),
+  image_paths: z.array(z.string()).min(1, "Камида 1 та файл юкланг"),
   body_part: z.string().optional(),
   description: z.string().optional(),
 });
@@ -131,35 +131,36 @@ export const NewMedicalImage = ({
     }
   }, [open, form]);
 
-  // Rasm yuklash funksiyasi
+  // Fayl yuklash funksiyasi (rasm, PDF, Word va boshqalar)
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
     // Fayllarni array'ga o'tkazamiz
     const fileArray = Array.from(files);
 
-    // Faqat rasm fayllarini filtrlash
-    const imageFiles = fileArray.filter((file) => {
-      if (!file.type.startsWith("image/")) {
-        toast.warning(`"${file.name}" расм файли эмас ва ўтказиб юборилди`);
+    // Maksimal fayl hajmini tekshirish (masalan, 50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    const validFiles = fileArray.filter((file) => {
+      if (file.size > maxSize) {
+        toast.warning(`"${file.name}" жуда катта (макс. 50MB)`);
         return false;
       }
       return true;
     });
 
-    if (imageFiles.length === 0) {
-      toast.error("Илтимос, расм файлларини танланг");
+    if (validFiles.length === 0) {
+      toast.error("Илтимос, тўғри файлларни танланг");
       return;
     }
 
     // Barcha fayllarni uploading holatiga qo'shamiz
-    setUploadingFiles((prev) => [...prev, ...imageFiles.map((f) => f.name)]);
+    setUploadingFiles((prev) => [...prev, ...validFiles.map((f) => f.name)]);
 
     let successCount = 0;
     let errorCount = 0;
 
     // Barcha fayllarni parallel yuklash
-    const uploadPromises = imageFiles.map(async (file) => {
+    const uploadPromises = validFiles.map(async (file) => {
       try {
         const formData = new FormData();
         formData.append("file", file);
@@ -217,11 +218,11 @@ export const NewMedicalImage = ({
 
     // Success va error xabarlari
     if (successCount > 0) {
-      toast.success(`${successCount} та расм муваффақиятли юкланди`);
+      toast.success(`${successCount} та файл муваффақиятли юкланди`);
     }
     if (duplicateCount > 0) {
       toast.warning(
-        `${duplicateCount} та расм аллақачон мавжуд ва ўтказиб юборилди`
+        `${duplicateCount} та файл аллақачон мавжуд ва ўтказиб юборилди`
       );
     }
   };
@@ -376,13 +377,12 @@ export const NewMedicalImage = ({
                             }
                             disabled={isUploading}
                           >
-                            <ImagePlus className="mr-2 h-4 w-4" />
-                            {isUploading ? "Юкланмоқда..." : "Расм танланг"}
+                            <Upload className="mr-2 h-4 w-4" />
+                            {isUploading ? "Юкланмоқда..." : "Файл танланг (расм, PDF, Word ва б.)"}
                           </Button>
                           <input
                             id="image-upload"
                             type="file"
-                            accept="image/*"
                             multiple
                             className="hidden"
                             onChange={(e) => handleFileUpload(e.target.files)}
