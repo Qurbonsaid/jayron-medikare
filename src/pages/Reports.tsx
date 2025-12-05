@@ -1,12 +1,12 @@
 import {
 	useGetAllAnalysisQuery,
 	useGetAllBillingsQuery,
-	useGetDiagnosisQuery,
 	useGetAllDoctorsQuery,
 	useGetAllExaminationsQuery,
 	useGetAllPatientsQuery,
 	useGetAllRoomsQuery,
 	useGetAllUsersQuery,
+	useGetDiagnosisQuery,
 } from '@/app/api/report/report'
 import { AnalysisChart } from '@/components/Reports/AnalysisChart'
 import { BillingChart } from '@/components/Reports/BillingChart'
@@ -14,18 +14,11 @@ import { DiagnosisChart } from '@/components/Reports/DiagnosisChart'
 import { DoctorPerformanceTable } from '@/components/Reports/DoctorPerformanceTable'
 import { ExaminationChart } from '@/components/Reports/ExaminationChart'
 import { PatientChart } from '@/components/Reports/PatientChart'
+import { ReportsPDFButton } from '@/components/Reports/ReportsPDF'
 import { StatisticsCard } from '@/components/Reports/StatisticsCard'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import {
-	Bed,
-	DollarSign,
-	Download,
-	FileSpreadsheet,
-	Printer,
-	Users,
-} from 'lucide-react'
+import { Bed, DollarSign, Users } from 'lucide-react'
 import { useState } from 'react'
 
 export enum REPORT_DATE_FILTER {
@@ -104,11 +97,6 @@ const Reports = () => {
 		}).format(value)
 	}
 
-	const handleExport = (format: 'excel' | 'pdf') => {
-		console.log(`Exporting to ${format}...`)
-		// Implement export logic
-	}
-
 	const isLoading =
 		billingsLoading || patientsLoading || roomsLoading || usersLoading
 
@@ -125,15 +113,23 @@ const Reports = () => {
 							</p>
 						</div>
 						<div className='flex gap-2'>
-							<Button
-								variant='outline'
-								size='sm'
-								onClick={() => handleExport('pdf')}
-								className='text-xs sm:text-sm'
-							>
-								<Download className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
-								PDF
-							</Button>
+							<ReportsPDFButton
+								billingsData={billingsData?.data || []}
+								patientsData={patientsData?.data || []}
+								examinationsData={examinationsData?.data || []}
+								analysisData={analysisData?.data || []}
+								diagnosisData={diagnosisData?.data?.diagnosisStats || []}
+								doctorsData={
+									Array.isArray(doctorsData?.data) ? doctorsData.data : []
+								}
+								roomsData={roomsData?.data}
+								usersData={usersData?.data}
+								billingInterval={billingInterval}
+								patientInterval={patientInterval}
+								examinationInterval={examinationInterval}
+								analysisInterval={analysisInterval}
+								doctorInterval={doctorInterval}
+							/>
 						</div>
 					</div>
 				</div>
