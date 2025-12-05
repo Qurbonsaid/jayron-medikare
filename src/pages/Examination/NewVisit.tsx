@@ -369,63 +369,65 @@ const NewVisit = () => {
                       )}
                     </div>
 
-                    {/* Doctor Selection */}
-                    <div>
-                      <div className='flex items-center gap-2 mb-2'>
-                        <UserCog className='w-5 h-5 text-primary' />
-                        <h3 className='font-semibold text-sm sm:text-base'>
-                          Шифокорни танланг
-                        </h3>
-                      </div>
-                      <Select
-                        value={selectedDoctorId}
-                        onValueChange={setSelectedDoctorId}
-                      >
-                        <SelectTrigger
-                          className={`h-10 sm:h-12 ${
-                            showErrors && !selectedDoctorId
-                              ? 'border-red-500'
-                              : ''
-                          }`}
+                    {/* Doctor Selection and Treatment Type in one row */}
+                    <div className='flex flex-col lg:flex-row gap-4'>
+                      <div className='flex-1'>
+                        <div className='flex items-center gap-2 mb-2'>
+                          <UserCog className='w-5 h-5 text-primary' />
+                          <h3 className='font-semibold text-sm sm:text-base'>
+                            Шифокорни танланг
+                          </h3>
+                        </div>
+                        <Select
+                          value={selectedDoctorId}
+                          onValueChange={setSelectedDoctorId}
                         >
-                          <SelectValue placeholder='Шифокорни танланг...' />
-                        </SelectTrigger>
-                        <SelectContent onScroll={handleDoctorScroll}>
-                          {doctors.map((doctor: any) => (
-                            <SelectItem key={doctor._id} value={doctor._id}>
-                              <div className='flex flex-col items-start'>
-                                <span className='font-medium'>
-                                  {doctor.fullname}
-                                </span>
-                                <span className='text-xs text-muted-foreground'>
-                                  {doctor.email}
-                                </span>
+                          <SelectTrigger
+                            className={`h-10 sm:h-12 ${
+                              showErrors && !selectedDoctorId
+                                ? 'border-red-500'
+                                : ''
+                            }`}
+                          >
+                            <SelectValue placeholder='Шифокорни танланг...' />
+                          </SelectTrigger>
+                          <SelectContent onScroll={handleDoctorScroll}>
+                            {doctors.map((doctor: any) => (
+                              <SelectItem key={doctor._id} value={doctor._id}>
+                                <div className='flex flex-col items-start'>
+                                  <span className='font-medium'>
+                                    {doctor.fullname}
+                                  </span>
+                                  <span className='text-xs text-muted-foreground'>
+                                    {doctor.email}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                            {isLoadingMoreDoctors && (
+                              <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
+                                Юкланмоқда...
                               </div>
-                            </SelectItem>
-                          ))}
-                          {isLoadingMoreDoctors && (
-                            <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
-                              Юкланмоқда...
-                            </div>
-                          )}
-                          {!hasMoreDoctors && doctors.length > 0 && (
-                            <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
-                              Барча шифокорлар юкланди
-                            </div>
-                          )}
-                        </SelectContent>
-                      </Select>
+                            )}
+                            {!hasMoreDoctors && doctors.length > 0 && (
+                              <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
+                                Барча шифокорлар юкланди
+                              </div>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
                       {/* Treatment Type Switch */}
-                      <div className='mt-4'>
-                        <h4 className='text-sm font-medium mb-3'>
+                      <div>
+                        <h4 className='text-sm font-medium mb-2'>
                           Даволаш тури
                         </h4>
-                        <div className='grid grid-cols-2 gap-3 border-2 border-blue-500 rounded-xl p-1'>
+                        <div className='grid grid-cols-2 gap-1 border-2 border-blue-500 rounded-xl p-1'>
                           <button
                             type='button'
                             onClick={() => setTreatmentType('ambulator')}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                               treatmentType === 'ambulator'
                                 ? 'bg-primary text-white shadow-md'
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -436,7 +438,7 @@ const NewVisit = () => {
                           <button
                             type='button'
                             onClick={() => setTreatmentType('stasionar')}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                               treatmentType === 'stasionar'
                                 ? 'bg-primary text-white shadow-md'
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'

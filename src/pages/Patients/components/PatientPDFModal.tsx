@@ -13,7 +13,7 @@ import {
   pdf,
   StyleSheet,
   Text,
-  View
+  View,
 } from '@react-pdf/renderer';
 import { Download } from 'lucide-react';
 import React from 'react';
@@ -320,10 +320,7 @@ const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
       {/* Ro'yxatga olish ma'lumotlari */}
       <View style={styles.patientInfo}>
         <Text style={styles.bold}>Ro'yxatga olish:</Text>
-        <Text style={{ marginBottom: 1 }}>
-          Ro'yxatdan o'tgan: {formatDate(patient.created_at)}
-        </Text>
-        <Text>Oxirgi yangilanish: {formatDate(patient.updated_at)}</Text>
+        <Text>Ro'yxatdan o'tgan: {formatDate(patient.created_at)}</Text>
       </View>
 
       {/* Ko'riklar jadvali */}
@@ -377,6 +374,10 @@ const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
                 completed: 'Tugallangan',
                 active: 'Faol',
                 inactive: 'Faol emas',
+                pending: 'Kutilmoqda',
+                scheduled: 'Rejalashtirilgan',
+                cancelled: 'Bekor qilingan',
+                in_progress: 'Jarayonda',
               };
               return statuses[exam.status] || exam.status || '-';
             };
@@ -428,14 +429,6 @@ const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
           )}
         </View>
       )}
-
-      {/* Imzo */}
-      <View style={styles.signature}>
-        <Text>Ushbu hujjat avtomatik tarzda tuzilgan</Text>
-        <Text style={{ marginTop: 2 }}>
-          {new Date().getFullYear()} Jayron MediKare
-        </Text>
-      </View>
     </Page>
   </Document>
 );

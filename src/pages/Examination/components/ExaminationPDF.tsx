@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     borderRightStyle: 'solid',
   },
   tableCell: {
-    fontSize: 6,
+    fontSize: 8,
     textAlign: 'center',
     flexWrap: 'wrap',
   },
@@ -242,11 +242,11 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
             <View style={[styles.tableCol, { flex: 2 }]}>
               <Text style={styles.tableCell}>Dori nomi</Text>
             </View>
-            <View style={[styles.tableCol, { flex: 0.6 }]}>
-              <Text style={styles.tableCell}>Kuniga</Text>
-            </View>
             <View style={[styles.tableCol, { flex: 1.2 }]}>
               <Text style={styles.tableCell}>Ko'rsatmalar</Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 0.6 }]}>
+              <Text style={styles.tableCell}>Kuniga</Text>
             </View>
             <View style={[styles.tableColLast, { flex: 0.6 }]}>
               <Text style={styles.tableCell}>Muddati</Text>
@@ -290,19 +290,19 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
                     {medicationWithDosage}
                   </Text>
                 </View>
-                <View style={[styles.tableCol, { flex: 0.6 }]}>
-                  <Text style={styles.tableCell}>
-                    {prescription.frequency} marta
-                  </Text>
-                </View>
                 <View style={[styles.tableCol, { flex: 1.2 }]}>
                   <Text
                     style={[
                       styles.tableCell,
-                      { textAlign: 'left', fontSize: 5 },
+                      { textAlign: 'left', fontSize: 8 },
                     ]}
                   >
                     {prescription.instructions || '-'}
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 0.6 }]}>
+                  <Text style={styles.tableCell}>
+                    {prescription.frequency} marta
                   </Text>
                 </View>
                 <View style={[styles.tableColLast, { flex: 0.6 }]}>
@@ -421,33 +421,6 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
               <Text style={styles.bold}>Manzil:</Text>
               <Text style={{ fontSize: 9, marginTop: 2 }}>
                 {exam.patient_id?.address || 'Ko`rsatilmagan'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Shifokor ma'lumotlari */}
-        <View style={[styles.patientInfo, { marginTop: 8 }]}>
-          <Text style={[styles.sectionTitle, { marginBottom: 4 }]}>
-            SHIFOKOR MA'LUMOTLARI
-          </Text>
-          <View style={styles.grid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.bold}>F.I.O:</Text>
-              <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.doctor_id?.fullname || 'Noma`lum'}
-              </Text>
-            </View>
-            <View style={styles.gridItem}>
-              <Text style={styles.bold}>Telefon:</Text>
-              <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {formatPhone(exam.doctor_id?.phone)}
-              </Text>
-            </View>
-            <View style={styles.gridItem}>
-              <Text style={styles.bold}>Mutaxassislik:</Text>
-              <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.doctor_id?.specialization || 'Ko`rsatilmagan'}
               </Text>
             </View>
           </View>
@@ -1403,17 +1376,21 @@ const NeurologicStatusPDF: React.FC<NeurologicStatusPDFProps> = ({
               </Text>
             </View>
           </View>
-          <View style={[styles.gridItem, styles.fullWidth, { marginTop: 4 }]}>
-            <Text style={styles.bold}>Diagnoz:</Text>
-            <Text style={{ fontSize: 9, marginTop: 2 }}>{getDiagnosis()}</Text>
-          </View>
-          <View style={[styles.gridItem, styles.fullWidth, { marginTop: 4 }]}>
-            <Text style={styles.bold}>Shifokor:</Text>
-            <Text style={{ fontSize: 9, marginTop: 2 }}>
-              {exam.doctor_id?.fullname || "Noma'lum"}
-              {exam.doctor_id?.specialization &&
-                ` (${exam.doctor_id.specialization})`}
-            </Text>
+          <View style={styles.grid}>
+            <View style={styles.gridItem}>
+              <Text style={styles.bold}>Diagnoz:</Text>
+              <Text style={{ fontSize: 9, marginTop: 2 }}>
+                {getDiagnosis()}
+              </Text>
+            </View>
+            <View style={styles.gridItem}>
+              <Text style={styles.bold}>Shifokor:</Text>
+              <Text style={{ fontSize: 9, marginTop: 2 }}>
+                {exam.doctor_id?.fullname || "Noma'lum"}
+                {exam.doctor_id?.specialization &&
+                  ` (${exam.doctor_id.specialization})`}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -1423,48 +1400,39 @@ const NeurologicStatusPDF: React.FC<NeurologicStatusPDFProps> = ({
             НЕВРОЛОГИК ТЕКШИРУВ
           </Text>
 
-          {neurologicFieldOrder.map((field) => {
-            const value = neurologic[field];
-            if (!value) return null;
-            return (
-              <View
-                key={field}
-                style={{
-                  marginBottom: 6,
-                  paddingBottom: 4,
-                  borderBottomWidth: 0.5,
-                  borderBottomColor: '#e0e0e0',
-                  borderBottomStyle: 'solid',
-                }}
-              >
-                <Text style={[styles.bold, { fontSize: 8, color: '#333' }]}>
-                  {neurologicFieldLabels[field] || field}:
-                </Text>
-                <Text
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {neurologicFieldOrder.map((field, index) => {
+              const value = neurologic[field];
+              if (!value) return null;
+              return (
+                <View
+                  key={field}
                   style={{
-                    fontSize: 9,
-                    marginTop: 2,
-                    textAlign: 'justify',
-                    lineHeight: 1.4,
+                    width: '48%',
+                    marginRight: index % 2 === 0 ? '4%' : 0,
+                    marginBottom: 6,
+                    paddingBottom: 4,
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: '#e0e0e0',
+                    borderBottomStyle: 'solid',
                   }}
                 >
-                  {value}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-
-        {/* Imzo */}
-        <View style={styles.signature}>
-          <Text>
-            Shifokor: {exam.doctor_id?.fullname || '_________________________'}
-          </Text>
-          <Text style={{ marginTop: 3 }}>Imzo: _________</Text>
-          <Text style={{ marginTop: 3, fontSize: 7 }}>
-            Telefon: {formatPhone(exam.doctor_id?.phone)} | Qabul kunlari:
-            Dushanba-Shanba
-          </Text>
+                  <Text style={[styles.bold, { fontSize: 8, color: '#333' }]}>
+                    {neurologicFieldLabels[field] || field}:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 8,
+                      marginTop: 1,
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {value}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
         </View>
       </Page>
     </Document>
