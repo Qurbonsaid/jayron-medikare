@@ -6,5 +6,6 @@ export enum PATHS {
   DELETE_EXAM = 'examination/delete/',
   TAKE_MEDICINE='/examination/take/',
   PRESCRIPTION = '/prescription/',
-  
+  EXAMINATION='/examination/',
+  DAILY_CHECKUP = '/daily-checkup',
 }

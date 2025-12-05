@@ -46,7 +46,10 @@ export const usePermissions = (): PermissionsResult => {
     };
   }
 
-  const rolePermission = permissionData.data[0];
+  // API data ni to'g'ridan-to'g'ri object yoki array sifatida qaytarishi mumkin
+  const rolePermission = Array.isArray(permissionData.data)
+    ? permissionData.data[0]
+    : permissionData.data;
   const permissions: Record<
     string,
     {
@@ -68,6 +71,7 @@ export const usePermissions = (): PermissionsResult => {
 
   const canRead = (collectionName: string | null): boolean => {
     if (!collectionName) return true; // permission null bo'lsa, har kim ko'ra oladi
+    if (collectionName === 'ceo_only') return false; // faqat CEO ko'ra oladi
     return permissions[collectionName.toLowerCase()]?.canRead ?? false;
   };
 

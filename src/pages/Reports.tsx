@@ -128,30 +128,11 @@ const Reports = () => {
 							<Button
 								variant='outline'
 								size='sm'
-								onClick={() => handleExport('excel')}
-								className='text-xs sm:text-sm'
-							>
-								<FileSpreadsheet className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
-								Excel
-							</Button>
-							<Button
-								variant='outline'
-								size='sm'
 								onClick={() => handleExport('pdf')}
 								className='text-xs sm:text-sm'
 							>
 								<Download className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
 								PDF
-							</Button>
-							<Button
-								variant='outline'
-								size='sm'
-								onClick={() => window.print()}
-								className='text-xs sm:text-sm'
-							>
-								<Printer className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
-								<span className='hidden sm:inline'>Чоп этиш</span>
-								<span className='sm:hidden'>Чоп</span>
 							</Button>
 						</div>
 					</div>
@@ -184,9 +165,7 @@ const Reports = () => {
 					/> */}
 					<StatisticsCard
 						title='Палата бандлиги'
-						value={`${
-							roomsData?.data?.occupancyRate.toFixed(1) || 0
-						}%`}
+						value={`${roomsData?.data?.occupancyRate.toFixed(1) || 0}%`}
 						icon={Bed}
 						description={`${roomsData?.data?.occupiedBeds || 0}/${
 							roomsData?.data?.totalBeds || 0
@@ -203,14 +182,14 @@ const Reports = () => {
 								Шифокорлар
 							</h3>
 							<p className='text-2xl font-bold'>
-								{usersData.data.doctor.total}
+								{usersData.data.doctor?.total ?? 0}
 							</p>
 							<div className='flex gap-4 mt-2 text-xs text-muted-foreground'>
 								<span className='text-green-600'>
-									Актив: {usersData.data.doctor.active}
+									Актив: {usersData.data.doctor?.active ?? 0}
 								</span>
 								<span className='text-red-600'>
-									Ноактив: {usersData.data.doctor.inactive}
+									Ноактив: {usersData.data.doctor?.inactive ?? 0}
 								</span>
 							</div>
 						</Card>
@@ -218,13 +197,15 @@ const Reports = () => {
 							<h3 className='text-sm font-medium text-muted-foreground mb-2'>
 								Ҳамширалар
 							</h3>
-							<p className='text-2xl font-bold'>{usersData.data.nurse.total}</p>
+							<p className='text-2xl font-bold'>
+								{usersData.data.nurse?.total ?? 0}
+							</p>
 							<div className='flex gap-4 mt-2 text-xs text-muted-foreground'>
 								<span className='text-green-600'>
-									Актив: {usersData.data.nurse.active}
+									Актив: {usersData.data.nurse?.active ?? 0}
 								</span>
 								<span className='text-red-600'>
-									Ноактив: {usersData.data.nurse.inactive}
+									Ноактив: {usersData.data.nurse?.inactive ?? 0}
 								</span>
 							</div>
 						</Card>
@@ -233,14 +214,14 @@ const Reports = () => {
 								Регистраторлар
 							</h3>
 							<p className='text-2xl font-bold'>
-								{usersData.data.receptionist.total}
+								{usersData.data.receptionist?.total ?? 0}
 							</p>
 							<div className='flex gap-4 mt-2 text-xs text-muted-foreground'>
 								<span className='text-green-600'>
-									Актив: {usersData.data.receptionist.active}
+									Актив: {usersData.data.receptionist?.active ?? 0}
 								</span>
 								<span className='text-red-600'>
-									Ноактив: {usersData.data.receptionist.inactive}
+									Ноактив: {usersData.data.receptionist?.inactive ?? 0}
 								</span>
 							</div>
 						</Card>

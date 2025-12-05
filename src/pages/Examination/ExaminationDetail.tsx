@@ -64,6 +64,7 @@ import AllPrescriptionsDownloadButton, {
   NeurologicStatusDownloadButton,
   ServicesDownloadButton,
 } from './components/ExaminationPDF';
+import { status } from '@/app/api/examinationApi/types';
 
 // Tana qismlari uchun o'zbek nomlari
 const bodyPartLabels: Record<string, string> = {
@@ -396,7 +397,7 @@ const ExaminationDetail = () => {
             price: selectedService.price,
             frequency: serviceForm.frequency,
             duration: serviceForm.duration,
-            status: serviceForm.status as 'pending' | 'completed' | 'cancelled',
+            status: serviceForm.status as status,
             notes: serviceForm.notes,
           },
         }).unwrap();
@@ -454,7 +455,7 @@ const ExaminationDetail = () => {
             price: selectedService.price,
             frequency: serviceForm.frequency,
             duration: serviceForm.duration,
-            status: serviceForm.status,
+            status: serviceForm.status as status,
             notes: serviceForm.notes,
           },
         }).unwrap();
@@ -1168,6 +1169,17 @@ const ExaminationDetail = () => {
                                       type='number'
                                       placeholder='Муддатни киритинг'
                                       value={prescriptionForm.duration}
+                                      onKeyDown={(e) => {
+                                        if (
+                                          e.key === ',' ||
+                                          e.key === 'e' ||
+                                          e.key === 'E' ||
+                                          e.key === '+' ||
+                                          e.key === '-'
+                                        ) {
+                                          e.preventDefault();
+                                        }
+                                      }}
                                       onChange={(e) =>
                                         setPrescriptionForm({
                                           ...prescriptionForm,
@@ -1183,6 +1195,17 @@ const ExaminationDetail = () => {
                                     <Input
                                       type='number'
                                       placeholder='Частотани киритинг'
+                                      onKeyDown={(e) => {
+                                        if (
+                                          e.key === ',' ||
+                                          e.key === 'e' ||
+                                          e.key === 'E' ||
+                                          e.key === '+' ||
+                                          e.key === '-'
+                                        ) {
+                                          e.preventDefault();
+                                        }
+                                      }}
                                       value={prescriptionForm.frequency}
                                       onChange={(e) =>
                                         setPrescriptionForm({
@@ -1383,12 +1406,6 @@ const ExaminationDetail = () => {
                                     <SelectItem
                                       key={service._id}
                                       value={service._id}
-                                      onChange={(e) =>
-                                        setServiceForm({
-                                          ...serviceForm,
-                                          price: e.target.value,
-                                        })
-                                      }
                                     >
                                       {service.name} -{' '}
                                       {service.price.toLocaleString()} сўм
@@ -1403,6 +1420,17 @@ const ExaminationDetail = () => {
                                 type='number'
                                 placeholder='Миқдор киритинг'
                                 value={serviceForm.duration}
+                                onKeyDown={(e) => {
+                                  if (
+                                    e.key === ',' ||
+                                    e.key === 'e' ||
+                                    e.key === 'E' ||
+                                    e.key === '+' ||
+                                    e.key === '-'
+                                  ) {
+                                    e.preventDefault();
+                                  }
+                                }}
                                 onChange={(e) =>
                                   setServiceForm({
                                     ...serviceForm,
@@ -1417,6 +1445,17 @@ const ExaminationDetail = () => {
                                 type='number'
                                 placeholder='Миқдор киритинг'
                                 value={serviceForm.frequency}
+                                onKeyDown={(e) => {
+                                  if (
+                                    e.key === ',' ||
+                                    e.key === 'e' ||
+                                    e.key === 'E' ||
+                                    e.key === '+' ||
+                                    e.key === '-'
+                                  ) {
+                                    e.preventDefault();
+                                  }
+                                }}
                                 onChange={(e) =>
                                   setServiceForm({
                                     ...serviceForm,
@@ -1540,10 +1579,21 @@ const ExaminationDetail = () => {
                                   <Input
                                     type='number'
                                     value={serviceForm.duration}
+                                    onKeyDown={(e) => {
+                                      if (
+                                        e.key === ',' ||
+                                        e.key === 'e' ||
+                                        e.key === 'E' ||
+                                        e.key === '+' ||
+                                        e.key === '-'
+                                      ) {
+                                        e.preventDefault();
+                                      }
+                                    }}
                                     onChange={(e) =>
                                       setServiceForm({
                                         ...serviceForm,
-                                        duration: e.target.value,
+                                        duration: Number(e.target.value),
                                       })
                                     }
                                   />
@@ -1553,10 +1603,21 @@ const ExaminationDetail = () => {
                                   <Input
                                     type='number'
                                     value={serviceForm.frequency}
+                                    onKeyDown={(e) => {
+                                      if (
+                                        e.key === ',' ||
+                                        e.key === 'e' ||
+                                        e.key === 'E' ||
+                                        e.key === '+' ||
+                                        e.key === '-'
+                                      ) {
+                                        e.preventDefault();
+                                      }
+                                    }}
                                     onChange={(e) =>
                                       setServiceForm({
                                         ...serviceForm,
-                                        frequency: e.target.value,
+                                        frequency: Number(e.target.value),
                                       })
                                     }
                                   />

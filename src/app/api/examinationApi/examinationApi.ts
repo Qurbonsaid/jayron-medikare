@@ -3,6 +3,7 @@ import { CreateExamReq, ExamResponse } from '.'
 import { baseApi } from '../baseApi'
 import { PATHS } from './path'
 import {
+	AddDailyCheckupReq,
 	addImagesRes,
 	AllExamReq,
 	AllExamRes,
@@ -12,6 +13,7 @@ import {
 	createServiceDays,
 	deletePrescriptionReq,
 	ExamRes,
+	GetAlldailyCheckup,
 	imageReq,
 	MutationRes,
 	RemoveService,
@@ -169,6 +171,41 @@ export const examinationApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: [API_TAGS.EXAMS],
 		}),
+
+		// daily-checkup
+
+		AddDailyCheckup: builder.mutation<MutationRes, AddDailyCheckupReq>({
+			query: ({ id, body }) => ({
+				url: `${PATHS.EXAMINATION}add/${id}${PATHS.DAILY_CHECKUP}`,
+				method: 'POST',
+				body,
+			}),
+			invalidatesTags: [API_TAGS.EXAMS],
+		}),
+		UpdateDailyCheckup: builder.mutation<MutationRes, AddDailyCheckupReq>({
+			query: ({ id, body, checkup_id }) => ({
+				url: `${PATHS.EXAMINATION}update/${id}${PATHS.DAILY_CHECKUP}/${checkup_id}`,
+				method: 'PATCH',
+				body,
+			}),
+			invalidatesTags: [API_TAGS.EXAMS],
+		}),
+		DeleteDailyCheckup: builder.mutation<
+			MutationRes,
+			{ id: string; checkup_id: string }
+		>({
+			query: ({ id, checkup_id }) => ({
+				url: `${PATHS.EXAMINATION}delete/${id}${PATHS.DAILY_CHECKUP}/${checkup_id}`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: [API_TAGS.EXAMS],
+		}),
+		getDailyCheckup: builder.query<GetAlldailyCheckup, string>({
+			query: id => ({
+				url: `${PATHS.EXAMINATION}get-all/${id}/daily-checkups`,
+			}),
+			providesTags: [API_TAGS.EXAMS],
+		}),
 	}),
 })
 
@@ -190,5 +227,9 @@ export const {
 	useRemoveServiceFromExaminationMutation,
 	useUpdateServiceFromExaminationMutation,
 	useCreateServiceDaysMutation,
-	useTakeServiceMutation
+	useTakeServiceMutation,
+	useAddDailyCheckupMutation,
+	useUpdateDailyCheckupMutation,
+	useDeleteDailyCheckupMutation,
+	useGetDailyCheckupQuery,
 } = examinationApi

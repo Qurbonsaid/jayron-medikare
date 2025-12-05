@@ -170,9 +170,6 @@ export interface MutationRes {
 	}
 }
 
-export const status =
-	'active' | 'inactive' | 'pending' | 'completed' | 'deleted'
-
 export type UpdateExamReq = {
 	id: string
 	body: {
@@ -295,4 +292,29 @@ export interface UpdateService extends CreateService {
 export interface RemoveService {
 	id: string
 	service_id: string
+}
+
+export interface AddDailyCheckupReq {
+	id: string
+	body: {
+		blood_pressure: {
+			systolic: number
+			diastolic: number
+		}
+		notes: string
+	}
+	checkup_id?: string
+}
+
+export interface GetAlldailyCheckup {
+	success: boolean
+	data: {
+		date: string
+		blood_pressure: {
+			systolic: number
+			diastolic: number
+		}
+		notes: string
+		_id: string
+	}[]
 }
