@@ -1,5 +1,5 @@
 import {
-  useAddServiceToExaminationMutation,
+  useAddServiceMutation,
   useCreateExamMutation,
   useCreatePrescriptionMutation,
 } from '@/app/api/examinationApi/examinationApi';
@@ -45,6 +45,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import {
   Activity,
+  Calendar,
   FileText,
   Pill,
   Plus,
@@ -91,17 +92,23 @@ const NewVisitDialog = ({
     frequency: string;
     duration: string;
     instructions: string;
+    addons: string;
   }
   const [medications, setMedications] = useState<MedicationItem[]>([]);
   const [medicationSearch, setMedicationSearch] = useState('');
 
   // Service states
+  interface ServiceDay {
+    day: number;
+    date: Date | null;
+  }
+
   interface ServiceItem {
     id: string;
     service_id: string;
-    frequency: number;
     duration: number;
     notes: string;
+    days: ServiceDay[];
   }
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [serviceSearch, setServiceSearch] = useState('');
@@ -126,7 +133,7 @@ const NewVisitDialog = ({
 
   const [createExam, { isLoading: isCreating }] = useCreateExamMutation();
   const [createPrescription] = useCreatePrescriptionMutation();
-  const [addServiceToExam] = useAddServiceToExaminationMutation();
+  const [addServiceToExam] = useAddServiceMutation();
   const handleRequest = useHandleRequest();
 
   // Fetch medications
@@ -217,6 +224,7 @@ const NewVisitDialog = ({
         frequency: '',
         duration: '',
         instructions: '',
+        addons: '',
       },
     ]);
   };
@@ -239,22 +247,69 @@ const NewVisitDialog = ({
 
   // Service handlers
   const addService = () => {
+    const defaultDuration = 7;
     setServices([
       ...services,
       {
         id: Date.now().toString(),
         service_id: '',
-        frequency: 1,
-        duration: 1,
+        duration: defaultDuration,
         notes: '',
+        days: Array.from({ length: defaultDuration }, (_, i) => ({
+          day: i + 1,
+          date: null,
+        })),
       },
     ]);
+  };
+
+  // Generate days array based on duration
+  const generateDays = (duration: number): ServiceDay[] => {
+    return Array.from({ length: duration }, (_, i) => ({
+      day: i + 1,
+      date: null,
+    }));
+  };
+
+  // Update service duration and regenerate days
+  const updateServiceDuration = (id: string, newDuration: number) => {
+    setServices(
+      services.map((srv) =>
+        srv.id === id
+          ? {
+              ...srv,
+              duration: newDuration,
+              days: generateDays(newDuration),
+            }
+          : srv
+      )
+    );
+  };
+
+  // Update a specific day's date
+  const updateServiceDayDate = (
+    serviceId: string,
+    dayIndex: number,
+    date: Date | null
+  ) => {
+    setServices(
+      services.map((srv) =>
+        srv.id === serviceId
+          ? {
+              ...srv,
+              days: srv.days.map((d, i) =>
+                i === dayIndex ? { ...d, date } : d
+              ),
+            }
+          : srv
+      )
+    );
   };
 
   const updateService = (
     id: string,
     field: keyof ServiceItem,
-    value: string | number
+    value: string | number | ServiceDay[]
   ) => {
     setServices(
       services.map((srv) => (srv.id === id ? { ...srv, [field]: value } : srv))
@@ -303,13 +358,16 @@ const NewVisitDialog = ({
           if (med.medication_id) {
             try {
               await createPrescription({
-                id: examId,
-                body: {
-                  medication_id: med.medication_id,
-                  frequency: parseInt(med.frequency) || 1,
-                  duration: parseInt(med.duration) || 1,
-                  instructions: med.instructions,
-                },
+                examination_id: examId,
+                items: [
+                  {
+                    medication_id: med.medication_id,
+                    frequency: parseInt(med.frequency) || 1,
+                    duration: parseInt(med.duration) || 1,
+                    instructions: med.instructions,
+                    addons: med.addons || '',
+                  },
+                ],
               }).unwrap();
             } catch (error) {
               console.error('Рецепт сақлашда хатолик:', error);
@@ -320,20 +378,20 @@ const NewVisitDialog = ({
         // Save services
         for (const srv of services) {
           if (srv.service_id) {
-            const serviceDetails = availableServices.find(
-              (s: any) => s._id === srv.service_id
-            );
             try {
               await addServiceToExam({
-                id: examId,
-                body: {
-                  service_type_id: srv.service_id,
-                  price: serviceDetails?.price || 0,
-                  frequency: srv.frequency,
-                  duration: srv.duration,
-                  status: 'pending',
-                  notes: srv.notes,
-                },
+                examination_id: examId,
+                duration: srv.duration,
+                items: [
+                  {
+                    service_type_id: srv.service_id,
+                    days: srv.days.map((d) => ({
+                      day: d.day,
+                      date: d.date,
+                    })),
+                    notes: srv.notes,
+                  },
+                ],
               }).unwrap();
             } catch (error) {
               console.error('Хизмат сақлашда хатолик:', error);
@@ -474,8 +532,7 @@ const NewVisitDialog = ({
                               {doctor.fullname}
                             </span>
                             <span className='text-xs text-muted-foreground'>
-                              {doctor.section ||
-                                'Мутахассислик кўрсатилмаган'}
+                              {doctor.section || 'Мутахассислик кўрсатилмаган'}
                             </span>
                           </div>
                         </SelectItem>
@@ -589,11 +646,34 @@ const NewVisitDialog = ({
                                 <SelectValue placeholder='Дорини танланг...' />
                               </SelectTrigger>
                               <SelectContent>
-                                {availableMedications.map((m: any) => (
-                                  <SelectItem key={m._id} value={m._id}>
-                                    {m.name}
-                                  </SelectItem>
-                                ))}
+                                <div className='p-2'>
+                                  <Input
+                                    placeholder='Дори қидириш...'
+                                    value={medicationSearch}
+                                    onChange={(e) =>
+                                      setMedicationSearch(e.target.value)
+                                    }
+                                    className='text-sm mb-2'
+                                  />
+                                </div>
+                                {availableMedications.length > 0 ? (
+                                  availableMedications.map((m: any) => (
+                                    <SelectItem key={m._id} value={m._id}>
+                                      <div className='flex flex-col'>
+                                        <span className='font-medium'>
+                                          {m.name}
+                                        </span>
+                                        <span className='text-xs text-muted-foreground'>
+                                          {m.dosage}
+                                        </span>
+                                      </div>
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <div className='p-4 text-center text-sm text-muted-foreground'>
+                                    Дори топилмади
+                                  </div>
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
@@ -716,84 +796,134 @@ const NewVisitDialog = ({
                     {services.map((srv) => (
                       <div
                         key={srv.id}
-                        className='flex items-center gap-2 p-3 bg-background rounded-lg border'
+                        className='p-3 bg-background rounded-lg border space-y-3'
                       >
-                        <div className='flex-1 min-w-0'>
-                          <Label className='text-xs mb-1 block'>Хизмат</Label>
-                          <Select
-                            value={srv.service_id}
-                            onValueChange={(value) =>
-                              updateService(srv.id, 'service_id', value)
-                            }
-                          >
-                            <SelectTrigger className='h-9'>
-                              <SelectValue placeholder='Хизматни танланг...' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableServices.map((s: any) => (
-                                <SelectItem key={s._id} value={s._id}>
-                                  <span>{s.name}</span>
-                                  <span className='ml-2 text-muted-foreground'>
-                                    (
-                                    {new Intl.NumberFormat('uz-UZ').format(
-                                      s.price
-                                    )}{' '}
-                                    сўм)
-                                  </span>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className='w-32 shrink-0'>
-                          <Label className='text-xs mb-1 block'>Марта</Label>
-                          <Select
-                            value={srv.frequency.toString()}
-                            onValueChange={(value) =>
-                              updateService(
-                                srv.id,
-                                'frequency',
-                                parseFloat(value)
-                              )
-                            }
-                          >
-                            <SelectTrigger className='h-9'>
-                              <SelectValue placeholder='Танланг...' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value='1'>1 марта</SelectItem>
-                              <SelectItem value='2'>2 марта</SelectItem>
-                              <SelectItem value='3'>3 марта</SelectItem>
-                              <SelectItem value='0.5'>
-                                2 кунда бир марта
-                              </SelectItem>
-                              <SelectItem value='0.33'>
-                                3 кунда бир марта
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className='w-20 shrink-0'>
-                          <Label className='text-xs mb-1 block'>Кун</Label>
-                          <Input
-                            type='number'
-                            placeholder='1'
-                            className='h-9'
-                            min={0}
-                            value={srv.duration}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (value === '' || parseFloat(value) >= 0) {
-                                updateService(
-                                  srv.id,
-                                  'duration',
-                                  parseFloat(value) || 0
-                                );
+                        {/* Service Selection and Duration Row */}
+                        <div className='flex items-center gap-2'>
+                          <div className='flex-1 min-w-0'>
+                            <Label className='text-xs mb-1 block'>Хизмат</Label>
+                            <Select
+                              value={srv.service_id}
+                              onValueChange={(value) =>
+                                updateService(srv.id, 'service_id', value)
                               }
-                            }}
-                          />
+                            >
+                              <SelectTrigger className='h-9'>
+                                <SelectValue placeholder='Хизматни танланг...' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <div className='p-2'>
+                                  <Input
+                                    placeholder='Хизмат қидириш...'
+                                    value={serviceSearch}
+                                    onChange={(e) =>
+                                      setServiceSearch(e.target.value)
+                                    }
+                                    className='text-sm mb-2'
+                                  />
+                                </div>
+                                {availableServices.length > 0 ? (
+                                  availableServices.map((s: any) => (
+                                    <SelectItem key={s._id} value={s._id}>
+                                      <div className='flex flex-col'>
+                                        <span className='font-medium'>
+                                          {s.name}
+                                        </span>
+                                        <span className='text-xs text-muted-foreground'>
+                                          {new Intl.NumberFormat(
+                                            'uz-UZ'
+                                          ).format(s.price)}{' '}
+                                          сўм
+                                        </span>
+                                      </div>
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <div className='p-4 text-center text-sm text-muted-foreground'>
+                                    Хизмат топилмади
+                                  </div>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className='w-24 shrink-0'>
+                            <Label className='text-xs mb-1 block'>
+                              Муддат (кун)
+                            </Label>
+                            <Input
+                              type='number'
+                              placeholder='7'
+                              className='h-9'
+                              min={1}
+                              max={30}
+                              value={srv.duration}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 0;
+                                if (val >= 0 && val <= 30) {
+                                  updateServiceDuration(srv.id, val);
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className='shrink-0 flex items-center pt-5'>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              className='h-9 w-9 text-red-500 hover:text-red-600 hover:bg-red-50'
+                              onClick={() => removeService(srv.id)}
+                            >
+                              <Trash2 className='w-4 h-4' />
+                            </Button>
+                          </div>
                         </div>
-                        <div className='flex-1 min-w-0'>
+
+                        {/* Days Table - Compact for Dialog */}
+                        {srv.duration > 0 && srv.days.length > 0 && (
+                          <div className='space-y-2'>
+                            <Label className='text-xs flex items-center gap-1'>
+                              <Calendar className='h-3 w-3' />
+                              Кунлар жадвали
+                            </Label>
+
+                            {/* Compact Grid View */}
+                            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2'>
+                              {srv.days.map((day, dayIndex) => (
+                                <div
+                                  key={dayIndex}
+                                  className='flex flex-col gap-1 p-2 bg-muted/30 rounded border'
+                                >
+                                  <span className='text-xs font-medium'>
+                                    {day.day}-кун
+                                  </span>
+                                  <Input
+                                    type='date'
+                                    value={
+                                      day.date
+                                        ? new Date(day.date)
+                                            .toISOString()
+                                            .split('T')[0]
+                                        : ''
+                                    }
+                                    onChange={(e) =>
+                                      updateServiceDayDate(
+                                        srv.id,
+                                        dayIndex,
+                                        e.target.value
+                                          ? new Date(e.target.value)
+                                          : null
+                                      )
+                                    }
+                                    className='text-xs h-7'
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Notes */}
+                        <div>
                           <Label className='text-xs mb-1 block'>Изоҳ</Label>
                           <Input
                             placeholder='Изоҳ...'
@@ -803,17 +933,6 @@ const NewVisitDialog = ({
                               updateService(srv.id, 'notes', e.target.value)
                             }
                           />
-                        </div>
-                        <div className='shrink-0 flex items-center pt-5'>
-                          <Button
-                            type='button'
-                            variant='ghost'
-                            size='icon'
-                            className='h-9 w-9 text-red-500 hover:text-red-600 hover:bg-red-50'
-                            onClick={() => removeService(srv.id)}
-                          >
-                            <Trash2 className='w-4 h-4' />
-                          </Button>
                         </div>
                       </div>
                     ))}
