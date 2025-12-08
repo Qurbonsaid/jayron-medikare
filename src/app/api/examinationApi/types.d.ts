@@ -10,18 +10,10 @@ export type ExamResponse = {
   };
 };
 
-export type CreateExamReq = {
-  patient_id: string;
-  doctor_id: string;
-  description?: string;
-  complaints: string;
-  treatment_type: 'STASIONAR' | 'AMBULATOR';
-};
-
 export type examCreateReq = {
   patient_id: string;
   doctor_id: string;
-  description: string;
+  description?: string;
   complaints: string;
   treatment_type: 'stasionar' | 'ambulator';
 };
@@ -112,12 +104,11 @@ export type ExamDataItem = {
   description: string;
   complaints: string;
   treatment_type: 'stasionar' | 'ambulator';
-  analyses: Array<Analysis> | null;
+  analyses: Array<Analysis>;
   billing_id: string | null;
   images: Array<Image> | [];
-  status: status;
-  prescription:string|null;
-  service:string|null;
+  prescriptions?: Array<getOnePrescriptionRes> | null;
+  service?: Array<getOneServiceRes> | null;
   status: status;
   neurological_status_id: string | null;
   daily_checkup_id: string | null;
@@ -125,7 +116,6 @@ export type ExamDataItem = {
   created_at: Date;
   updated_at: Date;
 };
-
 
 export type AllExamRes = {
   success: boolean;

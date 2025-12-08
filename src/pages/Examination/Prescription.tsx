@@ -3,13 +3,13 @@ import {
   useGetAllExamsQuery,
   useGetOneExamQuery,
 } from '@/app/api/examinationApi/examinationApi';
+import type { Prescription } from '@/app/api/examinationApi/types';
+import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
+import { useGetPatientByIdQuery } from '@/app/api/patientApi/patientApi';
 import {
   useCreatePrescriptionMutation,
   useUpdatePrescriptionMutation,
 } from '@/app/api/prescription/prescriptionApi';
-import type { Prescription } from '@/app/api/examinationApi/types';
-import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
-import { useGetPatientByIdQuery } from '@/app/api/patientApi/patientApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -25,9 +25,10 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { format } from 'date-fns';
 import {
+  Activity,
   AlertCircle,
-  Calendar,
   Edit,
   Loader2,
   Plus,
@@ -56,9 +57,8 @@ interface ServiceDay {
 interface ServiceItem {
   id: string;
   service_id: string;
-  duration: number;
   notes: string;
-  days: ServiceDay[];
+  markedDays: number[]; // Array of day numbers that are marked
 }
 
 interface ValidationErrors {
@@ -93,6 +93,16 @@ const Prescription = () => {
     services: {},
   });
   const [serviceSearch, setServiceSearch] = useState('');
+  const [debouncedServiceSearch, setDebouncedServiceSearch] = useState('');
+  const [servicePage, setServicePage] = useState(1);
+  const [serviceOptions, setServiceOptions] = useState<any[]>([]);
+  const [hasMoreServices, setHasMoreServices] = useState(true);
+
+  // Common service settings
+  const [serviceDuration, setServiceDuration] = useState<number>(7);
+  const [serviceStartDate, setServiceStartDate] = useState<Date | null>(
+    new Date()
+  );
 
   // Prescription editing states
   const [editingPrescriptionId, setEditingPrescriptionId] = useState<
@@ -156,12 +166,49 @@ const Prescription = () => {
     search: medicationSearch || undefined,
   });
 
-  // Fetch services for search
-  const { data: servicesData } = useGetAllServiceQuery({
-    page: 1,
-    limit: 100,
-    search: serviceSearch,
-  } as any);
+  // Debounce service search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedServiceSearch(serviceSearch.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [serviceSearch]);
+
+  // Fetch services for search with paging
+  const { data: servicesData, isFetching: isFetchingServices } =
+    useGetAllServiceQuery({
+      page: servicePage,
+      limit: 20,
+      search: debouncedServiceSearch || undefined,
+    } as any);
+
+  // Reset paging when search changes
+  useEffect(() => {
+    setServicePage(1);
+    setServiceOptions([]);
+    setHasMoreServices(true);
+  }, [debouncedServiceSearch]);
+
+  // Append fetched services to options list
+  useEffect(() => {
+    if (servicesData?.data) {
+      setServiceOptions((prev) => {
+        const incoming = servicesData.data;
+        const merged = servicePage === 1 ? incoming : [...prev, ...incoming];
+        const seen = new Set<string>();
+        return merged.filter((s: any) => {
+          if (!s?._id) return false;
+          if (seen.has(s._id)) return false;
+          seen.add(s._id);
+          return true;
+        });
+      });
+
+      const pages = servicesData.pagination?.pages || 1;
+      const current = servicesData.pagination?.page || servicePage;
+      setHasMoreServices(current < pages);
+    }
+  }, [servicesData, servicePage]);
 
   const [createPrescription, { isLoading: isCreating }] =
     useCreatePrescriptionMutation();
@@ -170,6 +217,9 @@ const Prescription = () => {
   const [addServiceToExam, { isLoading: isAddingService }] =
     useAddServiceMutation();
   const handleRequest = useHandleRequest();
+
+  const availableMedications = medicationsData?.data || [];
+  const availableServices = serviceOptions;
 
   // Update examinations list when new data arrives
   useEffect(() => {
@@ -324,78 +374,42 @@ const Prescription = () => {
 
   // Service handlers
   const addService = () => {
-    const defaultDuration = 7;
     const newService: ServiceItem = {
       id: Date.now().toString(),
       service_id: '',
-      duration: defaultDuration,
       notes: '',
-      days: Array.from({ length: defaultDuration }, (_, i) => ({
-        day: i + 1,
-        date: null,
-      })),
+      markedDays: [],
     };
     setServices([...services, newService]);
   };
 
-  // Generate days array based on duration
-  const generateDays = (duration: number): ServiceDay[] => {
-    return Array.from({ length: duration }, (_, i) => ({
-      day: i + 1,
-      date: null,
-    }));
-  };
-
-  // Update service duration and regenerate days
-  const updateServiceDuration = (id: string, newDuration: number) => {
-    setServices(
-      services.map((srv) =>
-        srv.id === id
-          ? {
-              ...srv,
-              duration: newDuration,
-              days: generateDays(newDuration),
-            }
-          : srv
-      )
-    );
-  };
-
-  // Update a specific day's date
-  const updateServiceDayDate = (
-    serviceId: string,
-    dayIndex: number,
-    date: Date | null
-  ) => {
-    setServices(
-      services.map((srv) =>
-        srv.id === serviceId
-          ? {
-              ...srv,
-              days: srv.days.map((d, i) =>
-                i === dayIndex ? { ...d, date } : d
-              ),
-            }
-          : srv
-      )
-    );
+  // Generate days array based on duration and start date
+  const generateDays = (
+    duration: number,
+    startDate: Date | null
+  ): ServiceDay[] => {
+    return Array.from({ length: duration }, (_, i) => {
+      if (!startDate) {
+        return { day: i + 1, date: null };
+      }
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      return { day: i + 1, date };
+    });
   };
 
   const updateServiceField = (
     id: string,
     field: keyof ServiceItem,
-    value: string | number | ServiceDay[]
+    value: string
   ) => {
     setServices(
       services.map((srv) => (srv.id === id ? { ...srv, [field]: value } : srv))
     );
 
-    // Clear validation error when user selects/types
-    if (
-      (typeof value === 'string' && value.trim() !== '') ||
-      (typeof value === 'number' && value > 0)
-    ) {
-      if (field === 'service_id' || field === 'duration') {
+    // Clear validation error
+    if (value.trim() !== '') {
+      if (field === 'service_id') {
         setFormErrors((prev) => ({
           ...prev,
           services: {
@@ -412,6 +426,37 @@ const Prescription = () => {
 
   const removeService = (id: string) => {
     setServices(services.filter((srv) => srv.id !== id));
+  };
+
+  const toggleDayMark = (serviceId: string, dayNumber: number) => {
+    setServices(
+      services.map((srv) => {
+        if (srv.id === serviceId) {
+          const markedDays = srv.markedDays || [];
+          if (markedDays.includes(dayNumber)) {
+            return {
+              ...srv,
+              markedDays: markedDays.filter((d) => d !== dayNumber),
+            };
+          } else {
+            return { ...srv, markedDays: [...markedDays, dayNumber] };
+          }
+        }
+        return srv;
+      })
+    );
+  };
+
+  const markEveryOtherDay = () => {
+    setServices(
+      services.map((srv) => {
+        const everyOtherDay = Array.from(
+          { length: serviceDuration },
+          (_, i) => i + 1
+        ).filter((day) => day % 2 === 1); // Mark odd days: 1, 3, 5, 7...
+        return { ...srv, markedDays: everyOtherDay };
+      })
+    );
   };
 
   const handlePrint = () => {
@@ -472,10 +517,17 @@ const Prescription = () => {
         srvErrors[srv.id].service_id = true;
         hasErrors = true;
       }
+    }
 
-      if (!srv.duration || srv.duration < 1) {
-        srvErrors[srv.id].duration = true;
-        hasErrors = true;
+    // Validate common service settings
+    if (services.length > 0) {
+      if (!serviceDuration || serviceDuration < 1) {
+        toast.error('Илтимос, хизмат муддатини киритинг');
+        return;
+      }
+      if (!serviceStartDate) {
+        toast.error('Илтимос, бошланиш санасини танланг');
+        return;
       }
     }
 
@@ -551,20 +603,28 @@ const Prescription = () => {
     // Save all services at once
     let srvSuccessCount = 0;
     if (services.length > 0) {
-      const serviceItems = services.map((srv) => ({
-        service_type_id: srv.service_id,
-        days: srv.days.map((d) => ({
-          day: d.day,
-          date: d.date,
-        })),
-        notes: srv.notes,
-      }));
+      // Generate days for each service based on common duration and start date
+      const serviceItems = services.map((srv) => {
+        const allDays = generateDays(serviceDuration, serviceStartDate);
+        const markedDays = srv.markedDays || [];
+        // Only include marked days, or all days if none are marked
+        const daysToSave =
+          markedDays.length > 0
+            ? allDays.filter((day) => markedDays.includes(day.day))
+            : allDays;
+
+        return {
+          service_type_id: srv.service_id,
+          days: daysToSave,
+          notes: srv.notes,
+        };
+      });
 
       await handleRequest({
         request: async () => {
           const res = await addServiceToExam({
             examination_id: selectedExaminationId,
-            duration: services[0].duration,
+            duration: serviceDuration,
             items: serviceItems,
           }).unwrap();
           return res;
@@ -892,55 +952,6 @@ const Prescription = () => {
         {!isLoading && selectedExaminationId && patient && (
           <>
             {/* Drug Search */}
-            {/* <Card className='mb-4 sm:mb-6'>
-              <CardHeader>
-                <CardTitle>Дори Қидириш</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='relative'>
-                  <Search className='absolute left-3 top-3 h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground' />
-                  <Input
-                    placeholder='Дори номини киритинг...'
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setShowSuggestions(true);
-                    }}
-                    onFocus={() => setShowSuggestions(true)}
-                    onBlur={() => {
-                      // Delay to allow click event on dropdown items
-                      setTimeout(() => setShowSuggestions(false), 200);
-                    }}
-                    className='pl-9 sm:pl-10 text-sm sm:text-base'
-                  />
-                  {showSuggestions && searchTerm && (
-                    <div
-                      className='absolute z-10 w-full mt-1 bg-card border rounded-md shadow-lg max-h-48 overflow-auto'
-                      onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
-                    >
-                      {filteredDrugs.length > 0 ? (
-                        filteredDrugs.map((drug, index) => (
-                          <div
-                            key={index}
-                            className='px-3 sm:px-4 py-2 hover:bg-accent cursor-pointer text-sm transition-colors'
-                            onClick={() => addDrugFromSearch(drug)}
-                          >
-                            <div className='flex items-center justify-between'>
-                              <span>{drug}</span>
-                              <Plus className='h-4 w-4 text-primary' />
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className='px-3 sm:px-4 py-2 text-sm text-muted-foreground'>
-                          Дори топилмади
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card> */}
 
             {/* Medications List */}
             <Card className='mb-4 sm:mb-6'>
@@ -1435,395 +1446,272 @@ const Prescription = () => {
             </Card>
 
             {/* Services List */}
-            <Card className='mb-4 sm:mb-6'>
-              <CardHeader className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 space-y-2 sm:space-y-0'>
-                <CardTitle className='text-base sm:text-lg md:text-xl'>
-                  Хизматлар Рўйхати
-                </CardTitle>
+            <div className='space-y-3 border rounded-lg p-4 bg-muted/30'>
+              <div className='flex items-center justify-between'>
+                <Label className='flex items-center gap-2'>
+                  <Activity className='w-4 h-4 text-primary' />
+                  Хизматлар
+                </Label>
                 <Button
-                  onClick={addService}
+                  type='button'
+                  variant='outline'
                   size='sm'
-                  className='w-full sm:w-auto text-xs sm:text-sm'
+                  onClick={addService}
+                  className='gap-1'
                 >
-                  <Plus className='mr-2 h-3 w-3 sm:h-4 sm:w-4' />
-                  Хизмат Қўшиш
+                  <Plus className='w-4 h-4' />
+                  Хизмат қўшиш
                 </Button>
-              </CardHeader>
-              <CardContent className='space-y-3 sm:space-y-4'>
-                {/* New Services */}
-                {services.length > 0 && (
-                  <div className='text-xs font-medium text-muted-foreground mb-2 mt-4'>
-                    Янги хизматлар
-                  </div>
-                )}
-                {services.length === 0 &&
-                (!examinationData?.data?.services ||
-                  examinationData.data.services.length === 0) ? (
-                  <div className='text-center py-8 sm:py-12'>
-                    <p className='text-muted-foreground text-sm sm:text-base mb-2'>
-                      Ҳали хизматлар қўшилмаган
-                    </p>
-                    <p className='text-xs sm:text-sm text-muted-foreground'>
-                      "Хизмат Қўшиш" тугмасини босинг
-                    </p>
-                  </div>
-                ) : (
-                  services.map((srv, index) => (
-                    <Card
-                      key={srv.id}
-                      className='border border-border shadow-sm'
-                    >
-                      <CardContent className='pt-3 sm:pt-4'>
-                        <div className='flex items-center justify-between mb-3'>
-                          <span className='text-xs sm:text-sm font-medium text-muted-foreground'>
-                            Янги хизмат #{index + 1}
-                          </span>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() => removeService(srv.id)}
-                            className='h-8 w-8 p-0 text-destructive hover:text-destructive'
-                          >
-                            <Trash2 className='h-4 w-4' />
-                          </Button>
-                        </div>
-                        <div className='space-y-4'>
-                          {/* Service Selection, Duration and Notes in one row */}
-                          <div className='grid grid-cols-7 items-center gap-3'>
-                            <div className='col-span-2 min-w-0'>
-                              <Label className='text-xs sm:text-sm'>
-                                Хизмат Тури{' '}
-                                <span className='text-red-500'>*</span>
-                              </Label>
-                              <Select
-                                value={srv.service_id}
-                                onValueChange={(value) =>
-                                  updateServiceField(
-                                    srv.id,
-                                    'service_id',
-                                    value
-                                  )
-                                }
-                              >
-                                <SelectTrigger
-                                  className={`text-sm mt-1 ${
-                                    formErrors.services[srv.id]?.service_id
-                                      ? 'border-red-500 focus:ring-red-500'
-                                      : ''
-                                  }`}
-                                >
-                                  <SelectValue placeholder='Хизмат турини танланг' />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <div className='p-2'>
-                                    <Input
-                                      placeholder='Хизмат қидириш...'
-                                      value={serviceSearch}
-                                      onChange={(e) =>
-                                        setServiceSearch(e.target.value)
-                                      }
-                                      className='text-sm mb-2'
-                                    />
-                                  </div>
-                                  {servicesData?.data &&
-                                  servicesData.data.length > 0 ? (
-                                    servicesData.data.map((service: any) => (
-                                      <SelectItem
-                                        key={service._id}
-                                        value={service._id}
-                                      >
-                                        {service.name} -{' '}
-                                        {service.price?.toLocaleString()} сўм
-                                      </SelectItem>
-                                    ))
-                                  ) : (
-                                    <div className='p-4 text-center text-sm text-muted-foreground'>
-                                      Хизмат топилмади
-                                    </div>
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className='w-28 shrink-0'>
-                              <Label className='text-xs sm:text-sm'>
-                                Муддат (кун){' '}
-                                <span className='text-red-500'>*</span>
-                              </Label>
-                              <Input
-                                type='number'
-                                min={1}
-                                max={30}
-                                placeholder='7'
-                                value={srv.duration}
-                                onKeyDown={(e) => {
+              </div>
+
+              {services.length === 0 ? (
+                <p className='text-sm text-muted-foreground text-center py-4'>
+                  Хизматлар қўшилмаган
+                </p>
+              ) : (
+                <div className='space-y-3'>
+                  {/* Common Settings */}
+                  <div className='flex items-end gap-2 p-2 bg-muted/30 rounded-lg border'>
+                    <div className='w-28'>
+                      <Label className='text-xs font-medium'>
+                        Муддат (кун)
+                      </Label>
+                      <Input
+                        type='number'
+                        min={1}
+                        max={30}
+                        value={serviceDuration}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 7;
+                          if (val >= 1 && val <= 30) {
+                            setServiceDuration(val);
+                            // Auto-adjust marked days when duration changes
+                            setServices(
+                              services.map((srv) => {
+                                const currentMarked = srv.markedDays || [];
+                                // Keep only marked days that are within new duration
+                                const adjustedMarked = currentMarked.filter(
+                                  (day) => day <= val
+                                );
+                                // If pattern is every other day, extend pattern to new duration
+                                if (adjustedMarked.length > 0) {
+                                  const isEveryOtherDay = adjustedMarked.every(
+                                    (day, idx) =>
+                                      idx === 0 ||
+                                      day === adjustedMarked[idx - 1] + 2
+                                  );
                                   if (
-                                    e.key === ',' ||
-                                    e.key === 'e' ||
-                                    e.key === 'E' ||
-                                    e.key === '+' ||
-                                    e.key === '-'
+                                    isEveryOtherDay &&
+                                    adjustedMarked[0] === 1
                                   ) {
-                                    e.preventDefault();
+                                    // Extend pattern for new days
+                                    const newMarked = Array.from(
+                                      { length: val },
+                                      (_, i) => i + 1
+                                    ).filter((day) => day % 2 === 1);
+                                    return { ...srv, markedDays: newMarked };
                                   }
-                                }}
-                                onChange={(e) => {
-                                  const val = parseInt(e.target.value) || 0;
-                                  if (val >= 0 && val <= 30) {
-                                    updateServiceDuration(srv.id, val);
-                                  }
-                                }}
-                                className={`text-sm mt-1 ${
-                                  formErrors.services[srv.id]?.duration
-                                    ? 'border-red-500 focus:ring-red-500'
-                                    : ''
-                                }`}
-                              />
-                            </div>
-                            <div className='col-span-4 min-w-0'>
-                              <Label className='text-xs sm:text-sm'>Изоҳ</Label>
-                              <Textarea
-                                placeholder='Қўшимча изоҳ киритинг'
-                                value={srv.notes}
-                                onChange={(e) =>
-                                  updateServiceField(
-                                    srv.id,
-                                    'notes',
-                                    e.target.value
-                                  )
                                 }
-                                rows={1}
-                                className='text-sm mt-1 resize-none min-h-10'
-                              />
-                            </div>
-                          </div>
+                                return { ...srv, markedDays: adjustedMarked };
+                              })
+                            );
+                          }
+                        }}
+                        className='h-8 text-xs mt-1'
+                      />
+                    </div>
+                    <div className='flex-1'>
+                      <Label className='text-xs font-medium'>
+                        Бошланиш санаси
+                      </Label>
+                      <Input
+                        type='date'
+                        value={
+                          serviceStartDate
+                            ? serviceStartDate.toISOString().split('T')[0]
+                            : ''
+                        }
+                        onChange={(e) =>
+                          setServiceStartDate(
+                            e.target.value ? new Date(e.target.value) : null
+                          )
+                        }
+                        className='h-8 text-xs mt-1'
+                      />
+                    </div>
 
-                          {/* Days Table - Responsive Design */}
-                          {srv.duration > 0 && srv.days.length > 0 && (
-                            <div className='space-y-2'>
-                              <Label className='text-xs sm:text-sm flex items-center gap-2'>
-                                <Calendar className='h-4 w-4' />
-                                Кунлар жадвали
-                              </Label>
+                    {/* Quick Mark Button */}
+                    <div className='shrink-0'>
+                      <Label className='text-xs font-medium text-transparent'>
+                        &nbsp;
+                      </Label>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        onClick={markEveryOtherDay}
+                        className='h-8 text-sm mt-1'
+                        disabled={services.length === 0}
+                      >
+                        2 кунда бир
+                      </Button>
+                    </div>
+                  </div>
 
-                              {/* Mobile View - Cards */}
-                              <div className='block sm:hidden space-y-2'>
-                                {srv.days.map((day, dayIndex) => (
-                                  <div
-                                    key={dayIndex}
-                                    className='flex items-center justify-between p-3 bg-muted/50 rounded-lg border'
+                  {/* Services Table */}
+                  <div className='overflow-x-auto max-h-[400px] scroll-auto'>
+                    <table className='w-full border-collapse border text-xs'>
+                      <thead className='sticky top-0 bg-background z-10'>
+                        <tr className='bg-muted/50'>
+                          <th className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'>
+                            Хизмат
+                          </th>
+                          {Array.from({ length: serviceDuration }, (_, i) => (
+                            <th
+                              key={i}
+                              className='border px-1 py-1.5 text-center font-semibold min-w-[60px]'
+                            >
+                              {i + 1}
+                            </th>
+                          ))}
+                          <th className='border px-1 py-1.5 text-center font-semibold w-10 sticky right-0 bg-muted/50 z-20'></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {services.map((srv) => {
+                          const serviceName =
+                            availableServices.find(
+                              (s: any) => s._id === srv.service_id
+                            )?.name || '';
+                          const days = generateDays(
+                            serviceDuration,
+                            serviceStartDate
+                          );
+                          const markedDays = srv.markedDays || [];
+
+                          return (
+                            <tr key={srv.id} className='hover:bg-muted/30'>
+                              <td className='border px-1 py-1 sticky left-0 bg-background z-10'>
+                                <Select
+                                  value={srv.service_id}
+                                  onValueChange={(value) =>
+                                    updateServiceField(
+                                      srv.id,
+                                      'service_id',
+                                      value
+                                    )
+                                  }
+                                >
+                                  <SelectTrigger className='h-7 text-xs border-0 shadow-none'>
+                                    <SelectValue placeholder='Танланг...' />
+                                  </SelectTrigger>
+                                  <SelectContent
+                                    onScroll={(e) => {
+                                      const target = e.target as HTMLDivElement;
+                                      const bottom =
+                                        target.scrollHeight -
+                                          target.scrollTop -
+                                          target.clientHeight <
+                                        10;
+                                      if (
+                                        bottom &&
+                                        hasMoreServices &&
+                                        !isFetchingServices
+                                      ) {
+                                        setServicePage((prev) => prev + 1);
+                                      }
+                                    }}
                                   >
-                                    <span className='text-sm font-medium min-w-[60px]'>
-                                      {day.day}-кун
-                                    </span>
-                                    <Input
-                                      type='date'
-                                      value={
-                                        day.date
-                                          ? new Date(day.date)
-                                              .toISOString()
-                                              .split('T')[0]
-                                          : ''
-                                      }
-                                      onChange={(e) =>
-                                        updateServiceDayDate(
-                                          srv.id,
-                                          dayIndex,
-                                          e.target.value
-                                            ? new Date(e.target.value)
-                                            : null
-                                        )
-                                      }
-                                      className='text-sm flex-1 ml-2 max-w-[160px]'
-                                    />
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Tablet/Desktop View - Table */}
-                              <div className='hidden sm:block overflow-x-auto'>
-                                <div className='min-w-full border rounded-lg'>
-                                  {/* Dynamic Rows - 6 columns per row */}
-                                  {Array.from({
-                                    length: Math.ceil(srv.days.length / 6),
-                                  }).map((_, rowIndex) => {
-                                    const startIdx = rowIndex * 6;
-                                    const endIdx = Math.min(
-                                      startIdx + 6,
-                                      srv.days.length
-                                    );
-                                    const rowDays = srv.days.slice(
-                                      startIdx,
-                                      endIdx
-                                    );
-                                    const colCount = rowDays.length;
-
-                                    return (
-                                      <div key={rowIndex}>
-                                        {/* Row Header */}
-                                        <div
-                                          className={`grid bg-muted/50 ${
-                                            rowIndex > 0 ? 'border-t' : ''
-                                          } border-b`}
-                                          style={{
-                                            gridTemplateColumns: `repeat(${colCount}, minmax(120px, 1fr))`,
-                                          }}
-                                        >
-                                          {rowDays.map((day, dayIndex) => (
-                                            <div
-                                              key={dayIndex}
-                                              className='px-2 py-2 text-center text-xs font-semibold text-muted-foreground border-r last:border-r-0'
-                                            >
-                                              {day.day}-кун
-                                            </div>
-                                          ))}
+                                    <div className='p-2'>
+                                      <Input
+                                        placeholder='Қидириш...'
+                                        value={serviceSearch}
+                                        onChange={(e) =>
+                                          setServiceSearch(e.target.value)
+                                        }
+                                        className='text-sm mb-2'
+                                      />
+                                    </div>
+                                    {availableServices.map((s: any) => (
+                                      <SelectItem key={s._id} value={s._id}>
+                                        {s.name} -{' '}
+                                        {new Intl.NumberFormat('uz-UZ').format(
+                                          s.price
+                                        )}{' '}
+                                        сўм
+                                      </SelectItem>
+                                    ))}
+                                    {!isFetchingServices &&
+                                      availableServices.length === 0 && (
+                                        <div className='px-2 py-4 text-xs text-muted-foreground text-center'>
+                                          Хизмат топилмади
                                         </div>
-                                        {/* Row Body */}
-                                        <div
-                                          className='grid'
-                                          style={{
-                                            gridTemplateColumns: `repeat(${colCount}, minmax(120px, 1fr))`,
-                                          }}
+                                      )}
+                                    {isFetchingServices && (
+                                      <div className='flex items-center justify-center py-2 text-xs text-muted-foreground'>
+                                        <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                                        Юкланмоқда...
+                                      </div>
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                              </td>
+                              {days.map((day, i) => {
+                                const isMarked = markedDays.includes(day.day);
+                                return (
+                                  <td
+                                    key={i}
+                                    className='border px-1 py-1 text-center group relative cursor-pointer hover:bg-blue-50'
+                                    onClick={() =>
+                                      toggleDayMark(srv.id, day.day)
+                                    }
+                                  >
+                                    {day.date ? (
+                                      <div className='flex items-center justify-center'>
+                                        <span
+                                          className={`${
+                                            isMarked
+                                              ? 'bg-blue-500 text-white px-1.5 py-0.5 rounded font-semibold'
+                                              : ''
+                                          }`}
                                         >
-                                          {rowDays.map((day, dayIndex) => (
-                                            <div
-                                              key={dayIndex}
-                                              className='px-1 py-2 border-r last:border-r-0'
-                                            >
-                                              <Input
-                                                type='date'
-                                                value={
-                                                  day.date
-                                                    ? new Date(day.date)
-                                                        .toISOString()
-                                                        .split('T')[0]
-                                                    : ''
-                                                }
-                                                onChange={(e) =>
-                                                  updateServiceDayDate(
-                                                    srv.id,
-                                                    startIdx + dayIndex,
-                                                    e.target.value
-                                                      ? new Date(e.target.value)
-                                                      : null
-                                                  )
-                                                }
-                                                className='text-xs h-8 w-full'
-                                              />
-                                            </div>
-                                          ))}
+                                          {format(day.date, 'dd/MM')}
+                                        </span>
+                                        <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none text-xs'>
+                                          {new Date(
+                                            day.date
+                                          ).toLocaleDateString('uz-UZ')}
+                                          {isMarked && ' ✓'}
                                         </div>
                                       </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-
-                {/* Existing Services */}
-                {examinationData?.data?.service &&
-                  examinationData.data.service.length > 0 && (
-                    <>
-                      <div className='text-xs font-medium text-muted-foreground mb-2'>
-                        Мавжуд хизматлар ({examinationData.data.service.length}{' '}
-                        та)
-                      </div>
-                      {examinationData.data.service.map(
-                        (service: any, index: number) => (
-                          <Card
-                            key={service._id}
-                            className='border border-border bg-primary/5'
-                          >
-                            <CardContent className='pt-3 sm:pt-4'>
-                              <div className='flex items-center justify-between mb-2'>
-                                <span className='text-xs sm:text-sm font-medium text-primary'>
-                                  Хизмат #{index + 1}
-                                </span>
-                                <span
-                                  className={`text-xs px-2 py-1 rounded-full ${
-                                    service.status === 'completed'
-                                      ? 'bg-green-100 text-green-700'
-                                      : service.status === 'active'
-                                      ? 'bg-blue-100 text-blue-700'
-                                      : 'bg-yellow-100 text-yellow-700'
-                                  }`}
+                                    ) : (
+                                      <span className='text-muted-foreground'>
+                                        —
+                                      </span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                              <td className='border px-1 py-1 text-center sticky right-0 bg-background z-10'>
+                                <Button
+                                  type='button'
+                                  variant='ghost'
+                                  size='sm'
+                                  onClick={() => removeService(srv.id)}
+                                  className='h-6 w-6 p-0 text-destructive hover:text-destructive'
                                 >
-                                  {service.status === 'completed'
-                                    ? 'Якунланган'
-                                    : service.status === 'active'
-                                    ? 'Актив'
-                                    : 'Кутилмоқда'}
-                                </span>
-                              </div>
-                              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
-                                <div>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Хизмат номи
-                                  </Label>
-                                  <p className='text-sm font-medium'>
-                                    {service.service_type_id?.name ||
-                                      'Номаълум'}
-                                  </p>
-                                </div>
-                                <div>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Нарх
-                                  </Label>
-                                  <p className='text-sm font-medium'>
-                                    {service.price?.toLocaleString()} сўм
-                                  </p>
-                                </div>
-                                <div>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Муддати(кун)
-                                  </Label>
-                                  <p className='text-sm font-medium'>
-                                    {service.duration}
-                                  </p>
-                                </div>
-                                <div>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Қабул Қилиш (кунига марта)
-                                  </Label>
-                                  <p className='text-sm font-medium'>
-                                    {service.frequency}
-                                  </p>
-                                </div>
-                                <div>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Жами
-                                  </Label>
-                                  <p className='text-sm font-medium text-primary'>
-                                    {(
-                                      service.price *
-                                      service.duration *
-                                      service.frequency
-                                    )?.toLocaleString()}{' '}
-                                    сўм
-                                  </p>
-                                </div>
-                              </div>
-                              {service.notes && (
-                                <div className='mt-2'>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Изоҳ
-                                  </Label>
-                                  <p className='text-sm'>{service.notes}</p>
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                        )
-                      )}
-                    </>
-                  )}
-              </CardContent>
-            </Card>
+                                  <Trash2 className='w-3 h-3' />
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Action Buttons */}
             <div className='flex flex-col sm:flex-row justify-end gap-2 sm:gap-3'>

@@ -215,9 +215,6 @@ const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
           <Text style={{ width: '25%', fontSize: 8 }}>
             Jinsi: {patient.gender === 'male' ? 'Erkak' : 'Ayol'}
           </Text>
-          <Text style={{ width: '25%', fontSize: 8 }}>
-            Email: {patient.email || '-'}
-          </Text>
         </View>
 
         {/* Telefon va manzil */}

@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { usePermission } from '@/hooks/usePermission';
-import { Eye, Filter, Phone, Search, Users } from 'lucide-react';
+import { Eye, Filter, Phone, Plus, Search, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewPatient from './components/NewPatient';
@@ -125,31 +125,11 @@ const Patients = () => {
   return (
     <div className='min-h-screen bg-background'>
       <main className='container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
-        {/* Page Header */}
-        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8'>
-          <div>
-            <h1 className='text-2xl sm:text-3xl font-bold mb-1 sm:mb-2'>
-              Беморлар Рўйхати
-            </h1>
-            <p className='text-sm sm:text-base text-muted-foreground'>
-              Барча беморларни кўриш ва бошқариш
-            </p>
-          </div>
-          {canCreate && (
-            <Button
-              className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
-              onClick={() => setShowNewPatient(true)}
-            >
-              + Янги Бемор
-            </Button>
-          )}
-        </div>
-
         {/* Search and Filters */}
         <Card className='card-shadow mb-4 sm:mb-6'>
           <div className='p-4 sm:p-6'>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4'>
-              <div className='sm:col-span-2 lg:col-span-6'>
+              <div className='sm:col-span-2 lg:col-span-4'>
                 <div className='relative'>
                   <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground' />
                   <Input
@@ -222,8 +202,6 @@ const Patients = () => {
                 </Select>
               </div>
 
-              {/* itemsPerPage moved to pagination area below */}
-
               <div className='lg:col-span-2'>
                 <Button
                   variant='outline'
@@ -240,6 +218,18 @@ const Patients = () => {
                   <span className='ml-2'>Тозалаш</span>
                 </Button>
               </div>
+
+              {canCreate && (
+                <div className='lg:col-span-2'>
+                  <Button
+                    className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full'
+                    onClick={() => setShowNewPatient(true)}
+                  >
+                    <Plus className='w-4 h-4 mr-2' />
+                    Янги Бемор
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </Card>

@@ -59,11 +59,6 @@ const patientSchema = z.object({
   phone: z
     .string()
     .regex(phoneRegex, 'Телефон рақами нотўғри форматда (+998 XX XXX XX XX)'),
-  email: z
-    .string()
-    .email('Email нотўғри форматда')
-    .optional()
-    .or(z.literal('')),
   address: z.string().min(5, 'Манзил камида 5 та белгидан иборат бўлиши керак'),
   allergies: z.array(z.string()).optional().default([]),
 
@@ -115,7 +110,6 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
       passportSeries: 'AB',
       passportNumber: '1234567',
       phone: '+998912345678',
-      email: 'info@artikmuratov.uz',
       address: "Palonchayev Pismadoin ko'chasi 4053-uy",
       allergies: ['Пенициллин', 'Аспирин'],
       regular_medications: [
@@ -136,7 +130,6 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
       gender: data.gender,
       date_of_birth: format(data.date_of_birth, 'yyyy-MM-dd'),
       address: data.address,
-      email: data.email,
       allergies: data.allergies,
       regular_medications: data.regular_medications,
       passport: {
@@ -529,27 +522,9 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
 
                   <FormField
                     control={form.control}
-                    name='email'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='email@example.com'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
                     name='address'
                     render={({ field }) => (
-                      <FormItem className='sm:col-span-2'>
+                      <FormItem className='sm:col-span-1'>
                         <FormLabel>
                           Манзил <span className='text-red-500'>*</span>
                         </FormLabel>

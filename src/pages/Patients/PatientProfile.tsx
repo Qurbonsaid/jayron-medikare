@@ -33,7 +33,6 @@ import {
   Eye,
   FileText,
   FileX,
-  Mail,
   MapPin,
   Phone,
   Plus,
@@ -44,7 +43,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import NewVisitDialog from '../Examination/components/NewVisitDialog';
 import EditPatientModal from './components/EditPatientModal';
-import PatientPDFModal from './components/PatientPDFModal';
+import PatientPDFModal from '../../components/PDF/PatientPDFModal';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
@@ -209,12 +208,6 @@ const PatientProfile = () => {
               <div className='flex items-center gap-2 justify-center md:justify-start'>
                 <Phone className='w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0' />
                 <span className='text-sm sm:text-base'>{patient.phone}</span>
-              </div>
-              <div className='flex items-center gap-2 justify-center md:justify-start'>
-                <Mail className='w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0' />
-                <span className='text-sm sm:text-base break-all'>
-                  {patient.email}
-                </span>
               </div>
               <div className='flex items-start gap-2 justify-center md:justify-start sm:col-span-2 lg:col-span-1'>
                 <MapPin className='w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0 mt-0.5' />
@@ -384,14 +377,6 @@ const PatientProfile = () => {
                   <div className='space-y-3'>
                     <div className='p-3 bg-accent rounded-lg'>
                       <p className='text-xs text-muted-foreground mb-1'>
-                        Email
-                      </p>
-                      <p className='text-sm font-medium break-all'>
-                        {patient.email || 'Кўрсатилмаган'}
-                      </p>
-                    </div>
-                    <div className='p-3 bg-accent rounded-lg'>
-                      <p className='text-xs text-muted-foreground mb-1'>
                         Манзил
                       </p>
                       <p className='text-sm font-medium'>{patient.address}</p>
@@ -443,6 +428,7 @@ const PatientProfile = () => {
                         <TableRow>
                           <TableHead>Шифокор</TableHead>
                           <TableHead>Шикоят</TableHead>
+                          <TableHead>Диагноз</TableHead>
                           <TableHead>Статус</TableHead>
                           <TableHead>Сана</TableHead>
                           <TableHead className='text-right'>
@@ -465,6 +451,24 @@ const PatientProfile = () => {
                               <span className='text-sm line-clamp-2'>
                                 {exam.complaints}
                               </span>
+                            </TableCell>
+                            <TableCell>
+                              {exam.diagnosis?.diagnosis_id?.name ? (
+                                <div className='text-sm'>
+                                  <p className='font-medium line-clamp-1'>
+                                    {exam.diagnosis.diagnosis_id.name}
+                                  </p>
+                                  {exam.diagnosis.diagnosis_id.code && (
+                                    <p className='text-xs text-muted-foreground'>
+                                      {exam.diagnosis.diagnosis_id.code}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className='text-xs text-muted-foreground mx-auto'>
+                                  —
+                                </span>
+                              )}
                             </TableCell>
                             <TableCell>
                               {(() => {
@@ -584,6 +588,23 @@ const PatientProfile = () => {
                               {exam.complaints}
                             </p>
                           </div>
+
+                          {/* Diagnosis */}
+                          {exam.diagnosis?.diagnosis_id?.name && (
+                            <div>
+                              <p className='text-xs text-muted-foreground mb-1'>
+                                Диагноз:
+                              </p>
+                              <p className='text-sm font-medium'>
+                                {exam.diagnosis.diagnosis_id.name}
+                                {exam.diagnosis.diagnosis_id.code && (
+                                  <span className='text-xs text-muted-foreground ml-1'>
+                                    ({exam.diagnosis.diagnosis_id.code})
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          )}
 
                           {/* Date */}
                           <div className='flex items-center gap-2 text-xs text-muted-foreground'>
