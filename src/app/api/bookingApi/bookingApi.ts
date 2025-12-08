@@ -11,6 +11,8 @@ import {
   GetAvailableRoomsParams,
   GetAvailableRoomsResponse,
   GetBookingByPatientResponse,
+  SearchPatientsParams,
+  SearchPatientsResponse,
   UpdateBookingRequest,
 } from "./types";
 
@@ -83,6 +85,25 @@ export const bookingApi = baseApi.injectEndpoints({
       providesTags: [API_TAGS.BOOKING, API_TAGS.ROOM],
     }),
 
+    // Bronlangan bemorlarni qidirish
+    searchPatients: builder.query<SearchPatientsResponse, SearchPatientsParams>(
+      {
+        query: (params = {}) => {
+          const queryParams = new URLSearchParams();
+
+          if (params.search) queryParams.append("search", params.search);
+
+          const queryString = queryParams.toString();
+          return {
+            url: queryString
+              ? `${PATHS.SEARCH_PATIENTS}?${queryString}`
+              : PATHS.SEARCH_PATIENTS,
+          };
+        },
+        providesTags: [API_TAGS.BOOKING],
+      }
+    ),
+
     // Bookingni yangilash
     updateBooking: builder.mutation<BookingResponse, UpdateBookingRequest>({
       query: ({ id, body }) => ({
@@ -109,6 +130,7 @@ export const {
   useGetAllBookingsQuery,
   useGetBookingsByPatientQuery,
   useGetAvailableRoomsQuery,
+  useSearchPatientsQuery,
   useUpdateBookingMutation,
   useDeleteBookingMutation,
 } = bookingApi;
