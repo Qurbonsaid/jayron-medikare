@@ -190,32 +190,11 @@ const Examinations = () => {
   return (
     <div className='min-h-screen bg-background'>
       <main className='container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
-        {/* Page Header */}
-        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8'>
-          <div>
-            <h1 className='text-2xl sm:text-3xl font-bold mb-1 sm:mb-2'>
-              Кўриклар
-            </h1>
-            <p className='text-sm sm:text-base text-muted-foreground'>
-              Барча кўрикларни кўриш ва бошқариш
-            </p>
-          </div>
-          {canCreate && (
-            <Button
-              className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
-              onClick={() => navigate('/new-visit')}
-            >
-              <Plus className='w-4 h-4 mr-2' />
-              Янги Кўрик
-            </Button>
-          )}
-        </div>
-
         {/* Search and Filters */}
         <Card className='card-shadow mb-4 sm:mb-6'>
           <div className='p-4 sm:p-6'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
-              <div className='sm:col-span-2'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4'>
+              <div className='sm:col-span-2 lg:col-span-5'>
                 <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
                   Қидирув
                 </label>
@@ -230,7 +209,7 @@ const Examinations = () => {
                 </div>
               </div>
 
-              <div>
+              <div className='lg:col-span-2'>
                 <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
                   Статус
                 </label>
@@ -246,7 +225,7 @@ const Examinations = () => {
                 </Select>
               </div>
 
-              <div>
+              <div className='lg:col-span-2'>
                 <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
                   Даволаш тури
                 </label>
@@ -264,6 +243,21 @@ const Examinations = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {canCreate && (
+                <div className='lg:col-span-3'>
+                  <label className='block text-sm font-medium text-transparent mb-1.5'>
+                    &nbsp;
+                  </label>
+                  <Button
+                    className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full'
+                    onClick={() => navigate('/new-visit')}
+                  >
+                    <Plus className='w-4 h-4 mr-2' />
+                    Янги Кўрик
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </Card>

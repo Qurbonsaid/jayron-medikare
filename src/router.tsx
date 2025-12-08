@@ -108,7 +108,7 @@ export const navigator = [
   {
     path: '/patients',
     to: null,
-    title: 'Беморлар',
+    title: 'Беморлар рўйхати',
   },
   {
     path: '/patient/:id',

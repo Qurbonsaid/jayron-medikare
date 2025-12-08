@@ -84,6 +84,12 @@ const roomType = {
   ambulator: 'Амбулатор',
 };
 
+const statusMap: Record<string, { label: string; bgColor: string }> = {
+  pending: { label: 'Кутилмоқда', bgColor: 'bg-yellow-500' },
+  active: { label: 'Фаол', bgColor: 'bg-blue-500' },
+  completed: { label: 'Тайёр', bgColor: 'bg-green-500' },
+};
+
 const ExaminationDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -124,6 +130,7 @@ const ExaminationDetail = () => {
     duration: 1,
     notes: '',
     days: generateDays(1),
+    interval: 1,
   });
 
   // Prescription states
@@ -144,28 +151,6 @@ const ExaminationDetail = () => {
   const [editingNeurologicId, setEditingNeurologicId] = useState<string | null>(
     null
   );
-  const [neurologicForm, setNeurologicForm] = useState({
-    meningeal_symptoms: 'Yaxshi',
-    i_para_n_olfactorius: 'Yaxshi',
-    ii_para_n_opticus: 'Yaxshi',
-    iii_para_n_oculomotorius: 'Yaxshi',
-    iv_para_n_trochlearis: 'Yaxshi',
-    v_para_n_trigeminus: 'Yaxshi',
-    vi_para_n_abducens: 'Yaxshi',
-    vii_para_n_fascialis: 'Yaxshi',
-    viii_para_n_vestibulocochlearis: 'Yaxshi',
-    ix_para_n_glossopharyngeus: 'Yaxshi',
-    x_para_n_vagus: 'Yaxshi',
-    xi_para_n_accessorius: 'Yaxshi',
-    xii_para_n_hypoglossus: 'Yaxshi',
-    motor_system: 'Yaxshi',
-    sensory_sphere: 'Yaxshi',
-    coordination_sphere: 'Yaxshi',
-    higher_brain_functions: 'Yaxshi',
-    syndromic_diagnosis_justification: 'Yaxshi',
-    topical_diagnosis_justification: 'Yaxshi',
-  });
-
   const initialNeurologicForm = {
     meningeal_symptoms: 'Yaxshi',
     i_para_n_olfactorius: 'Yaxshi',
@@ -187,6 +172,8 @@ const ExaminationDetail = () => {
     syndromic_diagnosis_justification: 'Yaxshi',
     topical_diagnosis_justification: 'Yaxshi',
   };
+  const [neurologicForm, setNeurologicForm] = useState(initialNeurologicForm);
+
 
   // Fetch examination details
   const {
@@ -393,6 +380,7 @@ const ExaminationDetail = () => {
           duration: 1,
           notes: '',
           days: generateDays(1),
+          interval: 1,
         });
         refetch();
       },
@@ -438,6 +426,7 @@ const ExaminationDetail = () => {
           duration: 1,
           notes: '',
           days: generateDays(1),
+          interval: 1,
         });
         refetch();
       },
@@ -465,6 +454,7 @@ const ExaminationDetail = () => {
       duration: service.duration,
       notes: service.notes || '',
       days: generateDays(service.duration, existingDays),
+      interval: 1,
     });
   };
 
@@ -475,6 +465,7 @@ const ExaminationDetail = () => {
       duration: 1,
       notes: '',
       days: generateDays(1),
+      interval: 1,
     });
   };
 
@@ -489,11 +480,40 @@ const ExaminationDetail = () => {
 
   const updateServiceFormDayDate = (index: number, date: Date | null) => {
     setServiceForm((prev) => {
+      // If first day, auto-fill subsequent days
+      if (index === 0 && date) {
+        const newDays = prev.days.map((d, i) => {
+          if (i === 0) return { ...d, date };
+          const newDate = new Date(date);
+          newDate.setDate(newDate.getDate() + i * prev.interval);
+          return { ...d, date: newDate };
+        });
+        return { ...prev, days: newDays };
+      }
+
       const updated = [...prev.days];
       if (updated[index]) {
         updated[index] = { ...updated[index], date };
       }
       return { ...prev, days: updated };
+    });
+  };
+
+  const updateServiceFormInterval = (newInterval: number) => {
+    setServiceForm((prev) => {
+      const firstDate = prev.days[0]?.date;
+      if (!firstDate) {
+        return { ...prev, interval: newInterval };
+      }
+
+      const newDays = prev.days.map((d, i) => {
+        if (i === 0) return d;
+        const newDate = new Date(firstDate);
+        newDate.setDate(newDate.getDate() + i * newInterval);
+        return { ...d, date: newDate };
+      });
+
+      return { ...prev, interval: newInterval, days: newDays };
     });
   };
 
@@ -782,6 +802,16 @@ const ExaminationDetail = () => {
                   }`}
                 >
                   {roomType[exam.treatment_type]}
+                </p>
+              </div>
+              <div>
+                <Label className='text-muted-foreground mr-5'>Статус :</Label>
+                <p
+                  className={`font-medium mt-1 inline-block px-2 py-0.5 rounded text-white ${
+                    statusMap[exam.status]?.bgColor || 'bg-gray-500'
+                  }`}
+                >
+                  {statusMap[exam.status]?.label || exam.status}
                 </p>
               </div>
             </div>
@@ -1466,102 +1496,159 @@ const ExaminationDetail = () => {
                           </div>
 
                           {serviceForm.days.length > 0 && (
-                            <div className='space-y-2'>
-                              <Label className='flex items-center gap-1 text-xs'>
-                                Кунлар жадвали
-                              </Label>
-                              <div className='hidden sm:block overflow-x-auto'>
-                                <div className='min-w-full border rounded-lg'>
-                                  {chunkDays(serviceForm.days).map(
-                                    (row, rowIndex) => (
-                                      <div key={rowIndex}>
-                                        <div
-                                          className={`grid bg-muted/50 ${
-                                            rowIndex > 0 ? 'border-t' : ''
-                                          } border-b`}
-                                          style={{
-                                            gridTemplateColumns: `repeat(${row.length}, minmax(120px, 1fr))`,
-                                          }}
-                                        >
-                                          {row.map((day) => (
-                                            <div
-                                              key={day.day}
-                                              className='px-2 py-2 text-center text-xs font-semibold text-muted-foreground border-r last:border-r-0'
-                                            >
-                                              {day.day}-кун
-                                            </div>
-                                          ))}
-                                        </div>
-                                        <div
-                                          className='grid'
-                                          style={{
-                                            gridTemplateColumns: `repeat(${row.length}, minmax(120px, 1fr))`,
-                                          }}
-                                        >
-                                          {row.map((day) => (
-                                            <div
-                                              key={day.day}
-                                              className='px-1 py-2 border-r last:border-r-0'
-                                            >
-                                              <Input
-                                                type='date'
-                                                value={
-                                                  day.date
-                                                    ? new Date(day.date)
-                                                        .toISOString()
-                                                        .split('T')[0]
-                                                    : ''
-                                                }
-                                                onChange={(e) =>
-                                                  updateServiceFormDayDate(
-                                                    day.day - 1,
-                                                    e.target.value
-                                                      ? new Date(e.target.value)
-                                                      : null
-                                                  )
-                                                }
-                                                className='text-xs h-8 w-full'
-                                              />
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )
-                                  )}
+                            <div className='space-y-3'>
+                              <div className='flex items-center gap-4'>
+                                <Label className='text-xs whitespace-nowrap'>
+                                  Кунлар жадвали
+                                </Label>
+                                <div className='flex items-center gap-2'>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Интервал:
+                                  </Label>
+                                  <Select
+                                    value={String(serviceForm.interval || 1)}
+                                    onValueChange={(value) =>
+                                      updateServiceFormInterval(
+                                        parseInt(value) as 1 | 2
+                                      )
+                                    }
+                                  >
+                                    <SelectTrigger className='h-7 w-[140px] text-xs'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='1'>
+                                        Ҳар куни
+                                      </SelectItem>
+                                      <SelectItem value='2'>
+                                        Кун оралаб
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </div>
 
-                              {/* Mobile/compact view */}
-                              <div className='grid grid-cols-2 sm:hidden gap-2'>
-                                {serviceForm.days.map((day) => (
-                                  <div
-                                    key={day.day}
-                                    className='p-2 bg-muted/30 rounded border'
-                                  >
-                                    <div className='text-xs font-semibold mb-1'>
-                                      {day.day}-кун
+                              {/* Desktop horizontal table */}
+                              <div className='hidden sm:block overflow-x-auto'>
+                                <table className='border-collapse border rounded-lg w-full'>
+                                  <thead>
+                                    <tr className='bg-muted/50'>
+                                      <th className='border px-2 py-1 text-xs font-medium text-left min-w-[100px]'>
+                                        1-кун сана
+                                      </th>
+                                      {serviceForm.days.map((day) => (
+                                        <th
+                                          key={day.day}
+                                          className='border px-1 py-1 text-xs font-medium text-center min-w-[40px]'
+                                        >
+                                          {day.day}
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td className='border px-1 py-1'>
+                                        <Input
+                                          type='date'
+                                          value={
+                                            serviceForm.days[0]?.date
+                                              ? new Date(
+                                                  serviceForm.days[0].date
+                                                )
+                                                  .toISOString()
+                                                  .split('T')[0]
+                                              : ''
+                                          }
+                                          onChange={(e) =>
+                                            updateServiceFormDayDate(
+                                              0,
+                                              e.target.value
+                                                ? new Date(e.target.value)
+                                                : null
+                                            )
+                                          }
+                                          className='text-xs h-7 w-full'
+                                        />
+                                      </td>
+                                      {serviceForm.days.map((day) => (
+                                        <td
+                                          key={day.day}
+                                          className='border px-1 py-1 text-center group relative'
+                                        >
+                                          {day.date ? (
+                                            <div className='flex items-center justify-center'>
+                                              <span className='text-green-600 font-bold'>
+                                                ✓
+                                              </span>
+                                              <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
+                                                {new Date(
+                                                  day.date
+                                                ).toLocaleDateString('uz-UZ')}
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <span className='text-muted-foreground'>
+                                              -
+                                            </span>
+                                          )}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+
+                              {/* Mobile view */}
+                              <div className='sm:hidden space-y-2'>
+                                <div className='flex items-center gap-2'>
+                                  <Label className='text-xs'>1-кун сана:</Label>
+                                  <Input
+                                    type='date'
+                                    value={
+                                      serviceForm.days[0]?.date
+                                        ? new Date(serviceForm.days[0].date)
+                                            .toISOString()
+                                            .split('T')[0]
+                                        : ''
+                                    }
+                                    onChange={(e) =>
+                                      updateServiceFormDayDate(
+                                        0,
+                                        e.target.value
+                                          ? new Date(e.target.value)
+                                          : null
+                                      )
+                                    }
+                                    className='text-xs h-8 flex-1'
+                                  />
+                                </div>
+                                <div className='flex flex-wrap gap-1'>
+                                  {serviceForm.days.map((day) => (
+                                    <div
+                                      key={day.day}
+                                      className='w-8 h-8 flex items-center justify-center border rounded text-xs group relative'
+                                    >
+                                      {day.date ? (
+                                        <>
+                                          <span className='text-green-600 font-bold'>
+                                            ✓
+                                          </span>
+                                          <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
+                                            {day.day}:{' '}
+                                            {new Date(
+                                              day.date
+                                            ).toLocaleDateString('uz-UZ')}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <span className='text-muted-foreground'>
+                                          {day.day}
+                                        </span>
+                                      )}
                                     </div>
-                                    <Input
-                                      type='date'
-                                      value={
-                                        day.date
-                                          ? new Date(day.date)
-                                              .toISOString()
-                                              .split('T')[0]
-                                          : ''
-                                      }
-                                      onChange={(e) =>
-                                        updateServiceFormDayDate(
-                                          day.day - 1,
-                                          e.target.value
-                                            ? new Date(e.target.value)
-                                            : null
-                                        )
-                                      }
-                                      className='text-xs h-9'
-                                    />
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
                             </div>
                           )}
@@ -1575,6 +1662,7 @@ const ExaminationDetail = () => {
                                   duration: 1,
                                   notes: '',
                                   days: generateDays(1),
+                                  interval: 1,
                                 });
                               }}
                               disabled={isAddingServiceMutation}
@@ -1597,8 +1685,146 @@ const ExaminationDetail = () => {
                     </Card>
                   )}
 
-                  {/* Services List */}
-                  {exam.services && exam.services.length > 0 ? (
+                  {/* Services Summary Table - like the reference image */}
+                  {exam.services &&
+                    exam.services.length > 0 &&
+                    !editingServiceId && (
+                      <Card className='border border-primary/10 mb-4'>
+                        <CardContent className='pt-4'>
+                          <div className='flex items-center justify-between mb-3'>
+                            <Label className='text-sm font-semibold'>
+                              Хизматлар жадвали
+                            </Label>
+                          </div>
+                          <div className='overflow-x-auto'>
+                            <table className='w-full border-collapse border text-sm'>
+                              <thead>
+                                <tr className='bg-muted/50'>
+                                  <th className='border px-3 py-2 text-left font-semibold min-w-[150px]'>
+                                    Хизмат номи
+                                  </th>
+                                  {Array.from(
+                                    {
+                                      length: Math.max(
+                                        ...(exam.services || []).map(
+                                          (s: any) =>
+                                            s.duration || s.days?.length || 0
+                                        ),
+                                        1
+                                      ),
+                                    },
+                                    (_, i) => (
+                                      <th
+                                        key={i}
+                                        className='border px-2 py-2 text-center font-semibold min-w-[70px]'
+                                      >
+                                        {i + 1}
+                                      </th>
+                                    )
+                                  )}
+                                  <th className='border px-2 py-2 text-center font-semibold w-16'>
+                                    Ҳаракат
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {exam.services.map((service: any) => {
+                                  const maxDays = Math.max(
+                                    ...(exam.services || []).map(
+                                      (s: any) =>
+                                        s.duration || s.days?.length || 0
+                                    ),
+                                    1
+                                  );
+                                  return (
+                                    <tr
+                                      key={service._id}
+                                      className='hover:bg-muted/30'
+                                    >
+                                      <td className='border px-3 py-2 font-medium'>
+                                        {service.service_type_id?.name ||
+                                          'Номаълум'}
+                                      </td>
+                                      {Array.from(
+                                        { length: maxDays },
+                                        (_, i) => {
+                                          const day = service.days?.[i];
+                                          return (
+                                            <td
+                                              key={i}
+                                              className='border px-1 py-1 text-center group relative'
+                                            >
+                                              {day?.date ? (
+                                                <div className='flex items-center justify-center'>
+                                                  <span className='text-xs'>
+                                                    {new Date(
+                                                      day.date
+                                                    ).getDate()}{' '}
+                                                    {new Date(
+                                                      day.date
+                                                    ).toLocaleDateString(
+                                                      'uz-UZ',
+                                                      { month: 'short' }
+                                                    )}
+                                                  </span>
+                                                  <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
+                                                    {new Date(
+                                                      day.date
+                                                    ).toLocaleDateString(
+                                                      'uz-UZ'
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              ) : i <
+                                                (service.duration ||
+                                                  service.days?.length ||
+                                                  0) ? (
+                                                <span className='text-muted-foreground'>
+                                                  —
+                                                </span>
+                                              ) : null}
+                                            </td>
+                                          );
+                                        }
+                                      )}
+                                      <td className='border px-1 py-1 text-center'>
+                                        <div className='flex items-center justify-center gap-1'>
+                                          <Button
+                                            variant='ghost'
+                                            size='sm'
+                                            onClick={() =>
+                                              startEditService(service)
+                                            }
+                                            className='h-6 w-6 p-0'
+                                          >
+                                            <Edit className='h-3 w-3' />
+                                          </Button>
+                                          <Button
+                                            variant='ghost'
+                                            size='sm'
+                                            onClick={() =>
+                                              handleRemoveService(service._id)
+                                            }
+                                            className='h-6 w-6 p-0 text-destructive hover:text-destructive'
+                                          >
+                                            <Trash2 className='h-3 w-3' />
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                  {/* Services List - Individual Cards for Editing */}
+                  {exam.services &&
+                  exam.services.length > 0 &&
+                  editingServiceId ? (
                     exam.services.map((service: any, index: number) => (
                       <Card
                         key={service._id}
@@ -1675,104 +1901,165 @@ const ExaminationDetail = () => {
                               </div>
 
                               {serviceForm.days.length > 0 && (
-                                <div className='space-y-2'>
-                                  <Label className='flex items-center gap-1 text-xs'>
-                                    Кунлар жадвали
-                                  </Label>
-
-                                  <div className='hidden sm:block overflow-x-auto'>
-                                    <div className='min-w-full border rounded-lg'>
-                                      {chunkDays(serviceForm.days).map(
-                                        (row, rowIndex) => (
-                                          <div key={rowIndex}>
-                                            <div
-                                              className={`grid bg-muted/50 ${
-                                                rowIndex > 0 ? 'border-t' : ''
-                                              } border-b`}
-                                              style={{
-                                                gridTemplateColumns: `repeat(${row.length}, minmax(120px, 1fr))`,
-                                              }}
-                                            >
-                                              {row.map((day) => (
-                                                <div
-                                                  key={day.day}
-                                                  className='px-2 py-2 text-center text-xs font-semibold text-muted-foreground border-r last:border-r-0'
-                                                >
-                                                  {day.day}-кун
-                                                </div>
-                                              ))}
-                                            </div>
-                                            <div
-                                              className='grid'
-                                              style={{
-                                                gridTemplateColumns: `repeat(${row.length}, minmax(120px, 1fr))`,
-                                              }}
-                                            >
-                                              {row.map((day) => (
-                                                <div
-                                                  key={day.day}
-                                                  className='px-1 py-2 border-r last:border-r-0'
-                                                >
-                                                  <Input
-                                                    type='date'
-                                                    value={
-                                                      day.date
-                                                        ? new Date(day.date)
-                                                            .toISOString()
-                                                            .split('T')[0]
-                                                        : ''
-                                                    }
-                                                    onChange={(e) =>
-                                                      updateServiceFormDayDate(
-                                                        day.day - 1,
-                                                        e.target.value
-                                                          ? new Date(
-                                                              e.target.value
-                                                            )
-                                                          : null
-                                                      )
-                                                    }
-                                                    className='text-xs h-8 w-full'
-                                                  />
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )
-                                      )}
+                                <div className='space-y-3'>
+                                  <div className='flex items-center gap-4'>
+                                    <Label className='text-xs whitespace-nowrap'>
+                                      Кунлар жадвали
+                                    </Label>
+                                    <div className='flex items-center gap-2'>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Интервал:
+                                      </Label>
+                                      <Select
+                                        value={String(
+                                          serviceForm.interval || 1
+                                        )}
+                                        onValueChange={(value) =>
+                                          updateServiceFormInterval(
+                                            parseInt(value) as 1 | 2
+                                          )
+                                        }
+                                      >
+                                        <SelectTrigger className='h-7 w-[140px] text-xs'>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value='1'>
+                                            Ҳар куни
+                                          </SelectItem>
+                                          <SelectItem value='2'>
+                                            Кун оралаб
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
                                     </div>
                                   </div>
 
-                                  <div className='grid grid-cols-2 sm:hidden gap-2'>
-                                    {serviceForm.days.map((day) => (
-                                      <div
-                                        key={day.day}
-                                        className='p-2 bg-muted/30 rounded border'
-                                      >
-                                        <div className='text-xs font-semibold mb-1'>
-                                          {day.day}-кун
+                                  {/* Desktop horizontal table */}
+                                  <div className='hidden sm:block overflow-x-auto'>
+                                    <table className='border-collapse border rounded-lg w-full'>
+                                      <thead>
+                                        <tr className='bg-muted/50'>
+                                          <th className='border px-2 py-1 text-xs font-medium text-left min-w-[100px]'>
+                                            1-кун сана
+                                          </th>
+                                          {serviceForm.days.map((day) => (
+                                            <th
+                                              key={day.day}
+                                              className='border px-1 py-1 text-xs font-medium text-center min-w-[40px]'
+                                            >
+                                              {day.day}
+                                            </th>
+                                          ))}
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className='border px-1 py-1'>
+                                            <Input
+                                              type='date'
+                                              value={
+                                                serviceForm.days[0]?.date
+                                                  ? new Date(
+                                                      serviceForm.days[0].date
+                                                    )
+                                                      .toISOString()
+                                                      .split('T')[0]
+                                                  : ''
+                                              }
+                                              onChange={(e) =>
+                                                updateServiceFormDayDate(
+                                                  0,
+                                                  e.target.value
+                                                    ? new Date(e.target.value)
+                                                    : null
+                                                )
+                                              }
+                                              className='text-xs h-7 w-full'
+                                            />
+                                          </td>
+                                          {serviceForm.days.map((day) => (
+                                            <td
+                                              key={day.day}
+                                              className='border px-1 py-1 text-center group relative'
+                                            >
+                                              {day.date ? (
+                                                <div className='flex items-center justify-center'>
+                                                  <span className='text-green-600 font-bold'>
+                                                    ✓
+                                                  </span>
+                                                  <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
+                                                    {new Date(
+                                                      day.date
+                                                    ).toLocaleDateString(
+                                                      'uz-UZ'
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              ) : (
+                                                <span className='text-muted-foreground'>
+                                                  -
+                                                </span>
+                                              )}
+                                            </td>
+                                          ))}
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+
+                                  {/* Mobile view */}
+                                  <div className='sm:hidden space-y-2'>
+                                    <div className='flex items-center gap-2'>
+                                      <Label className='text-xs'>
+                                        1-кун сана:
+                                      </Label>
+                                      <Input
+                                        type='date'
+                                        value={
+                                          serviceForm.days[0]?.date
+                                            ? new Date(serviceForm.days[0].date)
+                                                .toISOString()
+                                                .split('T')[0]
+                                            : ''
+                                        }
+                                        onChange={(e) =>
+                                          updateServiceFormDayDate(
+                                            0,
+                                            e.target.value
+                                              ? new Date(e.target.value)
+                                              : null
+                                          )
+                                        }
+                                        className='text-xs h-8 flex-1'
+                                      />
+                                    </div>
+                                    <div className='flex flex-wrap gap-1'>
+                                      {serviceForm.days.map((day) => (
+                                        <div
+                                          key={day.day}
+                                          className='w-8 h-8 flex items-center justify-center border rounded text-xs group relative'
+                                        >
+                                          {day.date ? (
+                                            <>
+                                              <span className='text-green-600 font-bold'>
+                                                ✓
+                                              </span>
+                                              <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
+                                                {day.day}:{' '}
+                                                {new Date(
+                                                  day.date
+                                                ).toLocaleDateString('uz-UZ')}
+                                              </div>
+                                            </>
+                                          ) : (
+                                            <span className='text-muted-foreground'>
+                                              {day.day}
+                                            </span>
+                                          )}
                                         </div>
-                                        <Input
-                                          type='date'
-                                          value={
-                                            day.date
-                                              ? new Date(day.date)
-                                                  .toISOString()
-                                                  .split('T')[0]
-                                              : ''
-                                          }
-                                          onChange={(e) =>
-                                            updateServiceFormDayDate(
-                                              day.day - 1,
-                                              e.target.value
-                                                ? new Date(e.target.value)
-                                                : null
-                                            )
-                                          }
-                                          className='text-xs h-9'
-                                        />
-                                      </div>
-                                    ))}
+                                      ))}
+                                    </div>
                                   </div>
                                 </div>
                               )}
@@ -1858,80 +2145,97 @@ const ExaminationDetail = () => {
 
                               {service.days && service.days.length > 0 && (
                                 <div className='mt-3 space-y-2'>
-                                  <Label className='text-xs text-muted-foreground flex items-center gap-1'>
-                                    Кунлар жадвали
-                                  </Label>
-
-                                  <div className='hidden sm:block overflow-x-auto'>
-                                    <div className='min-w-full border rounded-lg'>
-                                      {chunkDays(service.days || []).map(
-                                        (row: any[], rowIndex: number) => (
-                                          <div key={rowIndex}>
-                                            <div
-                                              className={`grid bg-muted/50 ${
-                                                rowIndex > 0 ? 'border-t' : ''
-                                              } border-b`}
-                                              style={{
-                                                gridTemplateColumns: `repeat(${row.length}, minmax(120px, 1fr))`,
-                                              }}
-                                            >
-                                              {row.map(
-                                                (day: any, idx: number) => (
-                                                  <div
-                                                    key={`${rowIndex}-${idx}`}
-                                                    className='px-2 py-2 text-center text-xs font-semibold text-muted-foreground border-r last:border-r-0'
-                                                  >
-                                                    {day?.day || idx + 1}-кун
-                                                  </div>
-                                                )
-                                              )}
-                                            </div>
-                                            <div
-                                              className='grid'
-                                              style={{
-                                                gridTemplateColumns: `repeat(${row.length}, minmax(120px, 1fr))`,
-                                              }}
-                                            >
-                                              {row.map(
-                                                (day: any, idx: number) => (
-                                                  <div
-                                                    key={`${rowIndex}-${idx}-body`}
-                                                    className='px-2 py-2 border-r last:border-r-0 text-center text-xs'
-                                                  >
-                                                    {day?.date
-                                                      ? new Date(
-                                                          day.date
-                                                        ).toLocaleDateString(
-                                                          'uz-UZ'
-                                                        )
-                                                      : 'Санасиз'}
-                                                  </div>
-                                                )
-                                              )}
-                                            </div>
-                                          </div>
-                                        )
-                                      )}
-                                    </div>
+                                  <div className='flex items-center gap-4'>
+                                    <Label className='text-xs text-muted-foreground'>
+                                      Кунлар жадвали
+                                    </Label>
+                                    {service.interval && (
+                                      <span className='text-xs bg-muted px-2 py-0.5 rounded'>
+                                        {service.interval === 1
+                                          ? 'Ҳар куни'
+                                          : 'Кун оралаб'}
+                                      </span>
+                                    )}
                                   </div>
 
-                                  <div className='grid grid-cols-2 sm:hidden gap-2'>
-                                    {service.days.map(
+                                  {/* Desktop horizontal table */}
+                                  <div className='hidden sm:block overflow-x-auto'>
+                                    <table className='border-collapse border rounded-lg w-full'>
+                                      <thead>
+                                        <tr className='bg-muted/50'>
+                                          {(service.days || []).map(
+                                            (day: any, idx: number) => (
+                                              <th
+                                                key={day?.day || idx + 1}
+                                                className='border px-1 py-1 text-xs font-medium text-center min-w-[40px]'
+                                              >
+                                                {day?.day || idx + 1}
+                                              </th>
+                                            )
+                                          )}
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          {(service.days || []).map(
+                                            (day: any, idx: number) => (
+                                              <td
+                                                key={`${
+                                                  day?.day || idx + 1
+                                                }-body`}
+                                                className='border px-1 py-1 text-center group relative'
+                                              >
+                                                {day?.date ? (
+                                                  <div className='flex items-center justify-center'>
+                                                    <span className='text-green-600 font-bold'>
+                                                      ✓
+                                                    </span>
+                                                    <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
+                                                      {new Date(
+                                                        day.date
+                                                      ).toLocaleDateString(
+                                                        'uz-UZ'
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                ) : (
+                                                  <span className='text-muted-foreground'>
+                                                    -
+                                                  </span>
+                                                )}
+                                              </td>
+                                            )
+                                          )}
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+
+                                  {/* Mobile view */}
+                                  <div className='sm:hidden flex flex-wrap gap-1'>
+                                    {(service.days || []).map(
                                       (day: any, idx: number) => (
                                         <div
-                                          key={`${day?.day || idx + 1}`}
-                                          className='p-2 bg-muted/30 rounded border text-xs'
+                                          key={day?.day || idx + 1}
+                                          className='w-8 h-8 flex items-center justify-center border rounded text-xs group relative'
                                         >
-                                          <div className='font-semibold mb-1'>
-                                            {day?.day || idx + 1}-кун
-                                          </div>
-                                          <div>
-                                            {day?.date
-                                              ? new Date(
+                                          {day?.date ? (
+                                            <>
+                                              <span className='text-green-600 font-bold'>
+                                                ✓
+                                              </span>
+                                              <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
+                                                {day?.day || idx + 1}:{' '}
+                                                {new Date(
                                                   day.date
-                                                ).toLocaleDateString('uz-UZ')
-                                              : 'Санасиз'}
-                                          </div>
+                                                ).toLocaleDateString('uz-UZ')}
+                                              </div>
+                                            </>
+                                          ) : (
+                                            <span className='text-muted-foreground'>
+                                              {day?.day || idx + 1}
+                                            </span>
+                                          )}
                                         </div>
                                       )
                                     )}
