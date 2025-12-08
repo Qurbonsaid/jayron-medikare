@@ -19,7 +19,7 @@ import {
   getOneServiceRes,
   imageReq,
   MutationRes,
-  CreateExamReq,
+  examCreateReq,
   ExamResponse,
   reomveimagesRes,
   takeMedicine,
@@ -31,7 +31,7 @@ import {
 export const examinationApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // exams
-    createExam: builder.mutation<ExamResponse, CreateExamReq>({
+    createExam: builder.mutation<ExamResponse, examCreateReq>({
       query: (body) => ({
         url: PATHS.CREATE_EXAM,
         method: 'POST',

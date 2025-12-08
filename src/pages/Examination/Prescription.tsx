@@ -23,7 +23,16 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { AlertCircle, Edit, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { format } from 'date-fns';
+import {
+  Activity,
+  AlertCircle,
+  Edit,
+  Loader2,
+  Plus,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -165,6 +174,9 @@ const Prescription = () => {
   const [addServiceToExam, { isLoading: isAddingService }] =
     useAddServiceMutation();
   const handleRequest = useHandleRequest();
+
+  const availableMedications = medicationsData?.data || [];
+  const availableServices = servicesData?.data || [];
 
   // Update examinations list when new data arrives
   useEffect(() => {
@@ -388,6 +400,18 @@ const Prescription = () => {
           }
         }
         return srv;
+      })
+    );
+  };
+
+  const markEveryOtherDay = () => {
+    setServices(
+      services.map((srv) => {
+        const everyOtherDay = Array.from(
+          { length: serviceDuration },
+          (_, i) => i + 1
+        ).filter((day) => day % 2 === 1); // Mark odd days: 1, 3, 5, 7...
+        return { ...srv, markedDays: everyOtherDay };
       })
     );
   };
@@ -1428,290 +1452,244 @@ const Prescription = () => {
             </Card>
 
             {/* Services List */}
-            <Card className='mb-4 sm:mb-6'>
-              <CardHeader className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 space-y-2 sm:space-y-0'>
-                <CardTitle className='text-base sm:text-lg md:text-xl'>
-                  Хизматлар Рўйхати
-                </CardTitle>
+            <div className='space-y-3 border rounded-lg p-4 bg-muted/30'>
+              <div className='flex items-center justify-between'>
+                <Label className='flex items-center gap-2'>
+                  <Activity className='w-4 h-4 text-primary' />
+                  Хизматлар
+                </Label>
                 <Button
-                  onClick={addService}
+                  type='button'
+                  variant='outline'
                   size='sm'
-                  className='w-full sm:w-auto text-xs sm:text-sm'
+                  onClick={addService}
+                  className='gap-1'
                 >
-                  <Plus className='mr-2 h-3 w-3 sm:h-4 sm:w-4' />
-                  Хизмат Қўшиш
+                  <Plus className='w-4 h-4' />
+                  Хизмат қўшиш
                 </Button>
-              </CardHeader>
-              <CardContent className='space-y-3 sm:space-y-4'>
-                {services.length === 0 &&
-                (!examinationData?.data?.services ||
-                  examinationData.data.services.length === 0) ? (
-                  <div className='text-center py-8 sm:py-12'>
-                    <p className='text-muted-foreground text-sm sm:text-base mb-2'>
-                      Ҳали хизматлар қўшилмаган
-                    </p>
-                    <p className='text-xs sm:text-sm text-muted-foreground'>
-                      "Хизмат Қўшиш" тугмасини босинг
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Common Settings - Duration and Start Date */}
-                    {services.length > 0 && (
-                      <div className='flex items-end gap-3 p-3 bg-muted/30 rounded-lg border-b mb-4'>
-                        <div className='w-32'>
-                          <Label className='text-sm font-medium'>
-                            Муддат (кун)
-                          </Label>
-                          <Input
-                            type='number'
-                            min={1}
-                            max={30}
-                            value={serviceDuration}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value) || 7;
-                              if (val >= 1 && val <= 30) {
-                                setServiceDuration(val);
-                              }
-                            }}
-                            className='text-sm mt-1 h-9'
-                          />
-                        </div>
-                        <div className='flex-1'>
-                          <Label className='text-sm font-medium'>
-                            Бошланиш санаси
-                          </Label>
-                          <Input
-                            type='date'
-                            value={
-                              serviceStartDate
-                                ? serviceStartDate.toISOString().split('T')[0]
-                                : ''
-                            }
-                            onChange={(e) =>
-                              setServiceStartDate(
-                                e.target.value ? new Date(e.target.value) : null
-                              )
-                            }
-                            className='text-sm mt-1 h-9'
-                          />
-                        </div>
-                      </div>
-                    )}
+              </div>
 
-                    {/* Services Table */}
-                    {(services.length > 0 ||
-                      (examinationData?.data?.services &&
-                        examinationData.data.services.length > 0)) && (
-                      <div className='overflow-x-auto max-h-[400px] scroll-auto'>
-                        <table className='w-full border-collapse border'>
-                          <thead className='sticky top-0 bg-background z-10'>
-                            <tr className='bg-muted/50'>
-                              <th className='border px-3 py-2 text-left text-sm font-semibold min-w-[200px] sticky left-0 bg-muted/50 z-20'>
-                                Хизмат
-                              </th>
-                              {Array.from(
-                                { length: serviceDuration },
-                                (_, i) => (
-                                  <th
-                                    key={i}
-                                    className='border px-2 py-2 text-center text-xs font-semibold min-w-[70px]'
-                                  >
-                                    {i + 1}
-                                  </th>
-                                )
-                              )}
-                              <th className='border px-2 py-2 text-center text-xs font-semibold w-10 sticky right-0 bg-muted/50 z-20'></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {/* New services rows */}
-                            {services.map((srv) => {
-                              const serviceName =
-                                servicesData?.data?.find(
-                                  (s: any) => s._id === srv.service_id
-                                )?.name || '';
-                              const days = generateDays(
-                                serviceDuration,
-                                serviceStartDate
-                              );
-                              const markedDays = srv.markedDays || [];
-
-                              return (
-                                <tr key={srv.id} className='hover:bg-muted/30'>
-                                  <td className='border px-2 py-2 sticky left-0 bg-background z-10'>
-                                    <Select
-                                      value={srv.service_id}
-                                      onValueChange={(value) =>
-                                        updateServiceField(
-                                          srv.id,
-                                          'service_id',
-                                          value
-                                        )
-                                      }
-                                    >
-                                      <SelectTrigger className='text-sm h-8 border-0 shadow-none'>
-                                        <SelectValue placeholder='Танланг...' />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <div className='p-2'>
-                                          <Input
-                                            placeholder='Қидириш...'
-                                            value={serviceSearch}
-                                            onChange={(e) =>
-                                              setServiceSearch(e.target.value)
-                                            }
-                                            className='text-sm mb-2'
-                                          />
-                                        </div>
-                                        {servicesData?.data?.map(
-                                          (service: any) => (
-                                            <SelectItem
-                                              key={service._id}
-                                              value={service._id}
-                                            >
-                                              {service.name} -{' '}
-                                              {service.price?.toLocaleString()}{' '}
-                                              сўм
-                                            </SelectItem>
-                                          )
-                                        )}
-                                      </SelectContent>
-                                    </Select>
-                                  </td>
-                                  {days.map((day, i) => {
-                                    const isMarked = markedDays.includes(
-                                      day.day
-                                    );
-                                    return (
-                                      <td
-                                        key={i}
-                                        className='border px-1 py-1 text-center group relative cursor-pointer hover:bg-blue-50'
-                                        onClick={() =>
-                                          toggleDayMark(srv.id, day.day)
-                                        }
-                                      >
-                                        {day.date ? (
-                                          <div className='flex items-center justify-center'>
-                                            <span
-                                              className={`text-xs ${
-                                                isMarked
-                                                  ? 'bg-blue-500 text-white px-1.5 py-0.5 rounded font-semibold'
-                                                  : ''
-                                              }`}
-                                            >
-                                              {new Date(day.date).getDate()}{' '}
-                                              {new Date(
-                                                day.date
-                                              ).toLocaleDateString('uz-UZ', {
-                                                month: '2-digit',
-                                              })}
-                                            </span>
-                                            <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
-                                              {new Date(
-                                                day.date
-                                              ).toLocaleDateString('uz-UZ')}
-                                              {isMarked && ' ✓'}
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <span className='text-muted-foreground'>
-                                            —
-                                          </span>
-                                        )}
-                                      </td>
-                                    );
-                                  })}
-                                  <td className='border px-1 py-1 text-center sticky right-0 bg-background z-10'>
-                                    <Button
-                                      variant='ghost'
-                                      size='sm'
-                                      onClick={() => removeService(srv.id)}
-                                      className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-                                    >
-                                      <Trash2 className='h-3 w-3' />
-                                    </Button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                            {/* Existing services rows */}
-                            {examinationData?.data?.services?.map(
-                              (service: any) => {
-                                return (
-                                  <tr
-                                    key={service._id}
-                                    className='bg-primary/5 hover:bg-primary/10'
-                                  >
-                                    <td className='border px-3 py-2 text-sm font-medium text-primary'>
-                                      {service.service_type_id?.name ||
-                                        'Номаълум'}
-                                    </td>
-                                    <td className='border px-3 py-2 text-sm text-center text-primary'>
-                                      {service.duration ||
-                                        service.days?.length ||
-                                        0}{' '}
-                                      кун
-                                    </td>
-                                    <td className='border px-3 py-2 text-sm text-center text-primary'>
-                                      {service.days?.[0]?.date
-                                        ? new Date(
-                                            service.days[0].date
-                                          ).toLocaleDateString('uz-UZ')
-                                        : '—'}
-                                    </td>
-                                    {Array.from(
-                                      { length: serviceDuration },
-                                      (_, i) => {
-                                        const day = service.days?.[i];
-                                        return (
-                                          <td
-                                            key={i}
-                                            className='border px-1 py-1 text-center group relative'
-                                          >
-                                            {day?.date ? (
-                                              <div className='flex items-center justify-center'>
-                                                <span className='text-xs text-primary'>
-                                                  {new Date(day.date).getDate()}{' '}
-                                                  {new Date(
-                                                    day.date
-                                                  ).toLocaleDateString(
-                                                    'uz-UZ',
-                                                    { month: 'short' }
-                                                  )}
-                                                </span>
-                                                <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
-                                                  {new Date(
-                                                    day.date
-                                                  ).toLocaleDateString('uz-UZ')}
-                                                </div>
-                                              </div>
-                                            ) : (
-                                              <span className='text-muted-foreground'>
-                                                —
-                                              </span>
-                                            )}
-                                          </td>
-                                        );
-                                      }
-                                    )}
-                                    <td className='border px-1 py-1 text-center'>
-                                      <span className='text-xs text-primary'>
-                                        ✓
-                                      </span>
-                                    </td>
-                                  </tr>
+              {services.length === 0 ? (
+                <p className='text-sm text-muted-foreground text-center py-4'>
+                  Хизматлар қўшилмаган
+                </p>
+              ) : (
+                <div className='space-y-3'>
+                  {/* Common Settings */}
+                  <div className='flex items-end gap-2 p-2 bg-muted/30 rounded-lg border'>
+                    <div className='w-28'>
+                      <Label className='text-xs font-medium'>
+                        Муддат (кун)
+                      </Label>
+                      <Input
+                        type='number'
+                        min={1}
+                        max={30}
+                        value={serviceDuration}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 7;
+                          if (val >= 1 && val <= 30) {
+                            setServiceDuration(val);
+                            // Auto-adjust marked days when duration changes
+                            setServices(
+                              services.map((srv) => {
+                                const currentMarked = srv.markedDays || [];
+                                // Keep only marked days that are within new duration
+                                const adjustedMarked = currentMarked.filter(
+                                  (day) => day <= val
                                 );
-                              }
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                                // If pattern is every other day, extend pattern to new duration
+                                if (adjustedMarked.length > 0) {
+                                  const isEveryOtherDay = adjustedMarked.every(
+                                    (day, idx) =>
+                                      idx === 0 ||
+                                      day === adjustedMarked[idx - 1] + 2
+                                  );
+                                  if (
+                                    isEveryOtherDay &&
+                                    adjustedMarked[0] === 1
+                                  ) {
+                                    // Extend pattern for new days
+                                    const newMarked = Array.from(
+                                      { length: val },
+                                      (_, i) => i + 1
+                                    ).filter((day) => day % 2 === 1);
+                                    return { ...srv, markedDays: newMarked };
+                                  }
+                                }
+                                return { ...srv, markedDays: adjustedMarked };
+                              })
+                            );
+                          }
+                        }}
+                        className='h-8 text-xs mt-1'
+                      />
+                    </div>
+                    <div className='flex-1'>
+                      <Label className='text-xs font-medium'>
+                        Бошланиш санаси
+                      </Label>
+                      <Input
+                        type='date'
+                        value={
+                          serviceStartDate
+                            ? serviceStartDate.toISOString().split('T')[0]
+                            : ''
+                        }
+                        onChange={(e) =>
+                          setServiceStartDate(
+                            e.target.value ? new Date(e.target.value) : null
+                          )
+                        }
+                        className='h-8 text-xs mt-1'
+                      />
+                    </div>
+
+                    {/* Quick Mark Button */}
+                    <div className='shrink-0'>
+                      <Label className='text-xs font-medium text-transparent'>
+                        &nbsp;
+                      </Label>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        onClick={markEveryOtherDay}
+                        className='h-8 text-sm mt-1'
+                        disabled={services.length === 0}
+                      >
+                        2 кунда бир
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Services Table */}
+                  <div className='overflow-x-auto max-h-[400px] scroll-auto'>
+                    <table className='w-full border-collapse border text-xs'>
+                      <thead className='sticky top-0 bg-background z-10'>
+                        <tr className='bg-muted/50'>
+                          <th className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'>
+                            Хизмат
+                          </th>
+                          {Array.from({ length: serviceDuration }, (_, i) => (
+                            <th
+                              key={i}
+                              className='border px-1 py-1.5 text-center font-semibold min-w-[60px]'
+                            >
+                              {i + 1}
+                            </th>
+                          ))}
+                          <th className='border px-1 py-1.5 text-center font-semibold w-10 sticky right-0 bg-muted/50 z-20'></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {services.map((srv) => {
+                          const serviceName =
+                            availableServices.find(
+                              (s: any) => s._id === srv.service_id
+                            )?.name || '';
+                          const days = generateDays(
+                            serviceDuration,
+                            serviceStartDate
+                          );
+                          const markedDays = srv.markedDays || [];
+
+                          return (
+                            <tr key={srv.id} className='hover:bg-muted/30'>
+                              <td className='border px-1 py-1 sticky left-0 bg-background z-10'>
+                                <Select
+                                  value={srv.service_id}
+                                  onValueChange={(value) =>
+                                    updateServiceField(
+                                      srv.id,
+                                      'service_id',
+                                      value
+                                    )
+                                  }
+                                >
+                                  <SelectTrigger className='h-7 text-xs border-0 shadow-none'>
+                                    <SelectValue placeholder='Танланг...' />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <div className='p-2'>
+                                      <Input
+                                        placeholder='Қидириш...'
+                                        value={serviceSearch}
+                                        onChange={(e) =>
+                                          setServiceSearch(e.target.value)
+                                        }
+                                        className='text-sm mb-2'
+                                      />
+                                    </div>
+                                    {availableServices.map((s: any) => (
+                                      <SelectItem key={s._id} value={s._id}>
+                                        {s.name} -{' '}
+                                        {new Intl.NumberFormat('uz-UZ').format(
+                                          s.price
+                                        )}{' '}
+                                        сўм
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </td>
+                              {days.map((day, i) => {
+                                const isMarked = markedDays.includes(day.day);
+                                return (
+                                  <td
+                                    key={i}
+                                    className='border px-1 py-1 text-center group relative cursor-pointer hover:bg-blue-50'
+                                    onClick={() =>
+                                      toggleDayMark(srv.id, day.day)
+                                    }
+                                  >
+                                    {day.date ? (
+                                      <div className='flex items-center justify-center'>
+                                        <span
+                                          className={`${
+                                            isMarked
+                                              ? 'bg-blue-500 text-white px-1.5 py-0.5 rounded font-semibold'
+                                              : ''
+                                          }`}
+                                        >
+                                          {format(day.date, 'dd/MM')}
+                                        </span>
+                                        <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none text-xs'>
+                                          {new Date(
+                                            day.date
+                                          ).toLocaleDateString('uz-UZ')}
+                                          {isMarked && ' ✓'}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <span className='text-muted-foreground'>
+                                        —
+                                      </span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                              <td className='border px-1 py-1 text-center sticky right-0 bg-background z-10'>
+                                <Button
+                                  type='button'
+                                  variant='ghost'
+                                  size='sm'
+                                  onClick={() => removeService(srv.id)}
+                                  className='h-6 w-6 p-0 text-destructive hover:text-destructive'
+                                >
+                                  <Trash2 className='w-3 h-3' />
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Action Buttons */}
             <div className='flex flex-col sm:flex-row justify-end gap-2 sm:gap-3'>

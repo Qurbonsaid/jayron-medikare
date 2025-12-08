@@ -309,6 +309,18 @@ const NewVisitDialog = ({
     );
   };
 
+  const markEveryOtherDay = () => {
+    setServices(
+      services.map((srv) => {
+        const everyOtherDay = Array.from(
+          { length: serviceDuration },
+          (_, i) => i + 1
+        ).filter((day) => day % 2 === 1); // Mark odd days: 1, 3, 5, 7...
+        return { ...srv, markedDays: everyOtherDay };
+      })
+    );
+  };
+
   const handleSave = async () => {
     setShowErrors(true);
 
@@ -405,7 +417,7 @@ const NewVisitDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
+      <DialogContent className='max-w-5xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='text-xl'>Янги Кўрик Яратиш</DialogTitle>
           <DialogDescription>
@@ -802,6 +814,37 @@ const NewVisitDialog = ({
                             const val = parseInt(e.target.value) || 7;
                             if (val >= 1 && val <= 30) {
                               setServiceDuration(val);
+                              // Auto-adjust marked days when duration changes
+                              setServices(
+                                services.map((srv) => {
+                                  const currentMarked = srv.markedDays || [];
+                                  // Keep only marked days that are within new duration
+                                  const adjustedMarked = currentMarked.filter(
+                                    (day) => day <= val
+                                  );
+                                  // If pattern is every other day, extend pattern to new duration
+                                  if (adjustedMarked.length > 0) {
+                                    const isEveryOtherDay =
+                                      adjustedMarked.every(
+                                        (day, idx) =>
+                                          idx === 0 ||
+                                          day === adjustedMarked[idx - 1] + 2
+                                      );
+                                    if (
+                                      isEveryOtherDay &&
+                                      adjustedMarked[0] === 1
+                                    ) {
+                                      // Extend pattern for new days
+                                      const newMarked = Array.from(
+                                        { length: val },
+                                        (_, i) => i + 1
+                                      ).filter((day) => day % 2 === 1);
+                                      return { ...srv, markedDays: newMarked };
+                                    }
+                                  }
+                                  return { ...srv, markedDays: adjustedMarked };
+                                })
+                              );
                             }
                           }}
                           className='h-8 text-xs mt-1'
@@ -825,6 +868,23 @@ const NewVisitDialog = ({
                           }
                           className='h-8 text-xs mt-1'
                         />
+                      </div>
+
+                      {/* Quick Mark Button */}
+                      <div className='shrink-0'>
+                        <Label className='text-xs font-medium text-transparent'>
+                          &nbsp;
+                        </Label>
+                        <Button
+                          type='button'
+                          variant='outline'
+                          size='sm'
+                          onClick={markEveryOtherDay}
+                          className='h-8 text-sm mt-1'
+                          disabled={services.length === 0}
+                        >
+                          2 кунда бир
+                        </Button>
                       </div>
                     </div>
 

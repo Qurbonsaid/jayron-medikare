@@ -3,6 +3,8 @@ import {
   useAddServiceMutation,
   useCompleteExamsMutation,
   useDeleteExamMutation,
+  useGetManyPrescriptionQuery,
+  useGetManyServiceQuery,
   useGetOneExamQuery,
   useUpdateExamMutation,
   useUpdatePrescriptionMutation,
@@ -19,6 +21,14 @@ import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -28,6 +38,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -39,11 +54,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { BodyPartConstants } from '@/constants/BodyPart';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { cn } from '@/lib/utils';
 import {
   AlertTriangle,
   ArrowLeft,
   Brain,
+  Check,
   CheckCircle2,
+  ChevronsUpDown,
   Edit,
   Eye,
   FilePlus,
@@ -106,32 +124,51 @@ const ExaminationDetail = () => {
 
   // Service states
   type ServiceDay = { day: number; date: Date | null };
+  type ServiceItem = {
+    id: string;
+    service_type_id: string;
+    duration: number;
+    notes: string;
+    days: ServiceDay[];
+  };
 
   const generateDays = (
     duration: number,
-    prevDays: ServiceDay[] = []
+    prevDays: ServiceDay[] = [],
+    startDate: Date | null = null
   ): ServiceDay[] => {
     const safeDuration = Math.max(0, Math.min(duration || 0, 60));
+    const baseDate = startDate || new Date();
     return Array.from({ length: safeDuration }, (_, idx) => {
       const existing = prevDays[idx];
-      return existing
-        ? existing
-        : {
-            day: idx + 1,
-            date: null,
-          };
+      if (existing) return existing;
+
+      const dayDate = new Date(baseDate);
+      dayDate.setDate(dayDate.getDate() + idx);
+      return {
+        day: idx + 1,
+        date: dayDate,
+      };
     });
   };
 
   const [isAddingService, setIsAddingService] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
-  const [serviceForm, setServiceForm] = useState({
-    service_type_id: '',
-    duration: 1,
-    notes: '',
-    days: generateDays(1),
-    interval: 1,
-  });
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [serviceStartDate, setServiceStartDate] = useState<Date>(new Date());
+  const [serviceDuration, setServiceDuration] = useState(7);
+  const [serviceSearch, setServiceSearch] = useState('');
+  const [debouncedServiceSearch, setDebouncedServiceSearch] = useState('');
+  const [openServiceCombobox, setOpenServiceCombobox] = useState<string>('');
+  const [servicePage, setServicePage] = useState(1);
+
+  // Debounce service search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedServiceSearch(serviceSearch);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [serviceSearch]);
 
   // Prescription states
   const [editingPrescriptionId, setEditingPrescriptionId] = useState<
@@ -174,7 +211,6 @@ const ExaminationDetail = () => {
   };
   const [neurologicForm, setNeurologicForm] = useState(initialNeurologicForm);
 
-
   // Fetch examination details
   const {
     data: examData,
@@ -190,17 +226,49 @@ const ExaminationDetail = () => {
   const { data: diagnosisData } = useGetAllDiagnosisQuery({});
   const diagnoses = diagnosisData?.data || [];
 
-  // Fetch all services
-  const { data: servicesData } = useGetAllServiceQuery({
-    page: 1,
-    limit: 100,
-    search: undefined,
-    code: undefined,
-    is_active: undefined,
-    min_price: undefined,
-    max_price: undefined,
-  });
+  // Fetch all service types with search and pagination
+  const serviceQueryParams: any = {
+    page: servicePage,
+    limit: 20,
+  };
+  if (debouncedServiceSearch.trim()) {
+    serviceQueryParams.search = debouncedServiceSearch.trim();
+  }
+  const { data: servicesData, isFetching: isFetchingServices } =
+    useGetAllServiceQuery(serviceQueryParams);
+
+  const [selectedServicesCache, setSelectedServicesCache] = useState<{
+    [key: string]: any;
+  }>({});
+
+  // Service types from API
   const serviceTypes = servicesData?.data || [];
+  const serviceHasMoreData = servicesData?.data?.length === 20;
+
+  // Cache selected services for lookup
+  useEffect(() => {
+    if (servicesData?.data) {
+      servicesData.data.forEach((service: any) => {
+        setSelectedServicesCache((prev) => ({
+          ...prev,
+          [service._id]: service,
+        }));
+      });
+    }
+  }, [servicesData]);
+
+  // Reset pagination when search changes
+  useEffect(() => {
+    setServicePage(1);
+  }, [debouncedServiceSearch]);
+
+  // Helper function to get service by ID
+  const getServiceById = (serviceId: string) => {
+    return (
+      serviceTypes.find((s: any) => s._id === serviceId) ||
+      selectedServicesCache[serviceId]
+    );
+  };
 
   // Fetch medications for prescription edit
   const { data: medicationsData } = useGetAllMedicationsQuery({
@@ -208,6 +276,30 @@ const ExaminationDetail = () => {
     limit: 100,
     search: medicationSearch || undefined,
   });
+
+  // Fetch prescriptions by patient_id
+  const { data: prescriptionsData, refetch: refetchPrescriptions } =
+    useGetManyPrescriptionQuery(
+      {
+        page: 1,
+        limit: 100,
+        patient_id: exam?.patient_id?._id || '',
+      },
+      { skip: !exam?.patient_id?._id }
+    );
+  const prescriptions = prescriptionsData?.data || [];
+
+  // Fetch services by patient_id
+  const { data: patientServicesData, refetch: refetchPatientServices } =
+    useGetManyServiceQuery(
+      {
+        page: 1,
+        limit: 100,
+        patient_id: exam?.patient_id?._id || '',
+      },
+      { skip: !exam?.patient_id?._id }
+    );
+  const patientServices = patientServicesData?.data || [];
 
   // Fetch neurologic status
   const { data: neurologicData, refetch: refetchNeurologic } =
@@ -225,7 +317,7 @@ const ExaminationDetail = () => {
   const [deleteExam, { isLoading: isDeleting }] = useDeleteExamMutation();
   const [completeExam, { isLoading: isCompleting }] =
     useCompleteExamsMutation();
-  const [addService, { isLoading: isAddingServiceMutation }] =
+  const [addServiceMutation, { isLoading: isAddingServiceMutation }] =
     useAddServiceMutation();
   const [updateService, { isLoading: isUpdatingService }] =
     useUpdateServiceMutation();
@@ -344,96 +436,118 @@ const ExaminationDetail = () => {
   };
 
   // Service handlers
+  const addService = () => {
+    const newService: ServiceItem = {
+      id: `temp-${Date.now()}-${Math.random()}`,
+      service_type_id: '',
+      duration: serviceDuration,
+      notes: '',
+      days: generateDays(serviceDuration, [], serviceStartDate),
+    };
+    setServices([...services, newService]);
+  };
+
+  const removeService = (serviceId: string) => {
+    setServices(services.filter((s) => s.id !== serviceId));
+  };
+
+  const updateServiceField = (
+    serviceId: string,
+    field: keyof ServiceItem,
+    value: any
+  ) => {
+    setServices(
+      services.map((srv) =>
+        srv.id === serviceId ? { ...srv, [field]: value } : srv
+      )
+    );
+  };
+
+  const toggleDayMark = (serviceId: string, dayNumber: number) => {
+    setServices(
+      services.map((srv) => {
+        if (srv.id !== serviceId) return srv;
+        const dayIndex = dayNumber - 1;
+        const updatedDays = [...srv.days];
+        if (updatedDays[dayIndex]) {
+          updatedDays[dayIndex] = {
+            ...updatedDays[dayIndex],
+            date: updatedDays[dayIndex].date
+              ? null
+              : new Date(
+                  serviceStartDate.getTime() + dayIndex * 24 * 60 * 60 * 1000
+                ),
+          };
+        }
+        return { ...srv, days: updatedDays };
+      })
+    );
+  };
+
+  const markEveryOtherDay = () => {
+    setServices(
+      services.map((srv) => {
+        const everyOtherDay = Array.from(
+          { length: serviceDuration },
+          (_, i) => i + 1
+        ).filter((day) => day % 2 === 1);
+
+        const updatedDays = srv.days.map((day, idx) => {
+          if (everyOtherDay.includes(day.day)) {
+            const dayDate = new Date(serviceStartDate);
+            dayDate.setDate(dayDate.getDate() + idx);
+            return { ...day, date: dayDate };
+          }
+          return { ...day, date: null };
+        });
+
+        return { ...srv, days: updatedDays };
+      })
+    );
+  };
+
   const handleAddService = async () => {
-    if (!serviceForm.service_type_id) {
-      toast.error('Илтимос, хизмат турини танланг');
-      return;
-    }
-    if (!serviceForm.duration || serviceForm.duration <= 0) {
-      toast.error('Илтимос, тўғри муддатни киритинг');
+    if (services.length === 0) {
+      toast.error('Илтимос, хизмат қўшинг');
       return;
     }
 
-    const safeDuration = Math.max(1, Math.min(serviceForm.duration, 60));
-    const normalizedDays = generateDays(safeDuration, serviceForm.days);
+    const invalidService = services.find((s) => !s.service_type_id);
+    if (invalidService) {
+      toast.error('Илтимос, барча хизматлар учун турини танланг');
+      return;
+    }
 
     await handleRequest({
       request: async () => {
-        const res = await addService({
+        const res = await addServiceMutation({
           examination_id: exam._id,
-          duration: safeDuration,
-          items: [
-            {
-              service_type_id: serviceForm.service_type_id,
-              days: normalizedDays,
-              notes: serviceForm.notes,
-            },
-          ],
+          duration: serviceDuration,
+          items: services.map((srv) => ({
+            service_type_id: srv.service_type_id,
+            days: srv.days,
+            notes: srv.notes,
+          })),
         }).unwrap();
         return res;
       },
       onSuccess: () => {
-        toast.success('Хизмат муваффақиятли қўшилди');
+        toast.success('Хизматлар муваффақиятли қўшилди');
         setIsAddingService(false);
-        setServiceForm({
-          service_type_id: '',
-          duration: 1,
-          notes: '',
-          days: generateDays(1),
-          interval: 1,
-        });
-        refetch();
+        setServices([]);
+        setServiceDuration(7);
+        setServiceStartDate(new Date());
+        refetchPatientServices();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хизматни қўшишда хатолик');
+        toast.error(error?.data?.error?.msg || 'Хизматларни қўшишда хатолик');
       },
     });
   };
 
   const handleUpdateService = async (serviceId: string) => {
-    if (!serviceForm.service_type_id) {
-      toast.error('Илтимос, хизмат турини танланг');
-      return;
-    }
-    if (!serviceForm.duration || serviceForm.duration <= 0) {
-      toast.error('Илтимос, тўғри муддатни киритинг');
-      return;
-    }
-
-    const safeDuration = Math.max(1, Math.min(serviceForm.duration, 60));
-    const normalizedDays = generateDays(safeDuration, serviceForm.days);
-
-    await handleRequest({
-      request: async () => {
-        const res = await updateService({
-          examination_id: exam._id,
-          duration: safeDuration,
-          items: [
-            {
-              service_type_id: serviceForm.service_type_id,
-              days: normalizedDays,
-              notes: serviceForm.notes,
-            },
-          ],
-        }).unwrap();
-        return res;
-      },
-      onSuccess: () => {
-        toast.success('Хизмат муваффақиятли янгиланди');
-        setEditingServiceId(null);
-        setServiceForm({
-          service_type_id: '',
-          duration: 1,
-          notes: '',
-          days: generateDays(1),
-          interval: 1,
-        });
-        refetch();
-      },
-      onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хизматни янгилашда хатолик');
-      },
-    });
+    // Update service functionality - to be implemented
+    toast.error('Хизматни янгилаш функцияси ҳозирча мавжуд эмас');
   };
 
   const handleRemoveService = async (serviceId: string) => {
@@ -442,87 +556,12 @@ const ExaminationDetail = () => {
   };
 
   const startEditService = (service: any) => {
-    setEditingServiceId(service._id);
-    const existingDays: ServiceDay[] = (service.days || []).map(
-      (d: any, idx: number) => ({
-        day: d?.day || idx + 1,
-        date: d?.date ? new Date(d.date) : null,
-      })
-    );
-    setServiceForm({
-      service_type_id: service.service_type_id?._id || service.service_type_id,
-      duration: service.duration,
-      notes: service.notes || '',
-      days: generateDays(service.duration, existingDays),
-      interval: 1,
-    });
+    // Edit service functionality - to be implemented
+    toast.error('Хизматни таҳрирлаш функцияси ҳозирча мавжуд эмас');
   };
 
   const cancelEditService = () => {
     setEditingServiceId(null);
-    setServiceForm({
-      service_type_id: '',
-      duration: 1,
-      notes: '',
-      days: generateDays(1),
-      interval: 1,
-    });
-  };
-
-  const handleServiceDurationChange = (duration: number) => {
-    const safeDuration = Math.max(0, Math.min(duration, 60));
-    setServiceForm((prev) => ({
-      ...prev,
-      duration: safeDuration,
-      days: generateDays(safeDuration, prev.days),
-    }));
-  };
-
-  const updateServiceFormDayDate = (index: number, date: Date | null) => {
-    setServiceForm((prev) => {
-      // If first day, auto-fill subsequent days
-      if (index === 0 && date) {
-        const newDays = prev.days.map((d, i) => {
-          if (i === 0) return { ...d, date };
-          const newDate = new Date(date);
-          newDate.setDate(newDate.getDate() + i * prev.interval);
-          return { ...d, date: newDate };
-        });
-        return { ...prev, days: newDays };
-      }
-
-      const updated = [...prev.days];
-      if (updated[index]) {
-        updated[index] = { ...updated[index], date };
-      }
-      return { ...prev, days: updated };
-    });
-  };
-
-  const updateServiceFormInterval = (newInterval: number) => {
-    setServiceForm((prev) => {
-      const firstDate = prev.days[0]?.date;
-      if (!firstDate) {
-        return { ...prev, interval: newInterval };
-      }
-
-      const newDays = prev.days.map((d, i) => {
-        if (i === 0) return d;
-        const newDate = new Date(firstDate);
-        newDate.setDate(newDate.getDate() + i * newInterval);
-        return { ...d, date: newDate };
-      });
-
-      return { ...prev, interval: newInterval, days: newDays };
-    });
-  };
-
-  const chunkDays = (days: ServiceDay[]) => {
-    const rows: ServiceDay[][] = [];
-    for (let i = 0; i < days.length; i += 6) {
-      rows.push(days.slice(i, i + 6));
-    }
-    return rows;
   };
 
   // Prescription handlers
@@ -605,7 +644,7 @@ const ExaminationDetail = () => {
           addons: '',
         });
         setMedicationSearch('');
-        refetch();
+        refetchPrescriptions();
       },
       onError: (error) => {
         toast.error(error?.data?.error?.msg || 'Рецептни янгилашда хатолик');
@@ -1108,259 +1147,153 @@ const ExaminationDetail = () => {
                 <CardTitle className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
                     <span>Рецептлар</span>
-                    {exam.prescriptions && exam.prescriptions.length > 0 && (
+                    {prescriptions.length > 0 && (
                       <span className='text-sm font-normal text-muted-foreground'>
-                        ({exam.prescriptions.length} та)
+                        ({prescriptions.length} та)
                       </span>
                     )}
                   </div>
-                  {exam.prescriptions && exam.prescriptions.length > 0 && (
+                  {prescriptions.length > 0 && (
                     <AllPrescriptionsDownloadButton exam={exam} />
                   )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {exam.prescriptions && exam.prescriptions.length > 0 ? (
+                {prescriptions.length > 0 ? (
                   <div className='space-y-4'>
-                    {exam.prescriptions.map(
-                      (prescription: any, index: number) => (
+                    {prescriptions.map(
+                      (prescriptionDoc: any, docIndex: number) => (
                         <Card
-                          key={prescription._id}
+                          key={prescriptionDoc._id}
                           className='border border-primary/10 bg-primary/5'
                         >
                           <CardContent className='pt-4'>
-                            {editingPrescriptionId === prescription._id ? (
-                              <div className='space-y-4'>
-                                <div className='flex items-center justify-between mb-3'>
-                                  <span className='text-sm font-medium text-primary'>
-                                    Рецепт #{index + 1} - Таҳрирлаш
-                                  </span>
-                                </div>
-                                <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
-                                  <div className='space-y-2 sm:col-span-3'>
-                                    <Label>Дори *</Label>
-                                    <Select
-                                      value={prescriptionForm.medication_id}
-                                      onValueChange={(value) =>
-                                        setPrescriptionForm({
-                                          ...prescriptionForm,
-                                          medication_id: value,
-                                        })
-                                      }
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder='Дорини танланг'>
-                                          {prescriptionForm.medication_id
-                                            ? medicationsData?.data?.find(
-                                                (m: any) =>
-                                                  m._id ===
-                                                  prescriptionForm.medication_id
-                                              )?.name || 'Дорини танланг'
-                                            : 'Дорини танланг'}
-                                        </SelectValue>
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <div className='p-2'>
-                                          <Input
-                                            placeholder='Дорини қидириш...'
-                                            value={medicationSearch}
-                                            onChange={(e) =>
-                                              setMedicationSearch(
-                                                e.target.value
-                                              )
-                                            }
-                                            className='mb-2'
-                                          />
-                                        </div>
-                                        {medicationsData?.data?.map(
-                                          (med: any) => (
-                                            <SelectItem
-                                              key={med._id}
-                                              value={med._id}
-                                            >
-                                              {med.name} ({med.dosage})
-                                            </SelectItem>
-                                          )
-                                        )}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className='space-y-2'>
-                                    <Label>Муддати (кун) *</Label>
-                                    <Input
-                                      type='number'
-                                      placeholder='Муддатни киритинг'
-                                      value={prescriptionForm.duration}
-                                      onKeyDown={(e) => {
-                                        if (
-                                          e.key === ',' ||
-                                          e.key === 'e' ||
-                                          e.key === 'E' ||
-                                          e.key === '+' ||
-                                          e.key === '-'
-                                        ) {
-                                          e.preventDefault();
-                                        }
-                                      }}
-                                      onChange={(e) =>
-                                        setPrescriptionForm({
-                                          ...prescriptionForm,
-                                          duration: e.target.value,
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className='space-y-2'>
-                                    <Label>
-                                      Қабул қилиш (кунига неча марта) *
-                                    </Label>
-                                    <Input
-                                      type='number'
-                                      placeholder='Частотани киритинг'
-                                      onKeyDown={(e) => {
-                                        if (
-                                          e.key === ',' ||
-                                          e.key === 'e' ||
-                                          e.key === 'E' ||
-                                          e.key === '+' ||
-                                          e.key === '-'
-                                        ) {
-                                          e.preventDefault();
-                                        }
-                                      }}
-                                      value={prescriptionForm.frequency}
-                                      onChange={(e) =>
-                                        setPrescriptionForm({
-                                          ...prescriptionForm,
-                                          frequency: e.target.value,
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                </div>
-                                <div className='space-y-2'>
-                                  <Label>Қўшимча Кўрсатмалар</Label>
-                                  <Textarea
-                                    placeholder='Қўшимча кўрсатмаларни киритинг'
-                                    value={prescriptionForm.instructions}
-                                    onChange={(e) =>
-                                      setPrescriptionForm({
-                                        ...prescriptionForm,
-                                        instructions: e.target.value,
-                                      })
-                                    }
-                                    rows={3}
-                                  />
-                                </div>
-                                <div className='space-y-2'>
-                                  <Label>Қўшимча дорилар</Label>
-                                  <Textarea
-                                    placeholder='Қўшимча дорилар ёки маслаҳатлар...'
-                                    value={prescriptionForm.addons}
-                                    onChange={(e) =>
-                                      setPrescriptionForm({
-                                        ...prescriptionForm,
-                                        addons: e.target.value,
-                                      })
-                                    }
-                                    rows={3}
-                                  />
-                                </div>
-                                <div className='flex gap-2 justify-end'>
-                                  <Button
-                                    variant='outline'
-                                    onClick={cancelEditPrescription}
-                                    disabled={isUpdatingPrescription}
-                                  >
-                                    <X className='w-4 h-4 mr-2' />
-                                    Бекор қилиш
-                                  </Button>
-                                  <Button
-                                    onClick={() =>
-                                      handleUpdatePrescription(prescription._id)
-                                    }
-                                    disabled={isUpdatingPrescription}
-                                  >
-                                    <Save className='w-4 h-4 mr-2' />
-                                    {isUpdatingPrescription
-                                      ? 'Сақланмоқда...'
-                                      : 'Сақлаш'}
-                                  </Button>
-                                </div>
+                            <div className='mb-3'>
+                              <div className='flex items-center justify-between'>
+                                <span className='text-sm font-medium text-primary'>
+                                  Рецепт #{docIndex + 1} -{' '}
+                                  {new Date(
+                                    prescriptionDoc.created_at
+                                  ).toLocaleDateString('uz-UZ')}
+                                </span>
+                                <span className='text-xs text-muted-foreground'>
+                                  {prescriptionDoc.doctor_id?.fullname}
+                                </span>
                               </div>
-                            ) : (
-                              <>
-                                <div className='flex items-center justify-between mb-3'>
-                                  <span className='text-sm font-medium text-primary'>
-                                    Рецепт #{index + 1}
-                                  </span>
-                                  <div className='flex gap-2'>
-                                    <Button
-                                      variant='ghost'
-                                      size='sm'
-                                      onClick={() =>
-                                        startEditPrescription(prescription)
-                                      }
-                                      disabled={editingPrescriptionId !== null}
-                                    >
-                                      <Edit className='h-4 w-4' />
-                                    </Button>
-                                    <Button
-                                      variant='ghost'
-                                      size='sm'
-                                      onClick={() =>
-                                        handleDeletePrescription(
-                                          prescription._id
-                                        )
-                                      }
-                                      disabled={false}
-                                      className='text-destructive hover:text-destructive hover:bg-destructive/10'
-                                    >
-                                      <Trash2 className='h-4 w-4' />
-                                    </Button>
+                            </div>
+                            {/* Prescription Items */}
+                            <div className='space-y-3'>
+                              {prescriptionDoc.items?.map(
+                                (item: any, itemIndex: number) => (
+                                  <div
+                                    key={item._id}
+                                    className='border rounded-lg p-3 bg-background'
+                                  >
+                                    <div className='flex items-center justify-between mb-2'>
+                                      <span className='text-xs font-medium text-muted-foreground'>
+                                        Дори #{itemIndex + 1}
+                                      </span>
+                                      <div className='flex gap-1'>
+                                        <Button
+                                          variant='ghost'
+                                          size='sm'
+                                          onClick={() =>
+                                            startEditPrescription({
+                                              ...item,
+                                              _id: item._id,
+                                              prescriptionDocId:
+                                                prescriptionDoc._id,
+                                            })
+                                          }
+                                          disabled={
+                                            editingPrescriptionId !== null
+                                          }
+                                          className='h-6 w-6 p-0'
+                                        >
+                                          <Edit className='h-3 w-3' />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2'>
+                                      <div>
+                                        <Label className='text-xs text-muted-foreground'>
+                                          Дори
+                                        </Label>
+                                        <p className='font-semibold text-sm'>
+                                          {item.medication_id?.name ||
+                                            'Номаълум'}{' '}
+                                          {item.medication_id?.dosage &&
+                                            `(${item.medication_id.dosage})`}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <Label className='text-xs text-muted-foreground'>
+                                          Муддати
+                                        </Label>
+                                        <p className='font-semibold text-sm'>
+                                          {item.duration} кун
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <Label className='text-xs text-muted-foreground'>
+                                          Қабул Қилиш
+                                        </Label>
+                                        <p className='font-semibold text-sm'>
+                                          Кунига {item.frequency} марта
+                                        </p>
+                                      </div>
+                                      {item.instructions && (
+                                        <div>
+                                          <Label className='text-xs text-muted-foreground'>
+                                            Кўрсатма
+                                          </Label>
+                                          <p className='text-sm'>
+                                            {item.instructions}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                    {/* Days grid */}
+                                    {item.days && item.days.length > 0 && (
+                                      <div className='mt-2 pt-2 border-t'>
+                                        <Label className='text-xs text-muted-foreground mb-1 block'>
+                                          Қабул қилиш кунлари
+                                        </Label>
+                                        <div className='flex flex-wrap gap-1'>
+                                          {item.days.map((day: any) => (
+                                            <div
+                                              key={day._id || day.day}
+                                              className={`text-xs px-2 py-1 rounded ${
+                                                day.date
+                                                  ? 'bg-green-100 text-green-800'
+                                                  : 'bg-gray-100 text-gray-500'
+                                              }`}
+                                            >
+                                              {day.day}
+                                              {day.date && (
+                                                <span className='ml-1'>
+                                                  (
+                                                  {new Date(
+                                                    day.date
+                                                  ).toLocaleDateString(
+                                                    'uz-UZ',
+                                                    {
+                                                      day: '2-digit',
+                                                      month: '2-digit',
+                                                    }
+                                                  )}
+                                                  )
+                                                </span>
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
-                                </div>
-                                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
-                                  <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Дори
-                                    </Label>
-                                    <p className='font-semibold text-sm mt-1'>
-                                      {typeof prescription.medication_id ===
-                                        'object' && prescription.medication_id
-                                        ? `${prescription.medication_id.name} (${prescription.medication_id.dosage})`
-                                        : 'Номаълум'}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Муддати
-                                    </Label>
-                                    <p className='font-semibold text-sm mt-1'>
-                                      {prescription.duration} кун
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Қабул Қилиш
-                                    </Label>
-                                    <p className='font-semibold text-sm mt-1'>
-                                      Кунига {prescription.frequency} марта
-                                    </p>
-                                  </div>
-                                </div>
-                                {prescription.instructions && (
-                                  <div className='mt-3 pt-3 border-t border-primary/10'>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Қўшимча Кўрсатмалар
-                                    </Label>
-                                    <p className='text-sm font-medium mt-1'>
-                                      {prescription.instructions}
-                                    </p>
-                                  </div>
-                                )}
-                              </>
-                            )}
+                                )
+                              )}
+                            </div>
                           </CardContent>
                         </Card>
                       )
@@ -1394,14 +1327,14 @@ const ExaminationDetail = () => {
                 <CardTitle className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
                     <span>Хизматлар</span>
-                    {exam.services && exam.services.length > 0 && (
+                    {patientServices.length > 0 && (
                       <span className='text-sm font-normal text-muted-foreground'>
-                        ({exam.services.length} та)
+                        ({patientServices.length} та)
                       </span>
                     )}
                   </div>
                   <div className='flex items-center gap-2'>
-                    {exam.services && exam.services.length > 0 && (
+                    {patientServices.length > 0 && (
                       <ServicesDownloadButton exam={exam} />
                     )}
                     <Button
@@ -1422,170 +1355,240 @@ const ExaminationDetail = () => {
                     <Card className='border-2 border-primary/20 bg-primary/5'>
                       <CardContent className='pt-4'>
                         <div className='space-y-4'>
-                          <div className='flex flex-col gap-3 sm:flex-row sm:items-end'>
-                            <div className='flex-1 min-w-0 space-y-2'>
-                              <Label>Хизмат Тури *</Label>
-                              <Select
-                                value={serviceForm.service_type_id}
-                                onValueChange={(value) =>
-                                  setServiceForm({
-                                    ...serviceForm,
-                                    service_type_id: value,
-                                  })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder='Хизмат турини танланг' />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {serviceTypes.map((service: any) => (
-                                    <SelectItem
-                                      key={service._id}
-                                      value={service._id}
-                                    >
-                                      {service.name} -{' '}
-                                      {service.price.toLocaleString()} сўм
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className='w-28 space-y-2'>
+                          {/* Duration and Start Date Row */}
+                          <div className='flex items-end gap-3'>
+                            <div className='w-32'>
                               <Label>Муддат (кун)</Label>
                               <Input
                                 type='number'
-                                placeholder='7'
-                                value={serviceForm.duration}
+                                value={serviceDuration}
                                 min={1}
                                 max={60}
-                                onKeyDown={(e) => {
-                                  if (
-                                    e.key === ',' ||
-                                    e.key === 'e' ||
-                                    e.key === 'E' ||
-                                    e.key === '+' ||
-                                    e.key === '-'
-                                  ) {
-                                    e.preventDefault();
-                                  }
+                                onChange={(e) => {
+                                  const newDuration =
+                                    parseInt(e.target.value) || 1;
+                                  setServiceDuration(newDuration);
+                                  // Update all services with new duration
+                                  setServices(
+                                    services.map((srv) => ({
+                                      ...srv,
+                                      duration: newDuration,
+                                      days: generateDays(
+                                        newDuration,
+                                        [],
+                                        serviceStartDate
+                                      ),
+                                    }))
+                                  );
                                 }}
-                                onChange={(e) =>
-                                  handleServiceDurationChange(
-                                    parseInt(e.target.value) || 0
-                                  )
-                                }
+                                className='mt-1'
                               />
                             </div>
 
-                            <div className='flex-1 min-w-0 space-y-2'>
-                              <Label>Изоҳ</Label>
-                              <Textarea
-                                placeholder='Қўшимча изоҳ киритинг'
-                                value={serviceForm.notes}
-                                onChange={(e) =>
-                                  setServiceForm({
-                                    ...serviceForm,
-                                    notes: e.target.value,
-                                  })
+                            <div>
+                              <Label>Бошланиш санаси</Label>
+                              <Input
+                                type='date'
+                                value={
+                                  serviceStartDate.toISOString().split('T')[0]
                                 }
-                                rows={1}
-                                className='min-h-10'
+                                onChange={(e) => {
+                                  const newDate = new Date(e.target.value);
+                                  setServiceStartDate(newDate);
+                                  // Update all services with new start date
+                                  setServices(
+                                    services.map((srv) => ({
+                                      ...srv,
+                                      days: generateDays(
+                                        serviceDuration,
+                                        [],
+                                        newDate
+                                      ),
+                                    }))
+                                  );
+                                }}
+                                className='mt-1'
                               />
+                            </div>
+
+                            <div className='ml-auto flex items-center gap-2'>
+                              <Button
+                                variant='outline'
+                                onClick={markEveryOtherDay}
+                                disabled={services.length === 0}
+                              >
+                                2 кунда бир
+                              </Button>
+                              <Button variant='outline' onClick={addService}>
+                                <Plus className='w-4 h-4 mr-2' />
+                                Хизмат қўшиш
+                              </Button>
                             </div>
                           </div>
 
-                          {serviceForm.days.length > 0 && (
-                            <div className='space-y-3'>
-                              <div className='flex items-center gap-4'>
-                                <Label className='text-xs whitespace-nowrap'>
-                                  Кунлар жадвали
-                                </Label>
-                                <div className='flex items-center gap-2'>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Интервал:
-                                  </Label>
-                                  <Select
-                                    value={String(serviceForm.interval || 1)}
-                                    onValueChange={(value) =>
-                                      updateServiceFormInterval(
-                                        parseInt(value) as 1 | 2
-                                      )
-                                    }
-                                  >
-                                    <SelectTrigger className='h-7 w-[140px] text-xs'>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value='1'>
-                                        Ҳар куни
-                                      </SelectItem>
-                                      <SelectItem value='2'>
-                                        Кун оралаб
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-
-                              {/* Desktop horizontal table */}
-                              <div className='hidden sm:block overflow-x-auto'>
-                                <table className='border-collapse border rounded-lg w-full'>
-                                  <thead>
-                                    <tr className='bg-muted/50'>
-                                      <th className='border px-2 py-1 text-xs font-medium text-left min-w-[100px]'>
-                                        1-кун сана
-                                      </th>
-                                      {serviceForm.days.map((day) => (
+                          {/* Services Table */}
+                          {services.length > 0 && (
+                            <div className='border rounded-lg overflow-hidden'>
+                              <table className='w-full'>
+                                <thead>
+                                  <tr className='bg-muted/50'>
+                                    <th className='border-b px-3 py-2 text-left text-sm font-medium'>
+                                      Хизмат
+                                    </th>
+                                    {Array.from(
+                                      { length: serviceDuration },
+                                      (_, i) => (
                                         <th
-                                          key={day.day}
-                                          className='border px-1 py-1 text-xs font-medium text-center min-w-[40px]'
+                                          key={i + 1}
+                                          className='border-b border-l px-2 py-2 text-center text-sm font-medium'
                                         >
-                                          {day.day}
+                                          {i + 1}
                                         </th>
-                                      ))}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    <tr>
-                                      <td className='border px-1 py-1'>
-                                        <Input
-                                          type='date'
-                                          value={
-                                            serviceForm.days[0]?.date
-                                              ? new Date(
-                                                  serviceForm.days[0].date
-                                                )
-                                                  .toISOString()
-                                                  .split('T')[0]
-                                              : ''
+                                      )
+                                    )}
+                                    <th className='border-b border-l px-2 py-2 text-center text-sm font-medium w-12'></th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {services.map((service) => (
+                                    <tr
+                                      key={service.id}
+                                      className='hover:bg-muted/30'
+                                    >
+                                      <td className='border-b px-3 py-2'>
+                                        <Popover
+                                          open={
+                                            openServiceCombobox === service.id
                                           }
-                                          onChange={(e) =>
-                                            updateServiceFormDayDate(
-                                              0,
-                                              e.target.value
-                                                ? new Date(e.target.value)
-                                                : null
-                                            )
-                                          }
-                                          className='text-xs h-7 w-full'
-                                        />
+                                          onOpenChange={(open) => {
+                                            setOpenServiceCombobox(
+                                              open ? service.id : ''
+                                            );
+                                            if (open) {
+                                              // Reset search when opening
+                                              setServiceSearch('');
+                                            }
+                                          }}
+                                        >
+                                          <PopoverTrigger asChild>
+                                            <Button
+                                              variant='outline'
+                                              role='combobox'
+                                              className='w-full justify-between'
+                                            >
+                                              {service.service_type_id
+                                                ? getServiceById(
+                                                    service.service_type_id
+                                                  )?.name || 'Танланг...'
+                                                : 'Танланг...'}
+                                              <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                                            </Button>
+                                          </PopoverTrigger>
+                                          <PopoverContent className='w-[400px] p-0'>
+                                            <Command shouldFilter={false}>
+                                              <CommandInput
+                                                placeholder='Хизматни қидириш...'
+                                                value={serviceSearch}
+                                                onValueChange={setServiceSearch}
+                                              />
+                                              <CommandList
+                                                onScroll={(e: any) => {
+                                                  const bottom =
+                                                    e.target.scrollHeight -
+                                                      e.target.scrollTop ===
+                                                    e.target.clientHeight;
+                                                  if (
+                                                    bottom &&
+                                                    serviceHasMoreData &&
+                                                    !isFetchingServices
+                                                  ) {
+                                                    setServicePage(
+                                                      (prev) => prev + 1
+                                                    );
+                                                  }
+                                                }}
+                                              >
+                                                {isFetchingServices &&
+                                                serviceTypes.length === 0 ? (
+                                                  <div className='flex items-center justify-center py-4'>
+                                                    <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                                                    <span className='text-sm text-muted-foreground'>
+                                                      Юкланмоқда...
+                                                    </span>
+                                                  </div>
+                                                ) : serviceTypes.length ===
+                                                  0 ? (
+                                                  <CommandEmpty>
+                                                    Хизмат топилмади
+                                                  </CommandEmpty>
+                                                ) : (
+                                                  <CommandGroup>
+                                                    {serviceTypes.map(
+                                                      (serviceType: any) => (
+                                                        <CommandItem
+                                                          key={serviceType._id}
+                                                          value={
+                                                            serviceType.name
+                                                          }
+                                                          keywords={[
+                                                            serviceType.name,
+                                                          ]}
+                                                          onSelect={() => {
+                                                            updateServiceField(
+                                                              service.id,
+                                                              'service_type_id',
+                                                              serviceType._id
+                                                            );
+                                                            setOpenServiceCombobox(
+                                                              ''
+                                                            );
+                                                            setServiceSearch(
+                                                              ''
+                                                            );
+                                                            setServicePage(1);
+                                                          }}
+                                                        >
+                                                          <Check
+                                                            className={cn(
+                                                              'mr-2 h-4 w-4',
+                                                              service.service_type_id ===
+                                                                serviceType._id
+                                                                ? 'opacity-100'
+                                                                : 'opacity-0'
+                                                            )}
+                                                          />
+                                                          {serviceType.name}
+                                                        </CommandItem>
+                                                      )
+                                                    )}
+                                                    {isFetchingServices && (
+                                                      <div className='flex items-center justify-center py-2'>
+                                                        <Loader2 className='h-4 w-4 animate-spin' />
+                                                      </div>
+                                                    )}
+                                                  </CommandGroup>
+                                                )}
+                                              </CommandList>
+                                            </Command>
+                                          </PopoverContent>
+                                        </Popover>
                                       </td>
-                                      {serviceForm.days.map((day) => (
+                                      {service.days.map((day, dayIdx) => (
                                         <td
                                           key={day.day}
-                                          className='border px-1 py-1 text-center group relative'
+                                          className='border-b border-l px-1 py-1 text-center cursor-pointer hover:bg-muted/50'
+                                          onClick={() =>
+                                            toggleDayMark(service.id, day.day)
+                                          }
                                         >
                                           {day.date ? (
-                                            <div className='flex items-center justify-center'>
-                                              <span className='text-green-600 font-bold'>
-                                                ✓
-                                              </span>
-                                              <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
-                                                {new Date(
-                                                  day.date
-                                                ).toLocaleDateString('uz-UZ')}
-                                              </div>
+                                            <div className='text-xs font-medium'>
+                                              {new Date(
+                                                day.date
+                                              ).toLocaleDateString('en-GB', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                              })}
                                             </div>
                                           ) : (
                                             <span className='text-muted-foreground'>
@@ -1594,76 +1597,36 @@ const ExaminationDetail = () => {
                                           )}
                                         </td>
                                       ))}
+                                      <td className='border-b border-l px-1 py-1 text-center'>
+                                        <Button
+                                          variant='ghost'
+                                          size='sm'
+                                          onClick={() =>
+                                            removeService(service.id)
+                                          }
+                                          className='h-8 w-8 p-0 text-destructive hover:text-destructive'
+                                        >
+                                          <Trash2 className='h-4 w-4' />
+                                        </Button>
+                                      </td>
                                     </tr>
-                                  </tbody>
-                                </table>
-                              </div>
-
-                              {/* Mobile view */}
-                              <div className='sm:hidden space-y-2'>
-                                <div className='flex items-center gap-2'>
-                                  <Label className='text-xs'>1-кун сана:</Label>
-                                  <Input
-                                    type='date'
-                                    value={
-                                      serviceForm.days[0]?.date
-                                        ? new Date(serviceForm.days[0].date)
-                                            .toISOString()
-                                            .split('T')[0]
-                                        : ''
-                                    }
-                                    onChange={(e) =>
-                                      updateServiceFormDayDate(
-                                        0,
-                                        e.target.value
-                                          ? new Date(e.target.value)
-                                          : null
-                                      )
-                                    }
-                                    className='text-xs h-8 flex-1'
-                                  />
-                                </div>
-                                <div className='flex flex-wrap gap-1'>
-                                  {serviceForm.days.map((day) => (
-                                    <div
-                                      key={day.day}
-                                      className='w-8 h-8 flex items-center justify-center border rounded text-xs group relative'
-                                    >
-                                      {day.date ? (
-                                        <>
-                                          <span className='text-green-600 font-bold'>
-                                            ✓
-                                          </span>
-                                          <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
-                                            {day.day}:{' '}
-                                            {new Date(
-                                              day.date
-                                            ).toLocaleDateString('uz-UZ')}
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <span className='text-muted-foreground'>
-                                          {day.day}
-                                        </span>
-                                      )}
-                                    </div>
                                   ))}
-                                </div>
-                              </div>
+                                </tbody>
+                              </table>
                             </div>
                           )}
-                          <div className='flex gap-2 justify-end'>
+
+                          {/* Add Service Button */}
+
+                          {/* Action Buttons */}
+                          <div className='flex gap-2 justify-end pt-2'>
                             <Button
                               variant='outline'
                               onClick={() => {
                                 setIsAddingService(false);
-                                setServiceForm({
-                                  service_type_id: '',
-                                  duration: 1,
-                                  notes: '',
-                                  days: generateDays(1),
-                                  interval: 1,
-                                });
+                                setServices([]);
+                                setServiceDuration(7);
+                                setServiceStartDate(new Date());
                               }}
                               disabled={isAddingServiceMutation}
                             >
@@ -1672,7 +1635,9 @@ const ExaminationDetail = () => {
                             </Button>
                             <Button
                               onClick={handleAddService}
-                              disabled={isAddingServiceMutation}
+                              disabled={
+                                isAddingServiceMutation || services.length === 0
+                              }
                             >
                               <Save className='w-4 h-4 mr-2' />
                               {isAddingServiceMutation
@@ -1686,53 +1651,57 @@ const ExaminationDetail = () => {
                   )}
 
                   {/* Services Summary Table - like the reference image */}
-                  {exam.services &&
-                    exam.services.length > 0 &&
-                    !editingServiceId && (
-                      <Card className='border border-primary/10 mb-4'>
-                        <CardContent className='pt-4'>
-                          <div className='flex items-center justify-between mb-3'>
-                            <Label className='text-sm font-semibold'>
-                              Хизматлар жадвали
-                            </Label>
-                          </div>
-                          <div className='overflow-x-auto'>
-                            <table className='w-full border-collapse border text-sm'>
-                              <thead>
-                                <tr className='bg-muted/50'>
-                                  <th className='border px-3 py-2 text-left font-semibold min-w-[150px]'>
-                                    Хизмат номи
-                                  </th>
-                                  {Array.from(
-                                    {
-                                      length: Math.max(
-                                        ...(exam.services || []).map(
+                  {patientServices.length > 0 && !editingServiceId && (
+                    <Card className='border border-primary/10 mb-4'>
+                      <CardContent className='pt-4'>
+                        <div className='flex items-center justify-between mb-3'>
+                          <Label className='text-sm font-semibold'>
+                            Хизматлар жадвали
+                          </Label>
+                        </div>
+                        <div className='overflow-x-auto'>
+                          <table className='w-full border-collapse border text-sm'>
+                            <thead>
+                              <tr className='bg-muted/50'>
+                                <th className='border px-3 py-2 text-left font-semibold min-w-[150px]'>
+                                  Хизмат номи
+                                </th>
+                                {Array.from(
+                                  {
+                                    length: Math.max(
+                                      ...patientServices.map(
+                                        (s: any) =>
+                                          s.items?.[0]?.duration ||
+                                          s.items?.[0]?.days?.length ||
+                                          0
+                                      ),
+                                      1
+                                    ),
+                                  },
+                                  (_, i) => (
+                                    <th
+                                      key={i}
+                                      className='border px-2 py-2 text-center font-semibold min-w-[70px]'
+                                    >
+                                      {i + 1}
+                                    </th>
+                                  )
+                                )}
+                                <th className='border px-2 py-2 text-center font-semibold w-16'>
+                                  Ҳаракат
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {patientServices.map((serviceDoc: any) =>
+                                serviceDoc.items?.map((service: any) => {
+                                  const maxDays = Math.max(
+                                    ...patientServices.flatMap(
+                                      (sd: any) =>
+                                        sd.items?.map(
                                           (s: any) =>
                                             s.duration || s.days?.length || 0
-                                        ),
-                                        1
-                                      ),
-                                    },
-                                    (_, i) => (
-                                      <th
-                                        key={i}
-                                        className='border px-2 py-2 text-center font-semibold min-w-[70px]'
-                                      >
-                                        {i + 1}
-                                      </th>
-                                    )
-                                  )}
-                                  <th className='border px-2 py-2 text-center font-semibold w-16'>
-                                    Ҳаракат
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {exam.services.map((service: any) => {
-                                  const maxDays = Math.max(
-                                    ...(exam.services || []).map(
-                                      (s: any) =>
-                                        s.duration || s.days?.length || 0
+                                        ) || [0]
                                     ),
                                     1
                                   );
@@ -1813,451 +1782,16 @@ const ExaminationDetail = () => {
                                       </td>
                                     </tr>
                                   );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                  {/* Services List - Individual Cards for Editing */}
-                  {exam.services &&
-                  exam.services.length > 0 &&
-                  editingServiceId ? (
-                    exam.services.map((service: any, index: number) => (
-                      <Card
-                        key={service._id}
-                        className='border border-primary/10'
-                      >
-                        <CardContent className='pt-4'>
-                          {editingServiceId === service._id ? (
-                            <div className='space-y-4'>
-                              <div className='flex flex-col gap-3 sm:flex-row sm:items-end'>
-                                <div className='flex-1 min-w-0 space-y-2'>
-                                  <Label>Хизмат Тури *</Label>
-                                  <Select
-                                    value={serviceForm.service_type_id}
-                                    onValueChange={(value) =>
-                                      setServiceForm({
-                                        ...serviceForm,
-                                        service_type_id: value,
-                                      })
-                                    }
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder='Хизмат турини танланг' />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {serviceTypes.map((st: any) => (
-                                        <SelectItem key={st._id} value={st._id}>
-                                          {st.name} -{' '}
-                                          {st.price.toLocaleString()} сўм
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-
-                                <div className='w-28 space-y-2'>
-                                  <Label>Муддат (кун)</Label>
-                                  <Input
-                                    type='number'
-                                    value={serviceForm.duration}
-                                    min={1}
-                                    max={60}
-                                    onKeyDown={(e) => {
-                                      if (
-                                        e.key === ',' ||
-                                        e.key === 'e' ||
-                                        e.key === 'E' ||
-                                        e.key === '+' ||
-                                        e.key === '-'
-                                      ) {
-                                        e.preventDefault();
-                                      }
-                                    }}
-                                    onChange={(e) =>
-                                      handleServiceDurationChange(
-                                        parseInt(e.target.value) || 0
-                                      )
-                                    }
-                                  />
-                                </div>
-
-                                <div className='flex-1 min-w-0 space-y-2'>
-                                  <Label>Изоҳ</Label>
-                                  <Textarea
-                                    value={serviceForm.notes}
-                                    onChange={(e) =>
-                                      setServiceForm({
-                                        ...serviceForm,
-                                        notes: e.target.value,
-                                      })
-                                    }
-                                    rows={2}
-                                  />
-                                </div>
-                              </div>
-
-                              {serviceForm.days.length > 0 && (
-                                <div className='space-y-3'>
-                                  <div className='flex items-center gap-4'>
-                                    <Label className='text-xs whitespace-nowrap'>
-                                      Кунлар жадвали
-                                    </Label>
-                                    <div className='flex items-center gap-2'>
-                                      <Label className='text-xs text-muted-foreground'>
-                                        Интервал:
-                                      </Label>
-                                      <Select
-                                        value={String(
-                                          serviceForm.interval || 1
-                                        )}
-                                        onValueChange={(value) =>
-                                          updateServiceFormInterval(
-                                            parseInt(value) as 1 | 2
-                                          )
-                                        }
-                                      >
-                                        <SelectTrigger className='h-7 w-[140px] text-xs'>
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value='1'>
-                                            Ҳар куни
-                                          </SelectItem>
-                                          <SelectItem value='2'>
-                                            Кун оралаб
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  </div>
-
-                                  {/* Desktop horizontal table */}
-                                  <div className='hidden sm:block overflow-x-auto'>
-                                    <table className='border-collapse border rounded-lg w-full'>
-                                      <thead>
-                                        <tr className='bg-muted/50'>
-                                          <th className='border px-2 py-1 text-xs font-medium text-left min-w-[100px]'>
-                                            1-кун сана
-                                          </th>
-                                          {serviceForm.days.map((day) => (
-                                            <th
-                                              key={day.day}
-                                              className='border px-1 py-1 text-xs font-medium text-center min-w-[40px]'
-                                            >
-                                              {day.day}
-                                            </th>
-                                          ))}
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        <tr>
-                                          <td className='border px-1 py-1'>
-                                            <Input
-                                              type='date'
-                                              value={
-                                                serviceForm.days[0]?.date
-                                                  ? new Date(
-                                                      serviceForm.days[0].date
-                                                    )
-                                                      .toISOString()
-                                                      .split('T')[0]
-                                                  : ''
-                                              }
-                                              onChange={(e) =>
-                                                updateServiceFormDayDate(
-                                                  0,
-                                                  e.target.value
-                                                    ? new Date(e.target.value)
-                                                    : null
-                                                )
-                                              }
-                                              className='text-xs h-7 w-full'
-                                            />
-                                          </td>
-                                          {serviceForm.days.map((day) => (
-                                            <td
-                                              key={day.day}
-                                              className='border px-1 py-1 text-center group relative'
-                                            >
-                                              {day.date ? (
-                                                <div className='flex items-center justify-center'>
-                                                  <span className='text-green-600 font-bold'>
-                                                    ✓
-                                                  </span>
-                                                  <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
-                                                    {new Date(
-                                                      day.date
-                                                    ).toLocaleDateString(
-                                                      'uz-UZ'
-                                                    )}
-                                                  </div>
-                                                </div>
-                                              ) : (
-                                                <span className='text-muted-foreground'>
-                                                  -
-                                                </span>
-                                              )}
-                                            </td>
-                                          ))}
-                                        </tr>
-                                      </tbody>
-                                    </table>
-                                  </div>
-
-                                  {/* Mobile view */}
-                                  <div className='sm:hidden space-y-2'>
-                                    <div className='flex items-center gap-2'>
-                                      <Label className='text-xs'>
-                                        1-кун сана:
-                                      </Label>
-                                      <Input
-                                        type='date'
-                                        value={
-                                          serviceForm.days[0]?.date
-                                            ? new Date(serviceForm.days[0].date)
-                                                .toISOString()
-                                                .split('T')[0]
-                                            : ''
-                                        }
-                                        onChange={(e) =>
-                                          updateServiceFormDayDate(
-                                            0,
-                                            e.target.value
-                                              ? new Date(e.target.value)
-                                              : null
-                                          )
-                                        }
-                                        className='text-xs h-8 flex-1'
-                                      />
-                                    </div>
-                                    <div className='flex flex-wrap gap-1'>
-                                      {serviceForm.days.map((day) => (
-                                        <div
-                                          key={day.day}
-                                          className='w-8 h-8 flex items-center justify-center border rounded text-xs group relative'
-                                        >
-                                          {day.date ? (
-                                            <>
-                                              <span className='text-green-600 font-bold'>
-                                                ✓
-                                              </span>
-                                              <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
-                                                {day.day}:{' '}
-                                                {new Date(
-                                                  day.date
-                                                ).toLocaleDateString('uz-UZ')}
-                                              </div>
-                                            </>
-                                          ) : (
-                                            <span className='text-muted-foreground'>
-                                              {day.day}
-                                            </span>
-                                          )}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                </div>
+                                })
                               )}
-                              <div className='flex gap-2 justify-end'>
-                                <Button
-                                  variant='outline'
-                                  onClick={cancelEditService}
-                                  disabled={isUpdatingService}
-                                >
-                                  <X className='w-4 h-4 mr-2' />
-                                  Бекор қилиш
-                                </Button>
-                                <Button
-                                  onClick={() =>
-                                    handleUpdateService(service._id)
-                                  }
-                                  disabled={isUpdatingService}
-                                >
-                                  <Save className='w-4 h-4 mr-2' />
-                                  {isUpdatingService
-                                    ? 'Сақланмоқда...'
-                                    : 'Сақлаш'}
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <>
-                              <div className='flex items-center justify-between mb-3'>
-                                <span className='text-sm font-medium text-primary'>
-                                  Хизмат #{index + 1}
-                                </span>
-                                <div className='flex gap-2'>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    onClick={() => startEditService(service)}
-                                    disabled={editingServiceId !== null}
-                                  >
-                                    <Edit className='h-4 w-4' />
-                                  </Button>
-                                  <Button
-                                    variant='ghost'
-                                    size='sm'
-                                    onClick={() =>
-                                      handleRemoveService(service._id)
-                                    }
-                                    disabled={false}
-                                    className='text-destructive hover:text-destructive hover:bg-destructive/10'
-                                  >
-                                    <Trash2 className='h-4 w-4' />
-                                  </Button>
-                                </div>
-                              </div>
-                              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
-                                <div>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Хизмат Тури
-                                  </Label>
-                                  <p className='font-semibold text-sm mt-1'>
-                                    {service.service_type_id?.name ||
-                                      'Маълумот йўқ'}
-                                  </p>
-                                </div>
-                                <div>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Муддати
-                                  </Label>
-                                  <p className='font-semibold text-sm mt-1'>
-                                    {service.duration} кун
-                                  </p>
-                                </div>
-                                {service.price && (
-                                  <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Нарх
-                                    </Label>
-                                    <p className='font-semibold text-sm mt-1'>
-                                      {service.price.toLocaleString()} сўм
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
-                              {service.days && service.days.length > 0 && (
-                                <div className='mt-3 space-y-2'>
-                                  <div className='flex items-center gap-4'>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Кунлар жадвали
-                                    </Label>
-                                    {service.interval && (
-                                      <span className='text-xs bg-muted px-2 py-0.5 rounded'>
-                                        {service.interval === 1
-                                          ? 'Ҳар куни'
-                                          : 'Кун оралаб'}
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {/* Desktop horizontal table */}
-                                  <div className='hidden sm:block overflow-x-auto'>
-                                    <table className='border-collapse border rounded-lg w-full'>
-                                      <thead>
-                                        <tr className='bg-muted/50'>
-                                          {(service.days || []).map(
-                                            (day: any, idx: number) => (
-                                              <th
-                                                key={day?.day || idx + 1}
-                                                className='border px-1 py-1 text-xs font-medium text-center min-w-[40px]'
-                                              >
-                                                {day?.day || idx + 1}
-                                              </th>
-                                            )
-                                          )}
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        <tr>
-                                          {(service.days || []).map(
-                                            (day: any, idx: number) => (
-                                              <td
-                                                key={`${
-                                                  day?.day || idx + 1
-                                                }-body`}
-                                                className='border px-1 py-1 text-center group relative'
-                                              >
-                                                {day?.date ? (
-                                                  <div className='flex items-center justify-center'>
-                                                    <span className='text-green-600 font-bold'>
-                                                      ✓
-                                                    </span>
-                                                    <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
-                                                      {new Date(
-                                                        day.date
-                                                      ).toLocaleDateString(
-                                                        'uz-UZ'
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                ) : (
-                                                  <span className='text-muted-foreground'>
-                                                    -
-                                                  </span>
-                                                )}
-                                              </td>
-                                            )
-                                          )}
-                                        </tr>
-                                      </tbody>
-                                    </table>
-                                  </div>
-
-                                  {/* Mobile view */}
-                                  <div className='sm:hidden flex flex-wrap gap-1'>
-                                    {(service.days || []).map(
-                                      (day: any, idx: number) => (
-                                        <div
-                                          key={day?.day || idx + 1}
-                                          className='w-8 h-8 flex items-center justify-center border rounded text-xs group relative'
-                                        >
-                                          {day?.date ? (
-                                            <>
-                                              <span className='text-green-600 font-bold'>
-                                                ✓
-                                              </span>
-                                              <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
-                                                {day?.day || idx + 1}:{' '}
-                                                {new Date(
-                                                  day.date
-                                                ).toLocaleDateString('uz-UZ')}
-                                              </div>
-                                            </>
-                                          ) : (
-                                            <span className='text-muted-foreground'>
-                                              {day?.day || idx + 1}
-                                            </span>
-                                          )}
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              {service.notes && (
-                                <div className='mt-3 pt-3 border-t border-primary/10'>
-                                  <Label className='text-xs text-muted-foreground'>
-                                    Изоҳ
-                                  </Label>
-                                  <p className='text-sm font-medium mt-1'>
-                                    {service.notes}
-                                  </p>
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
+                  {patientServices.length === 0 ? (
                     <div className='text-center py-8'>
                       <p className='text-muted-foreground mb-4'>
                         Ҳали хизматлар қўшилмаган
@@ -2269,7 +1803,7 @@ const ExaminationDetail = () => {
                         </Button>
                       )}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </CardContent>
             </Card>

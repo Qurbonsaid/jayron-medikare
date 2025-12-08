@@ -10,18 +10,10 @@ export type ExamResponse = {
   };
 };
 
-export type CreateExamReq = {
-  patient_id: string;
-  doctor_id: string;
-  description?: string;
-  complaints: string;
-  treatment_type: 'STASIONAR' | 'AMBULATOR';
-};
-
 export type examCreateReq = {
   patient_id: string;
   doctor_id: string;
-  description: string;
+  description?: string;
   complaints: string;
   treatment_type: 'stasionar' | 'ambulator';
 };
@@ -112,20 +104,33 @@ export type ExamDataItem = {
   description: string;
   complaints: string;
   treatment_type: 'stasionar' | 'ambulator';
-  analyses: Array<Analysis> | null;
+  analyses: Array<Analysis>;
   billing_id: string | null;
   images: Array<Image> | [];
   status: status;
   prescriptions: Array<{
-    medication_id: string;
+    medication_id:
+      | {
+          _id: string;
+          name: string;
+          dosage: string;
+        }
+      | string;
     frequency: number;
     duration: number;
     instructions: string;
+    addons?: string;
     _id: string;
     days: Array<Day>;
   }> | null;
   services: Array<{
-    service_type_id: string;
+    service_type_id:
+      | {
+          _id: string;
+          name: string;
+          price: number;
+        }
+      | string;
     price: number;
     frequency: number;
     duration: number;
