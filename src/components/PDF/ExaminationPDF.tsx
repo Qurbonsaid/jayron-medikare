@@ -1,3 +1,4 @@
+import { useGetPatientByIdQuery } from '@/app/api/patientApi/patientApi';
 import { Button } from '@/components/ui/button';
 import {
   Document,
@@ -412,7 +413,9 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
             <View style={styles.gridItem}>
               <Text style={styles.bold}>Tug'ilgan sana:</Text>
               <Text style={{ fontSize: 9, marginTop: 2 }}>
-                {exam.patient_id?.birth_date
+                {exam.patient_id?.date_of_birth
+                  ? formatDate(exam.patient_id.date_of_birth)
+                  : exam.patient_id?.birth_date
                   ? formatDate(exam.patient_id.birth_date)
                   : 'Ko`rsatilmagan'}
               </Text>
@@ -864,12 +867,22 @@ const ExaminationInfoDownloadButton: React.FC<
   ExaminationInfoDownloadButtonProps
 > = ({ exam }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const patientId = exam?.patient_id?._id || exam?.patient_id;
+  const { data: patientData } = useGetPatientByIdQuery(patientId, {
+    skip: !patientId,
+  });
+
+  // Prefer fresh patient data from get-one endpoint, fallback to exam.patient_id
+  const patient = patientData?.data || exam?.patient_id || {};
 
   const handleDownloadExaminationInfo = async () => {
     try {
       setIsGenerating(true);
+      const examWithPatient = { ...exam, patient_id: patient };
 
-      const blob = await pdf(<ExaminationInfoPDF exam={exam} />).toBlob();
+      const blob = await pdf(
+        <ExaminationInfoPDF exam={examWithPatient} />
+      ).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -1264,17 +1277,16 @@ const neurologicFieldLabels: Record<string, string> = {
   meningeal_symptoms: 'Менингеальные симптомы',
   i_para_n_olfactorius: 'I пара – n.olfactorius',
   ii_para_n_opticus: 'II пара – n. opticus',
-  iii_para_n_oculomotorius:
-    'III, IV, VI пары – n. oculomotorius, n. trochlearis, n. abducens',
-  iv_para_n_trochlearis: 'V пара – n.trigeminus',
-  v_para_n_trigeminus: 'VII пара – n. facialis',
-  vi_para_n_abducens: 'VIII пара – n. vestibulocochlearis',
-  vii_para_n_fascialis: 'IX, X пара – n. glossopharingeus, n. vagus',
-  viii_para_n_vestibulocochlearis: 'XI пара – n. accessorius',
-  ix_para_n_glossopharyngeus: 'XII пара – n. hypoglossus',
-  x_para_n_vagus: 'Симптомы орального автоматизма',
-  xi_para_n_accessorius: 'Двигательная система',
-  xii_para_n_hypoglossus: 'Чувствительная сфера',
+  iii_para_n_oculomotorius: 'III пара – n. oculomotorius',
+  iv_para_n_trochlearis: 'IV пара – n. trochlearis',
+  v_para_n_trigeminus: 'V пара – n. trigeminus',
+  vi_para_n_abducens: 'VI пара – n. abducens',
+  vii_para_n_fascialis: 'VII пара – n. facialis',
+  viii_para_n_vestibulocochlearis: 'VIII пара – n. vestibulocochlearis',
+  ix_para_n_glossopharyngeus: 'IX пара – n. glossopharyngeus',
+  x_para_n_vagus: 'X пара – n. vagus',
+  xi_para_n_accessorius: 'XI пара – n. accessorius',
+  xii_para_n_hypoglossus: 'XII пара – n. hypoglossus',
   motor_system: 'Координаторная сфера',
   sensory_sphere: 'Высшие мозговые функции',
   coordination_sphere: 'Синдромологический диагноз, обоснование',

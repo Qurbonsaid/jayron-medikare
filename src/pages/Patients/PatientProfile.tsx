@@ -43,7 +43,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import NewVisitDialog from '../Examination/components/NewVisitDialog';
 import EditPatientModal from './components/EditPatientModal';
-import PatientPDFModal from './components/PatientPDFModal';
+import PatientPDFModal from '../../components/PDF/PatientPDFModal';
 
 const PatientProfile = () => {
   const navigate = useNavigate();

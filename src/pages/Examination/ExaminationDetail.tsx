@@ -80,7 +80,7 @@ import AllPrescriptionsDownloadButton, {
   ExaminationInfoDownloadButton,
   NeurologicStatusDownloadButton,
   ServicesDownloadButton,
-} from './components/ExaminationPDF';
+} from '../../components/PDF/ExaminationPDF';
 
 // Tana qismlari uchun o'zbek nomlari
 const bodyPartLabels: Record<string, string> = {
