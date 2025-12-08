@@ -1726,14 +1726,14 @@ const Prescription = () => {
                 )}
 
                 {/* Existing Services */}
-                {examinationData?.data?.services &&
-                  examinationData.data.services.length > 0 && (
+                {examinationData?.data?.service &&
+                  examinationData.data.service.length > 0 && (
                     <>
                       <div className='text-xs font-medium text-muted-foreground mb-2'>
-                        Мавжуд хизматлар ({examinationData.data.services.length}{' '}
+                        Мавжуд хизматлар ({examinationData.data.service.length}{' '}
                         та)
                       </div>
-                      {examinationData.data.services.map(
+                      {examinationData.data.service.map(
                         (service: any, index: number) => (
                           <Card
                             key={service._id}

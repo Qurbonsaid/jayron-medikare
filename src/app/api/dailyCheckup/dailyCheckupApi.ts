@@ -1,7 +1,12 @@
 import { API_TAGS } from '@/constants/apiTags'
 import { baseApi } from '../baseApi'
 import { PATHS } from './path'
-import { DailyCheckupGetAll, Entry, GetOneDailyCheckup } from './types'
+import {
+	DailyCheckupFilter,
+	DailyCheckupGetAll,
+	Entry,
+	GetOneDailyCheckup,
+} from './types'
 
 interface CreateDailyCheckupPayload extends Entry {
 	examination_id: string
@@ -9,11 +14,27 @@ interface CreateDailyCheckupPayload extends Entry {
 
 export const dailyCheckupApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
-		getAlldailyCheckup: builder.query<DailyCheckupGetAll, void>({
-			query: () => ({
-				url: PATHS.DAILY_CHECKUP_GET_ALL,
-				method: 'GET',
-			}),
+		getAlldailyCheckup: builder.query<DailyCheckupGetAll, DailyCheckupFilter>({
+			query: ({
+				page = 1,
+				limit = 100,
+				patient_id,
+				doctor_id,
+				examination_status,
+			}) => {
+				const params = new URLSearchParams({
+					page: page.toString(),
+					limit: limit.toString(),
+				})
+				if (patient_id) params.append('patient_id', patient_id)
+				if (doctor_id) params.append('doctor_id', doctor_id)
+				if (examination_status)
+					params.append('examination_status', examination_status)
+				return {
+					url: `${PATHS.DAILY_CHECKUP_GET_ALL}?${params.toString()}`,
+					method: 'GET',
+				}
+			},
 			providesTags: [API_TAGS.DAILY_CHECKUP],
 		}),
 		getOneDailyCheckup: builder.query<GetOneDailyCheckup, string>({

@@ -147,6 +147,12 @@ export const menuCategories: MenuCategory[] = [
         icon: Pill,
         permission: 'medication',
       },
+      {
+        title: 'Кунлик кўрик',
+        url: '/daily-checkup',
+        icon: ClipboardCheck,
+        permission: 'daily_checkup',
+      },
     ],
   },
   {

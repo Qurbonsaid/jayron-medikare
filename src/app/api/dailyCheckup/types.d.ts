@@ -1,4 +1,3 @@
-import { Entry } from './types.d';
 export interface Response {
 	success: boolean
 	message?: string
@@ -7,6 +6,14 @@ export interface Response {
 		statusMsg: string
 		msg: string
 	}
+}
+
+export interface DailyCheckupFilter {
+	page: number
+	limit: number
+	patient_id: string
+	doctor_id: string
+	examination_status: 'pending' | 'in-progress' | 'completed' | 'cancelled'
 }
 
 export interface Entry {
@@ -62,16 +69,15 @@ export interface Pagination {
 }
 export interface DailyCheckupGetAll {
 	success: true
-	data: 
-		{
-			_id: string
-			examination_id: Examination
-			patient_id: Patient
-			doctor_id: Doctor
-			entries: Entry[]
-			created_at: string
-			updated_at: string
-		}[]
+	data: {
+		_id: string
+		examination_id: Examination
+		patient_id: Patient
+		doctor_id: Doctor
+		entries: Entry[]
+		created_at: string
+		updated_at: string
+	}[]
 	pagination: Pagination
 }
 
