@@ -13,7 +13,7 @@ const CACHE_KEY = 'rtk_cache';
 const TOKEN_KEY = 'auth_token';
 
 // Load full cache
-const loadCache = (): Record<string, any> => {
+const loadCache = (): Record<string, unknown> => {
   try {
     const data = localStorage.getItem(CACHE_KEY);
     return data ? JSON.parse(data) : {};
@@ -23,20 +23,20 @@ const loadCache = (): Record<string, any> => {
   }
 };
 
-const updateCache = (url: string, data: any) => {
+const updateCache = (url: string, data: unknown) => {
   try {
     const cache = loadCache();
 
     cache[url] = data;
     const token =
-      data?.token ||
-      data?.accessToken ||
-      data?.access_token ||
-      data?.data?.token ||
-      data?.data?.access_token;
+      (data as Record<string, unknown>)?.token ||
+      (data as Record<string, unknown>)?.accessToken ||
+      (data as Record<string, unknown>)?.access_token ||
+      (data as { data?: Record<string, unknown> })?.data?.token ||
+      (data as { data?: Record<string, unknown> })?.data?.access_token;
 
     if (token && typeof token === 'string') {
-      localStorage.setItem(TOKEN_KEY,token)
+      localStorage.setItem(TOKEN_KEY, token);
     } else {
       console.warn('⚠️ No token found in response data');
     }
@@ -53,7 +53,7 @@ const clearAuthTokens = () => {
   } catch (error) {
     console.error('❌ Auth tokenni tozalashda xatolik:', error);
   }
-}
+};
 
 export const getTokenFromCache = (): string | null => {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -81,26 +81,24 @@ const customBaseQuery: BaseQueryFn<
 
   // Check for token expiration or authentication errors
   if ('error' in result) {
-    const error = result.error as any;
+    const error = result.error as { status?: number };
     const statusCode = error?.status;
 
     // Check if token is expired or invalid
-    if (
-      statusCode === 401
-    ) {
+    if (statusCode === 401) {
       // Clear authentication tokens
       clearAuthTokens();
       localStorage.removeItem(CACHE_KEY);
-      
+
       // Redirect to login page
       window.location.href = '/login';
-      
+
       return result;
     }
   }
 
   if (!('error' in result) && result.data) {
-    const responseData = result.data as any;
+    const responseData = result.data as { success?: boolean };
     const isSuccessResponse = responseData?.success !== false;
 
     if (isSuccessResponse) {
@@ -122,4 +120,4 @@ export const baseApi = createApi({
 
 export { clearAuthTokens, updateCache };
 export default baseApi;
-export const { util: apiUtil } = baseApi
+export const { util: apiUtil } = baseApi;

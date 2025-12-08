@@ -107,9 +107,8 @@ export type ExamDataItem = {
   analyses: Array<Analysis>;
   billing_id: string | null;
   images: Array<Image> | [];
-  status: status;
-  prescription:string|null;
-  service:string|null;
+  prescriptions?: Array<getOnePrescriptionRes> | null;
+  service?: Array<getOneServiceRes> | null;
   status: status;
   neurological_status_id: string | null;
   daily_checkup_id: string | null;
@@ -117,7 +116,6 @@ export type ExamDataItem = {
   created_at: Date;
   updated_at: Date;
 };
-
 
 export type AllExamRes = {
   success: boolean;
