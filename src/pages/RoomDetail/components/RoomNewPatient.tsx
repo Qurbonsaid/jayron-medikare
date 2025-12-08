@@ -48,7 +48,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
   const { data: examinations, isLoading } = useGetAllExamsQuery({
     page: 1,
     limit: 100,
-    search: searchQuery,
+    search: searchQuery || undefined,
     status: "pending",
     is_roomed: false,
     treatment_type: "stasionar",

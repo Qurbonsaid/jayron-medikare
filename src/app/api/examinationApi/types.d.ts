@@ -116,27 +116,16 @@ export type ExamDataItem = {
   billing_id: string | null;
   images: Array<Image> | [];
   status: status;
-  prescriptions: Array<{
-    medication_id: string;
-    frequency: number;
-    duration: number;
-    instructions: string;
-    _id: string;
-    days: Array<Day>;
-  }> | null;
-  services: Array<{
-    service_type_id: string;
-    price: number;
-    frequency: number;
-    duration: number;
-    status: status;
-    days: Array<Day>;
-    _id: string;
-  }>;
+  prescription:string|null;
+  service:string|null;
+  status: status;
+  neurological_status_id: string | null;
+  daily_checkup_id: string | null;
   rooms: Array<Room>;
   created_at: Date;
   updated_at: Date;
 };
+
 
 export type AllExamRes = {
   success: boolean;

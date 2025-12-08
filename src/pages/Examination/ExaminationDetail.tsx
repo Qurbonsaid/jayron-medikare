@@ -5,9 +5,9 @@ import {
   useDeleteExamMutation,
   useGetOneExamQuery,
   useUpdateExamMutation,
-  useUpdatePrescriptionMutation,
   useUpdateServiceMutation,
 } from '@/app/api/examinationApi/examinationApi';
+import { useUpdatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import {
   useCreateNeurologicStatusMutation,
