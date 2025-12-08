@@ -91,38 +91,38 @@ export const examinationApi = baseApi.injectEndpoints({
     }),
     // prescriptions
 
-    getManyPrescription: builder.query<
-      getAllPrescriptionRes,
-      getAllPrescriptionReq
-    >({
-      query: (params) => ({
-        url: 'prescription/get-all',
-        params,
-      }),
-      providesTags: [API_TAGS.PRESCRIPTION],
-    }),
-    getOnePrescription: builder.query<getOnePrescriptionRes, string>({
-      query: (id) => ({
-        url: 'prescription/get-one/' + id,
-      }),
-      providesTags: [API_TAGS.PRESCRIPTION],
-    }),
-    createPrescription: builder.mutation<MutationRes, createPrescriptionReq>({
-      query: (body) => ({
-        url: 'prescription/create',
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: [API_TAGS.PRESCRIPTION],
-    }),
-    updatePrescription: builder.mutation<MutationRes, updatePrescriptionReq>({
-      query: ({ id, body }) => ({
-        url: 'prescription/update/' + id,
-        method: 'PATCH',
-        body,
-      }),
-      invalidatesTags: [API_TAGS.PRESCRIPTION],
-    }),
+    // getManyPrescription: builder.query<
+    //   getAllPrescriptionRes,
+    //   getAllPrescriptionReq
+    // >({
+    //   query: (params) => ({
+    //     url: 'prescription/get-all',
+    //     params,
+    //   }),
+    //   providesTags: [API_TAGS.PRESCRIPTION],
+    // }),
+    // getOnePrescription: builder.query<getOnePrescriptionRes, string>({
+    //   query: (id) => ({
+    //     url: 'prescription/get-one/' + id,
+    //   }),
+    //   providesTags: [API_TAGS.PRESCRIPTION],
+    // }),
+    // createPrescription: builder.mutation<MutationRes, createPrescriptionReq>({
+    //   query: (body) => ({
+    //     url: 'prescription/create',
+    //     method: 'POST',
+    //     body,
+    //   }),
+    //   invalidatesTags: [API_TAGS.PRESCRIPTION],
+    // }),
+    // updatePrescription: builder.mutation<MutationRes, updatePrescriptionReq>({
+    //   query: ({ id, body }) => ({
+    //     url: 'prescription/update/' + id,
+    //     method: 'PATCH',
+    //     body,
+    //   }),
+    //   invalidatesTags: [API_TAGS.PRESCRIPTION],
+    // }),
     // deletePrescription: builder.mutation<MutationRes, deletePrescriptionReq>({
     // 	query: ({ id, prescription_id }) => ({
     // 		url: PATHS.DELETE_EXAM + id + PATHS.PRESCRIPTION + prescription_id,
@@ -237,14 +237,14 @@ export const {
   useCreateExamMutation,
   useAddImagesMutation,
   useCompleteExamsMutation,
-  useCreatePrescriptionMutation,
+  // useCreatePrescriptionMutation,
   useCreatePrescriptionDaysMutation,
   useDeleteExamMutation,
   useGetAllExamsQuery,
   useGetOneExamQuery,
   useRemoveImagesMutation,
   useUpdateExamMutation,
-  useUpdatePrescriptionMutation,
+  // useUpdatePrescriptionMutation,
   useTakeMedicineMutation,
   useCreateServiceDaysMutation,
   useTakeServiceMutation,
@@ -253,9 +253,9 @@ export const {
   useDeleteDailyCheckupMutation,
   useGetDailyCheckupQuery,
   useAddServiceMutation,
-  useGetManyPrescriptionQuery,
+  // useGetManyPrescriptionQuery,
   useGetManyServiceQuery,
-  useGetOnePrescriptionQuery,
+  // useGetOnePrescriptionQuery,
   useGetOneServiceQuery,
   useUpdateServiceMutation,
 } = examinationApi;

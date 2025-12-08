@@ -1,14 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-	useAddDailyCheckupMutation,
-	useCreatePrescriptionDaysMutation,
 	useCreateServiceDaysMutation,
-	useDeleteDailyCheckupMutation,
 	useGetAllExamsQuery,
-	useGetDailyCheckupQuery,
-	useTakeMedicineMutation,
 	useTakeServiceMutation,
-	useUpdateDailyCheckupMutation,
 } from '@/app/api/examinationApi/examinationApi'
+import { useTakePrescriptionMutation } from '@/app/api/prescription/prescriptionApi'
 import {
 	Accordion,
 	AccordionContent,
@@ -35,7 +31,8 @@ import {
 } from '@/components/ui/pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
-import { Activity, Check, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
+import PrescriptionCard from '@/pages/Medicine/components/PrescriptionCard'
+import { Check, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -63,17 +60,19 @@ interface Prescription {
 }
 
 interface Service {
-	service_type_id: {
-		_id: string
-		code: string
-		name: string
-		description: string
-	}
+	service_type_id:
+		| {
+				_id: string
+				code: string
+				name: string
+				description: string
+		  }
+		| string
 	price: number
 	frequency: number
 	duration: number
 	status: string
-	notes: string
+	notes?: string
 	days?: Day[]
 	_id: string
 }
@@ -90,8 +89,8 @@ interface ExamRecord {
 	_id: string
 	patient_id: Patient
 	rooms: Room[]
-	prescriptions: Prescription[]
-	services: Service[]
+	prescription: string | null
+	service: string | null
 }
 
 const Medicine = () => {
@@ -112,32 +111,9 @@ const Medicine = () => {
 		day: null,
 		type: 'medicine',
 	})
-	const [processedPrescriptions, setProcessedPrescriptions] = useState<
-		Set<string>
-	>(new Set())
 	const [processedServices, setProcessedServices] = useState<Set<string>>(
 		new Set()
 	)
-	const [selectedRecordForBP, setSelectedRecordForBP] = useState<string | null>(
-		null
-	)
-	const [bpDialogOpen, setBpDialogOpen] = useState(false)
-	const [editingBP, setEditingBP] = useState<{
-		id: string
-		systolic: number
-		diastolic: number
-		notes: string
-	} | null>(null)
-	const [bpForm, setBpForm] = useState({
-		systolic: '',
-		diastolic: '',
-		notes: '',
-	})
-	const [deleteBPModal, setDeleteBPModal] = useState<{
-		open: boolean
-		recordId: string | null
-		checkupId: string | null
-	}>({ open: false, recordId: null, checkupId: null })
 
 	const itemsPerPage = 10
 
@@ -148,18 +124,12 @@ const Medicine = () => {
 		status: 'pending',
 		is_roomed: true,
 		...(roomSearch && { room_name: roomSearch }),
-	})
+	} as any)
 
-	const [createPrescriptionDays] = useCreatePrescriptionDaysMutation()
-	const [takeMedicine, { isLoading: takingMedicine }] =
-		useTakeMedicineMutation()
+	const [takePrescription, { isLoading: takingMedicine }] =
+		useTakePrescriptionMutation()
 	const [createServiceDays] = useCreateServiceDaysMutation()
 	const [takeService, { isLoading: takingService }] = useTakeServiceMutation()
-	const [addDailyCheckup, { isLoading: addingBP }] =
-		useAddDailyCheckupMutation()
-	const [updateDailyCheckup, { isLoading: updatingBP }] =
-		useUpdateDailyCheckupMutation()
-	const [deleteDailyCheckup] = useDeleteDailyCheckupMutation()
 	const handleRequest = useHandleRequest()
 
 	// Format date helper
@@ -175,92 +145,53 @@ const Medicine = () => {
 		})
 	}
 
-	// Accordion ochilganda days yaratish
-	const handleAccordionChange = async (
-		recordId: string,
-		prescription: Prescription
-	) => {
-		if (
-			prescription.days?.length > 0 ||
-			processedPrescriptions.has(prescription._id)
-		) {
-			return
-		}
-
-		setProcessedPrescriptions(prev => new Set(prev).add(prescription._id))
-
-		await handleRequest({
-			request: () =>
-				createPrescriptionDays({
-					id: recordId,
-					prescriptionId: prescription._id,
-					data: {
-						medication_id:
-							typeof prescription.medication_id === 'string'
-								? prescription.medication_id
-								: prescription.medication_id._id,
-						frequency: prescription.frequency,
-						duration: prescription.duration,
-						instructions: prescription.instructions,
-					},
-				}),
-			onSuccess: () => {
-				toast.success('Кунлар яратилди')
-			},
-			onError: err => {
-				if (err?.data) {
-					toast.error(err?.data?.error?.msg)
-				} else {
-					toast.error(err?.error?.msg || 'Хатолик юз берди')
-				}
-			},
-		})
-	}
-
 	// Service accordion ochilganda days yaratish
-	const handleServiceAccordionChange = async (
-		recordId: string,
-		service: Service
-	) => {
-		if (service.days?.length > 0 || processedServices.has(service._id)) {
-			return
-		}
+	// const handleServiceAccordionChange = async (
+	// 	recordId: string,
+	// 	service: Service
+	// ) => {
+	// 	if (service.days?.length > 0 || processedServices.has(service._id)) {
+	// 		return
+	// 	}
 
-		setProcessedServices(prev => new Set(prev).add(service._id))
+	// 	setProcessedServices(prev => new Set(prev).add(service._id))
 
-		await handleRequest({
-			request: () =>
-				createServiceDays({
-					id: recordId,
-					serviceId: service._id,
-					data: {
-						service_type_id: service.service_type_id._id,
-						price: service.price,
-						frequency: service.frequency,
-						duration: service.duration,
-						status: service.status,
-						notes: service.notes,
-					},
-				}),
-			onSuccess: () => {
-				toast.success('Хизмат кунлари яратилди')
-			},
-			onError: err => {
-				if (err?.data) {
-					toast.error(err?.data?.error?.msg)
-				} else {
-					toast.error(err?.error?.msg || 'Хатолик юз берди')
-				}
-			},
-		})
-	}
+	// 	await handleRequest({
+	// 		request: () =>
+	// 			createServiceDays({
+	// 				id: recordId,
+	// 				serviceId: service._id,
+	// 				data: {
+	// 					service_type_id:
+	// 						typeof service.service_type_id === 'string'
+	// 							? service.service_type_id
+	// 							: service.service_type_id._id,
+	// 					price: service.price,
+	// 					frequency: service.frequency,
+	// 					duration: service.duration,
+	// 					status: service.status as any,
+	// 					notes: service.notes,
+	// 				},
+	// 			}),
+	// 		onSuccess: () => {
+	// 			toast.success('Хизмат кунлари яратилди')
+	// 		},
+	// 		onError: err => {
+	// 			if (err?.data) {
+	// 				toast.error(err?.data?.error?.msg)
+	// 			} else {
+	// 				toast.error(err?.error?.msg || 'Хатолик юз берди')
+	// 			}
+	// 		},
+	// 	})
+	// }
 
 	const openConfirmModal = (
 		recordId: string,
 		prescriptionId: string | null,
 		serviceId: string | null,
-		day: number,
-		type: 'medicine' | 'service'
+		day: string,
+		type: 'medicine' | 'service' = 'medicine'
 	) => {
 		setConfirmModal({
 			open: true,
@@ -280,10 +211,12 @@ const Medicine = () => {
 		if (confirmModal.type === 'medicine' && confirmModal.prescriptionId) {
 			await handleRequest({
 				request: () =>
-					takeMedicine({
-						id: confirmModal.recordId!,
-						prescriptionId: confirmModal.prescriptionId!,
-						day: confirmModal.day!,
+					takePrescription({
+						id: confirmModal.prescriptionId!,
+						body: {
+							item_id: confirmModal.prescriptionId!,
+							day: confirmModal.day!,
+						},
 					}),
 				onSuccess: () => {
 					toast.success('Дори қабул қилинди ✓')
@@ -337,111 +270,6 @@ const Medicine = () => {
 	// Room search handler
 	const handleSearch = () => {
 		setCurrentPage(1) // Reset to first page on search
-	}
-
-	// Blood pressure handlers
-	const openBPDialog = (recordId: string) => {
-		setSelectedRecordForBP(recordId)
-		setBpDialogOpen(true)
-		setEditingBP(null)
-		setBpForm({ systolic: '', diastolic: '', notes: '' })
-	}
-
-	const openEditBPDialog = (
-		recordId: string,
-		checkupId: string,
-		systolic: number,
-		diastolic: number,
-		notes: string
-	) => {
-		setSelectedRecordForBP(recordId)
-		setEditingBP({ id: checkupId, systolic, diastolic, notes })
-		setBpForm({
-			systolic: systolic.toString(),
-			diastolic: diastolic.toString(),
-			notes: notes || '',
-		})
-		setBpDialogOpen(true)
-	}
-
-	const closeBPDialog = () => {
-		setBpDialogOpen(false)
-		setEditingBP(null)
-		setBpForm({ systolic: '', diastolic: '', notes: '' })
-		setSelectedRecordForBP(null)
-	}
-
-	const handleBPSubmit = async () => {
-		if (!selectedRecordForBP) return
-
-		const systolic = parseInt(bpForm.systolic)
-		const diastolic = parseInt(bpForm.diastolic)
-
-		if (!systolic || !diastolic || systolic <= 0 || diastolic <= 0) {
-			toast.error('Илтимос, тўғри қийматлар киритинг')
-			return
-		}
-
-		const data = {
-			blood_pressure: { systolic, diastolic },
-			notes: bpForm.notes,
-		}
-
-		if (editingBP) {
-			await handleRequest({
-				request: () =>
-					updateDailyCheckup({
-						id: selectedRecordForBP,
-						checkup_id: editingBP.id,
-						body: data,
-					}),
-				onSuccess: () => {
-					toast.success('Қон босими янгиланди')
-					closeBPDialog()
-				},
-				onError: err => {
-					toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
-				},
-			})
-		} else {
-			await handleRequest({
-				request: () =>
-					addDailyCheckup({
-						id: selectedRecordForBP,
-						body: data,
-					}),
-				onSuccess: () => {
-					toast.success('Қон босими қўшилди')
-					closeBPDialog()
-				},
-				onError: err => {
-					toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
-				},
-			})
-		}
-	}
-
-	const handleDeleteBP = (recordId: string, checkupId: string) => {
-		setDeleteBPModal({ open: true, recordId, checkupId })
-	}
-
-	const confirmDeleteBP = async () => {
-		if (!deleteBPModal.recordId || !deleteBPModal.checkupId) return
-
-		await handleRequest({
-			request: () =>
-				deleteDailyCheckup({
-					id: deleteBPModal.recordId!,
-					checkup_id: deleteBPModal.checkupId!,
-				}),
-			onSuccess: () => {
-				toast.success('Қон босими ўчирилди')
-				setDeleteBPModal({ open: false, recordId: null, checkupId: null })
-			},
-			onError: err => {
-				toast.error(err?.data?.error?.msg || 'Хатолик юз берди')
-			},
-		})
 	}
 
 	if (isLoading) {
@@ -501,18 +329,6 @@ const Medicine = () => {
 							type='single'
 							collapsible
 							className='w-full space-y-2 sm:space-y-3'
-							onValueChange={value => {
-								if (value) {
-									const recordId = value.replace('record-', '')
-									const record = records.find(r => r._id === recordId)
-
-									if (record) {
-										record.prescriptions.forEach(prescription => {
-											handleAccordionChange(recordId, prescription)
-										})
-									}
-								}
-							}}
 						>
 							{records.map(record => (
 								<AccordionItem
@@ -537,267 +353,47 @@ const Medicine = () => {
 
 									<AccordionContent className='px-2 sm:px-4 pb-2 sm:pb-4'>
 										<Tabs defaultValue='medicines' className='w-full'>
-											<TabsList className='grid w-full grid-cols-3 mb-4'>
+											<TabsList className='grid w-full grid-cols-2 mb-4'>
 												<TabsTrigger value='medicines'>Дорилар</TabsTrigger>
 												<TabsTrigger value='services'>Хизматлар</TabsTrigger>
-												<TabsTrigger value='bloodpressure'>
-													Қон босими
-												</TabsTrigger>
 											</TabsList>{' '}
 											<TabsContent value='medicines'>
-												{record.prescriptions.length === 0 ? (
+												{!record.prescription ? (
 													<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
 														Дорилар топилмади
 													</p>
 												) : (
 													<div className='space-y-2 sm:space-y-4 pt-2 sm:pt-3'>
-														{record.prescriptions.map(prescription => {
-															const isProcessing = processedPrescriptions.has(
-																prescription._id
-															)
-															const hasDays =
-																prescription.days &&
-																prescription.days.length > 0
-
-															return (
-																<Card
-																	key={prescription._id}
-																	className='border shadow-sm bg-card'
-																>
-																	<CardHeader className='pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6'>
-																		<div className='flex justify-between items-start gap-2'>
-																			<div className='flex-1 min-w-0'>
-																				<h4 className='font-semibold text-xs sm:text-sm md:text-base line-clamp-2'>
-																					{typeof prescription.medication_id ===
-																					'string'
-																						? prescription.medication_id
-																						: prescription.medication_id.name}
-																				</h4>
-																				<p className='text-xs font-medium text-muted-foreground mt-1'>
-																					КЎРСАТМАЛАР:{' '}
-																					{prescription.instructions}
-																				</p>
-																				<p className='text-xs text-muted-foreground mt-0.5'>
-																					Доза:{' '}
-																					{typeof prescription.medication_id ===
-																					'string'
-																						? 'N/A'
-																						: `${prescription.medication_id.dosage}${prescription.medication_id.dosage_unit}`}
-																				</p>
-																			</div>
-																		</div>
-																	</CardHeader>
-																	<CardContent className='px-3 sm:px-6 pb-3 sm:pb-6'>
-																		{/* Loading holati */}
-																		{isProcessing && !hasDays && (
-																			<div className='flex items-center justify-center py-6 sm:py-8'>
-																				<Loader2 className='w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary' />
-																				<span className='ml-2 text-xs sm:text-sm text-muted-foreground'>
-																					Кунлар яратилмоқда...
-																				</span>
-																			</div>
-																		)}
-
-																		{/* Days mavjud bo'lsa */}
-																		{hasDays && (
-																			<>
-																				{/* Desktop - 5 columns */}
-																				<div className='hidden lg:grid lg:grid-cols-5 gap-2 xl:gap-3'>
-																					{prescription.days.map(day => {
-																						const taken = day.times || 0
-																						const total = prescription.frequency
-																						const isCompleted = taken >= total
-																						const lastDate = formatDate(
-																							day.date
-																						)
-
-																						return (
-																							<div
-																								key={day._id}
-																								className='flex flex-col items-center p-2 xl:p-3 border rounded-lg hover:bg-accent/50 transition-colors'
-																								onClick={() =>
-																									!isCompleted &&
-																									openConfirmModal(
-																										record._id,
-																										prescription._id,
-																										null,
-																										day.day,
-																										'medicine'
-																									)
-																								}
-																							>
-																								<p className='text-xs font-medium mb-1 text-center line-clamp-1'>
-																									Кун {day.day}
-																								</p>
-																								{lastDate && (
-																									<p className='text-[10px] text-black mb-1.5 text-center'>
-																										{isToday(day.date)
-																											? 'Bugun'
-																											: lastDate}
-																									</p>
-																								)}
-																								<button
-																									disabled={isCompleted}
-																									className={`text-base xl:text-lg font-bold transition-all ${
-																										isCompleted
-																											? 'text-green-600 cursor-default'
-																											: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
-																									}`}
-																								>
-																									{isCompleted ? (
-																										<div className='flex items-center justify-center w-7 h-7 xl:w-8 xl:h-8 bg-green-500 rounded-full'>
-																											<Check className='w-4 h-4 xl:w-5 xl:h-5 text-white' />
-																										</div>
-																									) : (
-																										<span>
-																											{taken}/{total}
-																										</span>
-																									)}
-																								</button>
-																							</div>
-																						)
-																					})}
-																				</div>
-
-																				{/* Tablet - 3 columns */}
-																				<div className='hidden sm:grid lg:hidden sm:grid-cols-3 md:grid-cols-4 gap-2'>
-																					{prescription.days.map(day => {
-																						const taken = day.times || 0
-																						const total = prescription.frequency
-																						const isCompleted = taken >= total
-																						const lastDate = formatDate(
-																							day.date
-																						)
-
-																						return (
-																							<div
-																								key={day._id}
-																								className='flex flex-col items-center p-2 border rounded-lg hover:bg-accent/50 transition-colors'
-																								onClick={() =>
-																									!isCompleted &&
-																									openConfirmModal(
-																										record._id,
-																										prescription._id,
-																										null,
-																										day.day,
-																										'medicine'
-																									)
-																								}
-																							>
-																								<p className='text-xs font-medium mb-0.5 text-center line-clamp-1'>
-																									Кун {day.day}
-																								</p>
-																								{lastDate && (
-																									<p className='text-[10px] text-black mb-1 text-center'>
-																										{isToday(day.date)
-																											? 'Bugun'
-																											: lastDate}
-																									</p>
-																								)}
-																								<button
-																									disabled={isCompleted}
-																									className={`text-base font-bold transition-all ${
-																										isCompleted
-																											? 'text-green-600 cursor-default'
-																											: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
-																									}`}
-																								>
-																									{isCompleted ? (
-																										<div className='flex items-center justify-center w-7 h-7 bg-green-500 rounded-full'>
-																											<Check className='w-4 h-4 text-white' />
-																										</div>
-																									) : (
-																										<span>
-																											{taken}/{total}
-																										</span>
-																									)}
-																								</button>
-																							</div>
-																						)
-																					})}
-																				</div>
-
-																				{/* Mobile - 2 columns */}
-																				<div className='grid grid-cols-2 gap-2 sm:hidden'>
-																					{prescription.days.map(day => {
-																						const taken = day.times || 0
-																						const total = prescription.frequency
-																						const isCompleted = taken >= total
-																						const lastDate = formatDate(
-																							day.date
-																						)
-
-																						return (
-																							<div
-																								key={day._id}
-																								className='flex flex-col p-2 border rounded-lg active:bg-accent/50 transition-colors'
-																								onClick={() =>
-																									!isCompleted &&
-																									openConfirmModal(
-																										record._id,
-																										prescription._id,
-																										null,
-																										day.day,
-																										'medicine'
-																									)
-																								}
-																							>
-																								<div className='flex items-center justify-between mb-1'>
-																									<span className='text-xs font-medium'>
-																										Кун {day.day}
-																									</span>
-																									<button
-																										disabled={isCompleted}
-																										className={`text-sm font-bold transition-all flex-shrink-0 ${
-																											isCompleted
-																												? 'text-green-600'
-																												: 'text-primary active:scale-95'
-																										}`}
-																									>
-																										{isCompleted ? (
-																											<Check className='w-5 h-5 text-green-600' />
-																										) : (
-																											<span>
-																												{taken}/{total}
-																											</span>
-																										)}
-																									</button>
-																								</div>
-																								{lastDate && (
-																									<p className='text-[9px] text-black text-left'>
-																										{isToday(day.date)
-																											? 'Bugun'
-																											: lastDate}
-																									</p>
-																								)}
-																							</div>
-																						)
-																					})}
-																				</div>
-																			</>
-																		)}
-
-																		{/* Days yo'q va processing ham yo'q */}
-																		{!hasDays && !isProcessing && (
-																			<p className='text-xs sm:text-sm text-black text-center py-4'>
-																				Кунлар юкланмоқда...
-																			</p>
-																		)}
-																	</CardContent>
-																</Card>
-															)
-														})}
+														<PrescriptionCard
+															key={record.prescription}
+															prescriptionId={record.prescription}
+															recordId={record._id}
+															onOpenModal={(recordId, prescId, day) =>
+																openConfirmModal(
+																	recordId,
+																	prescId,
+																	null,
+																	day,
+																	'medicine'
+																)
+															}
+															formatDate={formatDate}
+															isToday={isToday}
+														/>
 													</div>
 												)}
 											</TabsContent>
 											<TabsContent value='services'>
-												{!record.services || record.services.length === 0 ? (
+												{!record.service || record.service.length === 0 ? (
 													<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
 														Хизматлар топилмади
 													</p>
 												) : (
 													<div className='space-y-2 sm:space-y-4 pt-2 sm:pt-3'>
-														{record.services.map(service => {
+														{(Array.isArray(record.service)
+															? record.service
+															: []
+														).map(service => {
 															const isProcessing = processedServices.has(
 																service._id
 															)
@@ -813,11 +409,14 @@ const Medicine = () => {
 																		<div className='flex justify-between items-start gap-2'>
 																			<div className='flex-1 min-w-0'>
 																				<h4 className='font-semibold text-xs sm:text-sm md:text-base line-clamp-2'>
-																					{service.service_type_id.name}
+																					{
+																						(service.service_type_id as any)
+																							.name
+																					}
 																				</h4>
-																				{service.notes && (
+																				{(service as any).notes && (
 																					<p className='text-xs font-medium text-muted-foreground mt-1'>
-																						ИЗОҲ: {service.notes}
+																						ИЗОҲ: {(service as any).notes}
 																					</p>
 																				)}
 																				<p className='text-xs text-muted-foreground mt-0.5'>
@@ -861,7 +460,7 @@ const Medicine = () => {
 																										record._id,
 																										null,
 																										service._id,
-																										day.day,
+																										String(day.day),
 																										'service'
 																									)
 																								}
@@ -919,7 +518,7 @@ const Medicine = () => {
 																										record._id,
 																										null,
 																										service._id,
-																										day.day,
+																										String(day.day),
 																										'service'
 																									)
 																								}
@@ -977,7 +576,7 @@ const Medicine = () => {
 																										record._id,
 																										null,
 																										service._id,
-																										day.day,
+																										String(day.day),
 																										'service'
 																									)
 																								}
@@ -1029,14 +628,6 @@ const Medicine = () => {
 														})}
 													</div>
 												)}
-											</TabsContent>
-											<TabsContent value='bloodpressure'>
-												<BloodPressureTab
-													recordId={record._id}
-													onAdd={() => openBPDialog(record._id)}
-													onEdit={openEditBPDialog}
-													onDelete={handleDeleteBP}
-												/>
 											</TabsContent>
 										</Tabs>
 									</AccordionContent>
@@ -1168,274 +759,6 @@ const Medicine = () => {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
-
-			{/* Blood Pressure Dialog */}
-			<Dialog open={bpDialogOpen} onOpenChange={closeBPDialog}>
-				<DialogContent className='max-w-[90vw] sm:max-w-md'>
-					<DialogHeader>
-						<DialogTitle className='text-base sm:text-lg'>
-							{editingBP ? 'Қон босимини таҳрирлаш' : 'Қон босимини қўшиш'}
-						</DialogTitle>
-					</DialogHeader>
-					<div className='space-y-4 py-4'>
-						<div className='space-y-2'>
-							<label className='text-sm font-medium'>Систолик (yuqori)</label>
-							<Input
-								type='number'
-								placeholder='120'
-								value={bpForm.systolic}
-								onKeyDown={e => {
-									if (
-										e.key === ',' ||
-										e.key === 'e' ||
-										e.key === 'E' ||
-										e.key === '+' ||
-										e.key === '-'
-									) {
-										e.preventDefault()
-									}
-								}}
-								onChange={e =>
-									setBpForm({ ...bpForm, systolic: e.target.value })
-								}
-							/>
-						</div>
-						<div className='space-y-2'>
-							<label className='text-sm font-medium'>Диастолик (pastki)</label>
-							<Input
-								type='number'
-								placeholder='80'
-								onKeyDown={e => {
-									if (
-										e.key === ',' ||
-										e.key === 'e' ||
-										e.key === 'E' ||
-										e.key === '+' ||
-										e.key === '-'
-									) {
-										e.preventDefault()
-									}
-								}}
-								value={bpForm.diastolic}
-								onChange={e =>
-									setBpForm({ ...bpForm, diastolic: e.target.value })
-								}
-							/>
-						</div>
-						<div className='space-y-2'>
-							<label className='text-sm font-medium'>Изоҳ (optional)</label>
-							<Input
-								placeholder='Изоҳ...'
-								value={bpForm.notes}
-								onChange={e => setBpForm({ ...bpForm, notes: e.target.value })}
-							/>
-						</div>
-					</div>
-					<DialogFooter>
-						<Button variant='outline' onClick={closeBPDialog}>
-							Бекор қилиш
-						</Button>
-						<Button
-							onClick={handleBPSubmit}
-							disabled={addingBP || updatingBP}
-							className='bg-green-600 hover:bg-green-700'
-						>
-							{addingBP || updatingBP ? (
-								<Loader2 className='w-4 h-4 animate-spin' />
-							) : editingBP ? (
-								'Янгилаш'
-							) : (
-								'Қўшиш'
-							)}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-
-			{/* Delete Blood Pressure Confirmation Dialog */}
-			<Dialog
-				open={deleteBPModal.open}
-				onOpenChange={open =>
-					!open &&
-					setDeleteBPModal({ open: false, recordId: null, checkupId: null })
-				}
-			>
-				<DialogContent className='max-w-[90vw] sm:max-w-sm'>
-					<DialogHeader>
-						<DialogTitle className='text-base sm:text-lg'>
-							Тасдиқлаш
-						</DialogTitle>
-					</DialogHeader>
-					<p className='text-sm sm:text-base text-muted-foreground py-3 sm:py-4'>
-						Қон босими маълумотини ўчирмоқчимисиз?
-					</p>
-					<DialogFooter className='flex gap-2 sm:gap-3'>
-						<Button
-							variant='outline'
-							onClick={() =>
-								setDeleteBPModal({
-									open: false,
-									recordId: null,
-									checkupId: null,
-								})
-							}
-							className='flex-1 sm:flex-none text-sm'
-						>
-							Йўқ
-						</Button>
-						<Button
-							onClick={confirmDeleteBP}
-							className='flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-sm'
-						>
-							Ҳа
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-		</div>
-	)
-}
-
-// Blood Pressure Tab Component
-interface BloodPressureTabProps {
-	recordId: string
-	onAdd: () => void
-	onEdit: (
-		recordId: string,
-		checkupId: string,
-		systolic: number,
-		diastolic: number,
-		notes: string
-	) => void
-	onDelete: (recordId: string, checkupId: string) => void
-}
-
-const BloodPressureTab = ({
-	recordId,
-	onAdd,
-	onEdit,
-	onDelete,
-}: BloodPressureTabProps) => {
-	const { data, isLoading } = useGetDailyCheckupQuery(recordId)
-
-	const formatDateTime = (dateString: string) => {
-		const date = new Date(dateString)
-		return date.toLocaleDateString('uz-UZ', {
-			day: '2-digit',
-			month: '2-digit',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-		})
-	}
-
-	const getBPStatus = (systolic: number, diastolic: number) => {
-		if (systolic < 120 && diastolic < 80) {
-			return { label: 'Нормал', color: 'text-green-600 bg-green-50' }
-		} else if (systolic < 140 && diastolic < 90) {
-			return { label: 'Юқорилаш', color: 'text-yellow-600 bg-yellow-50' }
-		} else {
-			return { label: 'Юқори', color: 'text-red-600 bg-red-50' }
-		}
-	}
-
-	if (isLoading) {
-		return (
-			<div className='flex items-center justify-center py-8'>
-				<Loader2 className='w-6 h-6 animate-spin text-primary' />
-			</div>
-		)
-	}
-
-	const checkups = data?.data || []
-
-	return (
-		<div className='space-y-3'>
-			<div className='flex justify-between items-center'>
-				<h3 className='text-sm font-semibold flex items-center gap-2'>
-					<Activity className='w-4 h-4' />
-					Қон босими тарихи
-				</h3>
-				<Button size='sm' onClick={onAdd} className='h-8'>
-					<Plus className='w-4 h-4 mr-1' />
-					Қўшиш
-				</Button>
-			</div>
-
-			{checkups.length === 0 ? (
-				<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
-					Қон босими маълумотлари топилмади
-				</p>
-			) : (
-				<div className='space-y-2'>
-					{checkups.map(checkup => {
-						const status = getBPStatus(
-							checkup.blood_pressure.systolic,
-							checkup.blood_pressure.diastolic
-						)
-
-						return (
-							<Card key={checkup._id} className='border shadow-sm'>
-								<CardContent className='p-3 sm:p-4'>
-									<div className='flex justify-between items-start gap-2'>
-										<div className='flex-1'>
-											<div className='flex items-center gap-2 mb-2'>
-												<div className='text-lg sm:text-xl font-bold text-primary'>
-													{checkup.blood_pressure.systolic}/
-													{checkup.blood_pressure.diastolic}
-													<span className='text-xs text-muted-foreground ml-1'>
-														mmHg
-													</span>
-												</div>
-												{/* <span
-													className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.color}`}
-												>
-													{status.label}
-												</span> */}
-											</div>
-											<p className='text-xs text-muted-foreground'>
-												{formatDateTime(checkup.date)}
-											</p>
-											{checkup.notes && (
-												<p className='text-xs text-muted-foreground mt-1'>
-													<span className='font-medium'>Изоҳ:</span>{' '}
-													{checkup.notes}
-												</p>
-											)}
-										</div>
-										<div className='flex gap-1'>
-											<Button
-												size='sm'
-												variant='ghost'
-												className='h-8 w-8 p-0'
-												onClick={() =>
-													onEdit(
-														recordId,
-														checkup._id,
-														checkup.blood_pressure.systolic,
-														checkup.blood_pressure.diastolic,
-														checkup.notes
-													)
-												}
-											>
-												<Pencil className='w-3.5 h-3.5' />
-											</Button>
-											<Button
-												size='sm'
-												variant='ghost'
-												className='h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50'
-												onClick={() => onDelete(recordId, checkup._id)}
-											>
-												<Trash2 className='w-3.5 h-3.5' />
-											</Button>
-										</div>
-									</div>
-								</CardContent>
-							</Card>
-						)
-					})}
-				</div>
-			)}
 		</div>
 	)
 }

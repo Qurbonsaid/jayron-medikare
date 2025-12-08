@@ -1,8 +1,8 @@
 import {
   useAddServiceMutation,
   useCreateExamMutation,
-  useCreatePrescriptionMutation,
 } from '@/app/api/examinationApi/examinationApi';
+import { useCreatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import {
   useGetAllPatientQuery,

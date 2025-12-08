@@ -57,14 +57,14 @@ const Inpatient = () => {
   const { data: getCorpuses, isLoading } = useGetCorpusesQuery({
     page: currentPage,
     limit: itemsPerPage,
-    search: searchQuery,
+    search: searchQuery || undefined,
     corpus_number: corpusNumber,
   });
   const { data: examinations, isLoading: isExaminationsLoading } =
     useGetAllExamsQuery({
       page: 1,
       limit: 100,
-      search: searchExamsQuery,
+      search: searchExamsQuery || undefined ,
       status: "pending",
       is_roomed: true,
       treatment_type: "stasionar",

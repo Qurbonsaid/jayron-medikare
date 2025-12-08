@@ -15,7 +15,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { useGetAllPatientQuery } from "@/app/api/patientApi";
+import { useSearchPatientsQuery } from "@/app/api/bookingApi";
 import { formatPhoneNumber } from "@/lib/utils";
 import { Search, User, Calendar } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -33,11 +33,9 @@ export const PatientSearchModal = ({
 }: PatientSearchModalProps) => {
   const [searchPatient, setSearchPatient] = useState<string>("");
 
-  // Fetch patients
+  // Fetch patients (faqat bronlangan bemorlar)
   const { data: patientsData, isLoading: patientsLoading } =
-    useGetAllPatientQuery({
-      page: 1,
-      limit: 100,
+    useSearchPatientsQuery({
       search: searchPatient,
     });
 
@@ -85,11 +83,11 @@ export const PatientSearchModal = ({
                 )}
               </CommandEmpty>
               <CommandGroup>
-                {patientsData?.data.map((patient) => (
+                {patientsData?.data.map((booking) => (
                   <CommandItem
-                    key={patient._id}
-                    value={patient._id}
-                    onSelect={() => handlePatientClick(patient._id)}
+                    key={booking._id}
+                    value={booking._id}
+                    onSelect={() => handlePatientClick(booking.patient_id._id)}
                     className="py-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/20"
                   >
                     <div className="flex items-center gap-3 w-full">
@@ -98,10 +96,10 @@ export const PatientSearchModal = ({
                       </div>
                       <div className="flex flex-col flex-1">
                         <span className="font-semibold text-sm sm:text-base">
-                          {patient.fullname}
+                          {booking.patient_id.fullname}
                         </span>
                         <span className="text-xs sm:text-sm text-muted-foreground">
-                          {formatPhoneNumber(patient.phone)}
+                          {formatPhoneNumber(booking.patient_id.phone)}
                         </span>
                       </div>
                       <Calendar className="w-4 h-4 text-muted-foreground" />

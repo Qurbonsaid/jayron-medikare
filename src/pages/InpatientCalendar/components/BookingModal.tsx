@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -32,16 +31,16 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useGetAllPatientQuery } from "@/app/api/patientApi";
-import { useGetRoomsFromRoomApiQuery } from "@/app/api/roomApi";
 import { useCreateBookingMutation, useGetAvailableRoomsQuery } from "@/app/api/bookingApi";
 import { formatPhoneNumber, formatNumber } from "@/lib/utils";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
 import { toast } from "sonner";
-import { Calendar, User, Home, Search, Save, AlertCircle, UserPlus } from "lucide-react";
+import { Home, Search, Save, AlertCircle, UserPlus } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { QuickAddPatientModal } from "./QuickAddPatientModal";
+import { Card } from "@/components/ui/card";
 
 interface BookingModalProps {
   open: boolean;
@@ -74,7 +73,7 @@ export const BookingModal = ({
     if (open && defaultStartDate) {
       const start = new Date(defaultStartDate);
       setStartDate(start.toISOString().split("T")[0]);
-      
+
       const end = new Date(start);
       end.setDate(end.getDate() + 6); // Default 7 kun: 15-21 = 21-15+1 = 7
       setEndDate(end.toISOString().split("T")[0]);
@@ -195,7 +194,7 @@ export const BookingModal = ({
   // Handle patient created from quick add modal
   const handlePatientCreated = (patientId: string) => {
     setShowQuickAddPatient(false);
-    
+
     if (patientId) {
       // Bemor ID ni o'rnatish
       setSelectedPatientId(patientId);
@@ -205,28 +204,47 @@ export const BookingModal = ({
     }
   };
 
+  console.log(availableRoomsData)
+
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader className="space-y-2 sm:space-y-3">
-          <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
-            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-            Янги Бронь Яратиш
-          </DialogTitle>
-          <DialogDescription className="text-sm sm:text-base">
-            Беморни танлаб, хона ва саналарни белгиланг
-          </DialogDescription>
-        </DialogHeader>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="space-y-2 sm:space-y-3">
+            <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
+              Янги Бронь Яратиш
+            </DialogTitle>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          {/* Patient Selection */}
-          <div className="space-y-2">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            {/* Patient Selection */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <Label htmlFor="patient" className="flex items-center gap-2 text-sm sm:text-base">
-                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Бемор <span className="text-red-500">*</span>
-              </Label>
+              {roomsLoading ? (
+                <div className="animate-pulse space-y-2 flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-32 sm:w-48"></div>
+                  <div className="h-3 bg-gray-200 rounded w-20 sm:w-28"></div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1 w-full">
+                  <span className="font-semibold text-sm sm:text-base">{availableRoomsData ? availableRoomsData.data[0]?.room_name : "noma'lum"}</span>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={
+                        availableRoomsData && availableRoomsData.data[0]?.available_beds > 0
+                          ? "default"
+                          : "destructive"
+                      }
+                      className="text-xs"
+                    >
+                      {availableRoomsData ? availableRoomsData.data[0]?.available_beds : "noma'lum"} бўш
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {formatNumber(availableRoomsData ? availableRoomsData.data[0]?.room_price : 0)} сўм
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <Button
                 type="button"
                 variant="outline"
@@ -236,20 +254,27 @@ export const BookingModal = ({
                 }}
                 className="text-xs w-full sm:w-auto"
               >
-                <UserPlus className="w-3 h-3 mr-1" />
-                Янги бемор қўшиш
+                <UserPlus className="w-2 h-2 mr-1" />
+                Бемор қўшиш
               </Button>
             </div>
-            <Popover open={openPatientPopover} onOpenChange={setOpenPatientPopover}>
-              <PopoverTrigger asChild>
+
+            <div className="space-y-2">
+              <Label htmlFor="patient" className="flex items-center gap-2 text-sm">
+                Бемор <span className="text-red-500">*</span>
+              </Label>
+
+              <div className="w-full">
                 <Button
+                  type="button"
+                  onClick={() => setOpenPatientPopover(prev => !prev)}
                   variant="outline"
                   role="combobox"
-                  className="w-full justify-between h-auto min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
+                  className="w-full justify-between h-auto min-h-[48px] sm:min-h-[56px] text-sm"
                 >
                   {selectedPatient ? (
                     <div className="flex flex-col items-start gap-0.5">
-                      <span className="font-semibold text-sm sm:text-base">
+                      <span className="font-semibold text-sm">
                         {selectedPatient.fullname}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -257,202 +282,204 @@ export const BookingModal = ({
                       </span>
                     </div>
                   ) : (
-                    <span className="flex items-center gap-2 text-sm sm:text-base">
-                      <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="flex items-center gap-2 text-sm">
+                      <Search className="w-3 h-3 sm:w-4 sm:h-4  " />
                       Беморни қидириш...
                     </span>
                   )}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full sm:w-[500px] p-0" align="start">
-                <Command shouldFilter={false} className="w-full">
-                  <CommandInput
-                    placeholder="Исм, телефон орқали қидириш..."
-                    value={searchPatient}
-                    onValueChange={setSearchPatient}
-                    className="text-sm sm:text-base"
-                  />
-                  <CommandList className="max-h-[300px] overflow-y-auto">
-                    <CommandEmpty className="text-sm sm:text-base py-6">
-                      {patientsLoading ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <span>Юкланмоқда...</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                          <span>Бемор топилмади</span>
-                        </div>
-                      )}
-                    </CommandEmpty>
-                    <CommandGroup>
-                      {patientsData?.data.map((patient) => (
-                        <CommandItem
-                          key={patient._id}
-                          value={patient._id}
-                          onSelect={() => {
-                            setSelectedPatientId(patient._id);
-                            setOpenPatientPopover(false);
-                          }}
-                          className="py-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/20"
-                        >
-                          <div className="flex items-center gap-3 w-full">
-                            <div className="flex flex-col flex-1">
-                              <span className="font-semibold text-sm sm:text-base">
-                                {patient.fullname}
-                              </span>
-                              <span className="text-xs sm:text-sm text-muted-foreground">
-                                {formatPhoneNumber(patient.phone)}
+                {openPatientPopover && <div className="w-full h-full fixed top-0 left-0 bg-black/10 z-20" onClick={() => setOpenPatientPopover(false)}></div>}
+                <div className="w-full relative mt-2">
+                  {openPatientPopover && <Card className="absolute top-0 left-0 w-full z-30 bg-white ">
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="Исм, телефон орқали қидириш..."
+                        value={searchPatient}
+                        onValueChange={setSearchPatient}
+                        className="text-sm"
+                      />
+                      <CommandList className="max-h-[210px] overflow-y-auto">
+                        <CommandEmpty className="text-sm py-6">
+                          {patientsLoading ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <span>Юкланмоқда...</span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                              <span>Бемор топилмади</span>
+                            </div>
+                          )}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {patientsData?.data.map((patient) => (
+                            <CommandItem
+                              key={patient._id}
+                              value={patient._id}
+                              onSelect={() => {
+                                setSelectedPatientId(patient._id);
+                                setOpenPatientPopover(false);
+                              }}
+                              className="py-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                            >
+                              <div className="flex items-center gap-3 w-full">
+                                <div className="flex flex-col flex-1 min-w-0">
+                                  <span className="font-semibold text-sm truncate">
+                                    {patient.fullname}
+                                  </span>
+                                  <span className="text-xs sm:text-xs text-muted-foreground truncate">
+                                    {formatPhoneNumber(patient.phone)}
+                                  </span>
+                                </div>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </Card>}
+                </div>
+              </div>
+            </div>
+
+            {/* Date Range */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start_date" className="text-sm">
+                  Бошланиш санаси <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="start_date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                  min={new Date().toISOString().split("T")[0]}
+                  className="text-sm h-10 sm:h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end_date" className="text-sm">
+                  Тугаш санаси <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="end_date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  required
+                  min={startDate || new Date().toISOString().split("T")[0]}
+                  className="text-sm h-10 sm:h-11"
+                />
+              </div>
+            </div>
+
+            {/* Room Selection */}
+            {/* {startDate && endDate && (
+              <div className="space-y-2">
+                <Label htmlFor="room" className="flex items-center gap-2 text-sm sm:text-base">
+                  <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  Хона <span className="text-red-500">*</span>
+                </Label>
+                {roomsLoading ? (
+                  <div className="p-3 sm:p-4 text-center">
+                    <LoadingSpinner size="sm" text="Хоналар юкланмоқда..." />
+                  </div>
+                ) : availableRoomsData?.data && availableRoomsData.data.length > 0 ? (
+                  <Select value={selectedRoomId} onValueChange={setSelectedRoomId} disabled={!!roomId}>
+                    <SelectTrigger className="text-sm sm:text-base h-10 sm:h-11">
+                      <SelectValue placeholder="Хонани танланг" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableRoomsData.data.map((room) => (
+                        <SelectItem key={room._id} value={room._id} className="py-2 sm:py-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 w-full">
+                            <span className="font-semibold text-sm sm:text-base">{room.room_name}</span>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant={
+                                  room.available_beds > 0
+                                    ? "default"
+                                    : "destructive"
+                                }
+                                className="text-xs"
+                              >
+                                {room.available_beds} бўш
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {formatNumber(room.room_price)} сўм
                               </span>
                             </div>
                           </div>
-                        </CommandItem>
+                        </SelectItem>
                       ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Alert className="py-3">
+                    <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <AlertDescription className="text-xs sm:text-sm">
+                      Танланган вақт оралиғида бўш хоналар йўқ
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )} */}
 
-          {/* Date Range */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            {/* Note */}
             <div className="space-y-2">
-              <Label htmlFor="start_date" className="text-sm sm:text-base">
-                Бошланиш санаси <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="start_date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-                min={new Date().toISOString().split("T")[0]}
-                className="text-sm sm:text-base h-10 sm:h-11"
+              <Label htmlFor="note" className="text-sm sm:text-base">Изоҳ (ихтиёрий)</Label>
+              <Textarea
+                id="note"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Махсус диета, аллергия ва бошқа маълумотлар..."
+                rows={3}
+                className="text-sm sm:text-base resize-none"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="end_date" className="text-sm sm:text-base">
-                Тугаш санаси <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="end_date"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-                min={startDate || new Date().toISOString().split("T")[0]}
-                className="text-sm sm:text-base h-10 sm:h-11"
-              />
-            </div>
-          </div>
 
-          {/* Room Selection */}
-          {startDate && endDate && (
-            <div className="space-y-2">
-              <Label htmlFor="room" className="flex items-center gap-2 text-sm sm:text-base">
-                <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Хона <span className="text-red-500">*</span>
-              </Label>
-              {roomsLoading ? (
-                <div className="p-3 sm:p-4 text-center">
-                  <LoadingSpinner size="sm" text="Хоналар юкланмоқда..." />
-                </div>
-              ) : availableRoomsData?.data && availableRoomsData.data.length > 0 ? (
-                <Select value={selectedRoomId} onValueChange={setSelectedRoomId} disabled={!!roomId}>
-                  <SelectTrigger className="text-sm sm:text-base h-10 sm:h-11">
-                    <SelectValue placeholder="Хонани танланг" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableRoomsData.data.map((room) => (
-                      <SelectItem key={room._id} value={room._id} className="py-2 sm:py-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 w-full">
-                          <span className="font-semibold text-sm sm:text-base">{room.room_name}</span>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant={
-                                room.available_beds > 0
-                                  ? "default"
-                                  : "destructive"
-                              }
-                              className="text-xs"
-                            >
-                              {room.available_beds} бўш
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {formatNumber(room.room_price)} сўм
-                            </span>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Alert className="py-3">
-                  <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <AlertDescription className="text-xs sm:text-sm">
-                    Танланган вақт оралиғида бўш хоналар йўқ
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          )}
+            {/* Footer */}
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isCreating}
+                className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
+              >
+                Бекор қилиш
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  isCreating ||
+                  !selectedPatientId ||
+                  !selectedRoomId ||
+                  !startDate ||
+                  !endDate
+                }
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
+              >
+                {isCreating ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
+                    Сақлаш
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-          {/* Note */}
-          <div className="space-y-2">
-            <Label htmlFor="note" className="text-sm sm:text-base">Изоҳ (ихтиёрий)</Label>
-            <Textarea
-              id="note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Махсус диета, аллергия ва бошқа маълумотлар..."
-              rows={3}
-              className="text-sm sm:text-base resize-none"
-            />
-          </div>
-
-          {/* Footer */}
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isCreating}
-              className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
-            >
-              Бекор қилиш
-            </Button>
-            <Button
-              type="submit"
-              disabled={
-                isCreating ||
-                !selectedPatientId ||
-                !selectedRoomId ||
-                !startDate ||
-                !endDate
-              }
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
-            >
-              {isCreating ? (
-                <LoadingSpinner size="sm" />
-              ) : (
-                <>
-                  <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                  Сақлаш
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-
-    {/* Quick Add Patient Modal */}
-    <QuickAddPatientModal
-      open={showQuickAddPatient}
-      onOpenChange={setShowQuickAddPatient}
-      onPatientCreated={handlePatientCreated}
-    />
+      {/* Quick Add Patient Modal */}
+      <QuickAddPatientModal
+        open={showQuickAddPatient}
+        onOpenChange={setShowQuickAddPatient}
+        onPatientCreated={handlePatientCreated}
+      />
     </>
   );
 };

@@ -1,13 +1,15 @@
 import {
   useAddServiceMutation,
-  useCreatePrescriptionMutation,
   useGetAllExamsQuery,
   useGetOneExamQuery,
-  useUpdatePrescriptionMutation,
 } from '@/app/api/examinationApi/examinationApi';
 import type { Prescription } from '@/app/api/examinationApi/types';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import { useGetPatientByIdQuery } from '@/app/api/patientApi/patientApi';
+import {
+  useCreatePrescriptionMutation,
+  useUpdatePrescriptionMutation,
+} from '@/app/api/prescription/prescriptionApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';

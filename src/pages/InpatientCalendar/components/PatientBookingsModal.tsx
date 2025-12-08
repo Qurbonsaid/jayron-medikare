@@ -55,12 +55,12 @@ export const PatientBookingsModal = ({
   );
 
   const bookings = bookingsData?.data || [];
-  
+
   // Eng oxirgi bronni olish (created_at bo'yicha eng yangi)
-  const latestBooking = bookings.length > 0 
-    ? bookings.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      )[0]
+  const latestBooking = bookings.length > 0
+    ? bookings.sort((a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0]
     : null;
 
   // Get patient info from booking
@@ -71,18 +71,18 @@ export const PatientBookingsModal = ({
 
   const handleViewBooking = () => {
     if (!latestBooking) return;
-    
+
     // Extract IDs
     const roomId = typeof latestBooking.room_id === "object" ? latestBooking.room_id._id : latestBooking.room_id;
     const corpusId = typeof latestBooking.corpus_id === "object" ? latestBooking.corpus_id._id : latestBooking.corpus_id;
-    
+
     // Calculate week start from booking start_at
     const bookingStartDate = parseISO(latestBooking.start_at);
     const weekStart = startOfWeek(bookingStartDate, { weekStartsOn: 1 });
-    
+
     // Format week start for URL parameter (YYYY-MM-DD)
     const weekStartStr = format(weekStart, "yyyy-MM-dd");
-    
+
     // Navigate with startDate parameter
     navigate(`/inpatient-calendar/${corpusId}/${roomId}?startDate=${weekStartStr}`);
     onOpenChange(false);
@@ -219,55 +219,51 @@ export const PatientBookingsModal = ({
                   )}
                 </div>
 
-                {/* Bed Number */}
-                {latestBooking.bed_number && (
-                  <>
-                    <Separator />
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-950/20 flex items-center justify-center flex-shrink-0">
-                        <Bed className="w-5 h-5 text-amber-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground">Жой рақами</p>
-                        <p className="font-semibold text-base mt-1">
-                          {latestBooking.bed_number}-жой
-                        </p>
-                      </div>
+                <Separator />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Bed Number */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-950/20 flex items-center justify-center flex-shrink-0">
+                      <Bed className="w-5 h-5 text-amber-600" />
                     </div>
-                  </>
-                )}
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">Жой рақами</p>
+                      <p className="font-semibold text-base mt-1">
+                        {latestBooking?.bed_number || 0}-жой
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Created Date */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-950/20 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">Яратилган вақт</p>
+                      <p className="text-sm mt-1 text-muted-foreground">
+                        {format(parseISO(latestBooking.created_at), "d MMMM yyyy, HH:mm", { locale: uz })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
 
                 {/* Note */}
-                {latestBooking.note && (
-                  <>
-                    <Separator />
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-950/20 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-5 h-5 text-slate-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground">Изоҳ</p>
-                        <p className="text-sm mt-1 text-muted-foreground leading-relaxed">
-                          {latestBooking.note}
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Created Date */}
-                <Separator />
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-950/20 flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-5 h-5 text-gray-600" />
+                  <div className="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-950/20 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-slate-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Яратилган вақт</p>
-                    <p className="text-sm mt-1 text-muted-foreground">
-                      {format(parseISO(latestBooking.created_at), "d MMMM yyyy, HH:mm", { locale: uz })}
+                    <p className="text-sm text-muted-foreground">Изоҳ</p>
+                    <p className="text-sm mt-1 text-muted-foreground leading-relaxed">
+                      {latestBooking?.note || "berilmagan"}
                     </p>
                   </div>
                 </div>
+
               </div>
             </div>
 
@@ -275,18 +271,18 @@ export const PatientBookingsModal = ({
             <div className="border-t bg-muted/30 p-6">
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
-                  variant="outline"
-                  onClick={handleClose}
-                  className="flex-1 sm:flex-none"
-                >
-                  Ёпиш
-                </Button>
-                <Button
                   onClick={handleViewBooking}
                   className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   Календарда кўриш
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleClose}
+                  className="flex-1 sm:flex-none"
+                >
+                  Ёпиш
                 </Button>
               </div>
             </div>
