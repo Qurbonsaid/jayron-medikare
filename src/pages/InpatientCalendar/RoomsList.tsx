@@ -18,18 +18,6 @@ const RoomsList = () => {
   const [showPatientBookings, setShowPatientBookings] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
 
-  // Sana intervalini memoize qilish (har safar yangi Date() yaratilmasligi uchun)
-  const dateRange = useMemo(() => {
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 30);
-    
-    return {
-      start_date: startDate.toISOString(),
-      end_date: endDate.toISOString(),
-    };
-  }, []); // faqat component mount bo'lganda yaratiladi
-
   // Fetch corpuses
   const { data: corpusesData, isLoading: corpusesLoading } =
     useGetCorpusesQuery({
@@ -49,6 +37,7 @@ const RoomsList = () => {
   }, [corpusesData, selectedCorpusId]);
 
   // Fetch available rooms for selected corpus
+  // Backend o'zi start_date ni aniqlaydi
   const {
     data: availableRooms,
     isLoading: roomsLoading,
@@ -56,7 +45,6 @@ const RoomsList = () => {
   } = useGetAvailableRoomsQuery(
     {
       corpus_id: selectedCorpusId,
-      ...dateRange,
     },
     { skip: !selectedCorpusId }
   );

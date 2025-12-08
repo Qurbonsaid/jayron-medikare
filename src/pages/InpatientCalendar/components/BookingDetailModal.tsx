@@ -52,34 +52,50 @@ export const BookingDetailModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-blue-600" />
-            Бронь Тафсилотлари
-          </DialogTitle>
-          <DialogDescription>Бронь ҳақида тўлиқ маълумот</DialogDescription>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="space-y-2 sm:space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+              {booking.is_real_patient ? "Бемор маълумотлари" : "Бронь тафсилотлари"}
+            </DialogTitle>
+            <Badge 
+              variant={booking.is_real_patient ? "default" : "outline"}
+              className={booking.is_real_patient 
+                ? "bg-green-600 hover:bg-green-700 text-xs sm:text-sm" 
+                : "text-xs sm:text-sm"
+              }
+            >
+              {booking.is_real_patient ? "Одам бор" : "Бронь"}
+            </Badge>
+          </div>
+          <DialogDescription className="text-sm sm:text-base">
+            {booking.is_real_patient 
+              ? "Стационардаги бемор ҳақида тўлиқ маълумот"
+              : "Бронь ҳақида тўлиқ маълумот"
+            }
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Patient Info */}
-          <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-            <div className="flex items-center gap-2 mb-3">
-              <User className="w-5 h-5 text-blue-600" />
-              <h3 className="font-bold text-lg text-blue-900">
+          <div className="p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <User className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+              <h3 className="font-bold text-base sm:text-lg text-blue-900">
                 Бемор маълумотлари
               </h3>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <p className="text-xs text-blue-700 mb-1">Исм-фамилия</p>
-                <p className="font-semibold text-blue-900">
+                <p className="font-semibold text-sm sm:text-base text-blue-900 break-words">
                   {patient?.fullname || "Номаълум"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-blue-700 mb-1">Телефон</p>
-                <p className="font-semibold text-blue-900 flex items-center gap-1">
+                <p className="font-semibold text-sm sm:text-base text-blue-900 flex items-center gap-1">
                   <Phone className="w-3 h-3" />
                   {formatPhoneNumber(patient?.phone)}
                 </p>
@@ -90,41 +106,35 @@ export const BookingDetailModal = ({
           <Separator />
 
           {/* Room Info */}
-          <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
-            <div className="flex items-center gap-2 mb-3">
-              <Home className="w-5 h-5 text-green-600" />
-              <h3 className="font-bold text-lg text-green-900">
+          <div className="p-3 sm:p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <Home className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+              <h3 className="font-bold text-base sm:text-lg text-green-900">
                 Хона маълумотлари
               </h3>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs text-green-700 mb-1">Корпус</p>
-                <Badge variant="outline" className="bg-white">
+                <Badge variant="outline" className="bg-white text-xs sm:text-sm">
                   Корпус {corpus?.corpus_number || "-"}
                 </Badge>
               </div>
               <div>
                 <p className="text-xs text-green-700 mb-1">Хона</p>
-                <p className="font-semibold text-green-900">
+                <p className="font-semibold text-sm sm:text-base text-green-900">
                   {room?.room_name || "Номаълум"}
                 </p>
               </div>
-              {/* <div>
-                <p className="text-xs text-green-700 mb-1">Қават</p>
-                <p className="font-semibold text-green-900">
-                  {room?.floor_number || "-"}-қават
-                </p>
-              </div> */}
               <div>
                 <p className="text-xs text-green-700 mb-1">Сиғим</p>
-                <p className="font-semibold text-green-900">
+                <p className="font-semibold text-sm sm:text-base text-green-900">
                   {room?.patient_capacity || "-"} жойлик
                 </p>
               </div>
               <div>
                 <p className="text-xs text-green-700 mb-1">Нарх</p>
-                <p className="font-semibold text-green-900">
+                <p className="font-semibold text-sm sm:text-base text-green-900 break-words">
                   {formatNumber(room?.room_price)} сўм/кун
                 </p>
               </div>
@@ -134,15 +144,15 @@ export const BookingDetailModal = ({
           <Separator />
 
           {/* Booking Period */}
-          <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-5 h-5 text-purple-600" />
-              <h3 className="font-bold text-lg text-purple-900">Бронь даври</h3>
+          <div className="p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+              <h3 className="font-bold text-base sm:text-lg text-purple-900">Бронь даври</h3>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <p className="text-xs text-purple-700 mb-1">Бошланиши</p>
-                <p className="font-semibold text-purple-900">
+                <p className="font-semibold text-sm sm:text-base text-purple-900">
                   {format(startDate, "dd MMM yyyy", { locale: uz })}
                 </p>
                 <p className="text-xs text-purple-600">
@@ -151,7 +161,7 @@ export const BookingDetailModal = ({
               </div>
               <div>
                 <p className="text-xs text-purple-700 mb-1">Тугаши</p>
-                <p className="font-semibold text-purple-900">
+                <p className="font-semibold text-sm sm:text-base text-purple-900">
                   {format(endDate, "dd MMM yyyy", { locale: uz })}
                 </p>
                 <p className="text-xs text-purple-600">
@@ -160,7 +170,7 @@ export const BookingDetailModal = ({
               </div>
               <div>
                 <p className="text-xs text-purple-700 mb-1">Давомийлиги</p>
-                <p className="font-semibold text-purple-900">{duration} кун</p>
+                <p className="font-semibold text-sm sm:text-base text-purple-900">{duration} кун</p>
                 <p className="text-xs text-purple-600">
                   {Math.floor(duration / 7)} ҳафта {duration % 7} кун
                 </p>
@@ -172,20 +182,20 @@ export const BookingDetailModal = ({
           {booking.note && (
             <>
               <Separator />
-              <div className="p-4 bg-gray-50 rounded-xl">
+              <div className="p-3 sm:p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="w-4 h-4 text-gray-600" />
-                  <h4 className="font-semibold text-gray-900">Изоҳ</h4>
+                  <h4 className="font-semibold text-sm sm:text-base text-gray-900">Изоҳ</h4>
                 </div>
-                <p className="text-sm text-gray-700 italic">{booking.note}</p>
+                <p className="text-xs sm:text-sm text-gray-700 italic break-words">{booking.note}</p>
               </div>
             </>
           )}
 
           {/* Metadata */}
           <div className="pt-2">
-            <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-500">
+              <div className="break-words">
                 <span>Яратилди: </span>
                 <strong>
                   {format(new Date(booking.created_at), "dd.MM.yyyy HH:mm", {
@@ -193,7 +203,7 @@ export const BookingDetailModal = ({
                   })}
                 </strong>
               </div>
-              <div>
+              <div className="break-words">
                 <span>Янгиланди: </span>
                 <strong>
                   {format(new Date(booking.updated_at), "dd.MM.yyyy HH:mm", {
@@ -205,18 +215,32 @@ export const BookingDetailModal = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
-          {onDelete && (
-            <Button variant="destructive" onClick={onDelete}>
+        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
+          {/* Real bemor bo'lsa Edit va Delete ko'rinmasin */}
+          {!booking.is_real_patient && onDelete && (
+            <Button 
+              variant="destructive" 
+              onClick={onDelete}
+              className="w-full sm:w-auto text-sm sm:text-base"
+            >
               Ўчириш
             </Button>
           )}
-          {onEdit && (
-            <Button variant="outline" onClick={onEdit}>
+          {!booking.is_real_patient && onEdit && (
+            <Button 
+              variant="outline" 
+              onClick={onEdit}
+              className="w-full sm:w-auto text-sm sm:text-base"
+            >
               Таҳрирлаш
             </Button>
           )}
-          <Button onClick={() => onOpenChange(false)}>Ёпиш</Button>
+          <Button 
+            onClick={() => onOpenChange(false)}
+            className="w-full sm:w-auto text-sm sm:text-base"
+          >
+            Ёпиш
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

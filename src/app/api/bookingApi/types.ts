@@ -29,6 +29,7 @@ export type Booking = {
   bed_number?: number; // Joy raqami (backend dan keladi)
   note?: string;
   status?: string;
+  is_real_patient?: boolean; // Real bemor yoki bron
   created_at: string;
   updated_at: string;
 };
@@ -121,4 +122,40 @@ export type BookingError = {
   statusCode: number;
   statusMsg: string;
   msg: string;
+};
+
+// Search Patients Types (bronlangan bemorlar)
+export type SearchPatientBookingInfo = {
+  _id: string;
+  patient_id: {
+    _id: string;
+    fullname: string;
+    phone: string;
+    passport_serial?: string;
+    address?: string;
+  };
+  room_id: {
+    _id: string;
+    room_name: string;
+  } | string;
+  corpus_id: {
+    _id: string;
+    corpus_number: number;
+  } | string;
+  bed_number: number;
+  start_at: string;
+  end_at: string;
+  note?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SearchPatientsParams = {
+  search?: string;
+};
+
+export type SearchPatientsResponse = {
+  success: boolean;
+  message: string;
+  data: SearchPatientBookingInfo[];
 };
