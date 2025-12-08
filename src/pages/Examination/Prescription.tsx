@@ -91,6 +91,10 @@ const Prescription = () => {
     services: {},
   });
   const [serviceSearch, setServiceSearch] = useState('');
+  const [debouncedServiceSearch, setDebouncedServiceSearch] = useState('');
+  const [servicePage, setServicePage] = useState(1);
+  const [serviceOptions, setServiceOptions] = useState<any[]>([]);
+  const [hasMoreServices, setHasMoreServices] = useState(true);
 
   // Common service settings
   const [serviceDuration, setServiceDuration] = useState<number>(7);
@@ -160,12 +164,49 @@ const Prescription = () => {
     search: medicationSearch || undefined,
   });
 
-  // Fetch services for search
-  const { data: servicesData } = useGetAllServiceQuery({
-    page: 1,
-    limit: 100,
-    search: serviceSearch,
-  } as any);
+  // Debounce service search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedServiceSearch(serviceSearch.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [serviceSearch]);
+
+  // Fetch services for search with paging
+  const { data: servicesData, isFetching: isFetchingServices } =
+    useGetAllServiceQuery({
+      page: servicePage,
+      limit: 20,
+      search: debouncedServiceSearch || undefined,
+    } as any);
+
+  // Reset paging when search changes
+  useEffect(() => {
+    setServicePage(1);
+    setServiceOptions([]);
+    setHasMoreServices(true);
+  }, [debouncedServiceSearch]);
+
+  // Append fetched services to options list
+  useEffect(() => {
+    if (servicesData?.data) {
+      setServiceOptions((prev) => {
+        const incoming = servicesData.data;
+        const merged = servicePage === 1 ? incoming : [...prev, ...incoming];
+        const seen = new Set<string>();
+        return merged.filter((s: any) => {
+          if (!s?._id) return false;
+          if (seen.has(s._id)) return false;
+          seen.add(s._id);
+          return true;
+        });
+      });
+
+      const pages = servicesData.pagination?.pages || 1;
+      const current = servicesData.pagination?.page || servicePage;
+      setHasMoreServices(current < pages);
+    }
+  }, [servicesData, servicePage]);
 
   const [createPrescription, { isLoading: isCreating }] =
     useCreatePrescriptionMutation();
@@ -176,7 +217,7 @@ const Prescription = () => {
   const handleRequest = useHandleRequest();
 
   const availableMedications = medicationsData?.data || [];
-  const availableServices = servicesData?.data || [];
+  const availableServices = serviceOptions;
 
   // Update examinations list when new data arrives
   useEffect(() => {
@@ -909,55 +950,6 @@ const Prescription = () => {
         {!isLoading && selectedExaminationId && patient && (
           <>
             {/* Drug Search */}
-            {/* <Card className='mb-4 sm:mb-6'>
-              <CardHeader>
-                <CardTitle>Дори Қидириш</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='relative'>
-                  <Search className='absolute left-3 top-3 h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground' />
-                  <Input
-                    placeholder='Дори номини киритинг...'
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setShowSuggestions(true);
-                    }}
-                    onFocus={() => setShowSuggestions(true)}
-                    onBlur={() => {
-                      // Delay to allow click event on dropdown items
-                      setTimeout(() => setShowSuggestions(false), 200);
-                    }}
-                    className='pl-9 sm:pl-10 text-sm sm:text-base'
-                  />
-                  {showSuggestions && searchTerm && (
-                    <div
-                      className='absolute z-10 w-full mt-1 bg-card border rounded-md shadow-lg max-h-48 overflow-auto'
-                      onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
-                    >
-                      {filteredDrugs.length > 0 ? (
-                        filteredDrugs.map((drug, index) => (
-                          <div
-                            key={index}
-                            className='px-3 sm:px-4 py-2 hover:bg-accent cursor-pointer text-sm transition-colors'
-                            onClick={() => addDrugFromSearch(drug)}
-                          >
-                            <div className='flex items-center justify-between'>
-                              <span>{drug}</span>
-                              <Plus className='h-4 w-4 text-primary' />
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className='px-3 sm:px-4 py-2 text-sm text-muted-foreground'>
-                          Дори топилмади
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card> */}
 
             {/* Medications List */}
             <Card className='mb-4 sm:mb-6'>
@@ -1611,7 +1603,23 @@ const Prescription = () => {
                                   <SelectTrigger className='h-7 text-xs border-0 shadow-none'>
                                     <SelectValue placeholder='Танланг...' />
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent
+                                    onScroll={(e) => {
+                                      const target = e.target as HTMLDivElement;
+                                      const bottom =
+                                        target.scrollHeight -
+                                          target.scrollTop -
+                                          target.clientHeight <
+                                        10;
+                                      if (
+                                        bottom &&
+                                        hasMoreServices &&
+                                        !isFetchingServices
+                                      ) {
+                                        setServicePage((prev) => prev + 1);
+                                      }
+                                    }}
+                                  >
                                     <div className='p-2'>
                                       <Input
                                         placeholder='Қидириш...'
@@ -1631,6 +1639,18 @@ const Prescription = () => {
                                         сўм
                                       </SelectItem>
                                     ))}
+                                    {!isFetchingServices &&
+                                      availableServices.length === 0 && (
+                                        <div className='px-2 py-4 text-xs text-muted-foreground text-center'>
+                                          Хизмат топилмади
+                                        </div>
+                                      )}
+                                    {isFetchingServices && (
+                                      <div className='flex items-center justify-center py-2 text-xs text-muted-foreground'>
+                                        <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                                        Юкланмоқда...
+                                      </div>
+                                    )}
                                   </SelectContent>
                                 </Select>
                               </td>

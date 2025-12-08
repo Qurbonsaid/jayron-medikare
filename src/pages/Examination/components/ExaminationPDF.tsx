@@ -912,15 +912,19 @@ const ExaminationInfoDownloadButton: React.FC<
 // Barcha retseptlar uchun PDF yuklab olish komponenti
 interface AllPrescriptionsDownloadButtonProps {
   exam: any;
+  prescriptions?: any[];
 }
 
 const AllPrescriptionsDownloadButton: React.FC<
   AllPrescriptionsDownloadButtonProps
-> = ({ exam }) => {
+> = ({ exam, prescriptions: propPrescriptions }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
 
+  // Use prop prescriptions or fall back to exam.prescriptions
+  const prescriptions = propPrescriptions || exam.prescriptions || [];
+
   const handleDownloadAllPrescriptions = async () => {
-    if (!exam.prescriptions || exam.prescriptions.length === 0) {
+    if (prescriptions.length === 0) {
       alert('Retseptlar mavjud emas');
       return;
     }
@@ -929,7 +933,7 @@ const AllPrescriptionsDownloadButton: React.FC<
       setIsGenerating(true);
 
       const blob = await pdf(
-        <AllPrescriptionsPDF exam={exam} prescriptions={exam.prescriptions} />
+        <AllPrescriptionsPDF exam={exam} prescriptions={prescriptions} />
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -961,9 +965,7 @@ const AllPrescriptionsDownloadButton: React.FC<
       variant='outline'
       size='sm'
       onClick={handleDownloadAllPrescriptions}
-      disabled={
-        isGenerating || !exam.prescriptions || exam.prescriptions.length === 0
-      }
+      disabled={isGenerating || prescriptions.length === 0}
       className='flex items-center gap-2'
     >
       <Download className='h-4 w-4' />
@@ -1189,15 +1191,20 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
 // Xizmatlar uchun PDF yuklab olish komponenti
 interface ServicesDownloadButtonProps {
   exam: any;
+  services?: any[];
 }
 
 const ServicesDownloadButton: React.FC<ServicesDownloadButtonProps> = ({
   exam,
+  services,
 }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
 
+  // Use services from props or fall back to exam.services
+  const allServices = services || exam.services || [];
+
   const handleDownloadServices = async () => {
-    if (!exam.services || exam.services.length === 0) {
+    if (allServices.length === 0) {
       alert('Xizmatlar mavjud emas');
       return;
     }
@@ -1205,7 +1212,9 @@ const ServicesDownloadButton: React.FC<ServicesDownloadButtonProps> = ({
     try {
       setIsGenerating(true);
 
-      const blob = await pdf(<ServicesPDF exam={exam} />).toBlob();
+      // Create exam object with services from props
+      const examWithServices = { ...exam, services: allServices };
+      const blob = await pdf(<ServicesPDF exam={examWithServices} />).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -1236,7 +1245,7 @@ const ServicesDownloadButton: React.FC<ServicesDownloadButtonProps> = ({
       variant='outline'
       size='sm'
       onClick={handleDownloadServices}
-      disabled={isGenerating || !exam.services || exam.services.length === 0}
+      disabled={isGenerating || allServices.length === 0}
       className='flex items-center gap-2'
     >
       <Download className='h-4 w-4' />

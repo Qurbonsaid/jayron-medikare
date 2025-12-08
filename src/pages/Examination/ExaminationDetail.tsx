@@ -55,6 +55,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { BodyPartConstants } from '@/constants/BodyPart';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -506,7 +507,7 @@ const ExaminationDetail = () => {
     );
   };
 
-  const handleAddService = async () => {
+  const handleSaveService = async () => {
     if (services.length === 0) {
       toast.error('Илтимос, хизмат қўшинг');
       return;
@@ -518,29 +519,47 @@ const ExaminationDetail = () => {
       return;
     }
 
+    const payload = {
+      examination_id: exam._id,
+      duration: serviceDuration,
+      items: services.map((srv) => ({
+        service_type_id: srv.service_type_id,
+        days: srv.days,
+        notes: srv.notes,
+      })),
+    };
+
+    const isEdit = Boolean(editingServiceId);
+
     await handleRequest({
       request: async () => {
-        const res = await addServiceMutation({
-          examination_id: exam._id,
-          duration: serviceDuration,
-          items: services.map((srv) => ({
-            service_type_id: srv.service_type_id,
-            days: srv.days,
-            notes: srv.notes,
-          })),
-        }).unwrap();
+        if (isEdit) {
+          const res = await updateService(payload).unwrap();
+          return res;
+        }
+        const res = await addServiceMutation(payload).unwrap();
         return res;
       },
       onSuccess: () => {
-        toast.success('Хизматлар муваффақиятли қўшилди');
+        toast.success(
+          isEdit
+            ? 'Хизмат муваффақиятли янгиланди'
+            : 'Хизматлар муваффақиятли қўшилди'
+        );
         setIsAddingService(false);
+        setEditingServiceId(null);
         setServices([]);
         setServiceDuration(7);
         setServiceStartDate(new Date());
         refetchPatientServices();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хизматларни қўшишда хатолик');
+        toast.error(
+          error?.data?.error?.msg ||
+            (isEdit
+              ? 'Хизматни янгилашда хатолик'
+              : 'Хизматларни қўшишда хатолик')
+        );
       },
     });
   };
@@ -556,8 +575,36 @@ const ExaminationDetail = () => {
   };
 
   const startEditService = (service: any) => {
-    // Edit service functionality - to be implemented
-    toast.error('Хизматни таҳрирлаш функцияси ҳозирча мавжуд эмас');
+    const duration = service.duration || service.days?.length || 0;
+    const firstDate =
+      service.days?.find((d: any) => d?.date)?.date || new Date();
+
+    setIsAddingService(true);
+    setEditingServiceId(service._id);
+    setServiceDuration(duration || 7);
+    setServiceStartDate(firstDate ? new Date(firstDate) : new Date());
+
+    const normalizedDays =
+      service.days?.map((day: any, idx: number) => ({
+        day: day?.day || idx + 1,
+        date: day?.date ? new Date(day.date) : null,
+      })) || [];
+
+    setServices([
+      {
+        id: service._id,
+        service_type_id:
+          typeof service.service_type_id === 'object'
+            ? service.service_type_id?._id || ''
+            : service.service_type_id || '',
+        duration: duration || normalizedDays.length || 7,
+        notes: service.notes || '',
+        days:
+          normalizedDays.length > 0
+            ? normalizedDays
+            : generateDays(duration || 7, [], new Date(firstDate)),
+      },
+    ]);
   };
 
   const cancelEditService = () => {
@@ -1153,9 +1200,25 @@ const ExaminationDetail = () => {
                       </span>
                     )}
                   </div>
-                  {prescriptions.length > 0 && (
-                    <AllPrescriptionsDownloadButton exam={exam} />
-                  )}
+                  <div className='flex items-center gap-2'>
+                    {prescriptions.length > 0 && (
+                      <AllPrescriptionsDownloadButton
+                        exam={exam}
+                        prescriptions={prescriptions}
+                      />
+                    )}
+                    <Button
+                      size='sm'
+                      onClick={() => {
+                        navigate('/prescription', {
+                          state: { examinationId: exam._id },
+                        });
+                      }}
+                    >
+                      <Plus className='w-4 h-4 mr-2' />
+                      Рецепт Қўшиш
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1189,106 +1252,262 @@ const ExaminationDetail = () => {
                                     key={item._id}
                                     className='border rounded-lg p-3 bg-background'
                                   >
-                                    <div className='flex items-center justify-between mb-2'>
-                                      <span className='text-xs font-medium text-muted-foreground'>
-                                        Дори #{itemIndex + 1}
-                                      </span>
-                                      <div className='flex gap-1'>
-                                        <Button
-                                          variant='ghost'
-                                          size='sm'
-                                          onClick={() =>
-                                            startEditPrescription({
-                                              ...item,
-                                              _id: item._id,
-                                              prescriptionDocId:
-                                                prescriptionDoc._id,
-                                            })
-                                          }
-                                          disabled={
-                                            editingPrescriptionId !== null
-                                          }
-                                          className='h-6 w-6 p-0'
-                                        >
-                                          <Edit className='h-3 w-3' />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2'>
-                                      <div>
-                                        <Label className='text-xs text-muted-foreground'>
-                                          Дори
-                                        </Label>
-                                        <p className='font-semibold text-sm'>
-                                          {item.medication_id?.name ||
-                                            'Номаълум'}{' '}
-                                          {item.medication_id?.dosage &&
-                                            `(${item.medication_id.dosage})`}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <Label className='text-xs text-muted-foreground'>
-                                          Муддати
-                                        </Label>
-                                        <p className='font-semibold text-sm'>
-                                          {item.duration} кун
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <Label className='text-xs text-muted-foreground'>
-                                          Қабул Қилиш
-                                        </Label>
-                                        <p className='font-semibold text-sm'>
-                                          Кунига {item.frequency} марта
-                                        </p>
-                                      </div>
-                                      {item.instructions && (
-                                        <div>
-                                          <Label className='text-xs text-muted-foreground'>
-                                            Кўрсатма
-                                          </Label>
-                                          <p className='text-sm'>
-                                            {item.instructions}
-                                          </p>
+                                    {editingPrescriptionId === item._id ? (
+                                      // Edit mode
+                                      <div className='space-y-4'>
+                                        <div className='flex items-center justify-between mb-2'>
+                                          <span className='text-sm font-semibold text-primary'>
+                                            Дори #{itemIndex + 1} ни таҳрирлаш
+                                          </span>
                                         </div>
-                                      )}
-                                    </div>
-                                    {/* Days grid */}
-                                    {item.days && item.days.length > 0 && (
-                                      <div className='mt-2 pt-2 border-t'>
-                                        <Label className='text-xs text-muted-foreground mb-1 block'>
-                                          Қабул қилиш кунлари
-                                        </Label>
-                                        <div className='flex flex-wrap gap-1'>
-                                          {item.days.map((day: any) => (
-                                            <div
-                                              key={day._id || day.day}
-                                              className={`text-xs px-2 py-1 rounded ${
-                                                day.date
-                                                  ? 'bg-green-100 text-green-800'
-                                                  : 'bg-gray-100 text-gray-500'
-                                              }`}
+                                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
+                                          <div>
+                                            <Label className='text-xs'>
+                                              Дори
+                                            </Label>
+                                            <Select
+                                              value={
+                                                prescriptionForm.medication_id
+                                              }
+                                              onValueChange={(value) =>
+                                                setPrescriptionForm({
+                                                  ...prescriptionForm,
+                                                  medication_id: value,
+                                                })
+                                              }
                                             >
-                                              {day.day}
-                                              {day.date && (
-                                                <span className='ml-1'>
-                                                  (
-                                                  {new Date(
-                                                    day.date
-                                                  ).toLocaleDateString(
-                                                    'uz-UZ',
-                                                    {
-                                                      day: '2-digit',
-                                                      month: '2-digit',
+                                              <SelectTrigger className='mt-1'>
+                                                <SelectValue placeholder='Дорини танланг...' />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                <div className='p-2'>
+                                                  <Input
+                                                    placeholder='Қидириш...'
+                                                    value={medicationSearch}
+                                                    onChange={(e) =>
+                                                      setMedicationSearch(
+                                                        e.target.value
+                                                      )
                                                     }
-                                                  )}
+                                                    className='mb-2'
+                                                  />
+                                                </div>
+                                                {medicationsData?.data?.map(
+                                                  (med: any) => (
+                                                    <SelectItem
+                                                      key={med._id}
+                                                      value={med._id}
+                                                    >
+                                                      {med.name}{' '}
+                                                      {med.dosage &&
+                                                        `(${med.dosage})`}
+                                                    </SelectItem>
                                                   )
-                                                </span>
-                                              )}
-                                            </div>
-                                          ))}
+                                                )}
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                          <div>
+                                            <Label className='text-xs'>
+                                              Қабул қилиш (кунига)
+                                            </Label>
+                                            <Input
+                                              type='number'
+                                              min={1}
+                                              value={prescriptionForm.frequency}
+                                              onChange={(e) =>
+                                                setPrescriptionForm({
+                                                  ...prescriptionForm,
+                                                  frequency: e.target.value,
+                                                })
+                                              }
+                                              className='mt-1'
+                                              placeholder='Кунига неча марта'
+                                            />
+                                          </div>
+                                          <div>
+                                            <Label className='text-xs'>
+                                              Муддат (кун)
+                                            </Label>
+                                            <Input
+                                              type='number'
+                                              min={1}
+                                              value={prescriptionForm.duration}
+                                              onChange={(e) =>
+                                                setPrescriptionForm({
+                                                  ...prescriptionForm,
+                                                  duration: e.target.value,
+                                                })
+                                              }
+                                              className='mt-1'
+                                              placeholder='Қанча кун'
+                                            />
+                                          </div>
+                                          <div>
+                                            <Label className='text-xs'>
+                                              Кўрсатма
+                                            </Label>
+                                            <Input
+                                              value={
+                                                prescriptionForm.instructions
+                                              }
+                                              onChange={(e) =>
+                                                setPrescriptionForm({
+                                                  ...prescriptionForm,
+                                                  instructions: e.target.value,
+                                                })
+                                              }
+                                              className='mt-1'
+                                              placeholder='Кўрсатма...'
+                                            />
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <Label className='text-xs'>
+                                            Қўшимча
+                                          </Label>
+                                          <Textarea
+                                            value={prescriptionForm.addons}
+                                            onChange={(e) =>
+                                              setPrescriptionForm({
+                                                ...prescriptionForm,
+                                                addons: e.target.value,
+                                              })
+                                            }
+                                            className='mt-1'
+                                            placeholder='Қўшимча маълумот...'
+                                            rows={2}
+                                          />
+                                        </div>
+                                        <div className='flex gap-2 justify-end'>
+                                          <Button
+                                            variant='outline'
+                                            size='sm'
+                                            onClick={cancelEditPrescription}
+                                            disabled={isUpdatingPrescription}
+                                          >
+                                            <X className='w-3 h-3 mr-1' />
+                                            Бекор
+                                          </Button>
+                                          <Button
+                                            size='sm'
+                                            onClick={() =>
+                                              handleUpdatePrescription(item._id)
+                                            }
+                                            disabled={isUpdatingPrescription}
+                                          >
+                                            <Save className='w-3 h-3 mr-1' />
+                                            {isUpdatingPrescription
+                                              ? 'Сақланмоқда...'
+                                              : 'Сақлаш'}
+                                          </Button>
                                         </div>
                                       </div>
+                                    ) : (
+                                      // View mode
+                                      <>
+                                        <div className='flex items-center justify-between mb-2'>
+                                          <span className='text-xs font-medium text-muted-foreground'>
+                                            Дори #{itemIndex + 1}
+                                          </span>
+                                          <div className='flex gap-1'>
+                                            <Button
+                                              variant='ghost'
+                                              size='sm'
+                                              onClick={() =>
+                                                startEditPrescription({
+                                                  ...item,
+                                                  _id: item._id,
+                                                  prescriptionDocId:
+                                                    prescriptionDoc._id,
+                                                })
+                                              }
+                                              disabled={
+                                                editingPrescriptionId !== null
+                                              }
+                                              className='h-6 w-6 p-0'
+                                            >
+                                              <Edit className='h-3 w-3' />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2'>
+                                          <div>
+                                            <Label className='text-xs text-muted-foreground'>
+                                              Дори
+                                            </Label>
+                                            <p className='font-semibold text-sm'>
+                                              {item.medication_id?.name ||
+                                                'Номаълум'}{' '}
+                                              {item.medication_id?.dosage &&
+                                                `(${item.medication_id.dosage})`}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <Label className='text-xs text-muted-foreground'>
+                                              Муддати
+                                            </Label>
+                                            <p className='font-semibold text-sm'>
+                                              {item.duration} кун
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <Label className='text-xs text-muted-foreground'>
+                                              Қабул Қилиш
+                                            </Label>
+                                            <p className='font-semibold text-sm'>
+                                              Кунига {item.frequency} марта
+                                            </p>
+                                          </div>
+                                          {item.instructions && (
+                                            <div>
+                                              <Label className='text-xs text-muted-foreground'>
+                                                Кўрсатма
+                                              </Label>
+                                              <p className='text-sm'>
+                                                {item.instructions}
+                                              </p>
+                                            </div>
+                                          )}
+                                        </div>
+                                        {/* Days grid */}
+                                        {item.days && item.days.length > 0 && (
+                                          <div className='mt-2 pt-2 border-t'>
+                                            <Label className='text-xs text-muted-foreground mb-1 block'>
+                                              Қабул қилиш кунлари
+                                            </Label>
+                                            <div className='flex flex-wrap gap-1'>
+                                              {item.days.map((day: any) => (
+                                                <div
+                                                  key={day._id || day.day}
+                                                  className={`text-xs px-2 py-1 rounded ${
+                                                    day.date
+                                                      ? 'bg-green-100 text-green-800'
+                                                      : 'bg-gray-100 text-gray-500'
+                                                  }`}
+                                                >
+                                                  {day.day}
+                                                  {day.date && (
+                                                    <span className='ml-1'>
+                                                      (
+                                                      {new Date(
+                                                        day.date
+                                                      ).toLocaleDateString(
+                                                        'uz-UZ',
+                                                        {
+                                                          day: '2-digit',
+                                                          month: '2-digit',
+                                                        }
+                                                      )}
+                                                      )
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </>
                                     )}
                                   </div>
                                 )
@@ -1335,11 +1554,20 @@ const ExaminationDetail = () => {
                   </div>
                   <div className='flex items-center gap-2'>
                     {patientServices.length > 0 && (
-                      <ServicesDownloadButton exam={exam} />
+                      <ServicesDownloadButton
+                        exam={exam}
+                        services={patientServices}
+                      />
                     )}
                     <Button
                       size='sm'
-                      onClick={() => setIsAddingService(true)}
+                      onClick={() => {
+                        setIsAddingService(true);
+                        // Add default one row
+                        if (services.length === 0) {
+                          addService();
+                        }
+                      }}
                       disabled={isAddingService}
                     >
                       <Plus className='w-4 h-4 mr-2' />
@@ -1627,20 +1855,29 @@ const ExaminationDetail = () => {
                                 setServices([]);
                                 setServiceDuration(7);
                                 setServiceStartDate(new Date());
+                                setEditingServiceId(null);
                               }}
-                              disabled={isAddingServiceMutation}
+                              disabled={
+                                isAddingServiceMutation || isUpdatingService
+                              }
                             >
                               <X className='w-4 h-4 mr-2' />
                               Бекор қилиш
                             </Button>
                             <Button
-                              onClick={handleAddService}
+                              onClick={handleSaveService}
                               disabled={
-                                isAddingServiceMutation || services.length === 0
+                                isAddingServiceMutation ||
+                                isUpdatingService ||
+                                services.length === 0
                               }
                             >
                               <Save className='w-4 h-4 mr-2' />
-                              {isAddingServiceMutation
+                              {editingServiceId
+                                ? isUpdatingService
+                                  ? 'Янгиланмоқда...'
+                                  : 'Янгилаш'
+                                : isAddingServiceMutation
                                 ? 'Сақланмоқда...'
                                 : 'Сақлаш'}
                             </Button>
@@ -1726,15 +1963,7 @@ const ExaminationDetail = () => {
                                               {day?.date ? (
                                                 <div className='flex items-center justify-center'>
                                                   <span className='text-xs'>
-                                                    {new Date(
-                                                      day.date
-                                                    ).getDate()}{' '}
-                                                    {new Date(
-                                                      day.date
-                                                    ).toLocaleDateString(
-                                                      'uz-UZ',
-                                                      { month: 'short' }
-                                                    )}
+                                                    {format(day.date, 'dd/MM')}
                                                   </span>
                                                   <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
                                                     {new Date(
@@ -1768,16 +1997,6 @@ const ExaminationDetail = () => {
                                           >
                                             <Edit className='h-3 w-3' />
                                           </Button>
-                                          <Button
-                                            variant='ghost'
-                                            size='sm'
-                                            onClick={() =>
-                                              handleRemoveService(service._id)
-                                            }
-                                            className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-                                          >
-                                            <Trash2 className='h-3 w-3' />
-                                          </Button>
                                         </div>
                                       </td>
                                     </tr>
@@ -1797,7 +2016,15 @@ const ExaminationDetail = () => {
                         Ҳали хизматлар қўшилмаган
                       </p>
                       {!isAddingService && (
-                        <Button onClick={() => setIsAddingService(true)}>
+                        <Button
+                          onClick={() => {
+                            setIsAddingService(true);
+                            // Add default one row
+                            if (services.length === 0) {
+                              addService();
+                            }
+                          }}
+                        >
                           <Plus className='w-4 h-4 mr-2' />
                           Хизмат Қўшиш
                         </Button>
