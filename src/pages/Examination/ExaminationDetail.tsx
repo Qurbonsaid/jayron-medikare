@@ -9,7 +9,6 @@ import {
   useUpdateExamMutation,
   useUpdateServiceMutation,
 } from '@/app/api/examinationApi/examinationApi';
-import { useUpdatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import {
   useCreateNeurologicStatusMutation,
@@ -17,6 +16,7 @@ import {
   useGetAllNeurologicStatusQuery,
   useUpdateNeurologicStatusMutation,
 } from '@/app/api/neurologicApi/neurologicApi';
+import { useUpdatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,15 +72,15 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ViewMedicalImage } from '../Radiology/components';
 import AllPrescriptionsDownloadButton, {
   ExaminationInfoDownloadButton,
   NeurologicStatusDownloadButton,
   ServicesDownloadButton,
 } from '../../components/PDF/ExaminationPDF';
+import { ViewMedicalImage } from '../Radiology/components';
 
 // Tana qismlari uchun o'zbek nomlari
 const bodyPartLabels: Record<string, string> = {
@@ -163,11 +163,15 @@ const ExaminationDetail = () => {
   const [openServiceCombobox, setOpenServiceCombobox] = useState<string>('');
   const [servicePage, setServicePage] = useState(1);
 
+  // Refs for autofocus
+  const serviceSearchRef = useRef<HTMLInputElement>(null);
+  const medicationSearchRef = useRef<HTMLInputElement>(null);
+
   // Debounce service search
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedServiceSearch(serviceSearch);
-    }, 300);
+    }, 150);
     return () => clearTimeout(timer);
   }, [serviceSearch]);
 
@@ -1275,6 +1279,15 @@ const ExaminationDetail = () => {
                                                   medication_id: value,
                                                 })
                                               }
+                                              onOpenChange={(open) => {
+                                                if (open) {
+                                                  setTimeout(
+                                                    () =>
+                                                      medicationSearchRef.current?.focus(),
+                                                    0
+                                                  );
+                                                }
+                                              }}
                                             >
                                               <SelectTrigger className='mt-1'>
                                                 <SelectValue placeholder='Дорини танланг...' />
@@ -1282,6 +1295,7 @@ const ExaminationDetail = () => {
                                               <SelectContent>
                                                 <div className='p-2'>
                                                   <Input
+                                                    ref={medicationSearchRef}
                                                     placeholder='Қидириш...'
                                                     value={medicationSearch}
                                                     onChange={(e) =>
@@ -1289,6 +1303,15 @@ const ExaminationDetail = () => {
                                                         e.target.value
                                                       )
                                                     }
+                                                    onKeyDown={(e) =>
+                                                      e.stopPropagation()
+                                                    }
+                                                    onFocus={(e) => {
+                                                      setTimeout(
+                                                        () => e.target.focus(),
+                                                        0
+                                                      );
+                                                    }}
                                                     className='mb-2'
                                                   />
                                                 </div>
@@ -1695,6 +1718,12 @@ const ExaminationDetail = () => {
                                             if (open) {
                                               // Reset search when opening
                                               setServiceSearch('');
+                                              // Focus on search input
+                                              setTimeout(
+                                                () =>
+                                                  serviceSearchRef.current?.focus(),
+                                                0
+                                              );
                                             }
                                           }}
                                         >
@@ -1715,9 +1744,13 @@ const ExaminationDetail = () => {
                                           <PopoverContent className='w-[400px] p-0'>
                                             <Command shouldFilter={false}>
                                               <CommandInput
+                                                ref={serviceSearchRef}
                                                 placeholder='Хизматни қидириш...'
                                                 value={serviceSearch}
                                                 onValueChange={setServiceSearch}
+                                                onKeyDown={(e) =>
+                                                  e.stopPropagation()
+                                                }
                                               />
                                               <CommandList
                                                 onScroll={(e: any) => {
@@ -1756,10 +1789,11 @@ const ExaminationDetail = () => {
                                                         <CommandItem
                                                           key={serviceType._id}
                                                           value={
-                                                            serviceType.name
+                                                            serviceType._id
                                                           }
                                                           keywords={[
                                                             serviceType.name,
+                                                            serviceType._id,
                                                           ]}
                                                           onSelect={() => {
                                                             updateServiceField(
