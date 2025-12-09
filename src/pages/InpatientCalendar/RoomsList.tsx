@@ -88,7 +88,7 @@ const RoomsList = () => {
           {/* Patient Search Button */}
           <Button
             onClick={() => setShowPatientSearch(true)}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 w-full sm:w-auto"
+            className="w-full sm:w-auto"
           >
             <Search className="w-4 h-4 mr-2" />
             Бемор Қидириш
@@ -147,10 +147,10 @@ const RoomsList = () => {
             const totalBeds = room.patient_capacity;
             const availableBeds = room.available_beds;
             const occupiedBeds = totalBeds - availableBeds;
-            
+
             let roomBgColor = "bg-background";
             let roomBorderColor = "border-border";
-            
+
             if (occupiedBeds === 0) {
               // Barchasi bo'sh - yashil
               roomBgColor = "bg-green-50 dark:bg-green-950/20";
@@ -193,16 +193,15 @@ const RoomsList = () => {
                         Жойлар ({totalBeds} та):
                       </span>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-2">
                       {room.availability?.map((bed, index) => (
                         <div
                           key={index}
-                          className={`p-2 rounded-md border text-center text-xs sm:text-sm ${
-                            bed.status === 'available'
+                          className={`p-2 rounded-md border text-center text-xs sm:text-sm ${bed.status === 'available'
                               ? 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300'
                               : 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'
-                          }`}
+                            }`}
                         >
                           <div className="font-semibold">{bed.bed}-жой</div>
                           {bed.status === 'available' ? (

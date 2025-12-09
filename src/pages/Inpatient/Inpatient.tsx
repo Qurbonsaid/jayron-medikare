@@ -1,19 +1,8 @@
 import { useGetCorpusesQuery } from "@/app/api/corpusApi";
 import { Corpuses } from "@/app/api/corpusApi/types";
-import { useGetAllExamsQuery } from "@/app/api/examinationApi";
-import { formatPhoneNumber } from "@/lib/utils";
-import { ExamDataItem } from "@/app/api/examinationApi/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,11 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { usePermission } from "@/hooks/usePermission";
 import {
   Building,
@@ -40,6 +24,7 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DeleteWarnBuilding, NewBuilding, UpdatedBuilding } from "./components";
+import { PatientSearchModal } from "./components/PatientSearchModal";
 
 const Inpatient = () => {
   const { canCreate, canUpdate, canDelete } = usePermission("inpatient");
@@ -48,8 +33,7 @@ const Inpatient = () => {
   const [showUpdateBuilding, setShowUpdateBuilding] = useState(false);
   const [oneCorpus, setOneCorpus] = useState({});
   const navigate = useNavigate();
-  const [searchExamsQuery, setSearchExamsQuery] = useState("");
-  const [openPopover, setOpenPopover] = useState(false);
+  const [showPatientSearch, setShowPatientSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [corpusNumber, setCorpusNumber] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,22 +44,7 @@ const Inpatient = () => {
     search: searchQuery || undefined,
     corpus_number: corpusNumber,
   });
-  const { data: examinations, isLoading: isExaminationsLoading } =
-    useGetAllExamsQuery({
-      page: 1,
-      limit: 100,
-      search: searchExamsQuery || undefined ,
-      status: "pending",
-      is_roomed: true,
-      treatment_type: "stasionar",
-    });
 
-  function handleSelExam(selExam: ExamDataItem) {
-    setOpenPopover(false);
-    const { rooms } = selExam as ExamDataItem;
-    const roomId = rooms[rooms.length - 1]?.room_id;
-    if (roomId) navigate(`/room/${roomId}`);
-  }
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
@@ -89,15 +58,24 @@ const Inpatient = () => {
               Барча Korpuslarni кўриш ва бошқариш
             </p>
           </div>
-          {canCreate && (
+          <div className="flex flex-col justify-between items-center gap-2">
+            {canCreate && (
+              <Button
+                className="w-full"
+                onClick={() => setShowNewBuilding(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Янги Korpus
+              </Button>
+            )}
             <Button
-              className="w-full sm:w-auto"
-              onClick={() => setShowNewBuilding(true)}
+              onClick={() => setShowPatientSearch(true)}
+              className="w-full"
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Янги Korpus
+              <Search className="w-4 h-4 mr-2" />
+              Бемор Қидириш
             </Button>
-          )}
+          </div>
         </div>
 
         {isLoading ? (
@@ -110,85 +88,16 @@ const Inpatient = () => {
           </Card>
         ) : getCorpuses?.data && getCorpuses?.data.length > 0 ? (
           <>
-            <Card className="card-shadow p-4 sm:p-8 xl:p-12 cursor-pointer">
-              <Card className="mb-6">
-                <Popover open={openPopover} onOpenChange={setOpenPopover}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openPopover}
-                      className="w-full justify-between h-auto min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
-                    >
-                      <span className="flex items-center gap-2 text-sm sm:text-base">
-                        <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        Беморни қидириш...
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full sm:w-[500px] p-0" align="start">
-                    <Command shouldFilter={false} className="w-full">
-                      <CommandInput
-                        placeholder="Исм, ID ёки телефон орқали қидириш..."
-                        value={searchExamsQuery}
-                        onValueChange={setSearchExamsQuery}
-                        className="text-sm sm:text-base"
-                      />
-                      <CommandList className="max-h-[300px] overflow-y-auto">
-                        <CommandEmpty className="text-sm sm:text-base py-6">
-                          {isLoading ? (
-                            <div className="flex flex-col items-center gap-2">
-                              <span>Юкланмоқда...</span>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                              <span>Бемор топилмади</span>
-                            </div>
-                          )}
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {!isLoading && examinations?.data.map((e) => (
-                            <CommandItem
-                              key={e._id}
-                              value={e._id}
-                              onSelect={() => handleSelExam(e)}
-                              className="py-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/20"
-                            >
-                              <div className="flex items-center gap-3 w-full">
-                                <div className="flex flex-col flex-1">
-                                  <span className="font-semibold text-sm sm:text-base">
-                                    {e.patient_id.fullname}
-                                  </span>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-xs sm:text-sm text-muted-foreground">
-                                      {formatPhoneNumber(e.patient_id.phone)}
-                                      {" / "}
-                                    </span>
-                                    <span className="text-xs sm:text-sm font-medium">
-                                      {e.rooms[e.rooms.length - 1]?.floor_number || 0}-қават,{" "}
-                                      {e.rooms[e.rooms.length - 1]?.room_name || "Номаълум"}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </Card>
+            <Card className="card-shadow p-4 sm:p-8 xl:p-10 cursor-pointer">
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {getCorpuses?.data.map((corpus) => (
                   <Card
                     key={corpus._id}
-                    className={`p-4  transition-smooth relative ${
-                      corpus.room_statistics.leaving_today > 0
-                        ? "border-red-500 bg-red-100 hover:bg-red-200"
-                        : "bg-green-100 border-green-500/50 hover:bg-green-200"
-                    }`}
+                    className={`p-4  transition-smooth relative ${corpus.room_statistics.leaving_today > 0
+                      ? "border-red-500 bg-red-100 hover:bg-red-200"
+                      : "bg-green-100 border-green-500/50 hover:bg-green-200"
+                      }`}
                   >
                     <div className="absolute top-4 right-4">
                       <DropdownMenu>
@@ -310,6 +219,12 @@ const Inpatient = () => {
           open={showDeleteWarnBuilding}
           onOpenChange={setShowDeleteWarnBuilding}
           oneCorpus={oneCorpus as Corpuses}
+        />
+
+        {/* Patient Search Modal */}
+        <PatientSearchModal
+          open={showPatientSearch}
+          onOpenChange={setShowPatientSearch}
         />
       </div>
     </div>

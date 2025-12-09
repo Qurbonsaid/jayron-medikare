@@ -1,9 +1,6 @@
 import { useGetAllExamsQuery } from "@/app/api/examinationApi";
-import { useGetAllPatientQuery } from "@/app/api/patientApi";
-import { AllPatientRes } from "@/app/api/patientApi/types";
 import { useAddPatientRoomMutation } from "@/app/api/roomApi";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { formatPhoneNumber } from "@/lib/utils";
 import {
   Command,
@@ -16,7 +13,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -32,6 +28,7 @@ import { Clock, Save, Search, User } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
 
 interface RoomNewPatientProps {
   open: boolean;
@@ -62,7 +59,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
       request: async () =>
         await addPatientRoom({
           id: roomId,
-          patient_id: selectedPatient.patient_id._id,
+          patient_id: selectedPatient._id,
           estimated_leave_time: estimatedLeaveTime,
         }).unwrap(),
       onSuccess: () => {
@@ -78,53 +75,56 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl max-h-[75vh] p-0 border-2 border-primary/30">
-        <DialogHeader className="p-4 sm:p-6 pb-0">
-          <DialogTitle className="text-xl sm:text-2xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-2xl max-h-[75vh] p-0 border-2 border-primary/30">
+        <DialogHeader className="p-4 sm:p-6 pb-0 m-0">
+          <DialogTitle className="text-xl m-0 p-0">
             Xonaga yangi bemor qo'shish
           </DialogTitle>
         </DialogHeader>
 
-        <div className="p-4 sm:p-6">
+        <div className="p-4 sm:p-6 pt-0">
           <div className="flex items-center gap-3 mb-4">
-            <User className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-            <h3 className="text-base sm:text-lg font-bold">Беморни танланг</h3>
+            <User className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+            <h3 className="text-base font-bold">Беморни танланг</h3>
           </div>
-          <Popover open={openPopover} onOpenChange={setOpenPopover}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={openPopover}
-                className="w-full justify-between h-auto min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
-              >
-                {selectedPatient ? (
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="font-semibold text-sm sm:text-base">
-                      {selectedPatient.patient_id.fullname}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatPhoneNumber(selectedPatient.patient_id.phone)}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="flex items-center gap-2 text-sm sm:text-base">
-                    <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    Беморни қидириш...
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full sm:w-[500px] p-0" align="start">
-              <Command shouldFilter={false} className="w-full">
+
+          <Button
+            type="button"
+            onClick={() => setOpenPopover(prev => !prev)}
+            variant="outline"
+            role="combobox"
+            className="w-full justify-between h-auto min-h-[48px] sm:min-h-[56px] text-sm"
+          >
+            {selectedPatient ? (
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="font-semibold text-sm">
+                  {selectedPatient.fullname}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatPhoneNumber(selectedPatient.phone || 0)}
+                </span>
+              </div>
+            ) : (
+              <span className="flex items-center gap-2 text-sm">
+                <Search className="w-3 h-3 sm:w-4 sm:h-4  " />
+                Беморни қидириш...
+              </span>
+            )}
+          </Button>
+
+          {openPopover && <div className="w-full h-full fixed top-0 left-0 bg-black/10 z-20" onClick={() => setOpenPopover(false)}></div>}
+
+          <div className="w-full relative mt-2">
+            {openPopover && <Card className="absolute top-0 left-0 w-full z-30 bg-white ">
+              <Command shouldFilter={false}>
                 <CommandInput
-                  placeholder="Исм, ID ёки телефон орқали қидириш..."
+                  placeholder="Исм, телефон орқали қидириш..."
                   value={searchQuery}
                   onValueChange={setSearchQuery}
-                  className="text-sm sm:text-base"
+                  className="text-sm"
                 />
-                <CommandList className="max-h-[300px] overflow-y-auto">
-                  <CommandEmpty className="text-sm sm:text-base py-6">
+                <CommandList className="max-h-[210px] overflow-y-auto">
+                  <CommandEmpty className="text-sm py-6">
                     {isLoading ? (
                       <div className="flex flex-col items-center gap-2">
                         <span>Юкланмоқда...</span>
@@ -136,23 +136,23 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
                     )}
                   </CommandEmpty>
                   <CommandGroup>
-                    {!isLoading && examinations?.data.map((e) => (
+                    {!isLoading && examinations?.data.map((exam) => (
                       <CommandItem
-                        key={e._id}
-                        value={e._id}
+                        key={exam._id}
+                        value={exam._id}
                         onSelect={() => {
-                          setSelectedPatient(e);
+                          setSelectedPatient(exam.patient_id);
                           setOpenPopover(false);
                         }}
                         className="py-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/20"
                       >
                         <div className="flex items-center gap-3 w-full">
-                          <div className="flex flex-col flex-1">
-                            <span className="font-semibold text-sm sm:text-base">
-                              {e.patient_id.fullname}
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="font-semibold text-sm truncate">
+                              {exam.patient_id.fullname}
                             </span>
-                            <span className="text-xs sm:text-sm text-muted-foreground">
-                              {formatPhoneNumber(e.patient_id.phone)}
+                            <span className="text-xs sm:text-xs text-muted-foreground truncate">
+                              {formatPhoneNumber(exam.patient_id.phone)}
                             </span>
                           </div>
                         </div>
@@ -161,11 +161,13 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
                   </CommandGroup>
                 </CommandList>
               </Command>
-            </PopoverContent>
-          </Popover>
+            </Card>}
+          </div>
+
+
           <div className="flex items-center gap-3 my-4">
-            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            <h3 className="text-base sm:text-lg font-bold">
+            <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+            <h3 className="text-base font-bold">
               Ketish vaqtini tanlang
             </h3>
           </div>
