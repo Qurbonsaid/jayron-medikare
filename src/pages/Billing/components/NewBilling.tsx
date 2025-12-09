@@ -258,7 +258,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     }
 
     try {
-      const billingData: any = {
+      const billingData = {
         examination_id: selectedExaminationId,
         services: services.map((s) => ({
           name: s.name,
@@ -270,17 +270,6 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
           amount: parseFloat(paymentAmount),
         },
       };
-
-      // Add optional fields if selected
-      if (selectedAnalysis.length > 0) {
-        billingData.analysis_ids = selectedAnalysis;
-      }
-      if (selectedRooms.length > 0) {
-        billingData.room_ids = selectedRooms;
-      }
-      if (selectedServices.length > 0) {
-        billingData.service_ids = selectedServices;
-      }
 
       const result = await createBilling(billingData).unwrap();
 

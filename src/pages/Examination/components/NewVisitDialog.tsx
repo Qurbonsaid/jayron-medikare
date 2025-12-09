@@ -2,12 +2,12 @@ import {
   useAddServiceMutation,
   useCreateExamMutation,
 } from '@/app/api/examinationApi/examinationApi';
-import { useCreatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import {
   useGetAllPatientQuery,
   useGetPatientByIdQuery,
 } from '@/app/api/patientApi/patientApi';
+import { useCreatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { useGetUsersQuery } from '@/app/api/userApi/userApi';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,7 @@ import {
   User,
   UserCog,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { calculateAge } from './calculateAge';
 
@@ -115,6 +115,14 @@ const NewVisitDialog = ({
   const [serviceStartDate, setServiceStartDate] = useState<Date | null>(
     new Date()
   );
+
+  // Doctor search state
+  const [doctorSearch, setDoctorSearch] = useState('');
+
+  // Refs for autofocus
+  const doctorSearchRef = useRef<HTMLInputElement>(null);
+  const medicationSearchRef = useRef<HTMLInputElement>(null);
+  const serviceSearchRef = useRef<HTMLInputElement>(null);
 
   // Fetch all patients for search
   const { data: patientsData } = useGetAllPatientQuery({
@@ -214,6 +222,13 @@ const NewVisitDialog = ({
       p.patient_id.toLowerCase().includes(query) ||
       p.phone.includes(query)
     );
+  });
+
+  const filteredDoctors = doctors.filter((d) => {
+    const query = doctorSearch.toLowerCase().trim();
+    if (!query) return true;
+
+    return d.fullname.toLowerCase().includes(query) || d.phone?.includes(query);
   });
 
   // Medication handlers
@@ -453,6 +468,7 @@ const NewVisitDialog = ({
                       placeholder='Исм, ID ёки телефон орқали қидириш...'
                       value={searchQuery}
                       onValueChange={setSearchQuery}
+                      onKeyDown={(e) => e.stopPropagation()}
                     />
                     <CommandList>
                       <CommandEmpty>Бемор топилмади</CommandEmpty>
@@ -461,6 +477,7 @@ const NewVisitDialog = ({
                           <CommandItem
                             key={p._id}
                             value={p._id}
+                            keywords={[p.fullname, p.patient_id, p.phone]}
                             onSelect={() => selectPatient(p._id)}
                           >
                             <div className='flex flex-col w-full'>
@@ -522,6 +539,11 @@ const NewVisitDialog = ({
                   <Select
                     value={selectedDoctorId}
                     onValueChange={setSelectedDoctorId}
+                    onOpenChange={(open) => {
+                      if (open) {
+                        setTimeout(() => doctorSearchRef.current?.focus(), 0);
+                      }
+                    }}
                   >
                     <SelectTrigger
                       className={`h-12 ${
@@ -531,7 +553,20 @@ const NewVisitDialog = ({
                       <SelectValue placeholder='Шифокорни танланг...' />
                     </SelectTrigger>
                     <SelectContent>
-                      {doctors.map((doctor: any) => (
+                      <div className='p-2'>
+                        <Input
+                          ref={doctorSearchRef}
+                          placeholder='Қидириш...'
+                          value={doctorSearch}
+                          onChange={(e) => setDoctorSearch(e.target.value)}
+                          onKeyDown={(e) => e.stopPropagation()}
+                          onFocus={(e) => {
+                            setTimeout(() => e.target.focus(), 0);
+                          }}
+                          className='h-8 mb-2'
+                        />
+                      </div>
+                      {filteredDoctors.map((doctor: any) => (
                         <SelectItem key={doctor._id} value={doctor._id}>
                           <div className='flex flex-col'>
                             <span className='font-medium'>
@@ -647,6 +682,14 @@ const NewVisitDialog = ({
                               onValueChange={(value) =>
                                 updateMedication(med.id, 'medication_id', value)
                               }
+                              onOpenChange={(open) => {
+                                if (open) {
+                                  setTimeout(
+                                    () => medicationSearchRef.current?.focus(),
+                                    0
+                                  );
+                                }
+                              }}
                             >
                               <SelectTrigger className='h-9'>
                                 <SelectValue placeholder='Дорини танланг...' />
@@ -654,11 +697,16 @@ const NewVisitDialog = ({
                               <SelectContent>
                                 <div className='p-2'>
                                   <Input
+                                    ref={medicationSearchRef}
                                     placeholder='Дори қидириш...'
                                     value={medicationSearch}
                                     onChange={(e) =>
                                       setMedicationSearch(e.target.value)
                                     }
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                    onFocus={(e) => {
+                                      setTimeout(() => e.target.focus(), 0);
+                                    }}
                                     className='text-sm mb-2'
                                   />
                                 </div>
@@ -927,6 +975,15 @@ const NewVisitDialog = ({
                                     onValueChange={(value) =>
                                       updateService(srv.id, 'service_id', value)
                                     }
+                                    onOpenChange={(open) => {
+                                      if (open) {
+                                        setTimeout(
+                                          () =>
+                                            serviceSearchRef.current?.focus(),
+                                          0
+                                        );
+                                      }
+                                    }}
                                   >
                                     <SelectTrigger className='h-7 text-xs border-0 shadow-none'>
                                       <SelectValue placeholder='Танланг...' />
@@ -934,11 +991,19 @@ const NewVisitDialog = ({
                                     <SelectContent>
                                       <div className='p-2'>
                                         <Input
+                                          ref={serviceSearchRef}
                                           placeholder='Қидириш...'
                                           value={serviceSearch}
                                           onChange={(e) =>
                                             setServiceSearch(e.target.value)
                                           }
+                                          onKeyDown={(e) => e.stopPropagation()}
+                                          onFocus={(e) => {
+                                            setTimeout(
+                                              () => e.target.focus(),
+                                              0
+                                            );
+                                          }}
                                           className='text-sm mb-2'
                                         />
                                       </div>
