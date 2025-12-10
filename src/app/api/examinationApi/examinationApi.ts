@@ -26,6 +26,7 @@ import {
   takeService,
   UpdateExamReq,
   updatePrescriptionReq,
+  CreateExamWithPrescriptionAndServiceReq,
 } from './types';
 
 export const examinationApi = baseApi.injectEndpoints({
@@ -51,6 +52,14 @@ export const examinationApi = baseApi.injectEndpoints({
         url: `${PATHS.UPDATE_EXAM}${id}/prescription/${prescriptionId}`,
         method: 'PATCH',
         body: data,
+      }),
+      invalidatesTags: [API_TAGS.EXAMS],
+    }),
+    createExamWithPrescriptionAndService: builder.mutation<void, CreateExamWithPrescriptionAndServiceReq>({
+      query: (body) => ({
+        url: `examination/create-with-service-and-prescription`,
+        method: 'POST',
+        body,
       }),
       invalidatesTags: [API_TAGS.EXAMS],
     }),
@@ -258,4 +267,5 @@ export const {
   useGetOnePrescriptionQuery,
   useGetOneServiceQuery,
   useUpdateServiceMutation,
+  useCreateExamWithPrescriptionAndServiceMutation
 } = examinationApi;

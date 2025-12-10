@@ -41,9 +41,9 @@ import {
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import NewVisitDialog from '../Examination/components/NewVisitDialog';
-import EditPatientModal from './components/EditPatientModal';
 import PatientPDFModal from '../../components/PDF/PatientPDFModal';
+import EditPatientModal from './components/EditPatientModal';
+import NewVisitDialog from './components/NewVisitDialog';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
@@ -157,7 +157,7 @@ const PatientProfile = () => {
             </div>
           </div>
           {/* Patient Info */}
-          <div className='flex flex-wrap gap-2 mt-4 md:mt-0 justify-center md:justify-end lg:max-w-md'>
+          <div className='flex flex-wrap gap-2 mt-4 md:mt-0 justify-center md:justify-end lg:max-w-sm'>
             <Button
               variant='outline'
               size='sm'
@@ -176,6 +176,14 @@ const PatientProfile = () => {
               <FileText className='w-4 h-4 sm:mr-2' />
               <span className='hidden sm:inline'>PDF кўриш</span>
             </Button>
+            <Button
+              size='sm'
+              className='gradient-primary px-6 text-md'
+              onClick={() => setIsNewVisitOpen(true)}
+            >
+              <Plus className='w-4 h-4 sm:mr-2' />
+              <span className='hidden sm:inline'>Янги Кўрик Яратиш</span>
+            </Button>
             <RBS role={me.role} allowed={['ceo']}>
               <Button
                 variant='outline'
@@ -187,14 +195,6 @@ const PatientProfile = () => {
                 <span className='hidden sm:inline'>Ўчириш</span>
               </Button>
             </RBS>
-            <Button
-              size='sm'
-              className='gradient-primary px-6 text-md'
-              onClick={() => setIsNewVisitOpen(true)}
-            >
-              <Plus className='w-4 h-4 sm:mr-2' />
-              <span className='hidden sm:inline'>Янги Кўрик Яратиш</span>
-            </Button>
           </div>
         </Card>
 

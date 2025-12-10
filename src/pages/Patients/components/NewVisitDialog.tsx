@@ -1,13 +1,9 @@
-import {
-  useAddServiceMutation,
-  useCreateExamMutation,
-} from '@/app/api/examinationApi/examinationApi';
+import { useCreateExamWithPrescriptionAndServiceMutation } from '@/app/api/examinationApi/examinationApi';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import {
   useGetAllPatientQuery,
   useGetPatientByIdQuery,
 } from '@/app/api/patientApi/patientApi';
-import { useCreatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { useGetUsersQuery } from '@/app/api/userApi/userApi';
 import { Button } from '@/components/ui/button';
@@ -57,7 +53,7 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { calculateAge } from './calculateAge';
+import { calculateAge } from '../../Examination/components/calculateAge';
 
 interface NewVisitDialogProps {
   open: boolean;
@@ -142,9 +138,8 @@ const NewVisitDialog = ({
     role: 'doctor',
   });
 
-  const [createExam, { isLoading: isCreating }] = useCreateExamMutation();
-  const [createPrescription] = useCreatePrescriptionMutation();
-  const [addServiceToExam] = useAddServiceMutation();
+  const [createExamWithPrescriptionAndService, { isLoading: isCreating }] =
+    useCreateExamWithPrescriptionAndServiceMutation();
   const handleRequest = useHandleRequest();
 
   // Fetch medications
@@ -366,74 +361,76 @@ const NewVisitDialog = ({
       return;
     }
 
+    // Prepare prescription_data
+    const prescriptionItems = medications
+      .filter((med) => med.medication_id)
+      .map((med) => ({
+        medication_id: med.medication_id,
+        frequency: parseInt(med.frequency) || 1,
+        duration: parseInt(med.duration) || 1,
+        instructions: med.instructions,
+        addons: med.addons || '',
+      }));
+
+    // Prepare service_data
+    let serviceData: {
+      duration: number;
+      items: Array<{
+        service_type_id: string;
+        notes: string;
+        days: Array<{ day: number; date: Date }>;
+      }>;
+    } | null = null;
+
+    if (services.length > 0 && serviceDuration && serviceStartDate) {
+      const serviceItems = services.map((srv) => {
+        const allDays = generateDays(serviceDuration, serviceStartDate);
+        const markedDays = srv.markedDays || [];
+        // Only include marked days, or all days if none are marked
+        const daysToSave =
+          markedDays.length > 0
+            ? allDays.filter((day) => markedDays.includes(day.day))
+            : allDays;
+
+        return {
+          service_type_id: srv.service_id,
+          days: daysToSave,
+          notes: srv.notes,
+        };
+      });
+
+      serviceData = {
+        duration: serviceDuration,
+        items: serviceItems,
+      };
+    }
+
+    const request: any = {
+      patient_id: selectedPatientId,
+      doctor_id: selectedDoctorId,
+      complaints: subjective,
+      treatment_type: treatmentType,
+      prescription_data: {
+        items: prescriptionItems,
+      },
+    };
+    console.log(request);
     await handleRequest({
       request: async () => {
-        const request: any = {
-          patient_id: selectedPatientId,
-          doctor_id: selectedDoctorId,
-          complaints: subjective,
-          treatment_type: treatmentType,
-        };
         if (description.trim()) {
           request.description = description;
         }
-        const res = await createExam(request).unwrap();
+
+        if (serviceData) {
+          request.service_data = serviceData;
+        }
+
+        const res = await createExamWithPrescriptionAndService(
+          request
+        ).unwrap();
         return res;
       },
-      onSuccess: async (data: any) => {
-        const examId = data?.data?._id;
-
-        // Save prescriptions
-        for (const med of medications) {
-          if (med.medication_id) {
-            try {
-              await createPrescription({
-                examination_id: examId,
-                items: [
-                  {
-                    medication_id: med.medication_id,
-                    frequency: parseInt(med.frequency) || 1,
-                    duration: parseInt(med.duration) || 1,
-                    instructions: med.instructions,
-                    addons: med.addons || '',
-                  },
-                ],
-              }).unwrap();
-            } catch (error) {
-              console.error('Рецепт сақлашда хатолик:', error);
-            }
-          }
-        }
-
-        // Save services with common duration and start date
-        if (services.length > 0 && serviceDuration && serviceStartDate) {
-          const serviceItems = services.map((srv) => {
-            const allDays = generateDays(serviceDuration, serviceStartDate);
-            const markedDays = srv.markedDays || [];
-            // Only include marked days, or all days if none are marked
-            const daysToSave =
-              markedDays.length > 0
-                ? allDays.filter((day) => markedDays.includes(day.day))
-                : allDays;
-
-            return {
-              service_type_id: srv.service_id,
-              days: daysToSave,
-              notes: srv.notes,
-            };
-          });
-
-          try {
-            await addServiceToExam({
-              examination_id: examId,
-              duration: serviceDuration,
-              items: serviceItems,
-            }).unwrap();
-          } catch (error) {
-            console.error('Хизмат сақлашда хатолик:', error);
-          }
-        }
-
+      onSuccess: () => {
         toast.success('Кўрик муваффақиятли яратилди');
         onOpenChange(false);
         onSuccess?.();
@@ -532,19 +529,11 @@ const NewVisitDialog = ({
                       </div>
                     )}
                   </div>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={clearPatient}
-                    disabled={isCreating}
-                  >
-                    Ўзгартириш
-                  </Button>
                 </div>
               </div>
 
               {/* Doctor Selection and Treatment Type in one row */}
-              <div className='flex items-end gap-4'>
+              <div className='flex items-end gap-4 shadow-lg border p-2 rounded-lg'>
                 <div className='flex-1 space-y-2'>
                   <Label className='flex items-center gap-2'>
                     <UserCog className='w-4 h-4 text-primary' />
@@ -628,7 +617,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Subjective - Complaints */}
-              <div className='space-y-2'>
+              <div className='space-y-2 shadow-lg border p-2 rounded-lg'>
                 <Label className='flex items-center gap-2'>
                   <FileText className='w-4 h-4 text-primary' />
                   Бемор шикояти (Subjective)
@@ -644,7 +633,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Description */}
-              <div className='space-y-2'>
+              <div className='space-y-2 shadow-lg border p-2 rounded-lg'>
                 <Label className='flex items-center gap-2'>
                   <Activity className='w-4 h-4 text-primary' />
                   Изоҳ (Objective)
@@ -658,7 +647,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Prescriptions Section */}
-              <div className='space-y-3 border rounded-lg p-4 bg-muted/30'>
+              <div className='space-y-3 border rounded-lg p-4 bg-muted/30 shadow-lg'>
                 <div className='flex items-center justify-between'>
                   <Label className='flex items-center gap-2'>
                     <Pill className='w-4 h-4 text-primary' />
@@ -756,7 +745,7 @@ const NewVisitDialog = ({
                               onChange={(e) =>
                                 updateMedication(
                                   med.id,
-                                  'additionalInfo',
+                                  'addons',
                                   e.target.value
                                 )
                               }
@@ -837,7 +826,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Services Section */}
-              <div className='space-y-3 border rounded-lg p-4 bg-muted/30'>
+              <div className='space-y-3 border rounded-lg p-4 bg-muted/30 shadow-lg'>
                 <div className='flex items-center justify-between'>
                   <Label className='flex items-center gap-2'>
                     <Activity className='w-4 h-4 text-primary' />
