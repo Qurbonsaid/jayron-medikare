@@ -975,17 +975,12 @@ const NewVisitDialog = ({
                             <th className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'>
                               Хизмат
                             </th>
-                            {Array.from(
-                              { length: Math.min(serviceDuration, 8) },
-                              (_, i) => (
-                                <th
-                                  key={i}
-                                  className='border px-1 py-1.5 text-center font-semibold min-w-[70px]'
-                                >
-                                  {i + 1}
-                                </th>
-                              )
-                            )}
+                            {Array.from({ length: 8 }, (_, i) => (
+                              <th
+                                key={i}
+                                className='border px-1 py-1.5 text-center font-semibold min-w-[70px]'
+                              ></th>
+                            ))}
                             <th className='border px-1 py-1.5 text-center font-semibold w-10 sticky right-0 bg-muted/50 z-20'></th>
                           </tr>
                         </thead>
@@ -1090,7 +1085,10 @@ const NewVisitDialog = ({
                                           }
                                         >
                                           {day.date ? (
-                                            <div className='flex items-center justify-center'>
+                                            <div className='flex flex-col items-center justify-center'>
+                                              <span className='text-[10px] text-muted-foreground font-bold'>
+                                                {day.day}-кун
+                                              </span>
                                               <span
                                                 className={`px-1.5 py-0.5 rounded ${
                                                   isMarked
@@ -1109,9 +1107,14 @@ const NewVisitDialog = ({
                                               </div>
                                             </div>
                                           ) : (
-                                            <span className='text-muted-foreground'>
-                                              —
-                                            </span>
+                                            <div className='flex flex-col items-center justify-center'>
+                                              <span className='text-[10px] text-muted-foreground font-bold'>
+                                                {day.day}-кун
+                                              </span>
+                                              <span className='text-muted-foreground'>
+                                                —
+                                              </span>
+                                            </div>
                                           )}
                                         </td>
                                       );

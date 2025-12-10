@@ -477,53 +477,108 @@ const Prescription = () => {
     window.print();
   };
 
-  const handleSavePrescription = async () => {
-    // Validate examination selection
+  // Dorilarni alohida saqlash
+  const handleSaveMedications = async () => {
     if (!selectedExaminationId) {
       toast.error('Илтимос, кўрикни танланг');
       return;
     }
 
-    // Validate that at least one medication or service is added
-    if (medications.length === 0 && services.length === 0) {
-      toast.error('Илтимос, камида битта дори ёки хизмат қўшинг');
+    if (medications.length === 0) {
+      toast.error('Илтимос, камида битта дори қўшинг');
       return;
     }
 
-    // Validate each medication and collect errors
+    // Validate each medication
     const medErrors: ValidationErrors = {};
-    const srvErrors: ServiceValidationErrors = {};
     let hasErrors = false;
 
     for (const med of medications) {
       medErrors[med.id] = {};
 
-      // Check if medication is selected
       if (!med.medication_id || med.medication_id.trim() === '') {
         medErrors[med.id].medication_id = true;
         hasErrors = true;
       }
 
-      // Check if frequency is selected
       if (!med.frequency || med.frequency.trim() === '') {
         medErrors[med.id].frequency = true;
         hasErrors = true;
       }
 
-      // Check if duration is filled
       if (!med.duration || med.duration.trim() === '') {
         medErrors[med.id].duration = true;
         hasErrors = true;
       }
 
-      // Check if instructions are filled
       if (!med.instructions || med.instructions.trim() === '') {
         medErrors[med.id].instructions = true;
         hasErrors = true;
       }
     }
 
+    if (hasErrors) {
+      setFormErrors((prev) => ({ ...prev, medications: medErrors }));
+      toast.error('Илтимос, барча майдонларни тўлдиринг');
+      return;
+    }
+
+    // Check for duplicates
+    const medicationIds = medications.map((med) =>
+      med.medication_id.toLowerCase().trim()
+    );
+    const duplicates = medicationIds.filter(
+      (id, index) => medicationIds.indexOf(id) !== index
+    );
+    if (duplicates.length > 0) {
+      toast.error(
+        'Такрорланган дори. Ҳар бир дори фақат бир марта қўшилиши керак.'
+      );
+      return;
+    }
+
+    const medicationItems = medications.map((med) => ({
+      medication_id: med.medication_id,
+      frequency: parseInt(med.frequency) || 0,
+      duration: parseInt(med.duration) || 0,
+      instructions: med.instructions,
+      addons: med.addons || '',
+    }));
+
+    await handleRequest({
+      request: async () => {
+        const res = await createPrescription({
+          examination_id: selectedExaminationId,
+          items: medicationItems,
+        }).unwrap();
+        return res;
+      },
+      onSuccess: () => {
+        toast.success(`${medications.length} та дори муваффақиятли сақланди`);
+        setMedications([]);
+      },
+      onError: (error) => {
+        toast.error(error?.data?.error?.msg || `Дориларни сақлашда хатолик`);
+      },
+    });
+  };
+
+  // Xizmatlarni alohida saqlash
+  const handleSaveServices = async () => {
+    if (!selectedExaminationId) {
+      toast.error('Илтимос, кўрикни танланг');
+      return;
+    }
+
+    if (services.length === 0) {
+      toast.error('Илтимос, камида битта хизмат қўшинг');
+      return;
+    }
+
     // Validate services
+    const srvErrors: ServiceValidationErrors = {};
+    let hasErrors = false;
+
     for (const srv of services) {
       srvErrors[srv.id] = {};
 
@@ -533,138 +588,67 @@ const Prescription = () => {
       }
     }
 
-    // Validate common service settings
-    if (services.length > 0) {
-      if (!serviceDuration || serviceDuration < 1) {
-        toast.error('Илтимос, хизмат муддатини киритинг');
-        return;
-      }
-      if (!serviceStartDate) {
-        toast.error('Илтимос, бошланиш санасини танланг');
-        return;
-      }
+    if (!serviceDuration || serviceDuration < 1) {
+      toast.error('Илтимос, хизмат муддатини киритинг');
+      return;
+    }
+    if (!serviceStartDate) {
+      toast.error('Илтимос, бошланиш санасини танланг');
+      return;
     }
 
     if (hasErrors) {
-      setFormErrors({
-        medications: medErrors,
-        services: srvErrors,
-      });
+      setFormErrors((prev) => ({ ...prev, services: srvErrors }));
       toast.error('Илтимос, барча майдонларни тўлдиринг');
       return;
     }
 
-    // Check for duplicate medications
-    if (medications.length > 0) {
-      const medicationIds = medications.map((med) =>
-        med.medication_id.toLowerCase().trim()
+    // Check for duplicates
+    const serviceIds = services.map((srv) =>
+      srv.service_id.toLowerCase().trim()
+    );
+    const duplicates = serviceIds.filter(
+      (id, index) => serviceIds.indexOf(id) !== index
+    );
+    if (duplicates.length > 0) {
+      toast.error(
+        'Такрорланган хизмат. Ҳар бир хизмат фақат бир марта қўшилиши керак.'
       );
-      const duplicates = medicationIds.filter(
-        (id, index) => medicationIds.indexOf(id) !== index
-      );
-      if (duplicates.length > 0) {
-        toast.error(
-          'Такрорланган дори. Ҳар бир дори фақат бир марта қўшилиши керак.'
-        );
-        return;
-      }
+      return;
     }
 
-    // Check for duplicate services
-    if (services.length > 0) {
-      const serviceIds = services.map((srv) =>
-        srv.service_id.toLowerCase().trim()
-      );
-      const duplicates = serviceIds.filter(
-        (id, index) => serviceIds.indexOf(id) !== index
-      );
-      if (duplicates.length > 0) {
-        toast.error(
-          'Такрорланган хизмат. Ҳар бир хизмат фақат бир марта қўшилиши керак.'
-        );
-        return;
-      }
-    }
+    const serviceItems = services.map((srv) => {
+      const allDays = generateDays(serviceDuration, serviceStartDate);
+      const markedDays = srv.markedDays || [];
+      const daysToSave =
+        markedDays.length > 0
+          ? allDays.filter((day) => markedDays.includes(day.day))
+          : allDays;
 
-    // Save all medications at once
-    let medSuccessCount = 0;
-    if (medications.length > 0) {
-      const medicationItems = medications.map((med) => ({
-        medication_id: med.medication_id,
-        frequency: parseInt(med.frequency) || 0,
-        duration: parseInt(med.duration) || 0,
-        instructions: med.instructions,
-        addons: med.addons || '',
-      }));
+      return {
+        service_type_id: srv.service_id,
+        days: daysToSave,
+        notes: srv.notes,
+      };
+    });
 
-      await handleRequest({
-        request: async () => {
-          const res = await createPrescription({
-            examination_id: selectedExaminationId,
-            items: medicationItems,
-          }).unwrap();
-          return res;
-        },
-        onSuccess: () => {
-          medSuccessCount = medications.length;
-        },
-        onError: (error) => {
-          toast.error(error?.data?.error?.msg || `Дориларни сақлашда хатолик`);
-        },
-      });
-    }
-
-    // Save all services at once
-    let srvSuccessCount = 0;
-    if (services.length > 0) {
-      // Generate days for each service based on common duration and start date
-      const serviceItems = services.map((srv) => {
-        const allDays = generateDays(serviceDuration, serviceStartDate);
-        const markedDays = srv.markedDays || [];
-        // Only include marked days, or all days if none are marked
-        const daysToSave =
-          markedDays.length > 0
-            ? allDays.filter((day) => markedDays.includes(day.day))
-            : allDays;
-
-        return {
-          service_type_id: srv.service_id,
-          days: daysToSave,
-          notes: srv.notes,
-        };
-      });
-
-      await handleRequest({
-        request: async () => {
-          const res = await addServiceToExam({
-            examination_id: selectedExaminationId,
-            duration: serviceDuration,
-            items: serviceItems,
-          }).unwrap();
-          return res;
-        },
-        onSuccess: () => {
-          srvSuccessCount = services.length;
-        },
-        onError: (error) => {
-          toast.error(
-            error?.data?.error?.msg || `Хизматларни сақлашда хатолик`
-          );
-        },
-      });
-    }
-
-    const totalItems = medications.length + services.length;
-    const totalSuccess = medSuccessCount + srvSuccessCount;
-
-    if (totalSuccess === totalItems) {
-      toast.success(
-        `${medSuccessCount} та дори ва ${srvSuccessCount} та хизмат муваффақиятли сақланди`
-      );
-      navigate(-1);
-    } else if (totalSuccess > 0) {
-      toast.warning(`${totalSuccess}/${totalItems} та элемент сақланди`);
-    }
+    await handleRequest({
+      request: async () => {
+        const res = await addServiceToExam({
+          examination_id: selectedExaminationId,
+          duration: serviceDuration,
+          items: serviceItems,
+        }).unwrap();
+        return res;
+      },
+      onSuccess: () => {
+        toast.success(`${services.length} та хизмат муваффақиятли сақланди`);
+        setServices([]);
+      },
+      onError: (error) => {
+        toast.error(error?.data?.error?.msg || `Хизматларни сақлашда хатолик`);
+      },
+    });
   };
 
   const startEditPrescription = (prescription: any) => {
@@ -881,9 +865,9 @@ const Prescription = () => {
                         variant='ghost'
                         size='icon'
                         onClick={clearSelection}
-                        className='absolute right-2 top-2'
+                        className='absolute right-2 top-2 border border-red-500'
                       >
-                        <X className='h-4 w-4' />
+                        <X className='h-2 w-2 scale-125 text-red-500' />
                       </Button>
                     </div>
                   </CardContent>
@@ -972,8 +956,8 @@ const Prescription = () => {
                   </div>
                 )}
                 {medications.length === 0 &&
-                (!examinationData?.data?.prescriptions ||
-                  examinationData.data.prescriptions.length === 0) ? (
+                (!examinationData?.data?.prescription?.items ||
+                  examinationData.data.prescription.items.length === 0) ? (
                   <div className='text-center py-8 sm:py-12'>
                     <p className='text-muted-foreground text-sm sm:text-base mb-2'>
                       Ҳали дорилар қўшилмаган
@@ -1187,14 +1171,14 @@ const Prescription = () => {
                 )}
 
                 {/* Existing Prescriptions */}
-                {examinationData?.data?.prescriptions &&
-                  examinationData.data.prescriptions.length > 0 && (
+                {examinationData?.data?.prescription?.items &&
+                  examinationData.data.prescription.items.length > 0 && (
                     <>
                       <div className='text-xs font-medium text-muted-foreground mb-2'>
                         Мавжуд рецептлар (
-                        {examinationData.data.prescriptions.length} та)
+                        {examinationData.data.prescription.items.length} та)
                       </div>
-                      {examinationData.data.prescriptions.map(
+                      {examinationData.data.prescription.items.map(
                         (prescription: any, index: number) => (
                           <Card
                             key={prescription._id}
@@ -1438,6 +1422,19 @@ const Prescription = () => {
                       )}
                     </>
                   )}
+
+                {/* Dorilarni saqlash tugmasi */}
+                {medications.length > 0 && (
+                  <div className='flex justify-end mt-4'>
+                    <Button
+                      onClick={handleSaveMedications}
+                      disabled={isCreating || !selectedExaminationId}
+                      className='text-sm'
+                    >
+                      {isCreating ? 'Сақланмоқда...' : 'Дориларни сақлаш'}
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -1579,17 +1576,12 @@ const Prescription = () => {
                           <th className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'>
                             Хизмат
                           </th>
-                          {Array.from(
-                            { length: Math.min(serviceDuration, 8) },
-                            (_, i) => (
-                              <th
-                                key={i}
-                                className='border px-1 py-1.5 text-center font-semibold min-w-[70px]'
-                              >
-                                {i + 1}
-                              </th>
-                            )
-                          )}
+                          {Array.from({ length: 8 }, (_, i) => (
+                            <th
+                              key={i}
+                              className='border px-1 py-1.5 text-center min-w-[70px]'
+                            ></th>
+                          ))}
                           <th className='border px-1 py-1.5 text-center font-semibold w-10 sticky right-0 bg-muted/50 z-20'></th>
                         </tr>
                       </thead>
@@ -1704,7 +1696,10 @@ const Prescription = () => {
                                         }
                                       >
                                         {day.date ? (
-                                          <div className='flex items-center justify-center'>
+                                          <div className='flex flex-col items-center justify-center'>
+                                            <span className='text-[10px] text-muted-foreground font-bold'>
+                                              {day.day}-кун
+                                            </span>
                                             <span
                                               className={`px-1.5 py-0.5 rounded ${
                                                 isMarked
@@ -1723,9 +1718,14 @@ const Prescription = () => {
                                             </div>
                                           </div>
                                         ) : (
-                                          <span className='text-muted-foreground'>
-                                            —
-                                          </span>
+                                          <div className='flex flex-col items-center justify-center'>
+                                            <span className='text-[10px] text-muted-foreground font-medium'>
+                                              {day.day}-кун
+                                            </span>
+                                            <span className='text-muted-foreground'>
+                                              —
+                                            </span>
+                                          </div>
                                         )}
                                       </td>
                                     );
@@ -1767,6 +1767,19 @@ const Prescription = () => {
                   </div>
                 </div>
               )}
+
+              {/* Xizmatlarni saqlash tugmasi */}
+              {services.length > 0 && (
+                <div className='flex justify-end mt-4'>
+                  <Button
+                    onClick={handleSaveServices}
+                    disabled={isAddingService || !selectedExaminationId}
+                    className='text-sm'
+                  >
+                    {isAddingService ? 'Сақланмоқда...' : 'Хизматларни сақлаш'}
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -1778,20 +1791,6 @@ const Prescription = () => {
                 disabled={isCreating || isAddingService}
               >
                 Бекор Қилиш
-              </Button>
-              <Button
-                className='w-full sm:w-auto text-sm'
-                onClick={handleSavePrescription}
-                disabled={
-                  isCreating ||
-                  isAddingService ||
-                  (medications.length === 0 && services.length === 0) ||
-                  !selectedExaminationId
-                }
-              >
-                {isCreating || isAddingService
-                  ? 'Сақланмоқда...'
-                  : 'Тасдиқлаш ва Сақлаш'}
               </Button>
             </div>
           </>

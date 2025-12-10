@@ -104,11 +104,11 @@ export type ExamDataItem = {
   description: string;
   complaints: string;
   treatment_type: 'stasionar' | 'ambulator';
-  analyses: Array<Analysis>;
+  analyses: Array<Analysis> | [];
   billing_id: string | null;
   images: Array<Image> | [];
-  prescriptions?: Array<getOnePrescriptionRes> | null;
-  service?: Array<getOneServiceRes> | null;
+  prescription: getOnePrescriptionRes | null;
+  service: getOneServiceRes | null;
   status: status;
   neurological_status_id: string | null;
   daily_checkup_id: string | null;
