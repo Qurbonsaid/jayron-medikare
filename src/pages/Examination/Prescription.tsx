@@ -822,81 +822,66 @@ const Prescription = () => {
           </Card>
         ) : (
           <>
-            {/* Patient Info Banner */}
-
             {/* Examination Info */}
             {examinationData && (
               <>
-                <Card className='mb-4 sm:mb-6 bg-gradient-to-r from-primary/10 to-primary/10 border-primary/20'>
-                  <CardContent className='pt-4 sm:pt-6'>
+                <Card className='mb-3 bg-gradient-to-r from-primary/10 to-primary/10 border-primary/20'>
+                  <CardContent className='pt-4 sm:pt-6 relative'>
                     <div className='flex flex-col sm:flex-row items-start justify-between gap-3'>
-                      <div className='flex-1 w-full'>
-                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'>
-                          <div className='space-y-1'>
-                            <Label className='text-xs sm:text-sm text-muted-foreground'>
-                              Бемор Исми
-                            </Label>
-                            <p className='font-semibold text-sm sm:text-base break-words'>
-                              {patient?.fullname || 'Маълумот йўқ'}
-                            </p>
-                          </div>
-                          <div className='space-y-1'>
-                            <Label className='text-xs sm:text-sm text-muted-foreground'>
-                              Туғилган Сана
-                            </Label>
-                            <p className='font-semibold text-sm sm:text-base'>
-                              {patient?.date_of_birth ? (
-                                <>
-                                  {new Date(
-                                    patient.date_of_birth
-                                  ).toLocaleDateString('uz-UZ')}{' '}
-                                  <span className='text-muted-foreground'>
-                                    ({calculateAge(patient.date_of_birth)} ёш)
-                                  </span>
-                                </>
-                              ) : (
-                                'Маълумот йўқ'
-                              )}
-                            </p>
-                          </div>
-                          <div className='space-y-1'>
-                            <Label className='text-xs sm:text-sm text-muted-foreground'>
-                              Телефон
-                            </Label>
-                            <p className='font-semibold text-sm sm:text-base'>
-                              {patient?.phone || 'Маълумот йўқ'}
-                            </p>
-                          </div>
+                        <div className='flex-1 space-y-1'>
+                          <Label className='text-xs sm:text-sm text-muted-foreground'>
+                            Бемор Исми
+                          </Label>
+                          <p className='font-semibold text-sm sm:text-base break-words'>
+                            {patient?.fullname || 'Маълумот йўқ'}
+                          </p>
                         </div>
-                      </div>
+                        <div className='flex-1 space-y-1'>
+                          <Label className='text-xs sm:text-sm text-muted-foreground'>
+                            Туғилган Сана
+                          </Label>
+                          <p className='font-semibold text-sm sm:text-base'>
+                            {patient?.date_of_birth ? (
+                              <>
+                                {new Date(
+                                  patient.date_of_birth
+                                ).toLocaleDateString('uz-UZ')}{' '}
+                                <span className='text-muted-foreground'>
+                                  ({calculateAge(patient.date_of_birth)} ёш)
+                                </span>
+                              </>
+                            ) : (
+                              'Маълумот йўқ'
+                            )}
+                          </p>
+                        </div>
+                        <div className='flex-1 space-y-1'>
+                          <Label className='text-xs sm:text-sm text-muted-foreground'>
+                            Телефон
+                          </Label>
+                          <p className='font-semibold text-sm sm:text-base'>
+                            {patient?.phone || 'Маълумот йўқ'}
+                          </p>
+                        </div>
                       <Button
                         variant='ghost'
                         size='icon'
                         onClick={clearSelection}
-                        className='self-start sm:self-center'
+                        className='absolute right-2 top-2'
                       >
                         <X className='h-4 w-4' />
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-                <Card className='mb-4 sm:mb-6'>
-                  <CardHeader>
-                    <CardTitle className='text-base sm:text-lg md:text-xl'>
+                <Card className='mb-3'>
+                  <CardHeader className='p-5 max-sm:pb-2'>
+                    <CardTitle className='text-base sm:text-lg'>
                       Кўрик маълумоти
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className='space-y-3 sm:space-y-4'>
-                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-                        {/* <div className='space-y-1'>
-                          <Label className='text-xs sm:text-sm text-muted-foreground'>
-                            Кўрик ID
-                          </Label>
-                          <p className='font-mono font-semibold text-xs sm:text-sm break-all'>
-                            {examinationData.data._id || 'N/A'}
-                          </p>
-                        </div> */}
+                  <CardContent className='p-5 pt-0'>
+                    <div className='flex sm:justify-between items-center flex-col sm:flex-row max-sm:items-start'>
                         <div className='space-y-1'>
                           <Label className='text-xs sm:text-sm text-muted-foreground'>
                             Шифокор
@@ -914,17 +899,14 @@ const Prescription = () => {
                             {examinationData.data.complaints || 'Маълумот йўқ'}
                           </p>
                         </div>
-                      </div>
-                      {examinationData.data.description && (
                         <div className='space-y-1'>
                           <Label className='text-xs sm:text-sm text-muted-foreground'>
                             Тавсия
                           </Label>
                           <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
-                            {examinationData.data.description}
+                            {examinationData.data?.description || 'Маълумот йўқ'}
                           </p>
                         </div>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -939,7 +921,7 @@ const Prescription = () => {
           allergyWarning &&
           patient.allergies &&
           patient.allergies.length > 0 && (
-            <Alert className='mb-4 sm:mb-6 border-destructive bg-destructive/10'>
+            <Alert className='mb-3 border-destructive bg-destructive/10'>
               <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-destructive' />
               <AlertDescription className='text-destructive font-semibold text-xs sm:text-sm'>
                 ОГОҲЛАНТИРИШ: Беморда {patient.allergies.join(', ')}
