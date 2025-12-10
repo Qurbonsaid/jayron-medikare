@@ -1,13 +1,9 @@
-import {
-  useAddServiceMutation,
-  useCreateExamMutation,
-} from '@/app/api/examinationApi/examinationApi';
+import { useCreateExamWithPrescriptionAndServiceMutation } from '@/app/api/examinationApi/examinationApi';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import {
   useGetAllPatientQuery,
   useGetPatientByIdQuery,
 } from '@/app/api/patientApi/patientApi';
-import { useCreatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { useGetUsersQuery } from '@/app/api/userApi/userApi';
 import { Button } from '@/components/ui/button';
@@ -55,9 +51,9 @@ import {
   User,
   UserCog,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { calculateAge } from './calculateAge';
+import { calculateAge } from '../../Examination/components/calculateAge';
 
 interface NewVisitDialogProps {
   open: boolean;
@@ -142,9 +138,8 @@ const NewVisitDialog = ({
     role: 'doctor',
   });
 
-  const [createExam, { isLoading: isCreating }] = useCreateExamMutation();
-  const [createPrescription] = useCreatePrescriptionMutation();
-  const [addServiceToExam] = useAddServiceMutation();
+  const [createExamWithPrescriptionAndService, { isLoading: isCreating }] =
+    useCreateExamWithPrescriptionAndServiceMutation();
   const handleRequest = useHandleRequest();
 
   // Fetch medications
@@ -265,13 +260,15 @@ const NewVisitDialog = ({
 
   // Service handlers
   const addService = () => {
+    // Mark all days by default
+    const allDays = Array.from({ length: serviceDuration }, (_, i) => i + 1);
     setServices([
       ...services,
       {
         id: Date.now().toString(),
         service_id: '',
         notes: '',
-        markedDays: [],
+        markedDays: allDays,
       },
     ]);
   };
@@ -336,6 +333,18 @@ const NewVisitDialog = ({
     );
   };
 
+  const markEveryDay = () => {
+    setServices(
+      services.map((srv) => {
+        const allDays = Array.from(
+          { length: serviceDuration },
+          (_, i) => i + 1
+        ); // Mark all days: 1, 2, 3, 4...
+        return { ...srv, markedDays: allDays };
+      })
+    );
+  };
+
   const handleSave = async () => {
     setShowErrors(true);
 
@@ -352,74 +361,76 @@ const NewVisitDialog = ({
       return;
     }
 
+    // Prepare prescription_data
+    const prescriptionItems = medications
+      .filter((med) => med.medication_id)
+      .map((med) => ({
+        medication_id: med.medication_id,
+        frequency: parseInt(med.frequency) || 1,
+        duration: parseInt(med.duration) || 1,
+        instructions: med.instructions,
+        addons: med.addons || '',
+      }));
+
+    // Prepare service_data
+    let serviceData: {
+      duration: number;
+      items: Array<{
+        service_type_id: string;
+        notes: string;
+        days: Array<{ day: number; date: Date }>;
+      }>;
+    } | null = null;
+
+    if (services.length > 0 && serviceDuration && serviceStartDate) {
+      const serviceItems = services.map((srv) => {
+        const allDays = generateDays(serviceDuration, serviceStartDate);
+        const markedDays = srv.markedDays || [];
+        // Only include marked days, or all days if none are marked
+        const daysToSave =
+          markedDays.length > 0
+            ? allDays.filter((day) => markedDays.includes(day.day))
+            : allDays;
+
+        return {
+          service_type_id: srv.service_id,
+          days: daysToSave,
+          notes: srv.notes,
+        };
+      });
+
+      serviceData = {
+        duration: serviceDuration,
+        items: serviceItems,
+      };
+    }
+
+    const request: any = {
+      patient_id: selectedPatientId,
+      doctor_id: selectedDoctorId,
+      complaints: subjective,
+      treatment_type: treatmentType,
+      prescription_data: {
+        items: prescriptionItems,
+      },
+    };
+    console.log(request);
     await handleRequest({
       request: async () => {
-        const request: any = {
-          patient_id: selectedPatientId,
-          doctor_id: selectedDoctorId,
-          complaints: subjective,
-          treatment_type: treatmentType,
-        };
         if (description.trim()) {
           request.description = description;
         }
-        const res = await createExam(request).unwrap();
+
+        if (serviceData) {
+          request.service_data = serviceData;
+        }
+
+        const res = await createExamWithPrescriptionAndService(
+          request
+        ).unwrap();
         return res;
       },
-      onSuccess: async (data: any) => {
-        const examId = data?.data?._id;
-
-        // Save prescriptions
-        for (const med of medications) {
-          if (med.medication_id) {
-            try {
-              await createPrescription({
-                examination_id: examId,
-                items: [
-                  {
-                    medication_id: med.medication_id,
-                    frequency: parseInt(med.frequency) || 1,
-                    duration: parseInt(med.duration) || 1,
-                    instructions: med.instructions,
-                    addons: med.addons || '',
-                  },
-                ],
-              }).unwrap();
-            } catch (error) {
-              console.error('Рецепт сақлашда хатолик:', error);
-            }
-          }
-        }
-
-        // Save services with common duration and start date
-        if (services.length > 0 && serviceDuration && serviceStartDate) {
-          const serviceItems = services.map((srv) => {
-            const allDays = generateDays(serviceDuration, serviceStartDate);
-            const markedDays = srv.markedDays || [];
-            // Only include marked days, or all days if none are marked
-            const daysToSave =
-              markedDays.length > 0
-                ? allDays.filter((day) => markedDays.includes(day.day))
-                : allDays;
-
-            return {
-              service_type_id: srv.service_id,
-              days: daysToSave,
-              notes: srv.notes,
-            };
-          });
-
-          try {
-            await addServiceToExam({
-              examination_id: examId,
-              duration: serviceDuration,
-              items: serviceItems,
-            }).unwrap();
-          } catch (error) {
-            console.error('Хизмат сақлашда хатолик:', error);
-          }
-        }
-
+      onSuccess: () => {
         toast.success('Кўрик муваффақиятли яратилди');
         onOpenChange(false);
         onSuccess?.();
@@ -518,19 +529,11 @@ const NewVisitDialog = ({
                       </div>
                     )}
                   </div>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={clearPatient}
-                    disabled={isCreating}
-                  >
-                    Ўзгартириш
-                  </Button>
                 </div>
               </div>
 
               {/* Doctor Selection and Treatment Type in one row */}
-              <div className='flex items-end gap-4'>
+              <div className='flex items-end gap-4 shadow-lg border p-2 rounded-lg'>
                 <div className='flex-1 space-y-2'>
                   <Label className='flex items-center gap-2'>
                     <UserCog className='w-4 h-4 text-primary' />
@@ -614,7 +617,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Subjective - Complaints */}
-              <div className='space-y-2'>
+              <div className='space-y-2 shadow-lg border p-2 rounded-lg'>
                 <Label className='flex items-center gap-2'>
                   <FileText className='w-4 h-4 text-primary' />
                   Бемор шикояти (Subjective)
@@ -630,7 +633,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Description */}
-              <div className='space-y-2'>
+              <div className='space-y-2 shadow-lg border p-2 rounded-lg'>
                 <Label className='flex items-center gap-2'>
                   <Activity className='w-4 h-4 text-primary' />
                   Изоҳ (Objective)
@@ -644,7 +647,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Prescriptions Section */}
-              <div className='space-y-3 border rounded-lg p-4 bg-muted/30'>
+              <div className='space-y-3 border rounded-lg p-4 bg-muted/30 shadow-lg'>
                 <div className='flex items-center justify-between'>
                   <Label className='flex items-center gap-2'>
                     <Pill className='w-4 h-4 text-primary' />
@@ -742,7 +745,7 @@ const NewVisitDialog = ({
                               onChange={(e) =>
                                 updateMedication(
                                   med.id,
-                                  'additionalInfo',
+                                  'addons',
                                   e.target.value
                                 )
                               }
@@ -823,7 +826,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Services Section */}
-              <div className='space-y-3 border rounded-lg p-4 bg-muted/30'>
+              <div className='space-y-3 border rounded-lg p-4 bg-muted/30 shadow-lg'>
                 <div className='flex items-center justify-between'>
                   <Label className='flex items-center gap-2'>
                     <Activity className='w-4 h-4 text-primary' />
@@ -918,21 +921,38 @@ const NewVisitDialog = ({
                         />
                       </div>
 
-                      {/* Quick Mark Button */}
-                      <div className='shrink-0'>
-                        <Label className='text-xs font-medium text-transparent'>
-                          &nbsp;
-                        </Label>
-                        <Button
-                          type='button'
-                          variant='outline'
-                          size='sm'
-                          onClick={markEveryOtherDay}
-                          className='h-8 text-sm mt-1'
-                          disabled={services.length === 0}
-                        >
-                          2 кунда бир
-                        </Button>
+                      {/* Quick Mark Buttons */}
+                      <div className='shrink-0 flex gap-2'>
+                        <div>
+                          <Label className='text-xs font-medium text-transparent'>
+                            &nbsp;
+                          </Label>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={markEveryDay}
+                            className='h-8 text-sm mt-1'
+                            disabled={services.length === 0}
+                          >
+                            Ҳар куни
+                          </Button>
+                        </div>
+                        <div>
+                          <Label className='text-xs font-medium text-transparent'>
+                            &nbsp;
+                          </Label>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            onClick={markEveryOtherDay}
+                            className='h-8 text-sm mt-1'
+                            disabled={services.length === 0}
+                          >
+                            2 кунда бир
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
@@ -944,129 +964,180 @@ const NewVisitDialog = ({
                             <th className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'>
                               Хизмат
                             </th>
-                            {Array.from({ length: serviceDuration }, (_, i) => (
+                            {Array.from({ length: 8 }, (_, i) => (
                               <th
                                 key={i}
-                                className='border px-1 py-1.5 text-center font-semibold min-w-[60px]'
-                              >
-                                {i + 1}
-                              </th>
+                                className='border px-1 py-1.5 text-center font-semibold min-w-[70px]'
+                              ></th>
                             ))}
                             <th className='border px-1 py-1.5 text-center font-semibold w-10 sticky right-0 bg-muted/50 z-20'></th>
                           </tr>
                         </thead>
                         <tbody>
                           {services.map((srv) => {
-                            const serviceName =
-                              availableServices.find(
-                                (s: any) => s._id === srv.service_id
-                              )?.name || '';
                             const days = generateDays(
                               serviceDuration,
                               serviceStartDate
                             );
                             const markedDays = srv.markedDays || [];
 
+                            // Split days into chunks of 8
+                            const daysPerRow = 8;
+                            const dayChunks: ServiceDay[][] = [];
+                            for (let i = 0; i < days.length; i += daysPerRow) {
+                              dayChunks.push(days.slice(i, i + daysPerRow));
+                            }
+
                             return (
-                              <tr key={srv.id} className='hover:bg-muted/30'>
-                                <td className='border px-1 py-1 sticky left-0 bg-background z-10'>
-                                  <Select
-                                    value={srv.service_id}
-                                    onValueChange={(value) =>
-                                      updateService(srv.id, 'service_id', value)
-                                    }
-                                    onOpenChange={(open) => {
-                                      if (open) {
-                                        setTimeout(
-                                          () =>
-                                            serviceSearchRef.current?.focus(),
-                                          0
-                                        );
-                                      }
-                                    }}
+                              <React.Fragment key={srv.id}>
+                                {dayChunks.map((chunk, chunkIndex) => (
+                                  <tr
+                                    key={`${srv.id}-${chunkIndex}`}
+                                    className='hover:bg-muted/30'
                                   >
-                                    <SelectTrigger className='h-7 text-xs border-0 shadow-none'>
-                                      <SelectValue placeholder='Танланг...' />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <div className='p-2'>
-                                        <Input
-                                          ref={serviceSearchRef}
-                                          placeholder='Қидириш...'
-                                          value={serviceSearch}
-                                          onChange={(e) =>
-                                            setServiceSearch(e.target.value)
+                                    {chunkIndex === 0 && (
+                                      <td
+                                        className='border px-1 py-1 sticky left-0 bg-background z-10'
+                                        rowSpan={dayChunks.length}
+                                      >
+                                        <Select
+                                          value={srv.service_id}
+                                          onValueChange={(value) =>
+                                            updateService(
+                                              srv.id,
+                                              'service_id',
+                                              value
+                                            )
                                           }
-                                          onKeyDown={(e) => e.stopPropagation()}
-                                          onFocus={(e) => {
-                                            setTimeout(
-                                              () => e.target.focus(),
-                                              0
-                                            );
+                                          onOpenChange={(open) => {
+                                            if (open) {
+                                              setTimeout(
+                                                () =>
+                                                  serviceSearchRef.current?.focus(),
+                                                0
+                                              );
+                                            }
                                           }}
-                                          className='text-sm mb-2'
-                                        />
-                                      </div>
-                                      {availableServices.map((s: any) => (
-                                        <SelectItem key={s._id} value={s._id}>
-                                          {s.name} -{' '}
-                                          {new Intl.NumberFormat(
-                                            'uz-UZ'
-                                          ).format(s.price)}{' '}
-                                          сўм
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </td>
-                                {days.map((day, i) => {
-                                  const isMarked = markedDays.includes(day.day);
-                                  return (
-                                    <td
-                                      key={i}
-                                      className='border px-1 py-1 text-center group relative cursor-pointer hover:bg-blue-50'
-                                      onClick={() =>
-                                        toggleDayMark(srv.id, day.day)
-                                      }
-                                    >
-                                      {day.date ? (
-                                        <div className='flex items-center justify-center'>
-                                          <span
-                                            className={`${
-                                              isMarked
-                                                ? 'bg-blue-500 text-white px-1.5 py-0.5 rounded font-semibold'
-                                                : ''
-                                            }`}
-                                          >
-                                            {format(day.date, 'dd/MM')}
-                                          </span>
-                                          <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none text-xs'>
-                                            {new Date(
-                                              day.date
-                                            ).toLocaleDateString('uz-UZ')}
-                                            {isMarked && ' ✓'}
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <span className='text-muted-foreground'>
-                                          —
-                                        </span>
+                                        >
+                                          <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
+                                            <SelectValue placeholder='Танланг...' />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <div className='p-2'>
+                                              <Input
+                                                ref={serviceSearchRef}
+                                                placeholder='Қидириш...'
+                                                value={serviceSearch}
+                                                onChange={(e) =>
+                                                  setServiceSearch(
+                                                    e.target.value
+                                                  )
+                                                }
+                                                onKeyDown={(e) =>
+                                                  e.stopPropagation()
+                                                }
+                                                onFocus={(e) => {
+                                                  setTimeout(
+                                                    () => e.target.focus(),
+                                                    0
+                                                  );
+                                                }}
+                                                className='text-sm mb-2'
+                                              />
+                                            </div>
+                                            {availableServices.map((s: any) => (
+                                              <SelectItem
+                                                key={s._id}
+                                                value={s._id}
+                                              >
+                                                {s.name} -{' '}
+                                                {new Intl.NumberFormat(
+                                                  'uz-UZ'
+                                                ).format(s.price)}{' '}
+                                                сўм
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </td>
+                                    )}
+                                    {chunk.map((day, i) => {
+                                      const isMarked = markedDays.includes(
+                                        day.day
+                                      );
+                                      return (
+                                        <td
+                                          key={i}
+                                          className='border px-1 py-1 text-center group relative cursor-pointer hover:bg-blue-50 min-w-[70px]'
+                                          onClick={() =>
+                                            toggleDayMark(srv.id, day.day)
+                                          }
+                                        >
+                                          {day.date ? (
+                                            <div className='flex flex-col items-center justify-center'>
+                                              <span className='text-[10px] text-muted-foreground font-bold'>
+                                                {day.day}-кун
+                                              </span>
+                                              <span
+                                                className={`px-1.5 py-0.5 rounded ${
+                                                  isMarked
+                                                    ? 'bg-blue-500 text-white font-semibold'
+                                                    : ''
+                                                }`}
+                                              >
+                                                {format(day.date, 'dd/MM')}
+                                              </span>
+                                              <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none text-xs'>
+                                                {day.day}-кун:{' '}
+                                                {new Date(
+                                                  day.date
+                                                ).toLocaleDateString('uz-UZ')}
+                                                {isMarked && ' ✓'}
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <div className='flex flex-col items-center justify-center'>
+                                              <span className='text-[10px] text-muted-foreground font-bold'>
+                                                {day.day}-кун
+                                              </span>
+                                              <span className='text-muted-foreground'>
+                                                —
+                                              </span>
+                                            </div>
+                                          )}
+                                        </td>
+                                      );
+                                    })}
+                                    {/* Fill empty cells if chunk has less than 8 items */}
+                                    {chunk.length < daysPerRow &&
+                                      Array.from(
+                                        { length: daysPerRow - chunk.length },
+                                        (_, i) => (
+                                          <td
+                                            key={`empty-${i}`}
+                                            className='border px-1 py-1'
+                                          ></td>
+                                        )
                                       )}
-                                    </td>
-                                  );
-                                })}
-                                <td className='border px-1 py-1 text-center sticky right-0 bg-background z-10'>
-                                  <Button
-                                    type='button'
-                                    variant='ghost'
-                                    size='sm'
-                                    onClick={() => removeService(srv.id)}
-                                    className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-                                  >
-                                    <Trash2 className='w-3 h-3' />
-                                  </Button>
-                                </td>
-                              </tr>
+                                    {chunkIndex === 0 && (
+                                      <td
+                                        className='border px-1 py-1 text-center sticky right-0 bg-background z-10'
+                                        rowSpan={dayChunks.length}
+                                      >
+                                        <Button
+                                          type='button'
+                                          variant='ghost'
+                                          size='sm'
+                                          onClick={() => removeService(srv.id)}
+                                          className='h-6 w-6 p-0 text-destructive hover:text-destructive'
+                                        >
+                                          <Trash2 className='w-3 h-3' />
+                                        </Button>
+                                      </td>
+                                    )}
+                                  </tr>
+                                ))}
+                              </React.Fragment>
                             );
                           })}
                         </tbody>

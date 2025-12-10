@@ -104,11 +104,11 @@ export type ExamDataItem = {
   description: string;
   complaints: string;
   treatment_type: 'stasionar' | 'ambulator';
-  analyses: Array<Analysis>;
+  analyses: Array<Analysis> | [];
   billing_id: string | null;
   images: Array<Image> | [];
-  prescriptions?: Array<getOnePrescriptionRes> | null;
-  service?: Array<getOneServiceRes> | null;
+  prescription: getOnePrescriptionRes | null;
+  service: getOneServiceRes | null;
   status: status;
   neurological_status_id: string | null;
   daily_checkup_id: string | null;
@@ -289,6 +289,34 @@ export interface createPrescriptionDays {
   id: string;
   prescriptionId: string;
   data: Prescription;
+}
+
+interface CreateExamWithPrescriptionAndServiceReq {
+  patient_id: string;
+  doctor_id: string;
+  description: string;
+  complaints: string;
+  treatment_type: 'stasionar' | 'ambulator';
+  service_data?: {
+    duration: number;
+    items: Array<{
+      service_type_id: string;
+      notes?: string;
+      days: Array<{
+        day: number;
+        date: Date;
+      }>;
+    }>;
+  };
+  prescription_data?: {
+    items: Array<{
+        medication_id: string;
+        addons: string;
+        frequency: number;
+        duration: number;
+        instructions: string;
+      }>;
+  };
 }
 
 export interface takeMedicine {

@@ -837,6 +837,17 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                     </div>
                   </Card>
                 ))}
+
+                {/* Mobile Add Service Button */}
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={addService}
+                  className='w-full text-sm bg-blue-500 text-white'
+                >
+                  <Plus className='w-4 h-4 mr-2' />
+                  Хизмат қўшиш
+                </Button>
               </div>
             </div>
           )}
