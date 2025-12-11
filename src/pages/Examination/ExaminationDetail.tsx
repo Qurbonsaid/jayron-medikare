@@ -227,6 +227,8 @@ const ExaminationDetail = () => {
 
   const exam = examData?.data;
 
+  console.log("Exam: " , exam)
+
   // Fetch all diagnosis
   const { data: diagnosisData } = useGetAllDiagnosisQuery({});
   const diagnoses = diagnosisData?.data || [];
@@ -511,6 +513,19 @@ const ExaminationDetail = () => {
     );
   };
 
+  const markEveryDay = () => {
+    setServices(
+      services.map((srv) => {
+        const updatedDays = srv.days.map((day, idx) => {
+          const dayDate = new Date(serviceStartDate);
+          dayDate.setDate(dayDate.getDate() + idx);
+          return { ...day, date: dayDate };
+        });
+        return { ...srv, days: updatedDays };
+      })
+    );
+  };
+
   const handleSaveService = async () => {
     if (services.length === 0) {
       toast.error('Илтимос, хизмат қўшинг');
@@ -524,9 +539,10 @@ const ExaminationDetail = () => {
     }
 
     const payload = {
-      examination_id: exam._id,
+      id: exam.service._id,
       duration: serviceDuration,
       items: services.map((srv) => ({
+        _id: srv.id,
         service_type_id: srv.service_type_id,
         days: srv.days,
         notes: srv.notes,
@@ -1619,17 +1635,31 @@ const ExaminationDetail = () => {
                                   const newDuration =
                                     parseInt(e.target.value) || 1;
                                   setServiceDuration(newDuration);
-                                  // Update all services with new duration
+                                  // Update all services with new duration, preserving existing day states
                                   setServices(
-                                    services.map((srv) => ({
-                                      ...srv,
-                                      duration: newDuration,
-                                      days: generateDays(
-                                        newDuration,
-                                        [],
-                                        serviceStartDate
-                                      ),
-                                    }))
+                                    services.map((srv) => {
+                                      // Preserve existing day states (marked/unmarked)
+                                      const newDays: ServiceDay[] = Array.from(
+                                        { length: newDuration },
+                                        (_, idx) => {
+                                          const existingDay = srv.days[idx];
+                                          if (existingDay) {
+                                            // Keep existing day with its date (marked) or null (unmarked)
+                                            return existingDay;
+                                          }
+                                          // New days are unmarked by default (date: null)
+                                          return {
+                                            day: idx + 1,
+                                            date: null,
+                                          };
+                                        }
+                                      );
+                                      return {
+                                        ...srv,
+                                        duration: newDuration,
+                                        days: newDays,
+                                      };
+                                    })
                                   );
                                 }}
                                 className='mt-1'
@@ -1665,6 +1695,13 @@ const ExaminationDetail = () => {
                             <div className='ml-auto flex items-center gap-2'>
                               <Button
                                 variant='outline'
+                                onClick={markEveryDay}
+                                disabled={services.length === 0}
+                              >
+                                Ҳар куни
+                              </Button>
+                              <Button
+                                variant='outline'
                                 onClick={markEveryOtherDay}
                                 disabled={services.length === 0}
                               >
@@ -1687,192 +1724,252 @@ const ExaminationDetail = () => {
                                       Хизмат
                                     </th>
                                     {Array.from(
-                                      { length: serviceDuration },
+                                      { length: Math.min(serviceDuration, 8) },
                                       (_, i) => (
                                         <th
                                           key={i + 1}
                                           className='border-b border-l px-2 py-2 text-center text-sm font-medium'
-                                        >
-                                          {i + 1}
-                                        </th>
+                                        ></th>
                                       )
                                     )}
                                     <th className='border-b border-l px-2 py-2 text-center text-sm font-medium w-12'></th>
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {services.map((service) => (
-                                    <tr
-                                      key={service.id}
-                                      className='hover:bg-muted/30'
-                                    >
-                                      <td className='border-b px-3 py-2'>
-                                        <Popover
-                                          open={
-                                            openServiceCombobox === service.id
-                                          }
-                                          onOpenChange={(open) => {
-                                            setOpenServiceCombobox(
-                                              open ? service.id : ''
-                                            );
-                                            if (open) {
-                                              // Reset search when opening
-                                              setServiceSearch('');
-                                              // Focus on search input
-                                              setTimeout(
-                                                () =>
-                                                  serviceSearchRef.current?.focus(),
-                                                0
-                                              );
-                                            }
-                                          }}
+                                  {services.map((service) => {
+                                    // Split days into chunks of 8
+                                    const dayChunks: Array<
+                                      typeof service.days
+                                    > = [];
+                                    for (
+                                      let i = 0;
+                                      i < service.days.length;
+                                      i += 8
+                                    ) {
+                                      dayChunks.push(
+                                        service.days.slice(i, i + 8)
+                                      );
+                                    }
+
+                                    return dayChunks.map(
+                                      (chunk, chunkIndex) => (
+                                        <tr
+                                          key={`${service.id}-chunk-${chunkIndex}`}
+                                          className='hover:bg-muted/30'
                                         >
-                                          <PopoverTrigger asChild>
-                                            <Button
-                                              variant='outline'
-                                              role='combobox'
-                                              className='w-full justify-between'
+                                          {chunkIndex === 0 ? (
+                                            <td
+                                              className='border-b px-3 py-2'
+                                              rowSpan={dayChunks.length}
                                             >
-                                              {service.service_type_id
-                                                ? getServiceById(
-                                                    service.service_type_id
-                                                  )?.name || 'Танланг...'
-                                                : 'Танланг...'}
-                                              <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                                            </Button>
-                                          </PopoverTrigger>
-                                          <PopoverContent className='w-[400px] p-0'>
-                                            <Command shouldFilter={false}>
-                                              <CommandInput
-                                                ref={serviceSearchRef}
-                                                placeholder='Хизматни қидириш...'
-                                                value={serviceSearch}
-                                                onValueChange={setServiceSearch}
-                                                onKeyDown={(e) =>
-                                                  e.stopPropagation()
+                                              <Popover
+                                                open={
+                                                  openServiceCombobox ===
+                                                  service.id
                                                 }
-                                              />
-                                              <CommandList
-                                                onScroll={(e: any) => {
-                                                  const bottom =
-                                                    e.target.scrollHeight -
-                                                      e.target.scrollTop ===
-                                                    e.target.clientHeight;
-                                                  if (
-                                                    bottom &&
-                                                    serviceHasMoreData &&
-                                                    !isFetchingServices
-                                                  ) {
-                                                    setServicePage(
-                                                      (prev) => prev + 1
+                                                onOpenChange={(open) => {
+                                                  setOpenServiceCombobox(
+                                                    open ? service.id : ''
+                                                  );
+                                                  if (open) {
+                                                    // Reset search when opening
+                                                    setServiceSearch('');
+                                                    // Focus on search input
+                                                    setTimeout(
+                                                      () =>
+                                                        serviceSearchRef.current?.focus(),
+                                                      0
                                                     );
                                                   }
                                                 }}
                                               >
-                                                {isFetchingServices &&
-                                                serviceTypes.length === 0 ? (
-                                                  <div className='flex items-center justify-center py-4'>
-                                                    <Loader2 className='h-4 w-4 animate-spin mr-2' />
-                                                    <span className='text-sm text-muted-foreground'>
-                                                      Юкланмоқда...
-                                                    </span>
-                                                  </div>
-                                                ) : serviceTypes.length ===
-                                                  0 ? (
-                                                  <CommandEmpty>
-                                                    Хизмат топилмади
-                                                  </CommandEmpty>
-                                                ) : (
-                                                  <CommandGroup>
-                                                    {serviceTypes.map(
-                                                      (serviceType: any) => (
-                                                        <CommandItem
-                                                          key={serviceType._id}
-                                                          value={
-                                                            serviceType._id
-                                                          }
-                                                          keywords={[
-                                                            serviceType.name,
-                                                            serviceType._id,
-                                                          ]}
-                                                          onSelect={() => {
-                                                            updateServiceField(
-                                                              service.id,
-                                                              'service_type_id',
-                                                              serviceType._id
-                                                            );
-                                                            setOpenServiceCombobox(
-                                                              ''
-                                                            );
-                                                            setServiceSearch(
-                                                              ''
-                                                            );
-                                                            setServicePage(1);
-                                                          }}
-                                                        >
-                                                          <Check
-                                                            className={cn(
-                                                              'mr-2 h-4 w-4',
-                                                              service.service_type_id ===
-                                                                serviceType._id
-                                                                ? 'opacity-100'
-                                                                : 'opacity-0'
-                                                            )}
-                                                          />
-                                                          {serviceType.name}
-                                                        </CommandItem>
-                                                      )
-                                                    )}
-                                                    {isFetchingServices && (
-                                                      <div className='flex items-center justify-center py-2'>
-                                                        <Loader2 className='h-4 w-4 animate-spin' />
-                                                      </div>
-                                                    )}
-                                                  </CommandGroup>
-                                                )}
-                                              </CommandList>
-                                            </Command>
-                                          </PopoverContent>
-                                        </Popover>
-                                      </td>
-                                      {service.days.map((day, dayIdx) => (
-                                        <td
-                                          key={day.day}
-                                          className='border-b border-l px-1 py-1 text-center cursor-pointer hover:bg-muted/50'
-                                          onClick={() =>
-                                            toggleDayMark(service.id, day.day)
-                                          }
-                                        >
-                                          {day.date ? (
-                                            <div className='text-xs font-medium'>
-                                              {new Date(
-                                                day.date
-                                              ).toLocaleDateString('en-GB', {
-                                                day: '2-digit',
-                                                month: '2-digit',
-                                              })}
-                                            </div>
-                                          ) : (
-                                            <span className='text-muted-foreground'>
-                                              -
-                                            </span>
-                                          )}
-                                        </td>
-                                      ))}
-                                      <td className='border-b border-l px-1 py-1 text-center'>
-                                        <Button
-                                          variant='ghost'
-                                          size='sm'
-                                          onClick={() =>
-                                            removeService(service.id)
-                                          }
-                                          className='h-8 w-8 p-0 text-destructive hover:text-destructive'
-                                        >
-                                          <Trash2 className='h-4 w-4' />
-                                        </Button>
-                                      </td>
-                                    </tr>
-                                  ))}
+                                                <PopoverTrigger asChild>
+                                                  <Button
+                                                    variant='outline'
+                                                    role='combobox'
+                                                    className='w-full justify-between'
+                                                  >
+                                                    {service.service_type_id
+                                                      ? getServiceById(
+                                                          service.service_type_id
+                                                        )?.name || 'Танланг...'
+                                                      : 'Танланг...'}
+                                                    <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                                                  </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className='w-[400px] p-0'>
+                                                  <Command shouldFilter={false}>
+                                                    <CommandInput
+                                                      ref={serviceSearchRef}
+                                                      placeholder='Хизматни қидириш...'
+                                                      value={serviceSearch}
+                                                      onValueChange={
+                                                        setServiceSearch
+                                                      }
+                                                      onKeyDown={(e) =>
+                                                        e.stopPropagation()
+                                                      }
+                                                    />
+                                                    <CommandList
+                                                      onScroll={(e: any) => {
+                                                        const bottom =
+                                                          e.target
+                                                            .scrollHeight -
+                                                            e.target
+                                                              .scrollTop ===
+                                                          e.target.clientHeight;
+                                                        if (
+                                                          bottom &&
+                                                          serviceHasMoreData &&
+                                                          !isFetchingServices
+                                                        ) {
+                                                          setServicePage(
+                                                            (prev) => prev + 1
+                                                          );
+                                                        }
+                                                      }}
+                                                    >
+                                                      {isFetchingServices &&
+                                                      serviceTypes.length ===
+                                                        0 ? (
+                                                        <div className='flex items-center justify-center py-4'>
+                                                          <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                                                          <span className='text-sm text-muted-foreground'>
+                                                            Юкланмоқда...
+                                                          </span>
+                                                        </div>
+                                                      ) : serviceTypes.length ===
+                                                        0 ? (
+                                                        <CommandEmpty>
+                                                          Хизмат топилмади
+                                                        </CommandEmpty>
+                                                      ) : (
+                                                        <CommandGroup>
+                                                          {serviceTypes.map(
+                                                            (
+                                                              serviceType: any
+                                                            ) => (
+                                                              <CommandItem
+                                                                key={
+                                                                  serviceType._id
+                                                                }
+                                                                value={
+                                                                  serviceType._id
+                                                                }
+                                                                keywords={[
+                                                                  serviceType.name,
+                                                                  serviceType._id,
+                                                                ]}
+                                                                onSelect={() => {
+                                                                  updateServiceField(
+                                                                    service.id,
+                                                                    'service_type_id',
+                                                                    serviceType._id
+                                                                  );
+                                                                  setOpenServiceCombobox(
+                                                                    ''
+                                                                  );
+                                                                  setServiceSearch(
+                                                                    ''
+                                                                  );
+                                                                  setServicePage(
+                                                                    1
+                                                                  );
+                                                                }}
+                                                              >
+                                                                <Check
+                                                                  className={cn(
+                                                                    'mr-2 h-4 w-4',
+                                                                    service.service_type_id ===
+                                                                      serviceType._id
+                                                                      ? 'opacity-100'
+                                                                      : 'opacity-0'
+                                                                  )}
+                                                                />
+                                                                {
+                                                                  serviceType.name
+                                                                }
+                                                              </CommandItem>
+                                                            )
+                                                          )}
+                                                          {isFetchingServices && (
+                                                            <div className='flex items-center justify-center py-2'>
+                                                              <Loader2 className='h-4 w-4 animate-spin' />
+                                                            </div>
+                                                          )}
+                                                        </CommandGroup>
+                                                      )}
+                                                    </CommandList>
+                                                  </Command>
+                                                </PopoverContent>
+                                              </Popover>
+                                            </td>
+                                          ) : null}
+                                          {chunk.map((day) => (
+                                            <td
+                                              key={day.day}
+                                              className='border-b border-l px-1 py-1 text-center cursor-pointer hover:bg-muted/50'
+                                              onClick={() =>
+                                                toggleDayMark(
+                                                  service.id,
+                                                  day.day
+                                                )
+                                              }
+                                            >
+                                              <span className='font-bold text-xs block'>
+                                                {day.day}-кун
+                                              </span>
+                                              {day.date ? (
+                                                <div className='text-xs font-medium text-primary'>
+                                                  {new Date(
+                                                    day.date
+                                                  ).toLocaleDateString(
+                                                    'en-GB',
+                                                    {
+                                                      day: '2-digit',
+                                                      month: '2-digit',
+                                                    }
+                                                  )}
+                                                </div>
+                                              ) : (
+                                                <span className='text-muted-foreground text-xs'>
+                                                  -
+                                                </span>
+                                              )}
+                                            </td>
+                                          ))}
+                                          {/* Fill empty cells if chunk is less than 8 */}
+                                          {chunk.length < 8 &&
+                                            Array.from(
+                                              { length: 8 - chunk.length },
+                                              (_, i) => (
+                                                <td
+                                                  key={`empty-${i}`}
+                                                  className='border-b border-l px-1 py-1'
+                                                ></td>
+                                              )
+                                            )}
+                                          {chunkIndex === 0 ? (
+                                            <td
+                                              className='border-b border-l px-1 py-1 text-center'
+                                              rowSpan={dayChunks.length}
+                                            >
+                                              <Button
+                                                variant='ghost'
+                                                size='sm'
+                                                onClick={() =>
+                                                  removeService(service.id)
+                                                }
+                                                className='h-8 w-8 p-0 text-destructive hover:text-destructive'
+                                              >
+                                                <Trash2 className='h-4 w-4' />
+                                              </Button>
+                                            </td>
+                                          ) : null}
+                                        </tr>
+                                      )
+                                    );
+                                  })}
                                 </tbody>
                               </table>
                             </div>
@@ -1937,27 +2034,12 @@ const ExaminationDetail = () => {
                                 <th className='border px-3 py-2 text-left font-semibold min-w-[150px]'>
                                   Хизмат номи
                                 </th>
-                                {Array.from(
-                                  {
-                                    length: Math.max(
-                                      ...patientServices.map(
-                                        (s: any) =>
-                                          s.items?.[0]?.duration ||
-                                          s.items?.[0]?.days?.length ||
-                                          0
-                                      ),
-                                      1
-                                    ),
-                                  },
-                                  (_, i) => (
-                                    <th
-                                      key={i}
-                                      className='border px-2 py-2 text-center font-semibold min-w-[70px]'
-                                    >
-                                      {i + 1}
-                                    </th>
-                                  )
-                                )}
+                                {Array.from({ length: 8 }, (_, i) => (
+                                  <th
+                                    key={i}
+                                    className='border px-2 py-2 text-center font-semibold min-w-[70px]'
+                                  ></th>
+                                ))}
                                 <th className='border px-2 py-2 text-center font-semibold w-16'>
                                   Ҳаракат
                                 </th>
@@ -1966,75 +2048,107 @@ const ExaminationDetail = () => {
                             <tbody>
                               {patientServices.map((serviceDoc: any) =>
                                 serviceDoc.items?.map((service: any) => {
-                                  const maxDays = Math.max(
-                                    ...patientServices.flatMap(
-                                      (sd: any) =>
-                                        sd.items?.map(
-                                          (s: any) =>
-                                            s.duration || s.days?.length || 0
-                                        ) || [0]
-                                    ),
-                                    1
-                                  );
-                                  return (
+                                  const serviceDays = service.days || [];
+                                  const totalDays =
+                                    service.duration || serviceDays.length || 0;
+
+                                  // Split days into chunks of 8
+                                  const dayChunks: Array<Array<any>> = [];
+                                  for (let i = 0; i < totalDays; i += 8) {
+                                    const chunk = [];
+                                    for (
+                                      let j = i;
+                                      j < Math.min(i + 8, totalDays);
+                                      j++
+                                    ) {
+                                      chunk.push({
+                                        dayNumber: j + 1,
+                                        dayData: serviceDays[j] || null,
+                                      });
+                                    }
+                                    dayChunks.push(chunk);
+                                  }
+
+                                  // If no days, show at least one row
+                                  if (dayChunks.length === 0) {
+                                    dayChunks.push([]);
+                                  }
+
+                                  return dayChunks.map((chunk, chunkIndex) => (
                                     <tr
-                                      key={service._id}
+                                      key={`${service._id}-chunk-${chunkIndex}`}
                                       className='hover:bg-muted/30'
                                     >
-                                      <td className='border px-3 py-2 font-medium'>
-                                        {service.service_type_id?.name ||
-                                          'Номаълум'}
-                                      </td>
-                                      {Array.from(
-                                        { length: maxDays },
-                                        (_, i) => {
-                                          const day = service.days?.[i];
-                                          return (
+                                      {chunkIndex === 0 ? (
+                                        <td
+                                          className='border px-3 py-2 font-medium'
+                                          rowSpan={dayChunks.length}
+                                        >
+                                          {service.service_type_id?.name ||
+                                            'Номаълум'}
+                                        </td>
+                                      ) : null}
+                                      {chunk.map((dayItem, idx) => (
+                                        <td
+                                          key={idx}
+                                          className='border px-1 py-1 text-center group relative'
+                                        >
+                                          <span className='font-bold text-xs block'>
+                                            {dayItem.dayNumber}-кун
+                                          </span>
+                                          {dayItem.dayData?.date ? (
+                                            <div className='flex items-center justify-center'>
+                                              <span className='text-xs text-primary'>
+                                                {format(
+                                                  dayItem.dayData.date,
+                                                  'dd/MM'
+                                                )}
+                                              </span>
+                                              <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
+                                                {new Date(
+                                                  dayItem.dayData.date
+                                                ).toLocaleDateString('uz-UZ')}
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <span className='text-muted-foreground text-xs'>
+                                              —
+                                            </span>
+                                          )}
+                                        </td>
+                                      ))}
+                                      {/* Fill empty cells if chunk is less than 8 */}
+                                      {chunk.length < 8 &&
+                                        Array.from(
+                                          { length: 8 - chunk.length },
+                                          (_, i) => (
                                             <td
-                                              key={i}
-                                              className='border px-1 py-1 text-center group relative'
+                                              key={`empty-${i}`}
+                                              className='border px-1 py-1'
+                                            ></td>
+                                          )
+                                        )}
+                                      {chunkIndex === 0 ? (
+                                        <td
+                                          className='border px-1 py-1 text-center'
+                                          rowSpan={dayChunks.length}
+                                        >
+                                          <div className='flex items-center justify-center gap-1'>
+                                            <Button
+                                              variant='ghost'
+                                              size='sm'
+                                              onClick={() =>
+                                                startEditService(service)
+                                              }
+                                              className='h-6 w-6 p-0'
                                             >
-                                              {day?.date ? (
-                                                <div className='flex items-center justify-center'>
-                                                  <span className='text-xs'>
-                                                    {format(day.date, 'dd/MM')}
-                                                  </span>
-                                                  <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
-                                                    {new Date(
-                                                      day.date
-                                                    ).toLocaleDateString(
-                                                      'uz-UZ'
-                                                    )}
-                                                  </div>
-                                                </div>
-                                              ) : i <
-                                                (service.duration ||
-                                                  service.days?.length ||
-                                                  0) ? (
-                                                <span className='text-muted-foreground'>
-                                                  —
-                                                </span>
-                                              ) : null}
-                                            </td>
-                                          );
-                                        }
-                                      )}
-                                      <td className='border px-1 py-1 text-center'>
-                                        <div className='flex items-center justify-center gap-1'>
-                                          <Button
-                                            variant='ghost'
-                                            size='sm'
-                                            onClick={() =>
-                                              startEditService(service)
-                                            }
-                                            className='h-6 w-6 p-0'
-                                          >
-                                            <Edit className='h-3 w-3' />
-                                          </Button>
-                                        </div>
-                                      </td>
+                                              <Edit className='h-3 w-3' />
+                                            </Button>
+                                          </div>
+                                        </td>
+                                      ) : null}
                                     </tr>
-                                  );
+                                  ));
                                 })
                               )}
                             </tbody>

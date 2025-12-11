@@ -1,42 +1,48 @@
-import { useGetOneServiceQuery } from '@/app/api/serviceApi/serviceApi';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+interface ServiceData {
+  service_type_id:
+    | {
+        _id: string;
+        name: string;
+        description?: string;
+        price: number;
+        code?: string;
+      }
+    | string;
+  days?: Array<{
+    day: number;
+    is_completed: boolean;
+    date: string | null;
+    _id: string;
+  }>;
+  notes?: string;
+  _id?: string;
+}
 
 interface Props {
-  serviceId: string;
-  quantity?: number;
-  price?: number;
+  service: ServiceData;
   isMobile?: boolean;
 }
 
-export const ServiceItem = ({
-  serviceId,
-  quantity = 1,
-  price,
-  isMobile = false,
-}: Props) => {
-  const { data, isLoading } = useGetOneServiceQuery(serviceId);
-
-  if (isLoading) {
-    return (
-      <div className='py-3 px-4 text-center'>
-        <LoadingSpinner className='w-4 h-4 mx-auto' />
-      </div>
-    );
-  }
-
-  if (!data?.data) {
-    return null;
-  }
-
-  const service = data.data;
-
+export const ServiceItem = ({ service, isMobile = false }: Props) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
   };
 
-  // Use examination price if provided, otherwise use service default price
-  const unitPrice = price !== undefined ? price : service.price;
+  // Get service type data
+  const serviceType =
+    typeof service.service_type_id === 'object'
+      ? service.service_type_id
+      : null;
+
+  if (!serviceType) {
+    return null;
+  }
+
+  // Quantity is based on days array length
+  const quantity = service.days?.length || 1;
+  const unitPrice = serviceType.price;
   const totalPrice = unitPrice * quantity;
+  const code = (serviceType as any)?.code || serviceType.description || '-';
 
   if (isMobile) {
     return (
@@ -44,9 +50,9 @@ export const ServiceItem = ({
         <div className='space-y-2'>
           <div className='flex justify-between items-start'>
             <div>
-              <div className='font-semibold text-sm'>{service.name}</div>
+              <div className='font-semibold text-sm'>{serviceType.name}</div>
               <div className='text-xs text-primary font-medium mt-1'>
-                {service.code}
+                {code}
               </div>
             </div>
             <span className='text-xs px-2 py-1 rounded-md bg-muted'>
@@ -66,9 +72,9 @@ export const ServiceItem = ({
 
   return (
     <tr className='border-b last:border-0'>
-      <td className='py-3 px-4 text-sm'>{service.name}</td>
+      <td className='py-3 px-4 text-sm'>{serviceType.name}</td>
       <td className='py-3 px-4 text-sm'>
-        <span className='text-primary font-medium'>{service.code}</span>
+        <span className='text-primary font-medium'>{code}</span>
       </td>
       <td className='py-3 px-4 text-sm text-center'>{quantity}</td>
       <td className='py-3 px-4 text-sm text-right'>
