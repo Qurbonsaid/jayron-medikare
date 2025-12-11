@@ -6,8 +6,7 @@
       "description": "This is the API documentation for the backend service.",
       "version": "1.0.0",
       "contact": {
-        "name": "Support Team",
-        "email": "support@example.com"
+        "name": "Support Team"
       }
     },
     "servers": [
@@ -268,9 +267,6 @@
                           "fullname": {
                             "type": "string"
                           },
-                          "email": {
-                            "type": "string"
-                          },
                           "phone": {
                             "type": "string"
                           },
@@ -306,10 +302,6 @@
                     },
                     "username": {
                       "type": "string"
-                    },
-                    "email": {
-                      "type": "string",
-                      "format": "email"
                     },
                     "phone": {
                       "type": "string",
@@ -397,11 +389,6 @@
                       "type": "string",
                       "example": "John Doe"
                     },
-                    "email": {
-                      "type": "string",
-                      "format": "email",
-                      "example": "john@example.com"
-                    },
                     "phone": {
                       "type": "string",
                       "example": "+998901234567"
@@ -419,13 +406,7 @@
                       "example": "LN-1234"
                     }
                   },
-                  "required": [
-                    "username",
-                    "password",
-                    "fullname",
-                    "email",
-                    "phone"
-                  ]
+                  "required": ["username", "password", "fullname", "phone"]
                 }
               }
             }
@@ -521,9 +502,6 @@
                             "fullname": {
                               "type": "string"
                             },
-                            "email": {
-                              "type": "string"
-                            },
                             "phone": {
                               "type": "string"
                             },
@@ -610,9 +588,6 @@
                           "fullname": {
                             "type": "string"
                           },
-                          "email": {
-                            "type": "string"
-                          },
                           "phone": {
                             "type": "string"
                           },
@@ -672,10 +647,6 @@
                     },
                     "username": {
                       "type": "string"
-                    },
-                    "email": {
-                      "type": "string",
-                      "format": "email"
                     },
                     "phone": {
                       "type": "string"
@@ -1740,6 +1711,115 @@
           }
         }
       },
+      "/booking/search-patients": {
+        "get": {
+          "tags": ["Booking"],
+          "summary": "Bemor ism, telefon yoki passport orqali qidirish",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "query",
+              "name": "search",
+              "required": false,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Bemor ismi, telefon raqami yoki passport seriyasi (agar bo'sh bo'lsa, barcha bookinglar qaytariladi)",
+              "example": "Alisher"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Bemorlar va ularning bronlari topildi",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Bronlar muvaffaqiyatli olindi"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "patient_id": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string"
+                                },
+                                "fullname": {
+                                  "type": "string"
+                                },
+                                "phone": {
+                                  "type": "string"
+                                },
+                                "passport_serial": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "room_id": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string"
+                                },
+                                "room_name": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "corpus_id": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string"
+                                },
+                                "corpus_number": {
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            "bed_number": {
+                              "type": "integer"
+                            },
+                            "start_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "end_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Search parametri bo'sh"
+            }
+          }
+        }
+      },
       "/booking/get-by-patient/:patient_id": {
         "get": {
           "tags": ["Booking"],
@@ -1877,6 +1957,14 @@
                 "type": "string"
               },
               "description": "Корпус ID бўйича филтрлаш"
+            },
+            {
+              "in": "query",
+              "name": "room_id",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Хона ID бўйича филтрлаш"
             },
             {
               "in": "query",
@@ -2087,11 +2175,6 @@
                       "type": "string",
                       "example": "123 Main St"
                     },
-                    "email": {
-                      "type": "string",
-                      "format": "email",
-                      "example": "patient@example.com"
-                    },
                     "allergies": {
                       "type": "array",
                       "items": {
@@ -2123,8 +2206,7 @@
                           "type": "string",
                           "example": "123456"
                         }
-                      },
-                      "required": ["series", "number"]
+                      }
                     }
                   },
                   "required": [
@@ -2132,8 +2214,7 @@
                     "phone",
                     "gender",
                     "date_of_birth",
-                    "address",
-                    "passport"
+                    "address"
                   ]
                 }
               }
@@ -2352,10 +2433,6 @@
                           "address": {
                             "type": "string"
                           },
-                          "email": {
-                            "type": "string",
-                            "format": "email"
-                          },
                           "allergies": {
                             "type": "array",
                             "items": {
@@ -2451,10 +2528,6 @@
                     },
                     "address": {
                       "type": "string"
-                    },
-                    "email": {
-                      "type": "string",
-                      "format": "email"
                     },
                     "allergies": {
                       "type": "array",
@@ -2595,7 +2668,8 @@
                 "type": "integer",
                 "minimum": 1
               },
-              "required": false
+              "required": false,
+              "description": "Sahifa raqami"
             },
             {
               "name": "limit",
@@ -2605,7 +2679,8 @@
                 "minimum": 1,
                 "maximum": 100
               },
-              "required": false
+              "required": false,
+              "description": "Bir sahifadagi elementlar soni"
             },
             {
               "name": "doctor_id",
@@ -2613,7 +2688,8 @@
               "schema": {
                 "type": "string"
               },
-              "required": false
+              "required": false,
+              "description": "Doktor IDsi bo'yicha filter"
             },
             {
               "name": "patient_id",
@@ -2621,7 +2697,8 @@
               "schema": {
                 "type": "string"
               },
-              "required": false
+              "required": false,
+              "description": "Bemor IDsi bo'yicha filter"
             },
             {
               "name": "status",
@@ -2636,7 +2713,8 @@
                   "deleted"
                 ]
               },
-              "required": false
+              "required": false,
+              "description": "Ko'rik statusi bo'yicha filter"
             },
             {
               "name": "is_roomed",
@@ -2645,7 +2723,8 @@
                 "type": "string",
                 "enum": ["true", "false"]
               },
-              "required": false
+              "required": false,
+              "description": "Bemor hozir xonada yoki yo'qligi (true - xonada, false - xonada emas)"
             },
             {
               "name": "room_name",
@@ -2653,7 +2732,8 @@
               "schema": {
                 "type": "string"
               },
-              "required": false
+              "required": false,
+              "description": "Xona nomi bo'yicha qidirish"
             },
             {
               "name": "treatment_type",
@@ -2662,7 +2742,67 @@
                 "type": "string",
                 "enum": ["stasionar", "ambulator"]
               },
-              "required": false
+              "required": false,
+              "description": "Davolash turi bo'yicha filter"
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false,
+              "description": "Bemorning ismi yoki telefon raqami bo'yicha qidirish"
+            },
+            {
+              "name": "has_service",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["true", "false"]
+              },
+              "required": false,
+              "description": "Service mavjudligi bo'yicha filter (true - bor, false - yo'q)"
+            },
+            {
+              "name": "has_prescription",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["true", "false"]
+              },
+              "required": false,
+              "description": "Prescription mavjudligi bo'yicha filter (true - bor, false - yo'q)"
+            },
+            {
+              "name": "has_neurological_status",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["true", "false"]
+              },
+              "required": false,
+              "description": "Neurological status mavjudligi bo'yicha filter (true - bor, false - yo'q)"
+            },
+            {
+              "name": "has_daily_checkup",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["true", "false"]
+              },
+              "required": false,
+              "description": "Daily checkup mavjudligi bo'yicha filter (true - bor, false - yo'q)"
+            },
+            {
+              "name": "has_billing",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["true", "false"]
+              },
+              "required": false,
+              "description": "Billing mavjudligi bo'yicha filter (true - bor, false - yo'q)"
             }
           ],
           "responses": {
@@ -2768,196 +2908,6 @@
           }
         }
       },
-      "/examination/create/{id}/prescription": {
-        "post": {
-          "tags": ["Examination"],
-          "summary": "Create a prescription for an examination — Allowed roles: ceo, doctor",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "medication_id",
-                    "frequency",
-                    "duration",
-                    "instructions"
-                  ],
-                  "properties": {
-                    "medication_id": {
-                      "type": "string",
-                      "example": "656a2b1c3d4e5f6789012345"
-                    },
-                    "frequency": {
-                      "type": "integer",
-                      "example": 3
-                    },
-                    "duration": {
-                      "type": "integer",
-                      "example": 5
-                    },
-                    "instructions": {
-                      "type": "string",
-                      "example": "Take after meals"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "Prescription created successfully"
-            },
-            "404": {
-              "description": "Examination not found"
-            }
-          }
-        }
-      },
-      "/examination/update/{id}/prescription/{prescription_id}": {
-        "patch": {
-          "tags": ["Examination"],
-          "summary": "Update a prescription — Allowed roles: ceo, doctor",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            },
-            {
-              "name": "prescription_id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "medication_id": {
-                      "type": "string"
-                    },
-                    "frequency": {
-                      "type": "integer"
-                    },
-                    "duration": {
-                      "type": "integer"
-                    },
-                    "instructions": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Prescription updated successfully"
-            },
-            "404": {
-              "description": "Examination or Prescription not found"
-            }
-          }
-        }
-      },
-      "/examination/delete/{id}/prescription/{prescription_id}": {
-        "delete": {
-          "tags": ["Examination"],
-          "summary": "Delete a prescription — Allowed roles: ceo, doctor",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            },
-            {
-              "name": "prescription_id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Prescription deleted successfully"
-            },
-            "404": {
-              "description": "Examination or Prescription not found"
-            }
-          }
-        }
-      },
-      "/examination/take/{id}/prescription/{prescription_id}/day/{day}": {
-        "patch": {
-          "tags": ["Examination"],
-          "summary": "Mark a prescription dose as taken for a day — Allowed roles: ceo, doctor, nurse",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            },
-            {
-              "name": "prescription_id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            },
-            {
-              "name": "day",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Prescription day updated successfully"
-            },
-            "400": {
-              "description": "Invalid day parameter | Maximum frequency reached for this day | Cannot take prescription on a completed examination"
-            },
-            "404": {
-              "description": "Examination or Prescription or Day not found"
-            }
-          }
-        }
-      },
       "/examination/complete/{id}": {
         "patch": {
           "tags": ["Examination"],
@@ -2978,173 +2928,6 @@
             },
             "404": {
               "description": "Examination not found"
-            }
-          }
-        }
-      },
-      "/examination/create/{id}/service": {
-        "post": {
-          "tags": ["Examination"],
-          "summary": "Add a service to examination — Allowed roles: ceo, receptionist",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "service_type_id",
-                    "price",
-                    "quantity",
-                    "status"
-                  ],
-                  "properties": {
-                    "service_type_id": {
-                      "type": "string",
-                      "example": "656a2b1c3d4e5f6789012345"
-                    },
-                    "price": {
-                      "type": "integer",
-                      "example": 50000
-                    },
-                    "quantity": {
-                      "type": "integer",
-                      "example": 1
-                    },
-                    "status": {
-                      "type": "string",
-                      "enum": [
-                        "active",
-                        "inactive",
-                        "pending",
-                        "completed",
-                        "deleted"
-                      ],
-                      "example": "pending"
-                    },
-                    "notes": {
-                      "type": "string",
-                      "example": "Urgent"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "Service added successfully"
-            },
-            "404": {
-              "description": "Examination not found"
-            }
-          }
-        }
-      },
-      "/examination/update/{id}/service/{service_id}": {
-        "patch": {
-          "tags": ["Examination"],
-          "summary": "Update a service in examination — Allowed roles: ceo, receptionist",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            },
-            {
-              "name": "service_id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "service_type_id": {
-                      "type": "string"
-                    },
-                    "price": {
-                      "type": "integer"
-                    },
-                    "quantity": {
-                      "type": "integer"
-                    },
-                    "status": {
-                      "type": "string",
-                      "enum": [
-                        "active",
-                        "inactive",
-                        "pending",
-                        "completed",
-                        "deleted"
-                      ]
-                    },
-                    "notes": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Service updated successfully"
-            },
-            "404": {
-              "description": "Examination or Service not found"
-            }
-          }
-        }
-      },
-      "/examination/delete/{id}/service/{service_id}": {
-        "delete": {
-          "tags": ["Examination"],
-          "summary": "Delete a service from examination — Allowed roles: ceo, receptionist",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            },
-            {
-              "name": "service_id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Service deleted successfully"
-            },
-            "404": {
-              "description": "Examination or Service not found"
             }
           }
         }
@@ -5320,10 +5103,6 @@
                               "type": "string",
                               "example": "+998901234567"
                             },
-                            "doctor_email": {
-                              "type": "string",
-                              "example": "doctor@example.com"
-                            },
                             "totalExaminations": {
                               "type": "number",
                               "example": 35
@@ -7475,6 +7254,1329 @@
             },
             "404": {
               "description": "Neurological status not found"
+            }
+          }
+        }
+      },
+      "/permission/create": {
+        "post": {
+          "tags": ["Permission"],
+          "summary": "Create new permission for a role",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "example": "admin",
+                      "description": "Role for which the permission is created",
+                      "enum": [
+                        "ceo",
+                        "admin",
+                        "doctor",
+                        "nurse",
+                        "receptionist",
+                        "pharmacist"
+                      ]
+                    }
+                  },
+                  "required": ["role"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Permission created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Muvaffaqiyatli yaratildi"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Role already exists"
+            }
+          }
+        }
+      },
+      "/permission/update/{id}": {
+        "put": {
+          "tags": ["Permission"],
+          "summary": "Update permissions (except permission collection)",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Permission ID"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "507f1f77bcf86cd799439011",
+                            "description": "Permission ID"
+                          },
+                          "create": {
+                            "type": "boolean",
+                            "example": true,
+                            "description": "Create permission"
+                          },
+                          "read": {
+                            "type": "boolean",
+                            "example": true,
+                            "description": "Read permission"
+                          },
+                          "update": {
+                            "type": "boolean",
+                            "example": true,
+                            "description": "Update permission"
+                          },
+                          "delete": {
+                            "type": "boolean",
+                            "example": false,
+                            "description": "Delete permission"
+                          }
+                        },
+                        "required": [
+                          "_id",
+                          "create",
+                          "read",
+                          "update",
+                          "delete"
+                        ]
+                      },
+                      "example": [
+                        {
+                          "collection_name": "user",
+                          "create": true,
+                          "read": true,
+                          "update": true,
+                          "delete": false
+                        },
+                        {
+                          "collection_name": "patient",
+                          "create": true,
+                          "read": true,
+                          "update": true,
+                          "delete": true
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["permissions"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Permission updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Muvaffaqiyatli yangilandi"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Cannot modify permission collection"
+            },
+            "404": {
+              "description": "Permission not found"
+            }
+          }
+        }
+      },
+      "/permission/delete/{id}": {
+        "delete": {
+          "tags": ["Permission"],
+          "summary": "Delete permission",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Permission ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Permission deleted successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Muvaffaqiyatli o'chirildi"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Permission not found"
+            }
+          }
+        }
+      },
+      "/permission/get-all": {
+        "get": {
+          "tags": ["Permission"],
+          "summary": "Get all permissions",
+          "responses": {
+            "200": {
+              "description": "List of all permissions",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "507f1f77bcf86cd799439011"
+                            },
+                            "role": {
+                              "type": "string",
+                              "example": "admin"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "_id": {
+                                    "type": "string"
+                                  },
+                                  "collection_name": {
+                                    "type": "string",
+                                    "example": "user"
+                                  },
+                                  "create": {
+                                    "type": "boolean",
+                                    "example": true
+                                  },
+                                  "read": {
+                                    "type": "boolean",
+                                    "example": true
+                                  },
+                                  "update": {
+                                    "type": "boolean",
+                                    "example": true
+                                  },
+                                  "delete": {
+                                    "type": "boolean",
+                                    "example": false
+                                  }
+                                }
+                              }
+                            },
+                            "created_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "updated_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/permission/get-one/{role}": {
+        "get": {
+          "tags": ["Permission"],
+          "summary": "Get permission by role",
+          "parameters": [
+            {
+              "name": "role",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "ceo",
+                  "admin",
+                  "doctor",
+                  "nurse",
+                  "receptionist",
+                  "pharmacist"
+                ]
+              },
+              "description": "Role name",
+              "example": "admin"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Permission found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "507f1f77bcf86cd799439011"
+                          },
+                          "role": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "permissions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string"
+                                },
+                                "collection_name": {
+                                  "type": "string",
+                                  "example": "user"
+                                },
+                                "create": {
+                                  "type": "boolean",
+                                  "example": true
+                                },
+                                "read": {
+                                  "type": "boolean",
+                                  "example": true
+                                },
+                                "update": {
+                                  "type": "boolean",
+                                  "example": true
+                                },
+                                "delete": {
+                                  "type": "boolean",
+                                  "example": false
+                                }
+                              }
+                            }
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Permission not found"
+            }
+          }
+        }
+      },
+      "/prescription/get-all": {
+        "get": {
+          "tags": ["Prescription"],
+          "summary": "Get all prescriptions — Allowed roles: ceo, doctor, nurse",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "required": false
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "required": false
+            },
+            {
+              "name": "patient_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false
+            },
+            {
+              "name": "doctor_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false
+            },
+            {
+              "name": "examination_status",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["pending", "in-progress", "completed", "cancelled"]
+              },
+              "required": false,
+              "description": "Filter by examination status"
+            },
+            {
+              "name": "is_roomed",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["true", "false"]
+              },
+              "required": false,
+              "description": "Filter by examination room status"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of prescriptions"
+            }
+          }
+        }
+      },
+      "/prescription/get-one/{id}": {
+        "get": {
+          "tags": ["Prescription"],
+          "summary": "Get one prescription by ID — Allowed roles: ceo, doctor, nurse",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Prescription found"
+            },
+            "404": {
+              "description": "Prescription not found"
+            }
+          }
+        }
+      },
+      "/prescription/create": {
+        "post": {
+          "tags": ["Prescription"],
+          "summary": "Create a new prescription — Allowed roles: ceo, doctor",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["examination_id", "items"],
+                  "properties": {
+                    "examination_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8b"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "medication_id",
+                          "frequency",
+                          "duration",
+                          "instructions"
+                        ],
+                        "properties": {
+                          "medication_id": {
+                            "type": "string",
+                            "example": "656a2b1c3d4e5f6789012345"
+                          },
+                          "addons": {
+                            "type": "string",
+                            "example": "Qo'shimcha ma'lumot"
+                          },
+                          "frequency": {
+                            "type": "integer",
+                            "example": 3
+                          },
+                          "duration": {
+                            "type": "integer",
+                            "example": 5
+                          },
+                          "instructions": {
+                            "type": "string",
+                            "example": "Take after meals"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Prescription created successfully"
+            },
+            "404": {
+              "description": "Examination or Medication not found"
+            }
+          }
+        }
+      },
+      "/prescription/update/{id}": {
+        "patch": {
+          "tags": ["Prescription"],
+          "summary": "Update a prescription — Allowed roles: ceo, doctor",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["items"],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "medication_id",
+                          "frequency",
+                          "duration",
+                          "instructions"
+                        ],
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "656a2b1c3d4e5f6789012346",
+                            "description": "Optional - provide _id to preserve days data of existing item"
+                          },
+                          "medication_id": {
+                            "type": "string",
+                            "example": "656a2b1c3d4e5f6789012345"
+                          },
+                          "addons": {
+                            "type": "string",
+                            "example": "Qo'shimcha ma'lumot"
+                          },
+                          "frequency": {
+                            "type": "integer",
+                            "example": 2
+                          },
+                          "duration": {
+                            "type": "integer",
+                            "example": 7
+                          },
+                          "instructions": {
+                            "type": "string",
+                            "example": "Take before meals"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Prescription updated successfully"
+            },
+            "404": {
+              "description": "Prescription or Medication not found"
+            }
+          }
+        }
+      },
+      "/prescription/take-item/{id}": {
+        "patch": {
+          "tags": ["Prescription"],
+          "summary": "Mark prescription item as taken for a day — Allowed roles: ceo, doctor, nurse, patient",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["item_id", "day"],
+                  "properties": {
+                    "item_id": {
+                      "type": "string",
+                      "example": "656a2b1c3d4e5f6789012346"
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "example": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Prescription item day updated successfully"
+            },
+            "400": {
+              "description": "Invalid day parameter | Maximum frequency reached for this day | Previous day not completed"
+            },
+            "404": {
+              "description": "Prescription or Item or Day not found"
+            }
+          }
+        }
+      },
+      "/service/get-all": {
+        "get": {
+          "tags": ["Service"],
+          "summary": "Get all services — Allowed roles: ceo, doctor, nurse",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "required": false
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "required": false
+            },
+            {
+              "name": "patient_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false
+            },
+            {
+              "name": "doctor_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false
+            },
+            {
+              "name": "examination_status",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["pending", "in-progress", "completed", "cancelled"]
+              },
+              "required": false,
+              "description": "Filter by examination status"
+            },
+            {
+              "name": "is_roomed",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["true", "false"]
+              },
+              "required": false,
+              "description": "Filter by examination room status"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of services"
+            }
+          }
+        }
+      },
+      "/service/get-one/{id}": {
+        "get": {
+          "tags": ["Service"],
+          "summary": "Get one service by ID — Allowed roles: ceo, doctor, nurse",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Service found"
+            },
+            "404": {
+              "description": "Service not found"
+            }
+          }
+        }
+      },
+      "/service/create": {
+        "post": {
+          "tags": ["Service"],
+          "summary": "Create a new service — Allowed roles: ceo, doctor",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["examination_id", "duration", "items"],
+                  "properties": {
+                    "examination_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8b"
+                    },
+                    "duration": {
+                      "type": "integer",
+                      "example": 5,
+                      "description": "Duration applies to all items"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["service_type_id", "days"],
+                        "properties": {
+                          "service_type_id": {
+                            "type": "string",
+                            "example": "656a2b1c3d4e5f6789012345"
+                          },
+                          "days": {
+                            "type": "array",
+                            "description": "Days array length must equal duration",
+                            "items": {
+                              "type": "object",
+                              "required": ["day"],
+                              "properties": {
+                                "day": {
+                                  "type": "integer",
+                                  "example": 1
+                                },
+                                "date": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "nullable": true,
+                                  "example": null,
+                                  "description": "Optional - backend sets is_completed to true if date is provided, false otherwise"
+                                }
+                              }
+                            }
+                          },
+                          "notes": {
+                            "type": "string",
+                            "example": "Urgent service"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Service created successfully"
+            },
+            "404": {
+              "description": "Examination or Service type not found"
+            }
+          }
+        }
+      },
+      "/service/update/{id}": {
+        "patch": {
+          "tags": ["Service"],
+          "summary": "Update a service — Allowed roles: ceo, doctor",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["duration", "items"],
+                  "properties": {
+                    "duration": {
+                      "type": "integer",
+                      "example": 7,
+                      "description": "Duration applies to all items"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["service_type_id", "days"],
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "656a2b1c3d4e5f6789012346",
+                            "description": "Optional - provide _id to preserve days data of existing item"
+                          },
+                          "service_type_id": {
+                            "type": "string",
+                            "example": "656a2b1c3d4e5f6789012345"
+                          },
+                          "days": {
+                            "type": "array",
+                            "description": "Days array length must equal duration",
+                            "items": {
+                              "type": "object",
+                              "required": ["day"],
+                              "properties": {
+                                "day": {
+                                  "type": "integer",
+                                  "example": 1
+                                },
+                                "is_completed": {
+                                  "type": "boolean",
+                                  "example": false,
+                                  "description": "Optional - whether this day is completed"
+                                },
+                                "date": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "nullable": true,
+                                  "example": null,
+                                  "description": "Optional - date when service was performed"
+                                }
+                              }
+                            }
+                          },
+                          "notes": {
+                            "type": "string",
+                            "example": "Updated notes"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Service updated successfully"
+            },
+            "404": {
+              "description": "Service or Service type not found"
+            }
+          }
+        }
+      },
+      "/service/take-item/{id}": {
+        "patch": {
+          "tags": ["Service"],
+          "summary": "Mark service item as taken for a day — Allowed roles: ceo, doctor, nurse",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["item_id", "day"],
+                  "properties": {
+                    "item_id": {
+                      "type": "string",
+                      "example": "656a2b1c3d4e5f6789012346"
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "example": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Service item completed successfully"
+            },
+            "400": {
+              "description": "Invalid day parameter | Service already completed for this day | Previous day not completed"
+            },
+            "404": {
+              "description": "Service or Item or Day not found"
+            }
+          }
+        }
+      },
+      "/daily-checkup/get-all": {
+        "get": {
+          "tags": ["Daily Checkup"],
+          "summary": "Get all daily checkups — Allowed roles: ceo, doctor, nurse",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "required": false
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "required": false
+            },
+            {
+              "name": "patient_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false,
+              "description": "Filter by patient ID"
+            },
+            {
+              "name": "nurse_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false,
+              "description": "Filter by nurse ID"
+            },
+            {
+              "name": "room_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false,
+              "description": "Filter by room ID"
+            },
+            {
+              "name": "current_date",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "required": false,
+              "description": "Filter by specific date (all checkups created on this date)",
+              "example": "2025-12-08T00:00:00.000Z"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of daily checkups"
+            }
+          }
+        }
+      },
+      "/daily-checkup/get-one/{id}": {
+        "get": {
+          "tags": ["Daily Checkup"],
+          "summary": "Get one daily checkup by ID — Allowed roles: ceo, doctor, nurse",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Daily checkup found"
+            },
+            "404": {
+              "description": "Daily checkup not found"
+            }
+          }
+        }
+      },
+      "/daily-checkup/unchecked-patients": {
+        "get": {
+          "tags": ["Daily Checkup"],
+          "summary": "Get unchecked patients for today — Allowed roles: ceo, doctor, nurse",
+          "description": "Returns all patients in rooms who have not had their daily checkup (blood pressure) recorded today",
+          "responses": {
+            "200": {
+              "description": "List of unchecked patients",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Tekshirilmagan bemorlar muvaffaqiyatli olindi"
+                      },
+                      "total": {
+                        "type": "integer",
+                        "example": 5
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "patient": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string"
+                                },
+                                "fullname": {
+                                  "type": "string"
+                                },
+                                "phone": {
+                                  "type": "string"
+                                },
+                                "gender": {
+                                  "type": "string"
+                                },
+                                "date_of_birth": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                "address": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "room": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string"
+                                },
+                                "room_name": {
+                                  "type": "string"
+                                },
+                                "floor_number": {
+                                  "type": "integer"
+                                },
+                                "corpus_id": {
+                                  "type": "object",
+                                  "properties": {
+                                    "_id": {
+                                      "type": "string"
+                                    },
+                                    "corpus_number": {
+                                      "type": "integer"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "bed_number": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "start_date": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "estimated_leave_time": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/daily-checkup/create": {
+        "post": {
+          "tags": ["Daily Checkup"],
+          "summary": "Create a new daily checkup — Allowed roles: ceo, nurse",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["patient_id", "nurse_id", "room_id", "result"],
+                  "properties": {
+                    "patient_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8b",
+                      "description": "Patient ID"
+                    },
+                    "nurse_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8c",
+                      "description": "Nurse ID"
+                    },
+                    "room_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8d",
+                      "description": "Room ID"
+                    },
+                    "result": {
+                      "type": "object",
+                      "required": ["systolic", "diastolic"],
+                      "properties": {
+                        "systolic": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "example": 120,
+                          "description": "Yuqori qon bosimi"
+                        },
+                        "diastolic": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "example": 80,
+                          "description": "Pastki qon bosimi"
+                        }
+                      }
+                    },
+                    "notes": {
+                      "type": "string",
+                      "example": "Barqaror holat, hech qanday shikoyat yo'q",
+                      "description": "Qo'shimcha izohlar"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Daily checkup created successfully"
+            },
+            "404": {
+              "description": "Patient or Room not found"
+            }
+          }
+        }
+      },
+      "/daily-checkup/update/{id}": {
+        "put": {
+          "tags": ["Daily Checkup"],
+          "summary": "Update daily checkup — Allowed roles: ceo, nurse",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Daily checkup ID"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "systolic": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "example": 125,
+                          "description": "Yuqori qon bosimi"
+                        },
+                        "diastolic": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "example": 85,
+                          "description": "Pastki qon bosimi"
+                        }
+                      }
+                    },
+                    "notes": {
+                      "type": "string",
+                      "example": "Yangilangan izoh",
+                      "description": "Qo'shimcha izohlar"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Daily checkup updated successfully"
+            },
+            "404": {
+              "description": "Daily checkup not found"
+            }
+          }
+        }
+      },
+      "/daily-checkup/delete/{id}": {
+        "delete": {
+          "tags": ["Daily Checkup"],
+          "summary": "Delete daily checkup — Allowed roles: ceo, nurse",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Daily checkup ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Daily checkup deleted successfully"
+            },
+            "404": {
+              "description": "Daily checkup not found"
             }
           }
         }

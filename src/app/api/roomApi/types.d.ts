@@ -17,6 +17,11 @@ export type Patient = {
   estimated_leave_time: string;
   start_date: string;
   _id: string;
+  bed_number: number;
+  daily_checkup: {
+    do_it: boolean;
+    daily_checkup_id: string | null;
+  };
 };
 
 export type Room = {
