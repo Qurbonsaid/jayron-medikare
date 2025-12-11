@@ -183,7 +183,7 @@ export const examinationApi = baseApi.injectEndpoints({
     }),
     updateService: builder.mutation<MutationRes, CreateService>({
       query: (body) => ({
-        url: '/service/update/' + body.examination_id,
+        url: '/service/update/' + body.id,
         method: 'PATCH',
         body,
       }),

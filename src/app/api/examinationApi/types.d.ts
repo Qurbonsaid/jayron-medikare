@@ -18,7 +18,7 @@ export type examCreateReq = {
   treatment_type: 'stasionar' | 'ambulator';
 };
 
-type Analysis = {
+export type Analysis = {
   _id: string;
   analysis_type: {
     _id: string;
@@ -80,6 +80,7 @@ export type Room = {
   floor_number: number;
   _id: string;
   end_date?: string;
+  status?: string;
 };
 
 export type ExamDataItem = {
@@ -310,12 +311,12 @@ interface CreateExamWithPrescriptionAndServiceReq {
   };
   prescription_data?: {
     items: Array<{
-        medication_id: string;
-        addons: string;
-        frequency: number;
-        duration: number;
-        instructions: string;
-      }>;
+      medication_id: string;
+      addons: string;
+      frequency: number;
+      duration: number;
+      instructions: string;
+    }>;
   };
 }
 
@@ -327,7 +328,44 @@ export interface takeMedicine {
 
 //  services
 
-export interface getOneServiceRes extends getOnePrescriptionRes {
+export interface getOneServiceRes {
+  _id: string;
+  patient_id:
+    | {
+        _id: string;
+        patient_id: string;
+        fullname: string;
+        phone: string;
+        gender: 'male' | 'female';
+        date_of_birth: Date;
+        address: string;
+      }
+    | string;
+  doctor_id:
+    | {
+        _id: string;
+        fullname: string;
+        username: string;
+        phone: string;
+        role: string;
+        section: string;
+        license_number: string;
+      }
+    | string;
+  examination_id:
+    | {
+        _id: string;
+        patient_id: string;
+        doctor_id: string;
+        diagnosis: string;
+        description: string;
+        complaints: string;
+        treatment_type: string;
+        status;
+        created_at: Date;
+        updated_at: Date;
+      }
+    | string;
   duration: number;
   items: Array<{
     service_type_id: {
@@ -340,11 +378,13 @@ export interface getOneServiceRes extends getOnePrescriptionRes {
     days: Array<{
       day: number;
       is_completed: boolean;
-      date: Date | null;
+      date: Date;
       _id: string;
     }>;
     _id: string;
   }>;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface getAllServiceRes {
@@ -381,9 +421,9 @@ export type Service = {
 };
 
 export interface CreateService {
-  examination_id: string;
+  id: string;
   duration: number;
-  items: Array<Service>;
+  items: Array<Service & { _id: string }>;
 }
 
 export interface RemoveService {

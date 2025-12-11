@@ -4,10 +4,12 @@ export interface CreateBillingReq {
     name: string;
     count: number;
     price: number;
+    service_type: 'KORIK' | 'XIZMAT' | 'XONA' | 'TASVIR' | 'TAHLIL';
   }>;
   payment: {
     payment_method: string;
     amount: number;
+    payment_type: 'KORIK' | 'XIZMAT' | 'XONA' | 'TASVIR' | 'TAHLIL';
   };
 }
 
