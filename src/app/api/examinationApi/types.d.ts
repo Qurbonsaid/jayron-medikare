@@ -78,9 +78,10 @@ export type Room = {
   room_price: number;
   room_name: string;
   floor_number: number;
-  _id: string;
+  estimated_leave_time?: Date;
   end_date?: string;
   status?: string;
+  _id: string;
 };
 
 export type ExamDataItem = {
@@ -165,6 +166,7 @@ export type AllExamReq = {
   treatment_type?: 'stasionar' | 'ambulator';
   room_name?: string;
   search?: string;
+  has_billing?:boolean
 };
 
 // prescriptions

@@ -123,8 +123,6 @@ const Prescription = () => {
 
   // Medication search states
   const [medicationSearch, setMedicationSearch] = useState('');
-  const [selectedMedicationForNew, setSelectedMedicationForNew] =
-    useState<string>('');
 
   // Infinite scroll states
   const [page, setPage] = useState(1);
@@ -218,7 +216,6 @@ const Prescription = () => {
     useAddServiceMutation();
   const handleRequest = useHandleRequest();
 
-  const availableMedications = medicationsData?.data || [];
   const availableServices = serviceOptions;
 
   // Update examinations list when new data arrives
@@ -626,6 +623,7 @@ const Prescription = () => {
           : allDays;
 
       return {
+        _id: srv.id,
         service_type_id: srv.service_id,
         days: daysToSave,
         notes: srv.notes,
@@ -635,7 +633,7 @@ const Prescription = () => {
     await handleRequest({
       request: async () => {
         const res = await addServiceToExam({
-          examination_id: selectedExaminationId,
+          id: selectedExaminationId,
           duration: serviceDuration,
           items: serviceItems,
         }).unwrap();
@@ -1780,18 +1778,6 @@ const Prescription = () => {
                   </Button>
                 </div>
               )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className='flex flex-col sm:flex-row justify-end gap-2 sm:gap-3'>
-              <Button
-                variant='outline'
-                className='w-full sm:w-auto text-sm'
-                onClick={clearSelection}
-                disabled={isCreating || isAddingService}
-              >
-                Бекор Қилиш
-              </Button>
             </div>
           </>
         )}

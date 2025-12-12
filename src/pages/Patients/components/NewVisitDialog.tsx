@@ -741,7 +741,7 @@ const NewVisitDialog = ({
                             <Input
                               placeholder='Қўшимча маълумот...'
                               className='h-9'
-                              value={med.additionalInfo}
+                              value={med.addons}
                               onChange={(e) =>
                                 updateMedication(
                                   med.id,
