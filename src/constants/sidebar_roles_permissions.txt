@@ -1,0 +1,87 @@
+ bemorlar ro'yhati —-» [ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,
+               RoleConstants.NURSE,
+               RoleConstants.RECEPTIONIST]
+
+yangi ko'rik —-» [ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,]
+
+
+ko'riklar ——»[ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,
+               RoleConstants.NURSE,
+               RoleConstants.RECEPTIONIST,]
+
+retsept yozish—-»[ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,,]
+
+kasalliklar—-»[ RoleConstants.CEO,
+               RoleConstants.ADMIN]
+
+xizmatlar —-»[ RoleConstants.CEO,
+               RoleConstants.ADMIN,]
+
+dori-darmon—-» [ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,
+               RoleConstants.NURSE,
+               RoleConstants.RECEPTIONIST,
+                RoleConstants.PHARMACIST]
+
+diagnostika qo'shish ——»[RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR]
+
+taxlil buyurtmasi —-» [          RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,]
+
+taxlil natijasi —-» [ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,
+               RoleConstants.NURSE]
+
+
+rentgen/mrt/kt—»[ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,,]
+
+statsionar calendar—-»[ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,
+               RoleConstants.RECEPTIONIST,]
+
+statsionar boshqaruv —» [ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,
+               RoleConstants.NURSE,
+               RoleConstants.RECEPTIONIST,]
+
+dori va lechinya berish—-»[ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,
+               RoleConstants.NURSE,,]
+
+kunlik ko'rik—-»[ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,
+               RoleConstants.NURSE,,]
+xisob-kitob—-»[ RoleConstants.CEO,
+               RoleConstants.ADMIN,]
+
+xisobot—-»[ RoleConstants.CEO,
+               RoleConstants.ADMIN,]
+
+sozlamalar—»[ RoleConstants.CEO]
+
+profil—-»[ RoleConstants.CEO,
+               RoleConstants.ADMIN,
+               RoleConstants.DOCTOR,
+               RoleConstants.NURSE,
+               RoleConstants.RECEPTIONIST,]
+
+ruxsatlar delete

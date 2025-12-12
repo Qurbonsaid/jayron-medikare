@@ -23,11 +23,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { CreateAnalysisRequest } from '@/app/api/diagnostic/types';
-import { usePermission } from '@/hooks/usePermission';
 import { addDiagnosticSchema } from '@/validation/validationAddDiagnostic/validationAddDiagnostic';
 
 export default function DiagnosticsPage() {
-  const { canCreate, canUpdate, canDelete } = usePermission('diagnostic');
   const navigate = useNavigate();
   const [searchCode, setSearchCode] = useState('');
   const [searchName, setSearchName] = useState('');
@@ -167,7 +165,6 @@ export default function DiagnosticsPage() {
             className='w-full sm:w-64'
           />
         </div>
-        {canCreate && (
           <Button
             className='bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2'
             onClick={() => {
@@ -177,7 +174,6 @@ export default function DiagnosticsPage() {
           >
             <Plus size={18} /> Qo'shish
           </Button>
-        )}
       </div>
 
       {/* CREATE / EDIT DIALOG */}
@@ -295,7 +291,6 @@ export default function DiagnosticsPage() {
                 </p>
               </div>
               <div className='flex items-center gap-2'>
-                {canUpdate && (
                   <Button
                     size='icon'
                     variant='outline'
@@ -307,8 +302,6 @@ export default function DiagnosticsPage() {
                   >
                     <Edit size={16} />
                   </Button>
-                )}
-                {canDelete && (
                   <Button
                     size='icon'
                     variant='outline'
@@ -320,7 +313,6 @@ export default function DiagnosticsPage() {
                   >
                     <Trash2 size={16} />
                   </Button>
-                )}
               </div>
             </CardContent>
           </Card>

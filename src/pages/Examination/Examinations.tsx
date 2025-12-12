@@ -26,7 +26,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { usePermission } from '@/hooks/usePermission';
 import { Eye, FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -38,7 +37,6 @@ import ExamFilter from './components/ExamFilter';
 import VisitDetail from './components/VisitDetail';
 
 const Examinations = () => {
-  const { canCreate } = usePermission('examination');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -244,20 +242,18 @@ const Examinations = () => {
                 </Select>
               </div>
 
-              {canCreate && (
-                <div className='lg:col-span-3'>
-                  <label className='block text-sm font-medium text-transparent mb-1.5'>
-                    &nbsp;
-                  </label>
-                  <Button
-                    className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full'
-                    onClick={() => navigate('/new-visit')}
-                  >
-                    <Plus className='w-4 h-4 mr-2' />
-                    Янги Кўрик
-                  </Button>
-                </div>
-              )}
+              <div className='lg:col-span-3'>
+                <label className='block text-sm font-medium text-transparent mb-1.5'>
+                  &nbsp;
+                </label>
+                <Button
+                  className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full'
+                  onClick={() => navigate('/new-visit')}
+                >
+                  <Plus className='w-4 h-4 mr-2' />
+                  Янги Кўрик
+                </Button>
+              </div>
             </div>
           </div>
         </Card>

@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/sidebar';
 import { menuCategories, systemMenu } from '@/constants/Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { usePermissions } from '@/hooks/usePermissions';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
@@ -27,25 +26,18 @@ export function AppSidebar() {
   const {
     open,
     setOpen,
-    openMobile,
     setOpenMobile,
     isMobile: isMobileContext,
   } = useSidebar();
   const isMobile = useIsMobile();
   const prevPathRef = useRef<string>();
-  const { canRead, isLoading: permissionsLoading } = usePermissions();
 
   // Filter menu items based on read permission
   const filteredMenuCategories = menuCategories
-    .map((category) => ({
-      ...category,
-      items: category.items.filter((item) => canRead(item.permission)),
-    }))
     .filter((category) => category.items.length > 0);
 
   const filteredSystemMenu = {
-    ...systemMenu,
-    items: systemMenu.items.filter((item) => canRead(item.permission)),
+    ...systemMenu
   };
 
   const location = useLocation();

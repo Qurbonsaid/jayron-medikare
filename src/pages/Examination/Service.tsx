@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { usePermission } from '@/hooks/usePermission';
 import { Edit, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -44,7 +43,6 @@ const initialFormState: FormState = {
 
 export default function Service() {
   const handleRequest = useHandleRequest();
-  const { canCreate, canUpdate, canDelete } = usePermission('service');
 
   const [page, setPage] = useState(1);
   const [limit] = useState(100);
@@ -178,14 +176,12 @@ export default function Service() {
             />
           </div>
 
-          {canCreate && (
             <Button
               className='bg-blue-600 hover:bg-blue-700 text-white'
               onClick={() => setOpen(true)}
             >
               + Хизмат қўшиш
             </Button>
-          )}
         </div>
       </header>
 
@@ -255,7 +251,6 @@ export default function Service() {
 
               {/* Actions */}
               <div className='flex gap-1.5 pt-2'>
-                {canUpdate && (
                   <Button
                     variant='outline'
                     size='sm'
@@ -265,9 +260,7 @@ export default function Service() {
                     <Edit size={12} />
                     Таҳрирлаш
                   </Button>
-                )}
 
-                {canDelete && (
                   <Dialog
                     open={deleteId === service._id}
                     onOpenChange={(isOpen) => {
@@ -313,7 +306,6 @@ export default function Service() {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
-                )}
               </div>
             </div>
           </Card>
@@ -383,7 +375,6 @@ export default function Service() {
                     </td>
                     <td className='px-3 xl:px-5 py-3 xl:py-4'>
                       <div className='flex justify-center gap-3'>
-                        {canUpdate && (
                           <Button
                             size='icon'
                             variant='outline'
@@ -392,9 +383,7 @@ export default function Service() {
                           >
                             <Edit size={16} />
                           </Button>
-                        )}
 
-                        {canDelete && (
                           <Dialog
                             open={deleteId === service._id}
                             onOpenChange={(isOpen) => {
@@ -434,7 +423,6 @@ export default function Service() {
                               </DialogFooter>
                             </DialogContent>
                           </Dialog>
-                        )}
                       </div>
                     </td>
                   </tr>

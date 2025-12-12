@@ -23,7 +23,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { usePermission } from '@/hooks/usePermission';
 import { Edit, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -52,9 +51,7 @@ const initialFormState: FormState = {
 };
 
 export default function AnalysisParamsModal() {
-  const navigate = useNavigate();
   const handleRequest = useHandleRequest();
-  const { canCreate, canUpdate, canDelete } = usePermission('disease');
 
   const [page, setPage] = useState(1);
   const [limit] = useState(100);
@@ -247,14 +244,12 @@ export default function AnalysisParamsModal() {
             />
           </div>
 
-          {canCreate && (
             <Button
               className='bg-blue-600 hover:bg-blue-700 text-white'
               onClick={() => setOpen(true)}
             >
               + Kasallik qo'shish
             </Button>
-          )}
         </div>
       </header>
 
@@ -331,7 +326,6 @@ export default function AnalysisParamsModal() {
 
               {/* Actions */}
               <div className='flex gap-1.5 pt-2'>
-                {canUpdate && (
                   <Button
                     variant='outline'
                     size='sm'
@@ -341,9 +335,7 @@ export default function AnalysisParamsModal() {
                     <Edit size={12} />
                     Tahrirlash
                   </Button>
-                )}
 
-                {canDelete && (
                   <Dialog
                     open={deleteId === param._id}
                     onOpenChange={(isOpen) => {
@@ -389,7 +381,6 @@ export default function AnalysisParamsModal() {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
-                )}
               </div>
             </div>
           </Card>
@@ -453,7 +444,6 @@ export default function AnalysisParamsModal() {
                     </td>
                     <td className='px-3 xl:px-5 py-3 xl:py-4'>
                       <div className='flex justify-center gap-3'>
-                        {canUpdate && (
                           <Button
                             size='icon'
                             variant='outline'
@@ -462,9 +452,7 @@ export default function AnalysisParamsModal() {
                           >
                             <Edit size={16} />
                           </Button>
-                        )}
 
-                        {canDelete && (
                           <Dialog
                             open={deleteId === param._id}
                             onOpenChange={(isOpen) => {
@@ -504,7 +492,6 @@ export default function AnalysisParamsModal() {
                               </DialogFooter>
                             </DialogContent>
                           </Dialog>
-                        )}
                       </div>
                     </td>
                   </tr>

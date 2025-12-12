@@ -24,7 +24,6 @@ import { RoomCalendar, RoomsList } from './pages/InpatientCalendar';
 import Medicine from './pages/Medicine/Medicine';
 import RoomDetail from './pages/RoomDetail/RoomDetail';
 import Rooms from './pages/Rooms/Rooms';
-import Permissions from './pages/Tizim/Permissions';
 import Profil from './pages/Tizim/Profil';
 import DailyCheckup from './pages/DailyCheckup/DailyCheckup'
 
@@ -102,7 +101,6 @@ export const routers: RouteConfig[] = [
   { path: '/reports', element: <Reports />, permission: 'reports' },
   { path: '/settings', element: <Settings />, permission: 'ceo_only' },
   { path: '/profile', element: <Profil />, permission: null },
-  { path: '/permissions', element: <Permissions />, permission: 'ceo_only' },
   { path: '/patient-portal', element: <PatientPortal />, permission: null },
 ];
 
@@ -254,20 +252,6 @@ export const navigator = [
     path: '/profile',
     to: null,
     title: 'Профил',
-  },
-  {
-    path: '/permissions',
-    to: null,
-    title: (
-      <div className='flex items-center gap-4'>
-        <div>
-          <h1 className='text-xl font-bold'>Рухсатлар</h1>
-          <p className='text-sm text-muted-foreground'>
-            Тизим рухсатларини бошқариш
-          </p>
-        </div>
-      </div>
-    ),
   },
   {
     path: '/patient-portal',

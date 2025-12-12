@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { usePermission } from '@/hooks/usePermission';
 import { format } from 'date-fns';
 import { FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -33,7 +32,6 @@ export interface Service {
 // Custom Billing Status Badge
 
 const Billing = () => {
-  const { canCreate } = usePermission('billing');
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedBillingId, setSelectedBillingId] = useState<string | null>(
@@ -82,7 +80,6 @@ const Billing = () => {
       {/* Main Content */}
       <main className='container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6'>
         {/* Add Button */}
-        {canCreate && (
           <div className='mb-4 sm:mb-6 text-right'>
             <Button
               onClick={() => setIsInvoiceModalOpen(true)}
@@ -92,7 +89,6 @@ const Billing = () => {
               Янги ҳисоб-фактура
             </Button>
           </div>
-        )}
         {/* Filters */}
         <Card className='p-3 sm:p-4 mb-4 sm:mb-6'>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4'>

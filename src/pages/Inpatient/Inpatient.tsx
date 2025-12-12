@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { usePermission } from "@/hooks/usePermission";
 import {
   Building,
   Building2,
@@ -27,7 +26,6 @@ import { DeleteWarnBuilding, NewBuilding, UpdatedBuilding } from "./components";
 import { PatientSearchModal } from "./components/PatientSearchModal";
 
 const Inpatient = () => {
-  const { canCreate, canUpdate, canDelete } = usePermission("inpatient");
   const [showNewBuilding, setShowNewBuilding] = useState(false);
   const [showDeleteWarnBuilding, setShowDeleteWarnBuilding] = useState(false);
   const [showUpdateBuilding, setShowUpdateBuilding] = useState(false);
@@ -59,7 +57,6 @@ const Inpatient = () => {
             </p>
           </div>
           <div className="flex flex-col justify-between items-center gap-2">
-            {canCreate && (
               <Button
                 className="w-full"
                 onClick={() => setShowNewBuilding(true)}
@@ -67,7 +64,6 @@ const Inpatient = () => {
                 <Plus className="mr-2 h-4 w-4" />
                 Янги Korpus
               </Button>
-            )}
             <Button
               onClick={() => setShowPatientSearch(true)}
               className="w-full"
@@ -111,7 +107,6 @@ const Inpatient = () => {
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent>
-                          {canUpdate && (
                             <DropdownMenuItem>
                               <Button
                                 size="sm"
@@ -126,9 +121,7 @@ const Inpatient = () => {
                                 Таҳрирлаш
                               </Button>
                             </DropdownMenuItem>
-                          )}
 
-                          {canDelete && (
                             <DropdownMenuItem>
                               <Button
                                 size="sm"
@@ -143,7 +136,6 @@ const Inpatient = () => {
                                 Ўчириш
                               </Button>
                             </DropdownMenuItem>
-                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

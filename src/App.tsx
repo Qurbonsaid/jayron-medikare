@@ -3,7 +3,6 @@ import { KeyboardShortcutsDialog } from '@/components/ui/keyboard-shortcuts-dial
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { PermissionRoute } from '@/hooks/Router/PermissionRoute';
 import { PrivateRoute } from '@/hooks/Router/PrivateRouter';
 import { useGlobalShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import Login from '@/pages/Login/Login';
@@ -44,9 +43,7 @@ function RoutesContent() {
               path={path}
               element={
                 <AppLayout>
-                  <PermissionRoute permission={permission}>
                     {element}
-                  </PermissionRoute>
                 </AppLayout>
               }
             />
