@@ -4,14 +4,16 @@ export interface CreateBillingReq {
     name: string;
     count: number;
     price: number;
-    service_type: 'KORIK' | 'XIZMAT' | 'XONA' | 'TASVIR' | 'TAHLIL';
+    service_type;
   }>;
   payment: {
     payment_method: string;
     amount: number;
-    payment_type: 'KORIK' | 'XIZMAT' | 'XONA' | 'TASVIR' | 'TAHLIL';
+    payment_type: service_type;
   };
 }
+
+export type service_type = 'KORIK' | 'XIZMAT' | 'XONA' | 'TASVIR' | 'TAHLIL';
 
 export interface AllRes {
   success: boolean;
@@ -151,6 +153,7 @@ export interface GetOneBillingRes {
     }>;
     payments: Array<{
       payment_method: string;
+      payment_type?: service_type;
       amount: number;
       payment_date: string;
       _id: string;
@@ -207,6 +210,7 @@ export interface UpdateService {
       name: string;
       count: number;
       price: number;
+      service_type;
     }>;
   };
 }
@@ -217,6 +221,7 @@ export interface UpdatePayment {
     payment: {
       payment_method: string;
       amount: number;
+      payment_type: service_type;
     };
   };
 }

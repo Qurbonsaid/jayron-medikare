@@ -19,10 +19,12 @@ import { useState } from 'react';
 import NewBilling from './components/NewBilling';
 import ViewBillingDialog from './components/ViewBillingDialog';
 import  {getBillingStatusBadge, formatCurrency } from './components/BillingBadge';
+import type { service_type as ServiceType } from '@/app/api/billingApi/types';
 
 export interface Service {
   id: string;
   name: string;
+  service_type: ServiceType;
   quantity: number;
   unitPrice: number;
   total: number;

@@ -4,7 +4,7 @@ interface ServiceData {
         _id: string;
         name: string;
         description?: string;
-        price: number;
+        price?: number;
         code?: string;
       }
     | string;
@@ -14,6 +14,9 @@ interface ServiceData {
     date: string | null;
     _id: string;
   }>;
+  quantity?: number;
+  price?: number;
+  total_price?: number;
   notes?: string;
   _id?: string;
 }
@@ -38,11 +41,15 @@ export const ServiceItem = ({ service, isMobile = false }: Props) => {
     return null;
   }
 
-  // Quantity is based on days array length
-  const quantity = service.days?.length || 1;
-  const unitPrice = serviceType.price;
-  const totalPrice = unitPrice * quantity;
-  const code = (serviceType as any)?.code || serviceType.description || '-';
+  // Quantity can come from either `quantity` or `days.length`
+  const quantity = service.quantity ?? service.days?.length ?? 1;
+
+  // Unit price can come from `service_type_id.price` or the service's own `price`
+  const unitPrice = serviceType.price ?? service.price ?? 0;
+
+  // Total can come from `total_price` or be derived
+  const totalPrice = service.total_price ?? unitPrice * quantity;
+  const code = serviceType.code || serviceType.description || '-';
 
   if (isMobile) {
     return (
