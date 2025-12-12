@@ -216,13 +216,18 @@ const Permissions = () => {
 
   // Yangi rol yaratish uchun mavjud bo'lmagan rollar
   const availableRoles = Object.values(RoleConstants).filter(
-    (role) => !existingRoles.includes(role)
+    (role) => role !== RoleConstants.CEO && !existingRoles.includes(role)
   );
 
   // Yangi permission yaratish
   const handleCreatePermission = async () => {
     if (!newRole) {
       toast.error('Илтимос, ролни танланг');
+      return;
+    }
+
+    if (newRole === RoleConstants.CEO) {
+      toast.error('Бош директор (CEO) учун рухсат яратиш мумкин эмас');
       return;
     }
 
