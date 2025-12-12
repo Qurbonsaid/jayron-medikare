@@ -1,7 +1,7 @@
 import {
-	useCreateDailyCheckupMutation,
+	useGetOneDailyCheckupQuery,
+	useUpdateDailyCheckupMutation,
 } from '@/app/api/dailyCheckup/dailyCheckupApi'
-import { useMeQuery } from '@/app/api/authApi/authApi'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -16,38 +16,42 @@ import { Textarea } from '@/components/ui/textarea'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-interface MeasureBloodPressureProps {
+interface UpdateBloodPressureProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	patient_id: string | null
-	room_id: string | null
+	dailyCheckupId: string | null
 	refetch: () => void
 }
 
-export const MeasureBloodPressure = ({
+const UpdateBloodPressure = ({
 	open,
 	onOpenChange,
-	patient_id,
-	room_id,
+	dailyCheckupId,
 	refetch,
-}: MeasureBloodPressureProps) => {
+}: UpdateBloodPressureProps) => {
 	const [systolic, setSystolic] = useState('')
 	const [diastolic, setDiastolic] = useState('')
 	const [notes, setNotes] = useState('')
 
-	const { data: currentUser } = useMeQuery()
+	const { data: dailyCheckup, isLoading: isLoadingCheckup } =
+		useGetOneDailyCheckupQuery(dailyCheckupId || '', {
+			skip: !dailyCheckupId,
+		})
 
-	const [createDailyCheckup, { isLoading: isCreating }] =
-		useCreateDailyCheckupMutation()
+	const [updateDailyCheckup, { isLoading: isUpdating }] =
+		useUpdateDailyCheckupMutation()
 
 	useEffect(() => {
-		if (open) {
-			// Reset form when modal opens
-			setSystolic('')
-			setDiastolic('')
-			setNotes('')
+		if (open && dailyCheckup?.data) {
+			// Ma'lumotlarni formaga yuklash
+			const result = dailyCheckup.data.result
+			if (result) {
+				setSystolic(result.systolic?.toString() || '')
+				setDiastolic(result.diastolic?.toString() || '')
+			}
+			setNotes(dailyCheckup.data.notes || '')
 		}
-	}, [open])
+	}, [open, dailyCheckup])
 
 	const handleSubmit = async () => {
 		// Validation
@@ -56,18 +60,8 @@ export const MeasureBloodPressure = ({
 			return
 		}
 
-		if (!patient_id) {
-			toast.error('Бемор маълумотлари топилмади')
-			return
-		}
-
-		if (!room_id) {
-			toast.error('Хона маълумотлари топилмади')
-			return
-		}
-
-		if (!currentUser?.data?._id) {
-			toast.error('Фойдаланувчи маълумотлари топилмади')
+		if (!dailyCheckupId) {
+			toast.error('Қон босими маълумотлари топилмади')
 			return
 		}
 
@@ -85,11 +79,7 @@ export const MeasureBloodPressure = ({
 		}
 
 		try {
-			// Swagger.json ga moslashtirish: patient_id, nurse_id, room_id, result
 			const requestBody = {
-				patient_id: patient_id,
-				nurse_id: currentUser.data._id,
-				room_id: room_id,
 				result: {
 					systolic: systolicNum,
 					diastolic: diastolicNum,
@@ -97,13 +87,16 @@ export const MeasureBloodPressure = ({
 				notes: notes.trim() || undefined,
 			}
 
-			await createDailyCheckup(requestBody).unwrap()
+		await updateDailyCheckup({
+			id: dailyCheckupId,
+			body: requestBody,
+		}).unwrap()
 
-			toast.success('Қон босими муваффақиятли сақланди')
-			refetch() // Room ma'lumotlarini yangilash
-			onOpenChange(false)
+		toast.success('Қон босими муваффақиятли янгиланди')
+		refetch() // Room ma'lumotlarini yangilash
+		onOpenChange(false)
 		} catch (error: unknown) {
-			console.error('Error saving blood pressure:', error)
+			console.error('Error updating blood pressure:', error)
 			const errorMessage =
 				error &&
 				typeof error === 'object' &&
@@ -125,47 +118,53 @@ export const MeasureBloodPressure = ({
 			<DialogContent className='sm:max-w-[500px]'>
 				<DialogHeader className='p-4 sm:p-6 pb-0'>
 					<DialogTitle className='text-xl sm:text-2xl'>
-						Қон босимини ўлчаш
+						Қон босимини ўзгартириш
 					</DialogTitle>
 				</DialogHeader>
 
 				<div className='p-4 sm:p-6 space-y-4'>
-					<div className='grid grid-cols-2 gap-4'>
-						<div className='space-y-2'>
-							<Label htmlFor='systolic'>Систолик (мм рт.ст.)</Label>
-							<Input
-								id='systolic'
-								type='number'
-								placeholder='120'
-								value={systolic}
-								onChange={e => setSystolic(e.target.value)}
-								min='1'
-							/>
-						</div>
+					{isLoadingCheckup ? (
+						<div className='text-center py-4'>Юкланмоқда...</div>
+					) : (
+						<>
+							<div className='grid grid-cols-2 gap-4'>
+								<div className='space-y-2'>
+									<Label htmlFor='systolic'>Систолик (мм рт.ст.)</Label>
+									<Input
+										id='systolic'
+										type='number'
+										placeholder='120'
+										value={systolic}
+										onChange={e => setSystolic(e.target.value)}
+										min='1'
+									/>
+								</div>
 
-						<div className='space-y-2'>
-							<Label htmlFor='diastolic'>Диастолик (мм рт.ст.)</Label>
-							<Input
-								id='diastolic'
-								type='number'
-								placeholder='80'
-								value={diastolic}
-								onChange={e => setDiastolic(e.target.value)}
-								min='1'
-							/>
-					</div>
-				</div>
+								<div className='space-y-2'>
+									<Label htmlFor='diastolic'>Диастолик (мм рт.ст.)</Label>
+									<Input
+										id='diastolic'
+										type='number'
+										placeholder='80'
+										value={diastolic}
+										onChange={e => setDiastolic(e.target.value)}
+										min='1'
+									/>
+								</div>
+							</div>
 
-				<div className='space-y-2'>
-					<Label htmlFor='notes'>Изоҳ (ихтиёрий)</Label>
-						<Textarea
-							id='notes'
-							placeholder='Қўшимча маълумот киритинг...'
-							value={notes}
-							onChange={e => setNotes(e.target.value)}
-							rows={3}
-						/>
-					</div>
+							<div className='space-y-2'>
+								<Label htmlFor='notes'>Изоҳ (ихтиёрий)</Label>
+								<Textarea
+									id='notes'
+									placeholder='Қўшимча маълумот киритинг...'
+									value={notes}
+									onChange={e => setNotes(e.target.value)}
+									rows={3}
+								/>
+							</div>
+						</>
+					)}
 				</div>
 
 				<DialogFooter className='p-4 sm:p-6 pt-0 flex flex-col sm:flex-row gap-2 sm:gap-0'>
@@ -174,20 +173,22 @@ export const MeasureBloodPressure = ({
 						variant='outline'
 						onClick={() => onOpenChange(false)}
 						className='w-full sm:w-auto order-2 sm:order-1'
-						disabled={isCreating}
+						disabled={isUpdating}
 					>
 						Бекор қилиш
 					</Button>
 					<Button
 						type='submit'
 						onClick={handleSubmit}
-						disabled={isCreating}
+						disabled={isUpdating || isLoadingCheckup}
 						className='gradient-primary w-full sm:w-auto order-1 sm:order-2'
 					>
-						{isCreating ? 'Сақланмоқда...' : 'Сақлаш'}
+						{isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
 	)
 }
+
+export default UpdateBloodPressure
