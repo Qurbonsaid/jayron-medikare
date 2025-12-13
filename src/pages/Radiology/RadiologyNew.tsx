@@ -3,6 +3,7 @@ import { Activity, Image, Plus } from "lucide-react";
 import { useState } from "react";
 import { ImagingTypeTab } from "./components";
 import { MedicalImageTab } from "./components";
+import CantRead from "@/components/common/CantRead";
 
 const Radiology = () => {
   const [activeTab, setActiveTab] = useState("medical-images");

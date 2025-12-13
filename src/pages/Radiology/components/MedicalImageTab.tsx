@@ -85,8 +85,7 @@ export const MedicalImageTab = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Permission checks
-  const { canCreate } = useRouteActions('/radiology');
-  const { canUpdate, canDelete } = useRouteActions('/radiology/:id');
+  const { canCreate, canUpdate, canDelete } = useRouteActions('/radiology');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -372,34 +371,38 @@ export const MedicalImageTab = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        <DropdownMenuItem>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            onClick={() => {
-                              setSelectedImage(image);
-                              setShowUpdateModal(true);
-                            }}
-                            className='w-full bg-yellow-600 text-white'
-                          >
-                            <Edit className='w-4 h-4 mr-2' />
-                            Ўзгартириш
-                          </Button>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            onClick={() => {
-                              setSelectedImage(image);
-                              setShowDeleteModal(true);
-                            }}
-                            className='w-full bg-red-600 text-white'
-                          >
-                            <Trash2 className='w-4 h-4 mr-2' />
-                            Ўчириш
-                          </Button>
-                        </DropdownMenuItem>
+                        {canUpdate && (
+                          <DropdownMenuItem>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              onClick={() => {
+                                setSelectedImage(image);
+                                setShowUpdateModal(true);
+                              }}
+                              className='w-full hover:bg-yellow-600 hover:text-white transition-smooth'
+                            >
+                              <Edit className='w-4 h-4 mr-2' />
+                              Ўзгартириш
+                            </Button>
+                          </DropdownMenuItem>
+                        )}
+                        {canDelete && (
+                          <DropdownMenuItem>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              onClick={() => {
+                                setSelectedImage(image);
+                                setShowDeleteModal(true);
+                              }}
+                              className=' w-full hover:bg-red-600 hover:text-white transition-smooth'
+                            >
+                              <Trash2 className='w-4 h-4 mr-2' />
+                              Ўчириш
+                            </Button>
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

@@ -51,8 +51,7 @@ export const ImagingTypeTab = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Permission checks
-  const { canCreate } = useRouteActions('/imaging-type');
-  const { canUpdate, canDelete } = useRouteActions('/imaging-type/:id');
+  const { canCreate, canUpdate, canDelete } = useRouteActions('/radiology');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -256,34 +255,38 @@ export const ImagingTypeTab = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        <DropdownMenuItem>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            onClick={() => {
-                              setSelectedType(type);
-                              setShowUpdateModal(true);
-                            }}
-                            className='w-full bg-yellow-600 text-white'
-                          >
-                            <Edit className='w-4 h-4 mr-2' />
-                            Таҳрирлаш
-                          </Button>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            onClick={() => {
-                              setSelectedType(type);
-                              setShowDeleteModal(true);
-                            }}
-                            className='w-full bg-red-600 text-white'
-                          >
-                            <Trash2 className='w-4 h-4 mr-2' />
-                            Ўчириш
-                          </Button>
-                        </DropdownMenuItem>
+                        {canUpdate && (
+                          <DropdownMenuItem>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              onClick={() => {
+                                setSelectedType(type);
+                                setShowUpdateModal(true);
+                              }}
+                              className='w-full bg-yellow-600 text-white'
+                            >
+                              <Edit className='w-4 h-4 mr-2' />
+                              Таҳрирлаш
+                            </Button>
+                          </DropdownMenuItem>
+                        )}
+                        {canDelete && (
+                          <DropdownMenuItem>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              onClick={() => {
+                                setSelectedType(type);
+                                setShowDeleteModal(true);
+                              }}
+                              className='w-full bg-red-600 text-white'
+                            >
+                              <Trash2 className='w-4 h-4 mr-2' />
+                              Ўчириш
+                            </Button>
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

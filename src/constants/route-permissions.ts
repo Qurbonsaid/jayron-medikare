@@ -371,14 +371,14 @@ export const RoutePermissions: RoutePermission[] = [
     description: 'Upload medical images',
   },
   {
-    path: '/radiology/:id',
+    path: '/radiology',
     name: 'Update Radiology',
     method: 'PUT',
     roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
     description: 'Update medical image',
   },
   {
-    path: '/radiology/:id',
+    path: '/radiology',
     name: 'Delete Radiology',
     method: 'DELETE',
     roles: [RoleConstants.CEO, RoleConstants.ADMIN],
