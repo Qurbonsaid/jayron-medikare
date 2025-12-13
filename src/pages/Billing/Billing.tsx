@@ -1,4 +1,6 @@
 import { useGetAllBillingQuery } from '@/app/api/billingApi/billingApi';
+import type { service_type as ServiceType } from '@/app/api/billingApi/types';
+import CantRead from '@/components/common/CantRead';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -12,14 +14,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { usePermission } from '@/hooks/usePermission';
+import { useRouteActions } from '@/hooks/RBS';
 import { format } from 'date-fns';
 import { FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
+import {
+  formatCurrency,
+  getBillingStatusBadge,
+} from './components/BillingBadge';
 import NewBilling from './components/NewBilling';
 import ViewBillingDialog from './components/ViewBillingDialog';
-import  {getBillingStatusBadge, formatCurrency } from './components/BillingBadge';
-import type { service_type as ServiceType } from '@/app/api/billingApi/types';
 
 export interface Service {
   id: string;
@@ -33,7 +37,9 @@ export interface Service {
 // Custom Billing Status Badge
 
 const Billing = () => {
-  const { canCreate } = usePermission('billing');
+  const { canRead } = useRouteActions('/billing');
+
+  if (!canRead) return <CantRead />;
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedBillingId, setSelectedBillingId] = useState<string | null>(
@@ -82,17 +88,15 @@ const Billing = () => {
       {/* Main Content */}
       <main className='container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6'>
         {/* Add Button */}
-        {canCreate && (
-          <div className='mb-4 sm:mb-6 text-right'>
-            <Button
-              onClick={() => setIsInvoiceModalOpen(true)}
-              className='w-full sm:w-auto text-sm'
-            >
-              <Plus className='w-4 h-4 mr-2' />
-              Янги ҳисоб-фактура
-            </Button>
-          </div>
-        )}
+        <div className='mb-4 sm:mb-6 text-right'>
+          <Button
+            onClick={() => setIsInvoiceModalOpen(true)}
+            className='w-full sm:w-auto text-sm'
+          >
+            <Plus className='w-4 h-4 mr-2' />
+            Янги ҳисоб-фактура
+          </Button>
+        </div>
         {/* Filters */}
         <Card className='p-3 sm:p-4 mb-4 sm:mb-6'>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4'>

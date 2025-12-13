@@ -54,6 +54,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { BodyPartConstants } from '@/constants/BodyPart';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { useRouteActions } from '@/hooks/RBS/useRoutePermission';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
@@ -122,6 +123,24 @@ const ExaminationDetail = () => {
     description: '',
     diagnosis: '',
   });
+
+  const {
+    canRead: canReadExamination,
+    canUpdate,
+    canDelete,
+  } = useRouteActions('/examination/:id');
+  const { canRead: canReadPrescription } = useRouteActions('/prescription');
+  const { canRead: canReadServices } = useRouteActions('/service');
+  const { canRead: canReadVisits } = useRouteActions('/lab-results');
+  const { canRead: canReadImages } = useRouteActions('/radiology');
+  const tabPermissions: Record<string, boolean> = {
+    examination: canReadExamination,
+    prescriptions: canReadPrescription,
+    services: canReadServices,
+    visits: canReadVisits,
+    images: canReadImages,
+    neurologic: canReadExamination,
+  };
 
   // Service states
   type ServiceDay = { day: number; date: Date | null };
@@ -227,7 +246,7 @@ const ExaminationDetail = () => {
 
   const exam = examData?.data;
 
-  console.log("Exam: " , exam)
+  console.log('Exam: ', exam);
 
   // Fetch all diagnosis
   const { data: diagnosisData } = useGetAllDiagnosisQuery({});
@@ -928,35 +947,47 @@ const ExaminationDetail = () => {
         <Card className='mb-6'>
           <CardContent className='pt-6'>
             <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-              <Button
-                variant='outline'
-                className='w-full'
-                onClick={() => {
-                  navigate('/prescription', {
-                    state: { examinationId: exam._id },
-                  });
-                }}
-              >
-                <FilePlus className='w-4 h-4 mr-2' />
-                Рецепт Ёзиш
-              </Button>
-              <Button
-                variant='outline'
-                className='w-full'
-                onClick={handleEdit}
-                disabled={isEditMode}
-              >
-                <Edit className='w-4 h-4 mr-2' />
-                Таҳрирлаш
-              </Button>
-              <Button
-                variant='outline'
-                className='w-full text-red-600 hover:bg-red-600 hover:text-white'
-                onClick={() => setIsDeleteConfirm(true)}
-              >
-                <Trash2 className='w-4 h-4 mr-2' />
-                Ўчириш
-              </Button>
+              {canReadPrescription ? (
+                <Button
+                  variant='outline'
+                  className='w-full'
+                  onClick={() => {
+                    navigate('/prescription', {
+                      state: { examinationId: exam._id },
+                    });
+                  }}
+                >
+                  <FilePlus className='w-4 h-4 mr-2' />
+                  Рецепт Ёзиш
+                </Button>
+              ) : (
+                ''
+              )}
+              {canUpdate ? (
+                <Button
+                  variant='outline'
+                  className='w-full'
+                  onClick={handleEdit}
+                  disabled={isEditMode}
+                >
+                  <Edit className='w-4 h-4 mr-2' />
+                  Таҳрирлаш
+                </Button>
+              ) : (
+                ''
+              )}
+              {canDelete ? (
+                <Button
+                  variant='outline'
+                  className='w-full text-red-600 hover:bg-red-600 hover:text-white'
+                  onClick={() => setIsDeleteConfirm(true)}
+                >
+                  <Trash2 className='w-4 h-4 mr-2' />
+                  Ўчириш
+                </Button>
+              ) : (
+                ''
+              )}
               <Button
                 variant='default'
                 className='w-full bg-green-600 hover:bg-green-700'
@@ -978,6 +1009,10 @@ const ExaminationDetail = () => {
         <Tabs
           value={activeTab}
           onValueChange={(value) => {
+            if (!tabPermissions[value]) {
+              toast.error('Ушбу бўлим учун руҳсат йўқ');
+              return;
+            }
             // Tahrirlash rejimida boshqa tablarga o'tishni bloklash
             if (isEditMode && value !== 'examination') {
               toast.error(
@@ -990,950 +1025,1170 @@ const ExaminationDetail = () => {
           className='space-y-6'
         >
           <TabsList className='grid w-full grid-cols-3 sm:grid-cols-6 h-auto gap-1'>
-            <TabsTrigger
-              value='examination'
-              className='py-2 sm:py-3 text-xs sm:text-sm'
-            >
-              Кўрик
-            </TabsTrigger>
-            <TabsTrigger
-              value='prescriptions'
-              className='py-2 sm:py-3 text-xs sm:text-sm'
-              disabled={isEditMode}
-            >
-              Рецептлар
-            </TabsTrigger>
-            <TabsTrigger
-              value='services'
-              className='py-2 sm:py-3 text-xs sm:text-sm'
-              disabled={isEditMode}
-            >
-              Хизматлар
-            </TabsTrigger>
-            <TabsTrigger
-              value='visits'
-              className='py-2 sm:py-3 text-xs sm:text-sm'
-              disabled={isEditMode}
-            >
-              Таҳлил
-            </TabsTrigger>
-            <TabsTrigger
-              value='images'
-              className='py-2 sm:py-3 text-xs sm:text-sm'
-              disabled={isEditMode}
-            >
-              Тасвирлар
-            </TabsTrigger>
-            <TabsTrigger
-              value='neurologic'
-              className='py-2 sm:py-3 text-xs sm:text-sm'
-              disabled={isEditMode}
-            >
-              Неврологик Статус
-            </TabsTrigger>
+            {canReadExamination && (
+              <TabsTrigger
+                value='examination'
+                className='py-2 sm:py-3 text-xs sm:text-sm'
+              >
+                Кўрик
+              </TabsTrigger>
+            )}
+            {canReadPrescription && (
+              <TabsTrigger
+                value='prescriptions'
+                className='py-2 sm:py-3 text-xs sm:text-sm'
+                disabled={isEditMode}
+              >
+                Рецептлар
+              </TabsTrigger>
+            )}
+            {canReadServices && (
+              <TabsTrigger
+                value='services'
+                className='py-2 sm:py-3 text-xs sm:text-sm'
+                disabled={isEditMode}
+              >
+                Хизматлар
+              </TabsTrigger>
+            )}
+            {canReadVisits && (
+              <TabsTrigger
+                value='visits'
+                className='py-2 sm:py-3 text-xs sm:text-sm'
+                disabled={isEditMode}
+              >
+                Таҳлил
+              </TabsTrigger>
+            )}
+            {canReadImages && (
+              <TabsTrigger
+                value='images'
+                className='py-2 sm:py-3 text-xs sm:text-sm'
+                disabled={isEditMode}
+              >
+                Тасвирлар
+              </TabsTrigger>
+            )}
+            {canReadExamination && (
+              <TabsTrigger
+                value='neurologic'
+                className='py-2 sm:py-3 text-xs sm:text-sm'
+                disabled={isEditMode}
+              >
+                Неврологик Статус
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Examination Tab */}
-          <TabsContent value='examination'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Кўрик Маълумотлари</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isEditMode ? (
-                  <div className='space-y-4'>
-                    <div className='space-y-2'>
-                      <Label>Шикоят</Label>
-                      <Textarea
-                        placeholder='Бемор шикоятини киритинг...'
-                        value={editForm.complaints}
-                        onChange={(e) =>
-                          setEditForm({
-                            ...editForm,
-                            complaints: e.target.value,
-                          })
-                        }
-                        className='min-h-24'
-                      />
-                    </div>
-
-                    <div className='space-y-2'>
-                      <Label>Ташхис</Label>
-                      <Select
-                        value={editForm.diagnosis}
-                        onValueChange={(value) =>
-                          setEditForm({ ...editForm, diagnosis: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder='Ташхисни танланг...' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {diagnoses.map((diagnosis: any) => (
-                            <SelectItem
-                              key={diagnosis._id}
-                              value={diagnosis._id}
-                            >
-                              {diagnosis.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className='space-y-2'>
-                      <Label>Тавсия</Label>
-                      <Textarea
-                        placeholder='Кўрик натижаси ва тавсияларни киритинг...'
-                        value={editForm.description}
-                        onChange={(e) =>
-                          setEditForm({
-                            ...editForm,
-                            description: e.target.value,
-                          })
-                        }
-                        className='min-h-24'
-                      />
-                    </div>
-
-                    <div className='flex gap-3 justify-end'>
-                      <Button
-                        variant='outline'
-                        onClick={handleCancelEdit}
-                        disabled={isUpdating}
-                      >
-                        Бекор қилиш
-                      </Button>
-                      <Button onClick={handleUpdate} disabled={isUpdating}>
-                        {isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className='space-y-4'>
-                    <div>
-                      <Label className='text-muted-foreground'>Шикоят</Label>
-                      <p className='font-medium bg-muted p-3 rounded-md mt-1'>
-                        {exam.complaints || 'Киритилмаган'}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className='text-muted-foreground'>Ташхис</Label>
-                      <p className='font-medium bg-muted p-3 rounded-md mt-1'>
-                        {typeof exam.diagnosis === 'object' &&
-                        exam.diagnosis?.name
-                          ? exam.diagnosis.name
-                          : typeof exam.diagnosis === 'string'
-                          ? exam.diagnosis
-                          : 'Киритилмаган'}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className='text-muted-foreground'>Тавсия</Label>
-                      <p className='font-medium bg-muted p-3 rounded-md mt-1'>
-                        {exam.description || 'Киритилмаган'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Room Info Card */}
-            {exam.rooms && exam.rooms.length > 0 && (
-              <Card className='mt-6'>
+          {canReadExamination && (
+            <TabsContent value='examination'>
+              <Card>
                 <CardHeader>
-                  <CardTitle>Хоналар Маълумотлари</CardTitle>
+                  <CardTitle>Кўрик Маълумотлари</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className='space-y-4'>
-                    {exam.rooms.map((room: any, index: number) => (
-                      <Card key={room._id} className='border border-primary/10'>
-                        <CardContent className='pt-4'>
-                          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
-                            <div>
-                              <Label className='text-muted-foreground'>
-                                Хона Номи
-                              </Label>
-                              <p className='font-medium mt-1'>
-                                {room.room_name || 'Номаълум'}
-                              </p>
-                            </div>
-                            <div>
-                              <Label className='text-muted-foreground'>
-                                Қават
-                              </Label>
-                              <p className='font-medium mt-1'>
-                                {room.floor_number || 'Номаълум'}
-                              </p>
-                            </div>
-                            <div>
-                              <Label className='text-muted-foreground'>
-                                Нархи
-                              </Label>
-                              <p className='font-medium mt-1'>
-                                {room.room_price
-                                  ? `${room.room_price.toLocaleString()} сўм`
-                                  : 'Номаълум'}
-                              </p>
-                            </div>
-                            <div>
-                              <Label className='text-muted-foreground'>
-                                Муддати
-                              </Label>
-                              <p className='font-medium mt-1'>
-                                {room.start_date
-                                  ? new Date(
-                                      room.start_date
-                                    ).toLocaleDateString('uz-UZ')
-                                  : 'Номаълум'}
-                                {room.end_date && (
-                                  <>
-                                    {' - '}
-                                    {new Date(room.end_date).toLocaleDateString(
-                                      'uz-UZ'
-                                    )}
-                                  </>
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  {isEditMode ? (
+                    <div className='space-y-4'>
+                      <div className='space-y-2'>
+                        <Label>Шикоят</Label>
+                        <Textarea
+                          placeholder='Бемор шикоятини киритинг...'
+                          value={editForm.complaints}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              complaints: e.target.value,
+                            })
+                          }
+                          className='min-h-24'
+                        />
+                      </div>
+
+                      <div className='space-y-2'>
+                        <Label>Ташхис</Label>
+                        <Select
+                          value={editForm.diagnosis}
+                          onValueChange={(value) =>
+                            setEditForm({ ...editForm, diagnosis: value })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder='Ташхисни танланг...' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {diagnoses.map((diagnosis: any) => (
+                              <SelectItem
+                                key={diagnosis._id}
+                                value={diagnosis._id}
+                              >
+                                {diagnosis.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className='space-y-2'>
+                        <Label>Тавсия</Label>
+                        <Textarea
+                          placeholder='Кўрик натижаси ва тавсияларни киритинг...'
+                          value={editForm.description}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              description: e.target.value,
+                            })
+                          }
+                          className='min-h-24'
+                        />
+                      </div>
+
+                      <div className='flex gap-3 justify-end'>
+                        <Button
+                          variant='outline'
+                          onClick={handleCancelEdit}
+                          disabled={isUpdating}
+                        >
+                          Бекор қилиш
+                        </Button>
+                        <Button onClick={handleUpdate} disabled={isUpdating}>
+                          {isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='space-y-4'>
+                      <div>
+                        <Label className='text-muted-foreground'>Шикоят</Label>
+                        <p className='font-medium bg-muted p-3 rounded-md mt-1'>
+                          {exam.complaints || 'Киритилмаган'}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className='text-muted-foreground'>Ташхис</Label>
+                        <p className='font-medium bg-muted p-3 rounded-md mt-1'>
+                          {typeof exam.diagnosis === 'object' &&
+                          exam.diagnosis?.name
+                            ? exam.diagnosis.name
+                            : typeof exam.diagnosis === 'string'
+                            ? exam.diagnosis
+                            : 'Киритилмаган'}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className='text-muted-foreground'>Тавсия</Label>
+                        <p className='font-medium bg-muted p-3 rounded-md mt-1'>
+                          {exam.description || 'Киритилмаган'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            )}
-          </TabsContent>
 
-          {/* Prescriptions Tab */}
-          <TabsContent value='prescriptions'>
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <span>Рецептлар</span>
-                    {prescriptions.length > 0 && (
-                      <span className='text-sm font-normal text-muted-foreground'>
-                        ({prescriptions.length} та)
-                      </span>
-                    )}
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    {prescriptions.length > 0 && (
-                      <AllPrescriptionsDownloadButton
-                        exam={exam}
-                        prescriptions={prescriptions}
-                      />
-                    )}
-                    <Button
-                      size='sm'
-                      onClick={() => {
-                        navigate('/prescription', {
-                          state: { examinationId: exam._id },
-                        });
-                      }}
-                    >
-                      <Plus className='w-4 h-4 mr-2' />
-                      Рецепт Қўшиш
-                    </Button>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {prescriptions.length > 0 ? (
-                  <div className='space-y-4'>
-                    {prescriptions.map(
-                      (prescriptionDoc: any, docIndex: number) => (
+              {/* Room Info Card */}
+              {exam.rooms && exam.rooms.length > 0 && (
+                <Card className='mt-6'>
+                  <CardHeader>
+                    <CardTitle>Хоналар Маълумотлари</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='space-y-4'>
+                      {exam.rooms.map((room: any, index: number) => (
                         <Card
-                          key={prescriptionDoc._id}
-                          className='border border-primary/10 bg-primary/5'
+                          key={room._id}
+                          className='border border-primary/10'
                         >
                           <CardContent className='pt-4'>
-                            <div className='mb-3'>
-                              <div className='flex items-center justify-between'>
-                                <span className='text-sm font-medium text-primary'>
-                                  Рецепт #{docIndex + 1} -{' '}
-                                  {new Date(
-                                    prescriptionDoc.created_at
-                                  ).toLocaleDateString('uz-UZ')}
-                                </span>
-                                <span className='text-xs text-muted-foreground'>
-                                  {prescriptionDoc.doctor_id?.fullname}
-                                </span>
+                            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+                              <div>
+                                <Label className='text-muted-foreground'>
+                                  Хона Номи
+                                </Label>
+                                <p className='font-medium mt-1'>
+                                  {room.room_name || 'Номаълум'}
+                                </p>
                               </div>
-                            </div>
-                            {/* Prescription Items */}
-                            <div className='space-y-3'>
-                              {prescriptionDoc.items?.map(
-                                (item: any, itemIndex: number) => (
-                                  <div
-                                    key={item._id}
-                                    className='border rounded-lg p-3 bg-background'
-                                  >
-                                    {editingPrescriptionId === item._id ? (
-                                      // Edit mode
-                                      <div className='space-y-4'>
-                                        <div className='flex items-center justify-between mb-2'>
-                                          <span className='text-sm font-semibold text-primary'>
-                                            Дори #{itemIndex + 1} ни таҳрирлаш
-                                          </span>
-                                        </div>
-                                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
-                                          <div>
-                                            <Label className='text-xs'>
-                                              Дори
-                                            </Label>
-                                            <Select
-                                              value={
-                                                prescriptionForm.medication_id
-                                              }
-                                              onValueChange={(value) =>
-                                                setPrescriptionForm({
-                                                  ...prescriptionForm,
-                                                  medication_id: value,
-                                                })
-                                              }
-                                              onOpenChange={(open) => {
-                                                if (open) {
-                                                  setTimeout(
-                                                    () =>
-                                                      medicationSearchRef.current?.focus(),
-                                                    0
-                                                  );
-                                                }
-                                              }}
-                                            >
-                                              <SelectTrigger className='mt-1'>
-                                                <SelectValue placeholder='Дорини танланг...' />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                <div className='p-2'>
-                                                  <Input
-                                                    ref={medicationSearchRef}
-                                                    placeholder='Қидириш...'
-                                                    value={medicationSearch}
-                                                    onChange={(e) =>
-                                                      setMedicationSearch(
-                                                        e.target.value
-                                                      )
-                                                    }
-                                                    onKeyDown={(e) =>
-                                                      e.stopPropagation()
-                                                    }
-                                                    onFocus={(e) => {
-                                                      setTimeout(
-                                                        () => e.target.focus(),
-                                                        0
-                                                      );
-                                                    }}
-                                                    className='mb-2'
-                                                  />
-                                                </div>
-                                                {medicationsData?.data?.map(
-                                                  (med: any) => (
-                                                    <SelectItem
-                                                      key={med._id}
-                                                      value={med._id}
-                                                    >
-                                                      {med.name}{' '}
-                                                      {med.dosage &&
-                                                        `(${med.dosage})`}
-                                                    </SelectItem>
-                                                  )
-                                                )}
-                                              </SelectContent>
-                                            </Select>
-                                          </div>
-                                          <div>
-                                            <Label className='text-xs'>
-                                              Қабул қилиш (кунига)
-                                            </Label>
-                                            <Input
-                                              type='number'
-                                              min={1}
-                                              value={prescriptionForm.frequency}
-                                              onChange={(e) =>
-                                                setPrescriptionForm({
-                                                  ...prescriptionForm,
-                                                  frequency: e.target.value,
-                                                })
-                                              }
-                                              className='mt-1'
-                                              placeholder='Кунига неча марта'
-                                            />
-                                          </div>
-                                          <div>
-                                            <Label className='text-xs'>
-                                              Муддат (кун)
-                                            </Label>
-                                            <Input
-                                              type='number'
-                                              min={1}
-                                              value={prescriptionForm.duration}
-                                              onChange={(e) =>
-                                                setPrescriptionForm({
-                                                  ...prescriptionForm,
-                                                  duration: e.target.value,
-                                                })
-                                              }
-                                              className='mt-1'
-                                              placeholder='Қанча кун'
-                                            />
-                                          </div>
-                                          <div>
-                                            <Label className='text-xs'>
-                                              Кўрсатма
-                                            </Label>
-                                            <Input
-                                              value={
-                                                prescriptionForm.instructions
-                                              }
-                                              onChange={(e) =>
-                                                setPrescriptionForm({
-                                                  ...prescriptionForm,
-                                                  instructions: e.target.value,
-                                                })
-                                              }
-                                              className='mt-1'
-                                              placeholder='Кўрсатма...'
-                                            />
-                                          </div>
-                                        </div>
-                                        <div>
-                                          <Label className='text-xs'>
-                                            Қўшимча
-                                          </Label>
-                                          <Textarea
-                                            value={prescriptionForm.addons}
-                                            onChange={(e) =>
-                                              setPrescriptionForm({
-                                                ...prescriptionForm,
-                                                addons: e.target.value,
-                                              })
-                                            }
-                                            className='mt-1'
-                                            placeholder='Қўшимча маълумот...'
-                                            rows={2}
-                                          />
-                                        </div>
-                                        <div className='flex gap-2 justify-end'>
-                                          <Button
-                                            variant='outline'
-                                            size='sm'
-                                            onClick={cancelEditPrescription}
-                                            disabled={isUpdatingPrescription}
-                                          >
-                                            <X className='w-3 h-3 mr-1' />
-                                            Бекор
-                                          </Button>
-                                          <Button
-                                            size='sm'
-                                            onClick={() =>
-                                              handleUpdatePrescription(item._id)
-                                            }
-                                            disabled={isUpdatingPrescription}
-                                          >
-                                            <Save className='w-3 h-3 mr-1' />
-                                            {isUpdatingPrescription
-                                              ? 'Сақланмоқда...'
-                                              : 'Сақлаш'}
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      // View mode
-                                      <>
-                                        <div className='flex items-center justify-between mb-2'>
-                                          <span className='text-xs font-medium text-muted-foreground'>
-                                            Дори #{itemIndex + 1}
-                                          </span>
-                                          <div className='flex gap-1'>
-                                            <Button
-                                              variant='ghost'
-                                              size='sm'
-                                              onClick={() =>
-                                                startEditPrescription({
-                                                  ...item,
-                                                  _id: item._id,
-                                                  prescriptionDocId:
-                                                    prescriptionDoc._id,
-                                                })
-                                              }
-                                              disabled={
-                                                editingPrescriptionId !== null
-                                              }
-                                              className='h-6 w-6 p-0'
-                                            >
-                                              <Edit className='h-3 w-3' />
-                                            </Button>
-                                          </div>
-                                        </div>
-                                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2'>
-                                          <div>
-                                            <Label className='text-xs text-muted-foreground'>
-                                              Дори
-                                            </Label>
-                                            <p className='font-semibold text-sm'>
-                                              {item.medication_id?.name ||
-                                                'Номаълум'}{' '}
-                                              {item.medication_id?.dosage &&
-                                                `(${item.medication_id.dosage})`}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <Label className='text-xs text-muted-foreground'>
-                                              Муддати
-                                            </Label>
-                                            <p className='font-semibold text-sm'>
-                                              {item.duration} кун
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <Label className='text-xs text-muted-foreground'>
-                                              Қабул Қилиш
-                                            </Label>
-                                            <p className='font-semibold text-sm'>
-                                              Кунига {item.frequency} марта
-                                            </p>
-                                          </div>
-                                          {item.instructions && (
-                                            <div>
-                                              <Label className='text-xs text-muted-foreground'>
-                                                Кўрсатма
-                                              </Label>
-                                              <p className='text-sm'>
-                                                {item.instructions}
-                                              </p>
-                                            </div>
-                                          )}
-                                        </div>
-                                        {/* Days grid */}
-                                        {item.days && item.days.length > 0 && (
-                                          <div className='mt-2 pt-2 border-t'>
-                                            <Label className='text-xs text-muted-foreground mb-1 block'>
-                                              Қабул қилиш кунлари
-                                            </Label>
-                                            <div className='flex flex-wrap gap-1'>
-                                              {item.days.map((day: any) => (
-                                                <div
-                                                  key={day._id || day.day}
-                                                  className={`text-xs px-2 py-1 rounded ${
-                                                    day.date
-                                                      ? 'bg-green-100 text-green-800'
-                                                      : 'bg-gray-100 text-gray-500'
-                                                  }`}
-                                                >
-                                                  {day.day}
-                                                  {day.date && (
-                                                    <span className='ml-1'>
-                                                      (
-                                                      {new Date(
-                                                        day.date
-                                                      ).toLocaleDateString(
-                                                        'uz-UZ',
-                                                        {
-                                                          day: '2-digit',
-                                                          month: '2-digit',
-                                                        }
-                                                      )}
-                                                      )
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
-                                )
-                              )}
+                              <div>
+                                <Label className='text-muted-foreground'>
+                                  Қават
+                                </Label>
+                                <p className='font-medium mt-1'>
+                                  {room.floor_number || 'Номаълум'}
+                                </p>
+                              </div>
+                              <div>
+                                <Label className='text-muted-foreground'>
+                                  Нархи
+                                </Label>
+                                <p className='font-medium mt-1'>
+                                  {room.room_price
+                                    ? `${room.room_price.toLocaleString()} сўм`
+                                    : 'Номаълум'}
+                                </p>
+                              </div>
+                              <div>
+                                <Label className='text-muted-foreground'>
+                                  Муддати
+                                </Label>
+                                <p className='font-medium mt-1'>
+                                  {room.start_date
+                                    ? new Date(
+                                        room.start_date
+                                      ).toLocaleDateString('uz-UZ')
+                                    : 'Номаълум'}
+                                  {room.end_date && (
+                                    <>
+                                      {' - '}
+                                      {new Date(
+                                        room.end_date
+                                      ).toLocaleDateString('uz-UZ')}
+                                    </>
+                                  )}
+                                </p>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
-                      )
-                    )}
-                  </div>
-                ) : (
-                  <div className='text-center py-8'>
-                    <p className='text-muted-foreground mb-4'>
-                      Ҳали рецептлар қўшилмаган
-                    </p>
-                    <Button
-                      onClick={() => {
-                        navigate('/prescription', {
-                          state: { examinationId: exam._id },
-                        });
-                      }}
-                    >
-                      <FilePlus className='w-4 h-4 mr-2' />
-                      Рецепт Ёзиш
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          )}
 
-          {/* Services Tab */}
-          <TabsContent value='services'>
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <span>Хизматлар</span>
-                    {patientServices.length > 0 && (
-                      <span className='text-sm font-normal text-muted-foreground'>
-                        ({patientServices.length} та)
-                      </span>
-                    )}
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    {patientServices.length > 0 && (
-                      <ServicesDownloadButton
-                        exam={exam}
-                        services={patientServices}
-                      />
-                    )}
-                    <Button
-                      size='sm'
-                      onClick={() => {
-                        setIsAddingService(true);
-                        // Add default one row
-                        if (services.length === 0) {
-                          addService();
-                        }
-                      }}
-                      disabled={isAddingService}
-                    >
-                      <Plus className='w-4 h-4 mr-2' />
-                      Хизмат Қўшиш
-                    </Button>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='space-y-4'>
-                  {/* Add Service Form */}
-                  {isAddingService && (
-                    <Card className='border-2 border-primary/20 bg-primary/5'>
-                      <CardContent className='pt-4'>
-                        <div className='space-y-4'>
-                          {/* Duration and Start Date Row */}
-                          <div className='flex items-end gap-3'>
-                            <div className='w-32'>
-                              <Label>Муддат (кун)</Label>
-                              <Input
-                                type='number'
-                                value={serviceDuration}
-                                min={1}
-                                max={60}
-                                onChange={(e) => {
-                                  const newDuration =
-                                    parseInt(e.target.value) || 1;
-                                  setServiceDuration(newDuration);
-                                  // Update all services with new duration, preserving existing day states
-                                  setServices(
-                                    services.map((srv) => {
-                                      // Preserve existing day states (marked/unmarked)
-                                      const newDays: ServiceDay[] = Array.from(
-                                        { length: newDuration },
-                                        (_, idx) => {
-                                          const existingDay = srv.days[idx];
-                                          if (existingDay) {
-                                            // Keep existing day with its date (marked) or null (unmarked)
-                                            return existingDay;
-                                          }
-                                          // New days are unmarked by default (date: null)
-                                          return {
-                                            day: idx + 1,
-                                            date: null,
-                                          };
-                                        }
-                                      );
-                                      return {
-                                        ...srv,
-                                        duration: newDuration,
-                                        days: newDays,
-                                      };
-                                    })
-                                  );
-                                }}
-                                className='mt-1'
-                              />
-                            </div>
-
-                            <div>
-                              <Label>Бошланиш санаси</Label>
-                              <Input
-                                type='date'
-                                value={
-                                  serviceStartDate.toISOString().split('T')[0]
-                                }
-                                onChange={(e) => {
-                                  const newDate = new Date(e.target.value);
-                                  setServiceStartDate(newDate);
-                                  // Update all services with new start date
-                                  setServices(
-                                    services.map((srv) => ({
-                                      ...srv,
-                                      days: generateDays(
-                                        serviceDuration,
-                                        [],
-                                        newDate
-                                      ),
-                                    }))
-                                  );
-                                }}
-                                className='mt-1'
-                              />
-                            </div>
-
-                            <div className='ml-auto flex items-center gap-2'>
-                              <Button
-                                variant='outline'
-                                onClick={markEveryDay}
-                                disabled={services.length === 0}
-                              >
-                                Ҳар куни
-                              </Button>
-                              <Button
-                                variant='outline'
-                                onClick={markEveryOtherDay}
-                                disabled={services.length === 0}
-                              >
-                                2 кунда бир
-                              </Button>
-                              <Button variant='outline' onClick={addService}>
-                                <Plus className='w-4 h-4 mr-2' />
-                                Хизмат қўшиш
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Services Table */}
-                          {services.length > 0 && (
-                            <div className='border rounded-lg overflow-hidden'>
-                              <table className='w-full'>
-                                <thead>
-                                  <tr className='bg-muted/50'>
-                                    <th className='border-b px-3 py-2 text-left text-sm font-medium'>
-                                      Хизмат
-                                    </th>
-                                    {Array.from(
-                                      { length: Math.min(serviceDuration, 8) },
-                                      (_, i) => (
-                                        <th
-                                          key={i + 1}
-                                          className='border-b border-l px-2 py-2 text-center text-sm font-medium'
-                                        ></th>
-                                      )
-                                    )}
-                                    <th className='border-b border-l px-2 py-2 text-center text-sm font-medium w-12'></th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {services.map((service) => {
-                                    // Split days into chunks of 8
-                                    const dayChunks: Array<
-                                      typeof service.days
-                                    > = [];
-                                    for (
-                                      let i = 0;
-                                      i < service.days.length;
-                                      i += 8
-                                    ) {
-                                      dayChunks.push(
-                                        service.days.slice(i, i + 8)
-                                      );
-                                    }
-
-                                    return dayChunks.map(
-                                      (chunk, chunkIndex) => (
-                                        <tr
-                                          key={`${service.id}-chunk-${chunkIndex}`}
-                                          className='hover:bg-muted/30'
-                                        >
-                                          {chunkIndex === 0 ? (
-                                            <td
-                                              className='border-b px-3 py-2'
-                                              rowSpan={dayChunks.length}
-                                            >
-                                              <Popover
-                                                open={
-                                                  openServiceCombobox ===
-                                                  service.id
+          {/* Prescriptions Tab */}
+          {canReadPrescription && (
+            <TabsContent value='prescriptions'>
+              <Card>
+                <CardHeader>
+                  <CardTitle className='flex items-center justify-between'>
+                    <div className='flex items-center gap-2'>
+                      <span>Рецептлар</span>
+                      {prescriptions.length > 0 && (
+                        <span className='text-sm font-normal text-muted-foreground'>
+                          ({prescriptions.length} та)
+                        </span>
+                      )}
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      {prescriptions.length > 0 && (
+                        <AllPrescriptionsDownloadButton
+                          exam={exam}
+                          prescriptions={prescriptions}
+                        />
+                      )}
+                      <Button
+                        size='sm'
+                        onClick={() => {
+                          navigate('/prescription', {
+                            state: { examinationId: exam._id },
+                          });
+                        }}
+                      >
+                        <Plus className='w-4 h-4 mr-2' />
+                        Рецепт Қўшиш
+                      </Button>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {prescriptions.length > 0 ? (
+                    <div className='space-y-4'>
+                      {prescriptions.map(
+                        (prescriptionDoc: any, docIndex: number) => (
+                          <Card
+                            key={prescriptionDoc._id}
+                            className='border border-primary/10 bg-primary/5'
+                          >
+                            <CardContent className='pt-4'>
+                              <div className='mb-3'>
+                                <div className='flex items-center justify-between'>
+                                  <span className='text-sm font-medium text-primary'>
+                                    Рецепт #{docIndex + 1} -{' '}
+                                    {new Date(
+                                      prescriptionDoc.created_at
+                                    ).toLocaleDateString('uz-UZ')}
+                                  </span>
+                                  <span className='text-xs text-muted-foreground'>
+                                    {prescriptionDoc.doctor_id?.fullname}
+                                  </span>
+                                </div>
+                              </div>
+                              {/* Prescription Items */}
+                              <div className='space-y-3'>
+                                {prescriptionDoc.items?.map(
+                                  (item: any, itemIndex: number) => (
+                                    <div
+                                      key={item._id}
+                                      className='border rounded-lg p-3 bg-background'
+                                    >
+                                      {editingPrescriptionId === item._id ? (
+                                        // Edit mode
+                                        <div className='space-y-4'>
+                                          <div className='flex items-center justify-between mb-2'>
+                                            <span className='text-sm font-semibold text-primary'>
+                                              Дори #{itemIndex + 1} ни таҳрирлаш
+                                            </span>
+                                          </div>
+                                          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
+                                            <div>
+                                              <Label className='text-xs'>
+                                                Дори
+                                              </Label>
+                                              <Select
+                                                value={
+                                                  prescriptionForm.medication_id
+                                                }
+                                                onValueChange={(value) =>
+                                                  setPrescriptionForm({
+                                                    ...prescriptionForm,
+                                                    medication_id: value,
+                                                  })
                                                 }
                                                 onOpenChange={(open) => {
-                                                  setOpenServiceCombobox(
-                                                    open ? service.id : ''
-                                                  );
                                                   if (open) {
-                                                    // Reset search when opening
-                                                    setServiceSearch('');
-                                                    // Focus on search input
                                                     setTimeout(
                                                       () =>
-                                                        serviceSearchRef.current?.focus(),
+                                                        medicationSearchRef.current?.focus(),
                                                       0
                                                     );
                                                   }
                                                 }}
                                               >
-                                                <PopoverTrigger asChild>
-                                                  <Button
-                                                    variant='outline'
-                                                    role='combobox'
-                                                    className='w-full justify-between'
-                                                  >
-                                                    {service.service_type_id
-                                                      ? getServiceById(
-                                                          service.service_type_id
-                                                        )?.name || 'Танланг...'
-                                                      : 'Танланг...'}
-                                                    <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                                                  </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className='w-[400px] p-0'>
-                                                  <Command shouldFilter={false}>
-                                                    <CommandInput
-                                                      ref={serviceSearchRef}
-                                                      placeholder='Хизматни қидириш...'
-                                                      value={serviceSearch}
-                                                      onValueChange={
-                                                        setServiceSearch
+                                                <SelectTrigger className='mt-1'>
+                                                  <SelectValue placeholder='Дорини танланг...' />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  <div className='p-2'>
+                                                    <Input
+                                                      ref={medicationSearchRef}
+                                                      placeholder='Қидириш...'
+                                                      value={medicationSearch}
+                                                      onChange={(e) =>
+                                                        setMedicationSearch(
+                                                          e.target.value
+                                                        )
                                                       }
                                                       onKeyDown={(e) =>
                                                         e.stopPropagation()
                                                       }
-                                                    />
-                                                    <CommandList
-                                                      onScroll={(e: any) => {
-                                                        const bottom =
-                                                          e.target
-                                                            .scrollHeight -
-                                                            e.target
-                                                              .scrollTop ===
-                                                          e.target.clientHeight;
-                                                        if (
-                                                          bottom &&
-                                                          serviceHasMoreData &&
-                                                          !isFetchingServices
-                                                        ) {
-                                                          setServicePage(
-                                                            (prev) => prev + 1
-                                                          );
-                                                        }
+                                                      onFocus={(e) => {
+                                                        setTimeout(
+                                                          () =>
+                                                            e.target.focus(),
+                                                          0
+                                                        );
                                                       }}
-                                                    >
-                                                      {isFetchingServices &&
-                                                      serviceTypes.length ===
-                                                        0 ? (
-                                                        <div className='flex items-center justify-center py-4'>
-                                                          <Loader2 className='h-4 w-4 animate-spin mr-2' />
-                                                          <span className='text-sm text-muted-foreground'>
-                                                            Юкланмоқда...
-                                                          </span>
-                                                        </div>
-                                                      ) : serviceTypes.length ===
-                                                        0 ? (
-                                                        <CommandEmpty>
-                                                          Хизмат топилмади
-                                                        </CommandEmpty>
-                                                      ) : (
-                                                        <CommandGroup>
-                                                          {serviceTypes.map(
-                                                            (
-                                                              serviceType: any
-                                                            ) => (
-                                                              <CommandItem
-                                                                key={
-                                                                  serviceType._id
-                                                                }
-                                                                value={
-                                                                  serviceType._id
-                                                                }
-                                                                keywords={[
-                                                                  serviceType.name,
-                                                                  serviceType._id,
-                                                                ]}
-                                                                onSelect={() => {
-                                                                  updateServiceField(
-                                                                    service.id,
-                                                                    'service_type_id',
-                                                                    serviceType._id
-                                                                  );
-                                                                  setOpenServiceCombobox(
-                                                                    ''
-                                                                  );
-                                                                  setServiceSearch(
-                                                                    ''
-                                                                  );
-                                                                  setServicePage(
-                                                                    1
-                                                                  );
-                                                                }}
-                                                              >
-                                                                <Check
-                                                                  className={cn(
-                                                                    'mr-2 h-4 w-4',
-                                                                    service.service_type_id ===
-                                                                      serviceType._id
-                                                                      ? 'opacity-100'
-                                                                      : 'opacity-0'
-                                                                  )}
-                                                                />
-                                                                {
-                                                                  serviceType.name
-                                                                }
-                                                              </CommandItem>
-                                                            )
-                                                          )}
-                                                          {isFetchingServices && (
-                                                            <div className='flex items-center justify-center py-2'>
-                                                              <Loader2 className='h-4 w-4 animate-spin' />
-                                                            </div>
-                                                          )}
-                                                        </CommandGroup>
-                                                      )}
-                                                    </CommandList>
-                                                  </Command>
-                                                </PopoverContent>
-                                              </Popover>
-                                            </td>
-                                          ) : null}
-                                          {chunk.map((day) => (
-                                            <td
-                                              key={day.day}
-                                              className='border-b border-l px-1 py-1 text-center cursor-pointer hover:bg-muted/50'
+                                                      className='mb-2'
+                                                    />
+                                                  </div>
+                                                  {medicationsData?.data?.map(
+                                                    (med: any) => (
+                                                      <SelectItem
+                                                        key={med._id}
+                                                        value={med._id}
+                                                      >
+                                                        {med.name}{' '}
+                                                        {med.dosage &&
+                                                          `(${med.dosage})`}
+                                                      </SelectItem>
+                                                    )
+                                                  )}
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                            <div>
+                                              <Label className='text-xs'>
+                                                Қабул қилиш (кунига)
+                                              </Label>
+                                              <Input
+                                                type='number'
+                                                min={1}
+                                                value={
+                                                  prescriptionForm.frequency
+                                                }
+                                                onChange={(e) =>
+                                                  setPrescriptionForm({
+                                                    ...prescriptionForm,
+                                                    frequency: e.target.value,
+                                                  })
+                                                }
+                                                className='mt-1'
+                                                placeholder='Кунига неча марта'
+                                              />
+                                            </div>
+                                            <div>
+                                              <Label className='text-xs'>
+                                                Муддат (кун)
+                                              </Label>
+                                              <Input
+                                                type='number'
+                                                min={1}
+                                                value={
+                                                  prescriptionForm.duration
+                                                }
+                                                onChange={(e) =>
+                                                  setPrescriptionForm({
+                                                    ...prescriptionForm,
+                                                    duration: e.target.value,
+                                                  })
+                                                }
+                                                className='mt-1'
+                                                placeholder='Қанча кун'
+                                              />
+                                            </div>
+                                            <div>
+                                              <Label className='text-xs'>
+                                                Кўрсатма
+                                              </Label>
+                                              <Input
+                                                value={
+                                                  prescriptionForm.instructions
+                                                }
+                                                onChange={(e) =>
+                                                  setPrescriptionForm({
+                                                    ...prescriptionForm,
+                                                    instructions:
+                                                      e.target.value,
+                                                  })
+                                                }
+                                                className='mt-1'
+                                                placeholder='Кўрсатма...'
+                                              />
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <Label className='text-xs'>
+                                              Қўшимча
+                                            </Label>
+                                            <Textarea
+                                              value={prescriptionForm.addons}
+                                              onChange={(e) =>
+                                                setPrescriptionForm({
+                                                  ...prescriptionForm,
+                                                  addons: e.target.value,
+                                                })
+                                              }
+                                              className='mt-1'
+                                              placeholder='Қўшимча маълумот...'
+                                              rows={2}
+                                            />
+                                          </div>
+                                          <div className='flex gap-2 justify-end'>
+                                            <Button
+                                              variant='outline'
+                                              size='sm'
+                                              onClick={cancelEditPrescription}
+                                              disabled={isUpdatingPrescription}
+                                            >
+                                              <X className='w-3 h-3 mr-1' />
+                                              Бекор
+                                            </Button>
+                                            <Button
+                                              size='sm'
                                               onClick={() =>
-                                                toggleDayMark(
-                                                  service.id,
-                                                  day.day
+                                                handleUpdatePrescription(
+                                                  item._id
                                                 )
                                               }
+                                              disabled={isUpdatingPrescription}
+                                            >
+                                              <Save className='w-3 h-3 mr-1' />
+                                              {isUpdatingPrescription
+                                                ? 'Сақланмоқда...'
+                                                : 'Сақлаш'}
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        // View mode
+                                        <>
+                                          <div className='flex items-center justify-between mb-2'>
+                                            <span className='text-xs font-medium text-muted-foreground'>
+                                              Дори #{itemIndex + 1}
+                                            </span>
+                                            <div className='flex gap-1'>
+                                              <Button
+                                                variant='ghost'
+                                                size='sm'
+                                                onClick={() =>
+                                                  startEditPrescription({
+                                                    ...item,
+                                                    _id: item._id,
+                                                    prescriptionDocId:
+                                                      prescriptionDoc._id,
+                                                  })
+                                                }
+                                                disabled={
+                                                  editingPrescriptionId !== null
+                                                }
+                                                className='h-6 w-6 p-0'
+                                              >
+                                                <Edit className='h-3 w-3' />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2'>
+                                            <div>
+                                              <Label className='text-xs text-muted-foreground'>
+                                                Дори
+                                              </Label>
+                                              <p className='font-semibold text-sm'>
+                                                {item.medication_id?.name ||
+                                                  'Номаълум'}{' '}
+                                                {item.medication_id?.dosage &&
+                                                  `(${item.medication_id.dosage})`}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <Label className='text-xs text-muted-foreground'>
+                                                Муддати
+                                              </Label>
+                                              <p className='font-semibold text-sm'>
+                                                {item.duration} кун
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <Label className='text-xs text-muted-foreground'>
+                                                Қабул Қилиш
+                                              </Label>
+                                              <p className='font-semibold text-sm'>
+                                                Кунига {item.frequency} марта
+                                              </p>
+                                            </div>
+                                            {item.instructions && (
+                                              <div>
+                                                <Label className='text-xs text-muted-foreground'>
+                                                  Кўрсатма
+                                                </Label>
+                                                <p className='text-sm'>
+                                                  {item.instructions}
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
+                                          {/* Days grid */}
+                                          {item.days &&
+                                            item.days.length > 0 && (
+                                              <div className='mt-2 pt-2 border-t'>
+                                                <Label className='text-xs text-muted-foreground mb-1 block'>
+                                                  Қабул қилиш кунлари
+                                                </Label>
+                                                <div className='flex flex-wrap gap-1'>
+                                                  {item.days.map((day: any) => (
+                                                    <div
+                                                      key={day._id || day.day}
+                                                      className={`text-xs px-2 py-1 rounded ${
+                                                        day.date
+                                                          ? 'bg-green-100 text-green-800'
+                                                          : 'bg-gray-100 text-gray-500'
+                                                      }`}
+                                                    >
+                                                      {day.day}
+                                                      {day.date && (
+                                                        <span className='ml-1'>
+                                                          (
+                                                          {new Date(
+                                                            day.date
+                                                          ).toLocaleDateString(
+                                                            'uz-UZ',
+                                                            {
+                                                              day: '2-digit',
+                                                              month: '2-digit',
+                                                            }
+                                                          )}
+                                                          )
+                                                        </span>
+                                                      )}
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            )}
+                                        </>
+                                      )}
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <div className='text-center py-8'>
+                      <p className='text-muted-foreground mb-4'>
+                        Ҳали рецептлар қўшилмаган
+                      </p>
+                      <Button
+                        onClick={() => {
+                          navigate('/prescription', {
+                            state: { examinationId: exam._id },
+                          });
+                        }}
+                      >
+                        <FilePlus className='w-4 h-4 mr-2' />
+                        Рецепт Ёзиш
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {/* Services Tab */}
+          {canReadServices && (
+            <TabsContent value='services'>
+              <Card>
+                <CardHeader>
+                  <CardTitle className='flex items-center justify-between'>
+                    <div className='flex items-center gap-2'>
+                      <span>Хизматлар</span>
+                      {patientServices.length > 0 && (
+                        <span className='text-sm font-normal text-muted-foreground'>
+                          ({patientServices.length} та)
+                        </span>
+                      )}
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      {patientServices.length > 0 && (
+                        <ServicesDownloadButton
+                          exam={exam}
+                          services={patientServices}
+                        />
+                      )}
+                      <Button
+                        size='sm'
+                        onClick={() => {
+                          setIsAddingService(true);
+                          // Add default one row
+                          if (services.length === 0) {
+                            addService();
+                          }
+                        }}
+                        disabled={isAddingService}
+                      >
+                        <Plus className='w-4 h-4 mr-2' />
+                        Хизмат Қўшиш
+                      </Button>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className='space-y-4'>
+                    {/* Add Service Form */}
+                    {isAddingService && (
+                      <Card className='border-2 border-primary/20 bg-primary/5'>
+                        <CardContent className='pt-4'>
+                          <div className='space-y-4'>
+                            {/* Duration and Start Date Row */}
+                            <div className='flex items-end gap-3'>
+                              <div className='w-32'>
+                                <Label>Муддат (кун)</Label>
+                                <Input
+                                  type='number'
+                                  value={serviceDuration}
+                                  min={1}
+                                  max={60}
+                                  onChange={(e) => {
+                                    const newDuration =
+                                      parseInt(e.target.value) || 1;
+                                    setServiceDuration(newDuration);
+                                    // Update all services with new duration, preserving existing day states
+                                    setServices(
+                                      services.map((srv) => {
+                                        // Preserve existing day states (marked/unmarked)
+                                        const newDays: ServiceDay[] =
+                                          Array.from(
+                                            { length: newDuration },
+                                            (_, idx) => {
+                                              const existingDay = srv.days[idx];
+                                              if (existingDay) {
+                                                // Keep existing day with its date (marked) or null (unmarked)
+                                                return existingDay;
+                                              }
+                                              // New days are unmarked by default (date: null)
+                                              return {
+                                                day: idx + 1,
+                                                date: null,
+                                              };
+                                            }
+                                          );
+                                        return {
+                                          ...srv,
+                                          duration: newDuration,
+                                          days: newDays,
+                                        };
+                                      })
+                                    );
+                                  }}
+                                  className='mt-1'
+                                />
+                              </div>
+
+                              <div>
+                                <Label>Бошланиш санаси</Label>
+                                <Input
+                                  type='date'
+                                  value={
+                                    serviceStartDate.toISOString().split('T')[0]
+                                  }
+                                  onChange={(e) => {
+                                    const newDate = new Date(e.target.value);
+                                    setServiceStartDate(newDate);
+                                    // Update all services with new start date
+                                    setServices(
+                                      services.map((srv) => ({
+                                        ...srv,
+                                        days: generateDays(
+                                          serviceDuration,
+                                          [],
+                                          newDate
+                                        ),
+                                      }))
+                                    );
+                                  }}
+                                  className='mt-1'
+                                />
+                              </div>
+
+                              <div className='ml-auto flex items-center gap-2'>
+                                <Button
+                                  variant='outline'
+                                  onClick={markEveryDay}
+                                  disabled={services.length === 0}
+                                >
+                                  Ҳар куни
+                                </Button>
+                                <Button
+                                  variant='outline'
+                                  onClick={markEveryOtherDay}
+                                  disabled={services.length === 0}
+                                >
+                                  2 кунда бир
+                                </Button>
+                                <Button variant='outline' onClick={addService}>
+                                  <Plus className='w-4 h-4 mr-2' />
+                                  Хизмат қўшиш
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Services Table */}
+                            {services.length > 0 && (
+                              <div className='border rounded-lg overflow-hidden'>
+                                <table className='w-full'>
+                                  <thead>
+                                    <tr className='bg-muted/50'>
+                                      <th className='border-b px-3 py-2 text-left text-sm font-medium'>
+                                        Хизмат
+                                      </th>
+                                      {Array.from(
+                                        {
+                                          length: Math.min(serviceDuration, 8),
+                                        },
+                                        (_, i) => (
+                                          <th
+                                            key={i + 1}
+                                            className='border-b border-l px-2 py-2 text-center text-sm font-medium'
+                                          ></th>
+                                        )
+                                      )}
+                                      <th className='border-b border-l px-2 py-2 text-center text-sm font-medium w-12'></th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {services.map((service) => {
+                                      // Split days into chunks of 8
+                                      const dayChunks: Array<
+                                        typeof service.days
+                                      > = [];
+                                      for (
+                                        let i = 0;
+                                        i < service.days.length;
+                                        i += 8
+                                      ) {
+                                        dayChunks.push(
+                                          service.days.slice(i, i + 8)
+                                        );
+                                      }
+
+                                      return dayChunks.map(
+                                        (chunk, chunkIndex) => (
+                                          <tr
+                                            key={`${service.id}-chunk-${chunkIndex}`}
+                                            className='hover:bg-muted/30'
+                                          >
+                                            {chunkIndex === 0 ? (
+                                              <td
+                                                className='border-b px-3 py-2'
+                                                rowSpan={dayChunks.length}
+                                              >
+                                                <Popover
+                                                  open={
+                                                    openServiceCombobox ===
+                                                    service.id
+                                                  }
+                                                  onOpenChange={(open) => {
+                                                    setOpenServiceCombobox(
+                                                      open ? service.id : ''
+                                                    );
+                                                    if (open) {
+                                                      // Reset search when opening
+                                                      setServiceSearch('');
+                                                      // Focus on search input
+                                                      setTimeout(
+                                                        () =>
+                                                          serviceSearchRef.current?.focus(),
+                                                        0
+                                                      );
+                                                    }
+                                                  }}
+                                                >
+                                                  <PopoverTrigger asChild>
+                                                    <Button
+                                                      variant='outline'
+                                                      role='combobox'
+                                                      className='w-full justify-between'
+                                                    >
+                                                      {service.service_type_id
+                                                        ? getServiceById(
+                                                            service.service_type_id
+                                                          )?.name ||
+                                                          'Танланг...'
+                                                        : 'Танланг...'}
+                                                      <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                                                    </Button>
+                                                  </PopoverTrigger>
+                                                  <PopoverContent className='w-[400px] p-0'>
+                                                    <Command
+                                                      shouldFilter={false}
+                                                    >
+                                                      <CommandInput
+                                                        ref={serviceSearchRef}
+                                                        placeholder='Хизматни қидириш...'
+                                                        value={serviceSearch}
+                                                        onValueChange={
+                                                          setServiceSearch
+                                                        }
+                                                        onKeyDown={(e) =>
+                                                          e.stopPropagation()
+                                                        }
+                                                      />
+                                                      <CommandList
+                                                        onScroll={(e: any) => {
+                                                          const bottom =
+                                                            e.target
+                                                              .scrollHeight -
+                                                              e.target
+                                                                .scrollTop ===
+                                                            e.target
+                                                              .clientHeight;
+                                                          if (
+                                                            bottom &&
+                                                            serviceHasMoreData &&
+                                                            !isFetchingServices
+                                                          ) {
+                                                            setServicePage(
+                                                              (prev) => prev + 1
+                                                            );
+                                                          }
+                                                        }}
+                                                      >
+                                                        {isFetchingServices &&
+                                                        serviceTypes.length ===
+                                                          0 ? (
+                                                          <div className='flex items-center justify-center py-4'>
+                                                            <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                                                            <span className='text-sm text-muted-foreground'>
+                                                              Юкланмоқда...
+                                                            </span>
+                                                          </div>
+                                                        ) : serviceTypes.length ===
+                                                          0 ? (
+                                                          <CommandEmpty>
+                                                            Хизмат топилмади
+                                                          </CommandEmpty>
+                                                        ) : (
+                                                          <CommandGroup>
+                                                            {serviceTypes.map(
+                                                              (
+                                                                serviceType: any
+                                                              ) => (
+                                                                <CommandItem
+                                                                  key={
+                                                                    serviceType._id
+                                                                  }
+                                                                  value={
+                                                                    serviceType._id
+                                                                  }
+                                                                  keywords={[
+                                                                    serviceType.name,
+                                                                    serviceType._id,
+                                                                  ]}
+                                                                  onSelect={() => {
+                                                                    updateServiceField(
+                                                                      service.id,
+                                                                      'service_type_id',
+                                                                      serviceType._id
+                                                                    );
+                                                                    setOpenServiceCombobox(
+                                                                      ''
+                                                                    );
+                                                                    setServiceSearch(
+                                                                      ''
+                                                                    );
+                                                                    setServicePage(
+                                                                      1
+                                                                    );
+                                                                  }}
+                                                                >
+                                                                  <Check
+                                                                    className={cn(
+                                                                      'mr-2 h-4 w-4',
+                                                                      service.service_type_id ===
+                                                                        serviceType._id
+                                                                        ? 'opacity-100'
+                                                                        : 'opacity-0'
+                                                                    )}
+                                                                  />
+                                                                  {
+                                                                    serviceType.name
+                                                                  }
+                                                                </CommandItem>
+                                                              )
+                                                            )}
+                                                            {isFetchingServices && (
+                                                              <div className='flex items-center justify-center py-2'>
+                                                                <Loader2 className='h-4 w-4 animate-spin' />
+                                                              </div>
+                                                            )}
+                                                          </CommandGroup>
+                                                        )}
+                                                      </CommandList>
+                                                    </Command>
+                                                  </PopoverContent>
+                                                </Popover>
+                                              </td>
+                                            ) : null}
+                                            {chunk.map((day) => (
+                                              <td
+                                                key={day.day}
+                                                className='border-b border-l px-1 py-1 text-center cursor-pointer hover:bg-muted/50'
+                                                onClick={() =>
+                                                  toggleDayMark(
+                                                    service.id,
+                                                    day.day
+                                                  )
+                                                }
+                                              >
+                                                <span className='font-bold text-xs block'>
+                                                  {day.day}-кун
+                                                </span>
+                                                {day.date ? (
+                                                  <div className='text-xs font-medium text-primary'>
+                                                    {new Date(
+                                                      day.date
+                                                    ).toLocaleDateString(
+                                                      'en-GB',
+                                                      {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                      }
+                                                    )}
+                                                  </div>
+                                                ) : (
+                                                  <span className='text-muted-foreground text-xs'>
+                                                    -
+                                                  </span>
+                                                )}
+                                              </td>
+                                            ))}
+                                            {/* Fill empty cells if chunk is less than 8 */}
+                                            {chunk.length < 8 &&
+                                              Array.from(
+                                                { length: 8 - chunk.length },
+                                                (_, i) => (
+                                                  <td
+                                                    key={`empty-${i}`}
+                                                    className='border-b border-l px-1 py-1'
+                                                  ></td>
+                                                )
+                                              )}
+                                            {chunkIndex === 0 ? (
+                                              <td
+                                                className='border-b border-l px-1 py-1 text-center'
+                                                rowSpan={dayChunks.length}
+                                              >
+                                                <Button
+                                                  variant='ghost'
+                                                  size='sm'
+                                                  onClick={() =>
+                                                    removeService(service.id)
+                                                  }
+                                                  className='h-8 w-8 p-0 text-destructive hover:text-destructive'
+                                                >
+                                                  <Trash2 className='h-4 w-4' />
+                                                </Button>
+                                              </td>
+                                            ) : null}
+                                          </tr>
+                                        )
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+
+                            {/* Add Service Button */}
+
+                            {/* Action Buttons */}
+                            <div className='flex gap-2 justify-end pt-2'>
+                              <Button
+                                variant='outline'
+                                onClick={() => {
+                                  setIsAddingService(false);
+                                  setServices([]);
+                                  setServiceDuration(7);
+                                  setServiceStartDate(new Date());
+                                  setEditingServiceId(null);
+                                }}
+                                disabled={
+                                  isAddingServiceMutation || isUpdatingService
+                                }
+                              >
+                                <X className='w-4 h-4 mr-2' />
+                                Бекор қилиш
+                              </Button>
+                              <Button
+                                onClick={handleSaveService}
+                                disabled={
+                                  isAddingServiceMutation ||
+                                  isUpdatingService ||
+                                  services.length === 0
+                                }
+                              >
+                                <Save className='w-4 h-4 mr-2' />
+                                {editingServiceId
+                                  ? isUpdatingService
+                                    ? 'Янгиланмоқда...'
+                                    : 'Янгилаш'
+                                  : isAddingServiceMutation
+                                  ? 'Сақланмоқда...'
+                                  : 'Сақлаш'}
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Services Summary Table - like the reference image */}
+                    {patientServices.length > 0 && !editingServiceId && (
+                      <Card className='border border-primary/10 mb-4'>
+                        <CardContent className='pt-4'>
+                          <div className='flex items-center justify-between mb-3'>
+                            <Label className='text-sm font-semibold'>
+                              Хизматлар жадвали
+                            </Label>
+                          </div>
+                          <div className='overflow-x-auto'>
+                            <table className='w-full border-collapse border text-sm'>
+                              <thead>
+                                <tr className='bg-muted/50'>
+                                  <th className='border px-3 py-2 text-left font-semibold min-w-[150px]'>
+                                    Хизмат номи
+                                  </th>
+                                  {Array.from({ length: 8 }, (_, i) => (
+                                    <th
+                                      key={i}
+                                      className='border px-2 py-2 text-center font-semibold min-w-[70px]'
+                                    ></th>
+                                  ))}
+                                  <th className='border px-2 py-2 text-center font-semibold w-16'>
+                                    Ҳаракат
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {patientServices.map((serviceDoc: any) =>
+                                  serviceDoc.items?.map((service: any) => {
+                                    const serviceDays = service.days || [];
+                                    const totalDays =
+                                      service.duration ||
+                                      serviceDays.length ||
+                                      0;
+
+                                    // Split days into chunks of 8
+                                    const dayChunks: Array<Array<any>> = [];
+                                    for (let i = 0; i < totalDays; i += 8) {
+                                      const chunk = [];
+                                      for (
+                                        let j = i;
+                                        j < Math.min(i + 8, totalDays);
+                                        j++
+                                      ) {
+                                        chunk.push({
+                                          dayNumber: j + 1,
+                                          dayData: serviceDays[j] || null,
+                                        });
+                                      }
+                                      dayChunks.push(chunk);
+                                    }
+
+                                    // If no days, show at least one row
+                                    if (dayChunks.length === 0) {
+                                      dayChunks.push([]);
+                                    }
+
+                                    return dayChunks.map(
+                                      (chunk, chunkIndex) => (
+                                        <tr
+                                          key={`${service._id}-chunk-${chunkIndex}`}
+                                          className='hover:bg-muted/30'
+                                        >
+                                          {chunkIndex === 0 ? (
+                                            <td
+                                              className='border px-3 py-2 font-medium'
+                                              rowSpan={dayChunks.length}
+                                            >
+                                              {service.service_type_id?.name ||
+                                                'Номаълум'}
+                                            </td>
+                                          ) : null}
+                                          {chunk.map((dayItem, idx) => (
+                                            <td
+                                              key={idx}
+                                              className='border px-1 py-1 text-center group relative'
                                             >
                                               <span className='font-bold text-xs block'>
-                                                {day.day}-кун
+                                                {dayItem.dayNumber}-кун
                                               </span>
-                                              {day.date ? (
-                                                <div className='text-xs font-medium text-primary'>
-                                                  {new Date(
-                                                    day.date
-                                                  ).toLocaleDateString(
-                                                    'en-GB',
-                                                    {
-                                                      day: '2-digit',
-                                                      month: '2-digit',
-                                                    }
-                                                  )}
+                                              {dayItem.dayData?.date ? (
+                                                <div className='flex items-center justify-center'>
+                                                  <span className='text-xs text-primary'>
+                                                    {format(
+                                                      dayItem.dayData.date,
+                                                      'dd/MM'
+                                                    )}
+                                                  </span>
+                                                  <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
+                                                    {new Date(
+                                                      dayItem.dayData.date
+                                                    ).toLocaleDateString(
+                                                      'uz-UZ'
+                                                    )}
+                                                  </div>
                                                 </div>
                                               ) : (
                                                 <span className='text-muted-foreground text-xs'>
-                                                  -
+                                                  —
                                                 </span>
                                               )}
                                             </td>
@@ -1945,1022 +2200,883 @@ const ExaminationDetail = () => {
                                               (_, i) => (
                                                 <td
                                                   key={`empty-${i}`}
-                                                  className='border-b border-l px-1 py-1'
+                                                  className='border px-1 py-1'
                                                 ></td>
                                               )
                                             )}
                                           {chunkIndex === 0 ? (
                                             <td
-                                              className='border-b border-l px-1 py-1 text-center'
+                                              className='border px-1 py-1 text-center'
                                               rowSpan={dayChunks.length}
                                             >
-                                              <Button
-                                                variant='ghost'
-                                                size='sm'
-                                                onClick={() =>
-                                                  removeService(service.id)
-                                                }
-                                                className='h-8 w-8 p-0 text-destructive hover:text-destructive'
-                                              >
-                                                <Trash2 className='h-4 w-4' />
-                                              </Button>
+                                              <div className='flex items-center justify-center gap-1'>
+                                                <Button
+                                                  variant='ghost'
+                                                  size='sm'
+                                                  onClick={() =>
+                                                    startEditService(service)
+                                                  }
+                                                  className='h-6 w-6 p-0'
+                                                >
+                                                  <Edit className='h-3 w-3' />
+                                                </Button>
+                                              </div>
                                             </td>
                                           ) : null}
                                         </tr>
                                       )
                                     );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-
-                          {/* Add Service Button */}
-
-                          {/* Action Buttons */}
-                          <div className='flex gap-2 justify-end pt-2'>
-                            <Button
-                              variant='outline'
-                              onClick={() => {
-                                setIsAddingService(false);
-                                setServices([]);
-                                setServiceDuration(7);
-                                setServiceStartDate(new Date());
-                                setEditingServiceId(null);
-                              }}
-                              disabled={
-                                isAddingServiceMutation || isUpdatingService
-                              }
-                            >
-                              <X className='w-4 h-4 mr-2' />
-                              Бекор қилиш
-                            </Button>
-                            <Button
-                              onClick={handleSaveService}
-                              disabled={
-                                isAddingServiceMutation ||
-                                isUpdatingService ||
-                                services.length === 0
-                              }
-                            >
-                              <Save className='w-4 h-4 mr-2' />
-                              {editingServiceId
-                                ? isUpdatingService
-                                  ? 'Янгиланмоқда...'
-                                  : 'Янгилаш'
-                                : isAddingServiceMutation
-                                ? 'Сақланмоқда...'
-                                : 'Сақлаш'}
-                            </Button>
+                                  })
+                                )}
+                              </tbody>
+                            </table>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                        </CardContent>
+                      </Card>
+                    )}
 
-                  {/* Services Summary Table - like the reference image */}
-                  {patientServices.length > 0 && !editingServiceId && (
-                    <Card className='border border-primary/10 mb-4'>
-                      <CardContent className='pt-4'>
-                        <div className='flex items-center justify-between mb-3'>
-                          <Label className='text-sm font-semibold'>
-                            Хизматлар жадвали
-                          </Label>
-                        </div>
-                        <div className='overflow-x-auto'>
-                          <table className='w-full border-collapse border text-sm'>
-                            <thead>
-                              <tr className='bg-muted/50'>
-                                <th className='border px-3 py-2 text-left font-semibold min-w-[150px]'>
-                                  Хизмат номи
-                                </th>
-                                {Array.from({ length: 8 }, (_, i) => (
-                                  <th
-                                    key={i}
-                                    className='border px-2 py-2 text-center font-semibold min-w-[70px]'
-                                  ></th>
-                                ))}
-                                <th className='border px-2 py-2 text-center font-semibold w-16'>
-                                  Ҳаракат
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {patientServices.map((serviceDoc: any) =>
-                                serviceDoc.items?.map((service: any) => {
-                                  const serviceDays = service.days || [];
-                                  const totalDays =
-                                    service.duration || serviceDays.length || 0;
-
-                                  // Split days into chunks of 8
-                                  const dayChunks: Array<Array<any>> = [];
-                                  for (let i = 0; i < totalDays; i += 8) {
-                                    const chunk = [];
-                                    for (
-                                      let j = i;
-                                      j < Math.min(i + 8, totalDays);
-                                      j++
-                                    ) {
-                                      chunk.push({
-                                        dayNumber: j + 1,
-                                        dayData: serviceDays[j] || null,
-                                      });
-                                    }
-                                    dayChunks.push(chunk);
-                                  }
-
-                                  // If no days, show at least one row
-                                  if (dayChunks.length === 0) {
-                                    dayChunks.push([]);
-                                  }
-
-                                  return dayChunks.map((chunk, chunkIndex) => (
-                                    <tr
-                                      key={`${service._id}-chunk-${chunkIndex}`}
-                                      className='hover:bg-muted/30'
-                                    >
-                                      {chunkIndex === 0 ? (
-                                        <td
-                                          className='border px-3 py-2 font-medium'
-                                          rowSpan={dayChunks.length}
-                                        >
-                                          {service.service_type_id?.name ||
-                                            'Номаълум'}
-                                        </td>
-                                      ) : null}
-                                      {chunk.map((dayItem, idx) => (
-                                        <td
-                                          key={idx}
-                                          className='border px-1 py-1 text-center group relative'
-                                        >
-                                          <span className='font-bold text-xs block'>
-                                            {dayItem.dayNumber}-кун
-                                          </span>
-                                          {dayItem.dayData?.date ? (
-                                            <div className='flex items-center justify-center'>
-                                              <span className='text-xs text-primary'>
-                                                {format(
-                                                  dayItem.dayData.date,
-                                                  'dd/MM'
-                                                )}
-                                              </span>
-                                              <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
-                                                {new Date(
-                                                  dayItem.dayData.date
-                                                ).toLocaleDateString('uz-UZ')}
-                                              </div>
-                                            </div>
-                                          ) : (
-                                            <span className='text-muted-foreground text-xs'>
-                                              —
-                                            </span>
-                                          )}
-                                        </td>
-                                      ))}
-                                      {/* Fill empty cells if chunk is less than 8 */}
-                                      {chunk.length < 8 &&
-                                        Array.from(
-                                          { length: 8 - chunk.length },
-                                          (_, i) => (
-                                            <td
-                                              key={`empty-${i}`}
-                                              className='border px-1 py-1'
-                                            ></td>
-                                          )
-                                        )}
-                                      {chunkIndex === 0 ? (
-                                        <td
-                                          className='border px-1 py-1 text-center'
-                                          rowSpan={dayChunks.length}
-                                        >
-                                          <div className='flex items-center justify-center gap-1'>
-                                            <Button
-                                              variant='ghost'
-                                              size='sm'
-                                              onClick={() =>
-                                                startEditService(service)
-                                              }
-                                              className='h-6 w-6 p-0'
-                                            >
-                                              <Edit className='h-3 w-3' />
-                                            </Button>
-                                          </div>
-                                        </td>
-                                      ) : null}
-                                    </tr>
-                                  ));
-                                })
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {patientServices.length === 0 ? (
-                    <div className='text-center py-8'>
-                      <p className='text-muted-foreground mb-4'>
-                        Ҳали хизматлар қўшилмаган
-                      </p>
-                      {!isAddingService && (
-                        <Button
-                          onClick={() => {
-                            setIsAddingService(true);
-                            // Add default one row
-                            if (services.length === 0) {
-                              addService();
-                            }
-                          }}
-                        >
-                          <Plus className='w-4 h-4 mr-2' />
-                          Хизмат Қўшиш
-                        </Button>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                    {patientServices.length === 0 ? (
+                      <div className='text-center py-8'>
+                        <p className='text-muted-foreground mb-4'>
+                          Ҳали хизматлар қўшилмаган
+                        </p>
+                        {!isAddingService && (
+                          <Button
+                            onClick={() => {
+                              setIsAddingService(true);
+                              // Add default one row
+                              if (services.length === 0) {
+                                addService();
+                              }
+                            }}
+                          >
+                            <Plus className='w-4 h-4 mr-2' />
+                            Хизмат Қўшиш
+                          </Button>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           {/* Visits Tab */}
-          <TabsContent value='visits'>
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center justify-between'>
-                  <span>Таҳлиллар</span>
-                  {exam.analyses && exam.analyses.length > 0 && (
-                    <span className='text-sm font-normal text-muted-foreground'>
-                      ({exam.analyses.length} та)
-                    </span>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {exam.analyses && exam.analyses.length > 0 ? (
-                  <div className='space-y-4'>
-                    {exam.analyses.map((analysis: any, index: number) => {
-                      const paramType = analysis.analysis_parameter_type;
-                      const paramValue = analysis.analysis_parameter_value;
+          {canReadVisits && (
+            <TabsContent value='visits'>
+              <Card>
+                <CardHeader>
+                  <CardTitle className='flex items-center justify-between'>
+                    <span>Таҳлиллар</span>
+                    {exam.analyses && exam.analyses.length > 0 && (
+                      <span className='text-sm font-normal text-muted-foreground'>
+                        ({exam.analyses.length} та)
+                      </span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {exam.analyses && exam.analyses.length > 0 ? (
+                    <div className='space-y-4'>
+                      {exam.analyses.map((analysis: any, index: number) => {
+                        const paramType = analysis.analysis_parameter_type;
+                        const paramValue = analysis.analysis_parameter_value;
 
-                      // Check if this is new structure (single parameter per analysis)
-                      const isNewStructure =
-                        paramType && typeof paramType === 'object';
+                        // Check if this is new structure (single parameter per analysis)
+                        const isNewStructure =
+                          paramType && typeof paramType === 'object';
 
-                      if (isNewStructure) {
-                        // NEW STRUCTURE: Single parameter with detailed info
-                        const isAbnormal =
-                          paramType?.normal_range &&
-                          (() => {
-                            const range =
-                              paramType.normal_range.general ||
-                              paramType.normal_range.male ||
-                              paramType.normal_range.female;
-                            if (range && typeof paramValue === 'number') {
-                              return (
-                                paramValue < range.min || paramValue > range.max
-                              );
-                            }
-                            return false;
-                          })();
+                        if (isNewStructure) {
+                          // NEW STRUCTURE: Single parameter with detailed info
+                          const isAbnormal =
+                            paramType?.normal_range &&
+                            (() => {
+                              const range =
+                                paramType.normal_range.general ||
+                                paramType.normal_range.male ||
+                                paramType.normal_range.female;
+                              if (range && typeof paramValue === 'number') {
+                                return (
+                                  paramValue < range.min ||
+                                  paramValue > range.max
+                                );
+                              }
+                              return false;
+                            })();
 
-                        return (
-                          <Card
-                            key={analysis._id}
-                            className={`border ${
-                              isAbnormal
-                                ? 'border-red-300 bg-red-50/30'
-                                : 'border-primary/10 bg-primary/5'
-                            }`}
-                          >
-                            <CardContent className='pt-4'>
-                              <div className='space-y-4'>
-                                {/* Parameter Info */}
-                                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                                  <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Параметр номи
-                                    </Label>
-                                    <p className='font-bold text-base mt-1'>
-                                      {paramType.parameter_name}
-                                    </p>
-                                    {paramType.parameter_code && (
-                                      <p className='text-xs text-muted-foreground mt-1'>
-                                        Код: {paramType.parameter_code}
+                          return (
+                            <Card
+                              key={analysis._id}
+                              className={`border ${
+                                isAbnormal
+                                  ? 'border-red-300 bg-red-50/30'
+                                  : 'border-primary/10 bg-primary/5'
+                              }`}
+                            >
+                              <CardContent className='pt-4'>
+                                <div className='space-y-4'>
+                                  {/* Parameter Info */}
+                                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Параметр номи
+                                      </Label>
+                                      <p className='font-bold text-base mt-1'>
+                                        {paramType.parameter_name}
                                       </p>
-                                    )}
-                                  </div>
-
-                                  <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Натижа
-                                    </Label>
-                                    <div className='flex items-baseline gap-2 mt-1'>
-                                      <p
-                                        className={`font-bold text-lg ${
-                                          isAbnormal
-                                            ? 'text-red-600'
-                                            : 'text-green-600'
-                                        }`}
-                                      >
-                                        {paramValue}
-                                      </p>
-                                      {paramType.unit && (
-                                        <span className='text-sm text-muted-foreground'>
-                                          {paramType.unit}
-                                        </span>
+                                      {paramType.parameter_code && (
+                                        <p className='text-xs text-muted-foreground mt-1'>
+                                          Код: {paramType.parameter_code}
+                                        </p>
                                       )}
                                     </div>
-                                  </div>
-                                </div>
 
-                                {/* Normal Range */}
-                                {paramType?.normal_range && (
-                                  <div className='bg-white rounded border p-3'>
-                                    <Label className='text-xs text-muted-foreground block mb-2'>
-                                      Меъёрий қийматлар
-                                    </Label>
-                                    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm'>
-                                      {paramType.normal_range.general && (
-                                        <div>
-                                          <p className='text-xs text-muted-foreground'>
-                                            Умумий:
-                                          </p>
-                                          <p className='font-semibold'>
-                                            {paramType.normal_range.general.min}{' '}
-                                            -{' '}
-                                            {paramType.normal_range.general.max}
-                                            {paramType.normal_range.general
-                                              .value &&
-                                              ` (${paramType.normal_range.general.value})`}
-                                          </p>
-                                        </div>
-                                      )}
-                                      {paramType.normal_range.male && (
-                                        <div>
-                                          <p className='text-xs text-muted-foreground'>
-                                            Эркаклар:
-                                          </p>
-                                          <p className='font-semibold'>
-                                            {paramType.normal_range.male.min} -{' '}
-                                            {paramType.normal_range.male.max}
-                                            {paramType.normal_range.male
-                                              .value &&
-                                              ` (${paramType.normal_range.male.value})`}
-                                          </p>
-                                        </div>
-                                      )}
-                                      {paramType.normal_range.female && (
-                                        <div>
-                                          <p className='text-xs text-muted-foreground'>
-                                            Аёллар:
-                                          </p>
-                                          <p className='font-semibold'>
-                                            {paramType.normal_range.female.min}{' '}
-                                            -{' '}
-                                            {paramType.normal_range.female.max}
-                                            {paramType.normal_range.female
-                                              .value &&
-                                              ` (${paramType.normal_range.female.value})`}
-                                          </p>
-                                        </div>
-                                      )}
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Натижа
+                                      </Label>
+                                      <div className='flex items-baseline gap-2 mt-1'>
+                                        <p
+                                          className={`font-bold text-lg ${
+                                            isAbnormal
+                                              ? 'text-red-600'
+                                              : 'text-green-600'
+                                          }`}
+                                        >
+                                          {paramValue}
+                                        </p>
+                                        {paramType.unit && (
+                                          <span className='text-sm text-muted-foreground'>
+                                            {paramType.unit}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
-                                )}
 
-                                {/* Description */}
-                                {paramType?.description && (
-                                  <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Таърифи
-                                    </Label>
-                                    <p className='text-sm mt-1 bg-blue-50 p-2 rounded border border-blue-200'>
-                                      {paramType.description}
-                                    </p>
-                                  </div>
-                                )}
-
-                                {/* Status Indicator */}
-                                {isAbnormal && (
-                                  <div className='bg-red-100 border border-red-300 rounded p-3'>
-                                    <p className='text-sm font-semibold text-red-800 flex items-center gap-2'>
-                                      <AlertTriangle className='w-4 h-4' />
-                                      Огоҳлантириш: Натижа меъёрий қийматдан
-                                      ташқарида
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      } else {
-                        // OLD STRUCTURE: Analysis with multiple results
-                        return (
-                          <Card
-                            key={analysis._id}
-                            className='border border-primary/10 bg-primary/5'
-                          >
-                            <CardContent className='pt-4'>
-                              <div className='flex items-center justify-between mb-3'>
-                                <div>
-                                  <span className='text-sm font-medium text-primary'>
-                                    Таҳлил #{index + 1}
-                                  </span>
-                                  {analysis.created_at && (
-                                    <p className='text-xs text-muted-foreground mt-1'>
-                                      {new Date(
-                                        analysis.created_at
-                                      ).toLocaleString('uz-UZ', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                      })}
-                                    </p>
+                                  {/* Normal Range */}
+                                  {paramType?.normal_range && (
+                                    <div className='bg-white rounded border p-3'>
+                                      <Label className='text-xs text-muted-foreground block mb-2'>
+                                        Меъёрий қийматлар
+                                      </Label>
+                                      <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm'>
+                                        {paramType.normal_range.general && (
+                                          <div>
+                                            <p className='text-xs text-muted-foreground'>
+                                              Умумий:
+                                            </p>
+                                            <p className='font-semibold'>
+                                              {
+                                                paramType.normal_range.general
+                                                  .min
+                                              }{' '}
+                                              -{' '}
+                                              {
+                                                paramType.normal_range.general
+                                                  .max
+                                              }
+                                              {paramType.normal_range.general
+                                                .value &&
+                                                ` (${paramType.normal_range.general.value})`}
+                                            </p>
+                                          </div>
+                                        )}
+                                        {paramType.normal_range.male && (
+                                          <div>
+                                            <p className='text-xs text-muted-foreground'>
+                                              Эркаклар:
+                                            </p>
+                                            <p className='font-semibold'>
+                                              {paramType.normal_range.male.min}{' '}
+                                              -{' '}
+                                              {paramType.normal_range.male.max}
+                                              {paramType.normal_range.male
+                                                .value &&
+                                                ` (${paramType.normal_range.male.value})`}
+                                            </p>
+                                          </div>
+                                        )}
+                                        {paramType.normal_range.female && (
+                                          <div>
+                                            <p className='text-xs text-muted-foreground'>
+                                              Аёллар:
+                                            </p>
+                                            <p className='font-semibold'>
+                                              {
+                                                paramType.normal_range.female
+                                                  .min
+                                              }{' '}
+                                              -{' '}
+                                              {
+                                                paramType.normal_range.female
+                                                  .max
+                                              }
+                                              {paramType.normal_range.female
+                                                .value &&
+                                                ` (${paramType.normal_range.female.value})`}
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
                                   )}
-                                </div>
-                                {analysis.status && (
-                                  <div className='text-right'>
-                                    <span
-                                      className={`inline-block px-3 py-1 rounded text-xs font-semibold ${
-                                        analysis.status === 'completed'
-                                          ? 'bg-green-100 text-green-800'
-                                          : analysis.status === 'active'
-                                          ? 'bg-blue-100 text-blue-800'
-                                          : analysis.status === 'pending'
-                                          ? 'bg-yellow-100 text-yellow-800'
-                                          : 'bg-gray-200 text-gray-700'
-                                      }`}
-                                    >
-                                      {analysis.status === 'completed'
-                                        ? 'Тугалланган'
-                                        : analysis.status === 'active'
-                                        ? 'Фаол'
-                                        : analysis.status === 'pending'
-                                        ? 'Кутилмоқда'
-                                        : analysis.status}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
 
-                              <div className='space-y-3'>
-                                {analysis.analysis_type && (
-                                  <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Таҳлил Тури
-                                    </Label>
-                                    <p className='font-semibold text-sm mt-1'>
-                                      {typeof analysis.analysis_type ===
-                                      'object'
-                                        ? analysis.analysis_type.name
-                                        : analysis.analysis_type}
-                                    </p>
-                                  </div>
-                                )}
-
-                                {analysis.level && (
-                                  <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Даража
-                                    </Label>
-                                    <p className='font-semibold text-sm mt-1'>
-                                      {analysis.level}
-                                    </p>
-                                  </div>
-                                )}
-
-                                {typeof analysis.analysis_type === 'object' &&
-                                  analysis.analysis_type.description && (
+                                  {/* Description */}
+                                  {paramType?.description && (
                                     <div>
                                       <Label className='text-xs text-muted-foreground'>
                                         Таърифи
                                       </Label>
                                       <p className='text-sm mt-1 bg-blue-50 p-2 rounded border border-blue-200'>
-                                        {analysis.analysis_type.description}
+                                        {paramType.description}
                                       </p>
                                     </div>
                                   )}
 
-                                {analysis.clinical_indications && (
+                                  {/* Status Indicator */}
+                                  {isAbnormal && (
+                                    <div className='bg-red-100 border border-red-300 rounded p-3'>
+                                      <p className='text-sm font-semibold text-red-800 flex items-center gap-2'>
+                                        <AlertTriangle className='w-4 h-4' />
+                                        Огоҳлантириш: Натижа меъёрий қийматдан
+                                        ташқарида
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        } else {
+                          // OLD STRUCTURE: Analysis with multiple results
+                          return (
+                            <Card
+                              key={analysis._id}
+                              className='border border-primary/10 bg-primary/5'
+                            >
+                              <CardContent className='pt-4'>
+                                <div className='flex items-center justify-between mb-3'>
                                   <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Клиник Кўрсатмалар
-                                    </Label>
-                                    <p className='text-sm mt-1 bg-white p-2 rounded border'>
-                                      {analysis.clinical_indications}
-                                    </p>
+                                    <span className='text-sm font-medium text-primary'>
+                                      Таҳлил #{index + 1}
+                                    </span>
+                                    {analysis.created_at && (
+                                      <p className='text-xs text-muted-foreground mt-1'>
+                                        {new Date(
+                                          analysis.created_at
+                                        ).toLocaleString('uz-UZ', {
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                        })}
+                                      </p>
+                                    )}
                                   </div>
-                                )}
+                                  {analysis.status && (
+                                    <div className='text-right'>
+                                      <span
+                                        className={`inline-block px-3 py-1 rounded text-xs font-semibold ${
+                                          analysis.status === 'completed'
+                                            ? 'bg-green-100 text-green-800'
+                                            : analysis.status === 'active'
+                                            ? 'bg-blue-100 text-blue-800'
+                                            : analysis.status === 'pending'
+                                            ? 'bg-yellow-100 text-yellow-800'
+                                            : 'bg-gray-200 text-gray-700'
+                                        }`}
+                                      >
+                                        {analysis.status === 'completed'
+                                          ? 'Тугалланган'
+                                          : analysis.status === 'active'
+                                          ? 'Фаол'
+                                          : analysis.status === 'pending'
+                                          ? 'Кутилмоқда'
+                                          : analysis.status}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
 
-                                {analysis.results &&
-                                  analysis.results.length > 0 && (
+                                <div className='space-y-3'>
+                                  {analysis.analysis_type && (
                                     <div>
-                                      <Label className='text-xs text-muted-foreground mb-2 block'>
-                                        Натижалар
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Таҳлил Тури
                                       </Label>
-                                      <div className='bg-white rounded border'>
-                                        <div className='overflow-x-auto'>
-                                          <table className='w-full text-sm'>
-                                            <thead className='bg-muted/50'>
-                                              <tr>
-                                                <th className='text-left p-2 font-semibold'>
-                                                  Параметр
-                                                </th>
-                                                <th className='text-right p-2 font-semibold'>
-                                                  Қиймат
-                                                </th>
-                                                <th className='text-right p-2 font-semibold'>
-                                                  Меъёр
-                                                </th>
-                                              </tr>
-                                            </thead>
-                                            <tbody>
-                                              {analysis.results.map(
-                                                (result: any) => {
-                                                  const resParamType =
-                                                    typeof result.analysis_parameter_type ===
-                                                    'object'
-                                                      ? result.analysis_parameter_type
-                                                      : null;
-                                                  const resValue =
-                                                    result.analysis_parameter_value;
-
-                                                  // Check if abnormal
-                                                  const resIsAbnormal =
-                                                    resParamType?.normal_range &&
-                                                    (() => {
-                                                      const range =
-                                                        resParamType
-                                                          .normal_range
-                                                          .general ||
-                                                        resParamType
-                                                          .normal_range.male ||
-                                                        resParamType
-                                                          .normal_range.female;
-                                                      if (
-                                                        range &&
-                                                        typeof resValue ===
-                                                          'number'
-                                                      ) {
-                                                        return (
-                                                          resValue <
-                                                            range.min ||
-                                                          resValue > range.max
-                                                        );
-                                                      }
-                                                      return false;
-                                                    })();
-
-                                                  const normalRangeText =
-                                                    resParamType?.normal_range &&
-                                                    (() => {
-                                                      const range =
-                                                        resParamType
-                                                          .normal_range
-                                                          .general ||
-                                                        resParamType
-                                                          .normal_range.male ||
-                                                        resParamType
-                                                          .normal_range.female;
-                                                      if (range) {
-                                                        return `${range.min} - ${range.max}`;
-                                                      }
-                                                      return '-';
-                                                    })();
-
-                                                  return (
-                                                    <tr
-                                                      key={result._id}
-                                                      className={`border-t ${
-                                                        resIsAbnormal
-                                                          ? 'bg-red-50'
-                                                          : ''
-                                                      }`}
-                                                    >
-                                                      <td className='p-2'>
-                                                        {resParamType
-                                                          ? resParamType.parameter_name
-                                                          : result.analysis_parameter_type}
-                                                      </td>
-                                                      <td
-                                                        className={`p-2 text-right font-medium ${
-                                                          resIsAbnormal
-                                                            ? 'text-red-600 font-bold'
-                                                            : 'text-green-600'
-                                                        }`}
-                                                      >
-                                                        {resValue}
-                                                        {resParamType?.unit && (
-                                                          <span className='text-xs text-muted-foreground ml-1'>
-                                                            {resParamType.unit}
-                                                          </span>
-                                                        )}
-                                                      </td>
-                                                      <td className='p-2 text-right text-muted-foreground'>
-                                                        {normalRangeText || '-'}
-                                                      </td>
-                                                    </tr>
-                                                  );
-                                                }
-                                              )}
-                                            </tbody>
-                                          </table>
-                                        </div>
-                                      </div>
+                                      <p className='font-semibold text-sm mt-1'>
+                                        {typeof analysis.analysis_type ===
+                                        'object'
+                                          ? analysis.analysis_type.name
+                                          : analysis.analysis_type}
+                                      </p>
                                     </div>
                                   )}
 
-                                {analysis.comment && (
-                                  <div>
-                                    <Label className='text-xs text-muted-foreground'>
-                                      Изоҳ
-                                    </Label>
-                                    <p className='text-sm mt-1 bg-yellow-50 p-2 rounded border border-yellow-200'>
-                                      {analysis.comment}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      }
-                    })}
-                  </div>
-                ) : (
-                  <div className='text-center py-8'>
-                    <p className='text-muted-foreground'>
-                      Ҳали таҳлиллар қўшилмаган
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                                  {analysis.level && (
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Даража
+                                      </Label>
+                                      <p className='font-semibold text-sm mt-1'>
+                                        {analysis.level}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {typeof analysis.analysis_type === 'object' &&
+                                    analysis.analysis_type.description && (
+                                      <div>
+                                        <Label className='text-xs text-muted-foreground'>
+                                          Таърифи
+                                        </Label>
+                                        <p className='text-sm mt-1 bg-blue-50 p-2 rounded border border-blue-200'>
+                                          {analysis.analysis_type.description}
+                                        </p>
+                                      </div>
+                                    )}
+
+                                  {analysis.clinical_indications && (
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Клиник Кўрсатмалар
+                                      </Label>
+                                      <p className='text-sm mt-1 bg-white p-2 rounded border'>
+                                        {analysis.clinical_indications}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {analysis.results &&
+                                    analysis.results.length > 0 && (
+                                      <div>
+                                        <Label className='text-xs text-muted-foreground mb-2 block'>
+                                          Натижалар
+                                        </Label>
+                                        <div className='bg-white rounded border'>
+                                          <div className='overflow-x-auto'>
+                                            <table className='w-full text-sm'>
+                                              <thead className='bg-muted/50'>
+                                                <tr>
+                                                  <th className='text-left p-2 font-semibold'>
+                                                    Параметр
+                                                  </th>
+                                                  <th className='text-right p-2 font-semibold'>
+                                                    Қиймат
+                                                  </th>
+                                                  <th className='text-right p-2 font-semibold'>
+                                                    Меъёр
+                                                  </th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {analysis.results.map(
+                                                  (result: any) => {
+                                                    const resParamType =
+                                                      typeof result.analysis_parameter_type ===
+                                                      'object'
+                                                        ? result.analysis_parameter_type
+                                                        : null;
+                                                    const resValue =
+                                                      result.analysis_parameter_value;
+
+                                                    // Check if abnormal
+                                                    const resIsAbnormal =
+                                                      resParamType?.normal_range &&
+                                                      (() => {
+                                                        const range =
+                                                          resParamType
+                                                            .normal_range
+                                                            .general ||
+                                                          resParamType
+                                                            .normal_range
+                                                            .male ||
+                                                          resParamType
+                                                            .normal_range
+                                                            .female;
+                                                        if (
+                                                          range &&
+                                                          typeof resValue ===
+                                                            'number'
+                                                        ) {
+                                                          return (
+                                                            resValue <
+                                                              range.min ||
+                                                            resValue > range.max
+                                                          );
+                                                        }
+                                                        return false;
+                                                      })();
+
+                                                    const normalRangeText =
+                                                      resParamType?.normal_range &&
+                                                      (() => {
+                                                        const range =
+                                                          resParamType
+                                                            .normal_range
+                                                            .general ||
+                                                          resParamType
+                                                            .normal_range
+                                                            .male ||
+                                                          resParamType
+                                                            .normal_range
+                                                            .female;
+                                                        if (range) {
+                                                          return `${range.min} - ${range.max}`;
+                                                        }
+                                                        return '-';
+                                                      })();
+
+                                                    return (
+                                                      <tr
+                                                        key={result._id}
+                                                        className={`border-t ${
+                                                          resIsAbnormal
+                                                            ? 'bg-red-50'
+                                                            : ''
+                                                        }`}
+                                                      >
+                                                        <td className='p-2'>
+                                                          {resParamType
+                                                            ? resParamType.parameter_name
+                                                            : result.analysis_parameter_type}
+                                                        </td>
+                                                        <td
+                                                          className={`p-2 text-right font-medium ${
+                                                            resIsAbnormal
+                                                              ? 'text-red-600 font-bold'
+                                                              : 'text-green-600'
+                                                          }`}
+                                                        >
+                                                          {resValue}
+                                                          {resParamType?.unit && (
+                                                            <span className='text-xs text-muted-foreground ml-1'>
+                                                              {
+                                                                resParamType.unit
+                                                              }
+                                                            </span>
+                                                          )}
+                                                        </td>
+                                                        <td className='p-2 text-right text-muted-foreground'>
+                                                          {normalRangeText ||
+                                                            '-'}
+                                                        </td>
+                                                      </tr>
+                                                    );
+                                                  }
+                                                )}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                  {analysis.comment && (
+                                    <div>
+                                      <Label className='text-xs text-muted-foreground'>
+                                        Изоҳ
+                                      </Label>
+                                      <p className='text-sm mt-1 bg-yellow-50 p-2 rounded border border-yellow-200'>
+                                        {analysis.comment}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        }
+                      })}
+                    </div>
+                  ) : (
+                    <div className='text-center py-8'>
+                      <p className='text-muted-foreground'>
+                        Ҳали таҳлиллар қўшилмаган
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           {/* Images Tab */}
-          <TabsContent value='images'>
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center justify-between'>
-                  <span>Тасвирлар</span>
-                  {exam.images &&
-                    Array.isArray(exam.images) &&
-                    exam.images.length > 0 &&
-                    (() => {
-                      const totalImagesCount = (exam.images as any[]).reduce(
-                        (total: number, img: any) => {
-                          if (
-                            img?.image_paths &&
-                            Array.isArray(img.image_paths)
-                          ) {
-                            return total + img.image_paths.length;
-                          }
-                          return total;
-                        },
-                        0
-                      );
+          {canReadImages && (
+            <TabsContent value='images'>
+              <Card>
+                <CardHeader>
+                  <CardTitle className='flex items-center justify-between'>
+                    <span>Тасвирлар</span>
+                    {exam.images &&
+                      Array.isArray(exam.images) &&
+                      exam.images.length > 0 &&
+                      (() => {
+                        const totalImagesCount = (exam.images as any[]).reduce(
+                          (total: number, img: any) => {
+                            if (
+                              img?.image_paths &&
+                              Array.isArray(img.image_paths)
+                            ) {
+                              return total + img.image_paths.length;
+                            }
+                            return total;
+                          },
+                          0
+                        );
 
-                      return totalImagesCount > 0 ? (
-                        <span className='text-sm font-normal text-muted-foreground'>
-                          ({totalImagesCount} та)
-                        </span>
-                      ) : null;
-                    })()}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {exam.images && exam.images.length > 0 ? (
-                  <div className='space-y-3'>
-                    {exam.images.map((image: any, index: number) => {
-                      if (
-                        !image?.image_paths ||
-                        !Array.isArray(image.image_paths) ||
-                        image.image_paths.length === 0
-                      ) {
-                        return null;
-                      }
+                        return totalImagesCount > 0 ? (
+                          <span className='text-sm font-normal text-muted-foreground'>
+                            ({totalImagesCount} та)
+                          </span>
+                        ) : null;
+                      })()}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {exam.images && exam.images.length > 0 ? (
+                    <div className='space-y-3'>
+                      {exam.images.map((image: any, index: number) => {
+                        if (
+                          !image?.image_paths ||
+                          !Array.isArray(image.image_paths) ||
+                          image.image_paths.length === 0
+                        ) {
+                          return null;
+                        }
 
-                      // Display first image from image_paths as thumbnail
-                      const thumbnailPath = image.image_paths[0];
-                      const bodyPartLabel =
-                        bodyPartLabels[image.body_part] ||
-                        image.body_part ||
-                        'Кўрсатилмаган';
-                      const imagingTypeName =
-                        image.imaging_type_id?.name || 'Номаълум';
-                      const imageDate = image.created_at
-                        ? new Date(image.created_at).toLocaleDateString('uz-UZ')
-                        : '';
+                        const thumbnailPath = image.image_paths[0];
+                        const bodyPartLabel =
+                          bodyPartLabels[image.body_part] ||
+                          image.body_part ||
+                          'Кўрсатилмаган';
+                        const imagingTypeName =
+                          image.imaging_type_id?.name || 'Номаълум';
+                        const imageDate = image.created_at
+                          ? new Date(image.created_at).toLocaleDateString(
+                              'uz-UZ'
+                            )
+                          : '';
 
-                      return (
-                        <Card
-                          key={image._id || index}
-                          className='overflow-hidden hover:shadow-lg transition-shadow cursor-pointer'
-                          onClick={() => {
-                            setSelectedImage(image);
-                            setShowViewModal(true);
-                          }}
-                        >
-                          <div className='flex flex-col sm:flex-row'>
-                            {/* Image Section */}
-                            <div className='relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0'>
-                              <img
-                                src={thumbnailPath}
-                                alt={image.description || `Тасвир ${index + 1}`}
-                                className='w-full h-full object-cover hover:scale-105 transition-transform'
-                                onError={(e) => {
-                                  e.currentTarget.src =
-                                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="14"%3EТасвир топилмади%3C/text%3E%3C/svg%3E';
-                                }}
-                              />
-                              {image.image_paths.length > 1 && (
-                                <div className='absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded'>
-                                  +{image.image_paths.length - 1}
-                                </div>
-                              )}
-                              <div className='absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center group'>
-                                <Eye className='w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity' />
-                              </div>
-                            </div>
-
-                            {/* Info Section */}
-                            <div className='flex-1 p-4'>
-                              <div className='space-y-2'>
-                                <h4
-                                  className='font-semibold text-base line-clamp-2'
-                                  title={image.description}
-                                >
-                                  {image.description || 'Тавсиф йўқ'}
-                                </h4>
-                                <div className='flex flex-wrap items-center gap-3 text-sm text-muted-foreground'>
-                                  <div className='flex items-center gap-1'>
-                                    <span className='font-medium text-foreground'>
-                                      {imagingTypeName}
-                                    </span>
-                                  </div>
-                                  <span>•</span>
-                                  <div className='flex items-center gap-1'>
-                                    <span>{bodyPartLabel}</span>
-                                  </div>
-                                  <span>•</span>
-                                  <div className='flex items-center gap-1'>
-                                    <span>
-                                      {image.image_paths.length} та тасвир
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className='text-xs text-muted-foreground'>
-                                  {imageDate}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className='text-center py-8'>
-                    <p className='text-muted-foreground'>
-                      Ҳали тасвирлар қўшилмаган
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Neurologic Status Tab */}
-          <TabsContent value='neurologic'>
-            <Card>
-              <CardContent>
-                <div className='py-6'>
-                  {/* Add Neurologic Form */}
-                  {isAddingNeurologic && (
-                    <Card className='border-2 border-primary/20 bg-primary/5'>
-                      <CardContent className='pt-4'>
-                        <div className='space-y-4'>
-                          <h3 className='font-semibold text-lg mb-4'>
-                            Янги Неврологик Статус
-                          </h3>
-                          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                            {Object.keys(neurologicForm).map((field) => (
-                              <div key={field} className='space-y-2'>
-                                <Label className='text-sm font-medium'>
-                                  {neurologicFieldLabels[field] || field}
-                                </Label>
-                                <Textarea
-                                  placeholder={`${
-                                    neurologicFieldLabels[field] || field
-                                  } киритинг...`}
-                                  value={
-                                    neurologicForm[
-                                      field as keyof typeof neurologicForm
-                                    ]
-                                  }
-                                  onChange={(e) =>
-                                    setNeurologicForm({
-                                      ...neurologicForm,
-                                      [field]: e.target.value,
-                                    })
-                                  }
-                                  className='min-h-20 resize-y'
-                                  rows={3}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                          <div className='flex gap-2 justify-end pt-4'>
-                            <Button
-                              variant='outline'
-                              onClick={() => {
-                                setIsAddingNeurologic(false);
-                                setNeurologicForm(initialNeurologicForm);
-                              }}
-                              disabled={isCreatingNeurologic}
-                            >
-                              <X className='w-4 h-4 mr-2' />
-                              Бекор қилиш
-                            </Button>
-                            <Button
-                              onClick={handleAddNeurologic}
-                              disabled={isCreatingNeurologic}
-                            >
-                              <Save className='w-4 h-4 mr-2' />
-                              {isCreatingNeurologic
-                                ? 'Сақланмоқда...'
-                                : 'Сақлаш'}
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Neurologic Status List */}
-                  {neurologicStatuses.length > 0
-                    ? neurologicStatuses.map(
-                        (neurologic: any, index: number) => (
+                        return (
                           <Card
-                            key={neurologic._id}
-                            className='border border-primary/10'
+                            key={image._id || index}
+                            className='overflow-hidden hover:shadow-lg transition-shadow cursor-pointer'
+                            onClick={() => {
+                              setSelectedImage(image);
+                              setShowViewModal(true);
+                            }}
                           >
-                            <CardContent className='pt-4'>
-                              {editingNeurologicId === neurologic._id ? (
-                                <div className='space-y-4'>
-                                  <h3 className='font-semibold text-lg mb-4'>
-                                    Таҳрирлаш
-                                  </h3>
-                                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                                    {Object.keys(neurologicForm).map(
-                                      (field) => (
-                                        <div key={field} className='space-y-2'>
-                                          <Label className='text-sm font-medium'>
-                                            {neurologicFieldLabels[field] ||
-                                              field}
-                                          </Label>
-                                          <Textarea
-                                            placeholder={`${
-                                              neurologicFieldLabels[field] ||
-                                              field
-                                            } киритинг...`}
-                                            value={
-                                              neurologicForm[
-                                                field as keyof typeof neurologicForm
-                                              ]
-                                            }
-                                            onChange={(e) =>
-                                              setNeurologicForm({
-                                                ...neurologicForm,
-                                                [field]: e.target.value,
-                                              })
-                                            }
-                                            className='min-h-20 resize-y'
-                                            rows={3}
-                                          />
-                                        </div>
-                                      )
-                                    )}
+                            <div className='flex flex-col sm:flex-row'>
+                              <div className='relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0'>
+                                <img
+                                  src={thumbnailPath}
+                                  alt={
+                                    image.description || `Тасвир ${index + 1}`
+                                  }
+                                  className='w-full h-full object-cover hover:scale-105 transition-transform'
+                                  onError={(e) => {
+                                    e.currentTarget.src =
+                                      'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="14"%3EТасвир топилмади%3C/text%3E%3C/svg%3E';
+                                  }}
+                                />
+                                {image.image_paths.length > 1 && (
+                                  <div className='absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded'>
+                                    +{image.image_paths.length - 1}
                                   </div>
-                                  <div className='flex gap-2 justify-end pt-4'>
-                                    <Button
-                                      variant='outline'
-                                      onClick={cancelEditNeurologic}
-                                      disabled={isUpdatingNeurologic}
-                                    >
-                                      <X className='w-4 h-4 mr-2' />
-                                      Бекор қилиш
-                                    </Button>
-                                    <Button
-                                      onClick={() =>
-                                        handleUpdateNeurologic(neurologic._id)
-                                      }
-                                      disabled={isUpdatingNeurologic}
-                                    >
-                                      <Save className='w-4 h-4 mr-2' />
-                                      {isUpdatingNeurologic
-                                        ? 'Сақланмоқда...'
-                                        : 'Сақлаш'}
-                                    </Button>
-                                  </div>
+                                )}
+                                <div className='absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center group'>
+                                  <Eye className='w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity' />
                                 </div>
-                              ) : (
-                                <>
-                                  <div className='flex items-center justify-between mb-4'>
-                                    <div className='flex items-center gap-2'>
-                                      <Brain className='w-5 h-5 text-primary' />
-                                      <span className='text-sm font-medium text-primary'>
-                                        Неврологик Статус #{index + 1}
+                              </div>
+
+                              <div className='flex-1 p-4'>
+                                <div className='space-y-2'>
+                                  <h4
+                                    className='font-semibold text-base line-clamp-2'
+                                    title={image.description}
+                                  >
+                                    {image.description || 'Тавсиф йўқ'}
+                                  </h4>
+                                  <div className='flex flex-wrap items-center gap-3 text-sm text-muted-foreground'>
+                                    <div className='flex items-center gap-1'>
+                                      <span className='font-medium text-foreground'>
+                                        {imagingTypeName}
                                       </span>
                                     </div>
-                                    <div className='flex gap-2'>
-                                      <NeurologicStatusDownloadButton
-                                        exam={exam}
-                                        neurologic={neurologic}
-                                      />
-                                      <Button
-                                        variant='ghost'
-                                        size='sm'
-                                        onClick={() =>
-                                          startEditNeurologic(neurologic)
-                                        }
-                                        disabled={editingNeurologicId !== null}
-                                      >
-                                        <Edit className='h-4 w-4' />
-                                      </Button>
-                                      <Button
-                                        variant='ghost'
-                                        size='sm'
-                                        onClick={() =>
-                                          handleDeleteNeurologic(neurologic._id)
-                                        }
-                                        disabled={isDeletingNeurologic}
-                                        className='text-destructive hover:text-destructive hover:bg-destructive/10'
-                                      >
-                                        <Trash2 className='h-4 w-4' />
-                                      </Button>
+                                    <span>•</span>
+                                    <div className='flex items-center gap-1'>
+                                      <span>{bodyPartLabel}</span>
+                                    </div>
+                                    <span>•</span>
+                                    <div className='flex items-center gap-1'>
+                                      <span>
+                                        {image.image_paths.length} та тасвир
+                                      </span>
                                     </div>
                                   </div>
-                                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                                    {Object.keys(initialNeurologicForm).map(
-                                      (field) => {
-                                        const value = neurologic[field];
-                                        if (!value) return null;
-                                        return (
+                                  <div className='text-xs text-muted-foreground'>
+                                    {imageDate}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className='text-center py-8'>
+                      <p className='text-muted-foreground'>
+                        Ҳали тасвирлар қўшилмаган
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {/* Neurologic Status Tab */}
+          {canReadExamination && (
+            <TabsContent value='neurologic'>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Неврологик Статус</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className='py-6'>
+                    {/* Add Neurologic Form */}
+                    {isAddingNeurologic && (
+                      <Card className='border-2 border-primary/20 bg-primary/5'>
+                        <CardContent className='pt-4'>
+                          <div className='space-y-4'>
+                            <h3 className='font-semibold text-lg mb-4'>
+                              Янги Неврологик Статус
+                            </h3>
+                            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                              {Object.keys(neurologicForm).map((field) => (
+                                <div key={field} className='space-y-2'>
+                                  <Label className='text-sm font-medium'>
+                                    {neurologicFieldLabels[field] || field}
+                                  </Label>
+                                  <Textarea
+                                    placeholder={`${
+                                      neurologicFieldLabels[field] || field
+                                    } киритинг...`}
+                                    value={
+                                      neurologicForm[
+                                        field as keyof typeof neurologicForm
+                                      ]
+                                    }
+                                    onChange={(e) =>
+                                      setNeurologicForm({
+                                        ...neurologicForm,
+                                        [field]: e.target.value,
+                                      })
+                                    }
+                                    className='min-h-20 resize-y'
+                                    rows={3}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            <div className='flex gap-2 justify-end pt-4'>
+                              <Button
+                                variant='outline'
+                                onClick={() => {
+                                  setIsAddingNeurologic(false);
+                                  setNeurologicForm(initialNeurologicForm);
+                                }}
+                                disabled={isCreatingNeurologic}
+                              >
+                                <X className='w-4 h-4 mr-2' />
+                                Бекор қилиш
+                              </Button>
+                              <Button
+                                onClick={handleAddNeurologic}
+                                disabled={isCreatingNeurologic}
+                              >
+                                <Save className='w-4 h-4 mr-2' />
+                                {isCreatingNeurologic
+                                  ? 'Сақланмоқда...'
+                                  : 'Сақлаш'}
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Neurologic Status List */}
+                    {neurologicStatuses.length > 0
+                      ? neurologicStatuses.map(
+                          (neurologic: any, index: number) => (
+                            <Card
+                              key={neurologic._id}
+                              className='border border-primary/10'
+                            >
+                              <CardContent className='pt-4'>
+                                {editingNeurologicId === neurologic._id ? (
+                                  <div className='space-y-4'>
+                                    <h3 className='font-semibold text-lg mb-4'>
+                                      Таҳрирлаш
+                                    </h3>
+                                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                                      {Object.keys(neurologicForm).map(
+                                        (field) => (
                                           <div
                                             key={field}
-                                            className='bg-muted/50 p-3 rounded-lg'
+                                            className='space-y-2'
                                           >
-                                            <Label className='text-xs text-muted-foreground block mb-1'>
+                                            <Label className='text-sm font-medium'>
                                               {neurologicFieldLabels[field] ||
                                                 field}
                                             </Label>
-                                            <p className='text-sm font-medium whitespace-pre-wrap'>
-                                              {value}
-                                            </p>
+                                            <Textarea
+                                              placeholder={`${
+                                                neurologicFieldLabels[field] ||
+                                                field
+                                              } киритинг...`}
+                                              value={
+                                                neurologicForm[
+                                                  field as keyof typeof neurologicForm
+                                                ]
+                                              }
+                                              onChange={(e) =>
+                                                setNeurologicForm({
+                                                  ...neurologicForm,
+                                                  [field]: e.target.value,
+                                                })
+                                              }
+                                              className='min-h-20 resize-y'
+                                              rows={3}
+                                            />
                                           </div>
-                                        );
-                                      }
-                                    )}
-                                  </div>
-                                  {neurologic.created_at && (
-                                    <div className='mt-4 pt-3 border-t border-primary/10'>
-                                      <p className='text-xs text-muted-foreground'>
-                                        Яратилган:{' '}
-                                        {new Date(
-                                          neurologic.created_at
-                                        ).toLocaleString('uz-UZ')}
-                                      </p>
+                                        )
+                                      )}
                                     </div>
-                                  )}
-                                </>
-                              )}
-                            </CardContent>
-                          </Card>
+                                    <div className='flex gap-2 justify-end pt-4'>
+                                      <Button
+                                        variant='outline'
+                                        onClick={cancelEditNeurologic}
+                                        disabled={isUpdatingNeurologic}
+                                      >
+                                        <X className='w-4 h-4 mr-2' />
+                                        Бекор қилиш
+                                      </Button>
+                                      <Button
+                                        onClick={() =>
+                                          handleUpdateNeurologic(neurologic._id)
+                                        }
+                                        disabled={isUpdatingNeurologic}
+                                      >
+                                        <Save className='w-4 h-4 mr-2' />
+                                        {isUpdatingNeurologic
+                                          ? 'Сақланмоқда...'
+                                          : 'Сақлаш'}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className='flex items-center justify-between mb-4'>
+                                      <div className='flex items-center gap-2'>
+                                        <Brain className='w-5 h-5 text-primary' />
+                                        <span className='text-sm font-medium text-primary'>
+                                          Неврологик Статус #{index + 1}
+                                        </span>
+                                      </div>
+                                      <div className='flex gap-2'>
+                                        <NeurologicStatusDownloadButton
+                                          exam={exam}
+                                          neurologic={neurologic}
+                                        />
+                                        <Button
+                                          variant='ghost'
+                                          size='sm'
+                                          onClick={() =>
+                                            startEditNeurologic(neurologic)
+                                          }
+                                          disabled={
+                                            editingNeurologicId !== null
+                                          }
+                                        >
+                                          <Edit className='h-4 w-4' />
+                                        </Button>
+                                        <Button
+                                          variant='ghost'
+                                          size='sm'
+                                          onClick={() =>
+                                            handleDeleteNeurologic(
+                                              neurologic._id
+                                            )
+                                          }
+                                          disabled={isDeletingNeurologic}
+                                          className='text-destructive hover:text-destructive hover:bg-destructive/10'
+                                        >
+                                          <Trash2 className='h-4 w-4' />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                                      {Object.keys(initialNeurologicForm).map(
+                                        (field) => {
+                                          const value = neurologic[field];
+                                          if (!value) return null;
+                                          return (
+                                            <div
+                                              key={field}
+                                              className='bg-muted/50 p-3 rounded-lg'
+                                            >
+                                              <Label className='text-xs text-muted-foreground block mb-1'>
+                                                {neurologicFieldLabels[field] ||
+                                                  field}
+                                              </Label>
+                                              <p className='text-sm font-medium whitespace-pre-wrap'>
+                                                {value}
+                                              </p>
+                                            </div>
+                                          );
+                                        }
+                                      )}
+                                    </div>
+                                    {neurologic.created_at && (
+                                      <div className='mt-4 pt-3 border-t border-primary/10'>
+                                        <p className='text-xs text-muted-foreground'>
+                                          Яратилган:{' '}
+                                          {new Date(
+                                            neurologic.created_at
+                                          ).toLocaleString('uz-UZ')}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </CardContent>
+                            </Card>
+                          )
                         )
-                      )
-                    : !isAddingNeurologic && (
-                        <div className='text-center py-8'>
-                          <Brain className='w-12 h-12 text-muted-foreground mx-auto mb-4' />
-                          <p className='text-muted-foreground mb-4'>
-                            Ҳали неврологик статус қўшилмаган
-                          </p>
-                          <Button onClick={() => setIsAddingNeurologic(true)}>
-                            <Plus className='w-4 h-4 mr-2' />
-                            Неврологик Статус Қўшиш
-                          </Button>
-                        </div>
-                      )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                      : !isAddingNeurologic && (
+                          <div className='text-center py-8'>
+                            <Brain className='w-12 h-12 text-muted-foreground mx-auto mb-4' />
+                            <p className='text-muted-foreground mb-4'>
+                              Ҳали неврологик статус қўшилмаган
+                            </p>
+                            <Button onClick={() => setIsAddingNeurologic(true)}>
+                              <Plus className='w-4 h-4 mr-2' />
+                              Неврологик Статус Қўшиш
+                            </Button>
+                          </div>
+                        )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* View Medical Images Modal */}

@@ -11,6 +11,7 @@ import {
 	useGetUsersQuery,
 	useUpdateUserMutation,
 } from '@/app/api/userApi/userApi'
+import CantRead from '@/components/common/CantRead'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -37,6 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RoleConstants } from '@/constants/Roles'
 import { SectionConstants } from '@/constants/section'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
+import { useRouteActions } from '@/hooks/RBS'
 import { settingsSchema } from '@/validation/validationSettings'
 import { userSchema } from '@/validation/validationUser'
 import { Edit, Plus, Search, Trash2, Upload } from 'lucide-react'
@@ -89,6 +91,11 @@ const Settings = () => {
 	const [errors, setErrors] = useState<Record<string, string>>({})
 	const [errorsUser, setErrorsUser] = useState<Record<string, string>>({})
 	const [isUploading, setIsUploading] = useState(false)
+
+
+	const { canRead } = useRouteActions('/reports')
+	
+		if (!canRead) return <CantRead />
 
 	// --- API HOOKLAR ---
 	const [createUser] = useCreateUserMutation()

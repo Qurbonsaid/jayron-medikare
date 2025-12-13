@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { usePermission } from '@/hooks/usePermission';
+import { useRouteActions } from '@/hooks/RBS/useRoutePermission';
 import { Edit, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -44,7 +44,9 @@ const initialFormState: FormState = {
 
 export default function Service() {
   const handleRequest = useHandleRequest();
-  const { canCreate, canUpdate, canDelete } = usePermission('service');
+
+  const { canRead: canReadService, canCreate } = useRouteActions('/service');
+  const { canUpdate, canDelete } = useRouteActions('/service/:id');
 
   const [page, setPage] = useState(1);
   const [limit] = useState(100);
@@ -164,6 +166,10 @@ export default function Service() {
   if (isLoading) return <p className='p-4'>Юкланмоқда...</p>;
   if (isError || !data)
     return <p className='p-4 text-red-500'>Хатолик юз берди!</p>;
+  if (!canReadService)
+    return (
+      <div className='p-4 text-red-500'>Ушбу бўлимга кириш рухсати йўқ</div>
+    );
 
   return (
     <div className='min-h-screen bg-background flex flex-col'>

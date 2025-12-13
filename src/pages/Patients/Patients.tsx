@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { usePermission } from '@/hooks/usePermission';
+import { useRouteActions } from '@/hooks/RBS';
 import { Eye, Filter, Phone, Plus, Search, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +29,6 @@ import NewPatient from './components/NewPatient';
 
 const Patients = () => {
   const navigate = useNavigate();
-  const { canCreate } = usePermission('patients');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewPatient, setShowNewPatient] = useState(false);
   const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female'>(
@@ -40,17 +39,17 @@ const Patients = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [queryKey, setQueryKey] = useState(0);
 
+  // Get patient permissions
+  const { canCreate } = useRouteActions('/patients');
+  const { canRead } = useRouteActions('/patient/:id');
+
   // Infinite scroll states for doctors
   const [doctorPage, setDoctorPage] = useState(1);
   const [allDoctors, setAllDoctors] = useState<any[]>([]);
   const [hasMoreDoctors, setHasMoreDoctors] = useState(true);
   const [isLoadingMoreDoctors, setIsLoadingMoreDoctors] = useState(false);
 
-  const {
-    data: patientdata,
-    isLoading,
-    isFetching,
-  } = useGetAllPatientQuery({
+  const { data: patientdata, isLoading } = useGetAllPatientQuery({
     page: currentPage,
     limit: itemsPerPage,
     gender: genderFilter !== 'all' ? genderFilter : undefined,
@@ -119,8 +118,6 @@ const Patients = () => {
   useEffect(() => {
     setQueryKey((prev) => prev + 1);
   }, []);
-
-  console.log(patientdata);
 
   return (
     <div className='min-h-screen bg-background'>
@@ -219,8 +216,8 @@ const Patients = () => {
                 </Button>
               </div>
 
-              {canCreate && (
-                <div className='lg:col-span-2'>
+              <div className='lg:col-span-2'>
+                {canCreate ? (
                   <Button
                     className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full'
                     onClick={() => setShowNewPatient(true)}
@@ -228,8 +225,14 @@ const Patients = () => {
                     <Plus className='w-4 h-4 mr-2' />
                     Янги Бемор
                   </Button>
-                </div>
-              )}
+                ) : (
+                  <div className='alert alert-warning h-10 sm:h-12 flex items-center px-4 rounded-md bg-warning/10 border border-warning/20'>
+                    <span className='text-xs sm:text-sm text-warning'>
+                      Янги бемор қўшиш рухсати йўқ
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </Card>
@@ -313,14 +316,18 @@ const Patients = () => {
                         </div>
                       )}
                     </div>
-                    <Button
-                      size='sm'
-                      className='w-full gradient-primary'
-                      onClick={() => navigate(`/patient/${patient._id}`)}
-                    >
-                      <Eye className='w-4 h-4 mr-2' />
-                      Кўриш
-                    </Button>
+                    {canRead ? (
+                      <Button
+                        size='sm'
+                        className='w-full gradient-primary'
+                        onClick={() => navigate(`/patient/${patient._id}`)}
+                      >
+                        <Eye className='w-4 h-4 mr-2' />
+                        Кўриш
+                      </Button>
+                    ) : (
+                      ''
+                    )}
                   </div>
                 </Card>
               ))}
@@ -380,17 +387,19 @@ const Patients = () => {
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4'>
                           <div className='flex justify-center'>
-                            <Button
-                              size='sm'
-                              variant='outline'
-                              onClick={() =>
-                                navigate(`/patient/${patient._id}`)
-                              }
-                              className='hover:bg-primary hover:text-white transition-smooth text-xs xl:text-sm'
-                            >
-                              <Eye className='w-3 h-3 xl:w-4 xl:h-4 mr-1 xl:mr-2' />
-                              Кўриш
-                            </Button>
+                            {canRead ? (
+                              <Button
+                                size='sm'
+                                variant='outline'
+                                onClick={() =>
+                                  navigate(`/patient/${patient._id}`)
+                                }
+                                className='hover:bg-primary hover:text-white transition-smooth text-xs xl:text-sm'
+                              >
+                                <Eye className='w-3 h-3 xl:w-4 xl:h-4 mr-1 xl:mr-2' />
+                                Кўриш
+                              </Button>
+                            ) : null}
                           </div>
                         </td>
                       </tr>
@@ -481,37 +490,40 @@ const Patients = () => {
                     </PaginationItem>
 
                     {/* Next page */}
-                    {currentPage < patientdata.pagination.total_pages && (
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() => setCurrentPage(currentPage + 1)}
-                          className='cursor-pointer'
-                        >
-                          {currentPage + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
+                    {patientdata?.pagination &&
+                      currentPage < patientdata.pagination.total_pages && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(currentPage + 1)}
+                            className='cursor-pointer'
+                          >
+                            {currentPage + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
 
                     {/* Ellipsis after */}
-                    {currentPage < patientdata.pagination.total_pages - 2 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
+                    {patientdata?.pagination &&
+                      currentPage < patientdata.pagination.total_pages - 2 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
 
                     {/* Last page */}
-                    {currentPage < patientdata.pagination.total_pages - 1 && (
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() =>
-                            setCurrentPage(patientdata.pagination.total_pages)
-                          }
-                          className='cursor-pointer'
-                        >
-                          {patientdata.pagination.total_pages}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
+                    {patientdata?.pagination &&
+                      currentPage < patientdata.pagination.total_pages - 1 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() =>
+                              setCurrentPage(patientdata.pagination.total_pages)
+                            }
+                            className='cursor-pointer'
+                          >
+                            {patientdata.pagination.total_pages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
 
                     <PaginationItem>
                       <PaginationNext
@@ -519,11 +531,13 @@ const Patients = () => {
                           setCurrentPage((prev) =>
                             Math.min(
                               prev + 1,
-                              patientdata.pagination.total_pages
+                              patientdata?.pagination?.total_pages ||
+                                currentPage
                             )
                           )
                         }
                         className={
+                          !patientdata?.pagination ||
                           currentPage === patientdata.pagination.total_pages
                             ? 'pointer-events-none opacity-50'
                             : 'cursor-pointer'

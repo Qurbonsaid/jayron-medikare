@@ -1,39 +1,40 @@
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, ArrowLeft, Users, Bed } from "lucide-react";
+import type { Booking } from '@/app/api/bookingApi';
 import {
   useGetAllBookingsQuery,
   useGetAvailableRoomsQuery,
-} from "@/app/api/bookingApi";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+} from '@/app/api/bookingApi';
+import CantRead from '@/components/common/CantRead';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip';
+import { useRouteActions } from '@/hooks/RBS';
+import { formatPhoneNumber } from '@/lib/utils';
 import {
-  format,
   addDays,
-  startOfWeek,
   endOfWeek,
-  parseISO,
-  isWithinInterval,
+  format,
   isValid,
-} from "date-fns";
-import { uz } from "date-fns/locale";
-import { toast } from "sonner";
-import { formatPhoneNumber } from "@/lib/utils";
+  parseISO,
+  startOfWeek,
+} from 'date-fns';
+import { uz } from 'date-fns/locale';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
-  BookingModal,
-  UpdateBookingModal,
-  DeleteBookingModal,
   BookingDetailModal,
-} from "./components";
-import type { Booking } from "@/app/api/bookingApi";
+  BookingModal,
+  DeleteBookingModal,
+  UpdateBookingModal,
+} from './components';
 
 const RoomCalendar = () => {
   const { roomId, corpusId } = useParams<{
@@ -41,11 +42,14 @@ const RoomCalendar = () => {
     corpusId: string;
   }>();
   const navigate = useNavigate();
+  const { canRead } = useRouteActions('/inpatient-calendar/:corpusId/:roomId');
+
+  if (!canRead) return <CantRead />;
   const [searchParams] = useSearchParams();
 
   // Get initial week start from URL param or default to current week
   const getInitialWeekStart = () => {
-    const startDateParam = searchParams.get("startDate");
+    const startDateParam = searchParams.get('startDate');
     if (startDateParam) {
       try {
         // Parse date from URL (YYYY-MM-DD format)
@@ -55,7 +59,7 @@ const RoomCalendar = () => {
           return startOfWeek(parsedDate, { weekStartsOn: 1 });
         }
       } catch (error) {
-        console.error("Error parsing startDate:", error);
+        console.error('Error parsing startDate:', error);
       }
     }
     // Default to current week
@@ -68,7 +72,7 @@ const RoomCalendar = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>('');
 
   // Calculate week range
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
@@ -79,15 +83,15 @@ const RoomCalendar = () => {
   // End: YYYY-MM-DDT23:59:59.999Z (kun tugashi)
   const formatDateToStart = (date: Date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}T00:00:00.000Z`;
   };
 
   const formatDateToEnd = (date: Date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}T23:59:59.999Z`;
   };
 
@@ -108,8 +112,8 @@ const RoomCalendar = () => {
   const { data: availableRoomsData, isLoading: roomsLoading } =
     useGetAvailableRoomsQuery(
       {
-        corpus_id: corpusId || "",
-        room_id: roomId || "",
+        corpus_id: corpusId || '',
+        room_id: roomId || '',
         start_date: apiStartDate,
         end_date: apiEndDate,
       },
@@ -138,41 +142,41 @@ const RoomCalendar = () => {
         return;
       }
 
-      if (e.key === "ArrowLeft") {
+      if (e.key === 'ArrowLeft') {
         e.preventDefault();
         handlePreviousWeek();
-      } else if (e.key === "ArrowRight") {
+      } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         handleNextWeek();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handlePreviousWeek, handleNextWeek]);
 
   // Booking rangini aniqlash
   const getBookingColor = (isRealPatient: boolean) => {
     // Real bemor - yashil, Bron qilingan - ko'k
-    return isRealPatient ? "bg-green-300" : "bg-blue-300";
+    return isRealPatient ? 'bg-green-300' : 'bg-blue-300';
   };
 
   // Booking label (Одам бор / Бронь)
   const getBookingLabel = (isRealPatient: boolean) => {
-    return isRealPatient ? "Одам бор" : "Бронь";
+    return isRealPatient ? 'Одам бор' : 'Бронь';
   };
 
   // Bronni qaysi kunlarda ko'rsatish kerakligini aniqlash
   const getBookingDays = (booking: Booking) => {
     // UTC sanani YYYY-MM-DD formatga o'zgartirish (faqat sana, vaqtsiz)
-    const startStr = booking.start_at.split("T")[0]; // "2025-12-07"
-    const endStr = booking.end_at.split("T")[0]; // "2025-12-14"
+    const startStr = booking.start_at.split('T')[0]; // "2025-12-07"
+    const endStr = booking.end_at.split('T')[0]; // "2025-12-14"
 
     return weekDays.map((day) => {
       // Kunni YYYY-MM-DD formatga o'zgartirish
       const year = day.getFullYear();
-      const month = String(day.getMonth() + 1).padStart(2, "0");
-      const dayNum = String(day.getDate()).padStart(2, "0");
+      const month = String(day.getMonth() + 1).padStart(2, '0');
+      const dayNum = String(day.getDate()).padStart(2, '0');
       const dayStr = `${year}-${month}-${dayNum}`;
 
       // Boshlanish kunidan boshlanadi, tugash kunida KIRADI (<=)
@@ -245,14 +249,14 @@ const RoomCalendar = () => {
 
     // Agar o'tgan kun bo'lsa - xabar berish
     if (selectedDay < today) {
-      toast.error("Ўтган санага бронь қилиб бўлмайди");
+      toast.error('Ўтган санага бронь қилиб бўлмайди');
       return;
     }
 
     // Sanani to'g'ri formatda o'tkazish (timezone muammosiz)
     const year = day.getFullYear();
-    const month = String(day.getMonth() + 1).padStart(2, "0");
-    const dayNum = String(day.getDate()).padStart(2, "0");
+    const month = String(day.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(day.getDate()).padStart(2, '0');
     setSelectedDate(`${year}-${month}-${dayNum}`);
     setShowBookingModal(true);
   };
@@ -265,20 +269,20 @@ const RoomCalendar = () => {
 
   if (roomsLoading || bookingsLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <LoadingSpinner size="lg" />
+      <div className='flex items-center justify-center h-screen'>
+        <LoadingSpinner size='lg' />
       </div>
     );
   }
 
   if (!roomData) {
     return (
-      <div className="container mx-auto p-6">
-        <Card className="p-12 text-center">
-          <p className="text-lg text-muted-foreground">Хона топилмади</p>
+      <div className='container mx-auto p-6'>
+        <Card className='p-12 text-center'>
+          <p className='text-lg text-muted-foreground'>Хона топилмади</p>
           <Button
-            onClick={() => navigate("/inpatient-calendar")}
-            className="mt-4"
+            onClick={() => navigate('/inpatient-calendar')}
+            className='mt-4'
           >
             Орқага қайтиш
           </Button>
@@ -293,25 +297,25 @@ const RoomCalendar = () => {
   const occupiedBeds = totalBeds - availableBeds;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className='container mx-auto p-6 space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         {/* Week Navigation */}
-        <Card className="p-4">
-          <div className="flex items-center justify-between gap-4">
-            <Button variant="outline" size="icon" onClick={handlePreviousWeek}>
-              <ChevronLeft className="w-5 h-5" />
+        <Card className='p-4'>
+          <div className='flex items-center justify-between gap-4'>
+            <Button variant='outline' size='icon' onClick={handlePreviousWeek}>
+              <ChevronLeft className='w-5 h-5' />
             </Button>
 
-            <div className="text-center">
-              <p className="text-lg font-semibold">
-                {format(weekStart, "d MMMM", { locale: uz })} -{" "}
-                {format(weekEnd, "d MMMM yyyy", { locale: uz })}
+            <div className='text-center'>
+              <p className='text-lg font-semibold'>
+                {format(weekStart, 'd MMMM', { locale: uz })} -{' '}
+                {format(weekEnd, 'd MMMM yyyy', { locale: uz })}
               </p>
             </div>
 
-            <Button variant="outline" size="icon" onClick={handleNextWeek}>
-              <ChevronRight className="w-5 h-5" />
+            <Button variant='outline' size='icon' onClick={handleNextWeek}>
+              <ChevronRight className='w-5 h-5' />
             </Button>
           </div>
         </Card>
@@ -323,8 +327,8 @@ const RoomCalendar = () => {
             const startDate = weekStart > today ? weekStart : today;
 
             const year = startDate.getFullYear();
-            const month = String(startDate.getMonth() + 1).padStart(2, "0");
-            const day = String(startDate.getDate()).padStart(2, "0");
+            const month = String(startDate.getMonth() + 1).padStart(2, '0');
+            const day = String(startDate.getDate()).padStart(2, '0');
             setSelectedDate(`${year}-${month}-${day}`);
             setShowBookingModal(true);
           }}
@@ -335,32 +339,32 @@ const RoomCalendar = () => {
 
       {/* Calendar Grid */}
       {bookingsLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner size="lg" />
+        <div className='flex items-center justify-center h-64'>
+          <LoadingSpinner size='lg' />
         </div>
       ) : (
-        <Card className="overflow-hidden bg-white shadow-lg">
-          <div className="overflow-x-auto">
+        <Card className='overflow-hidden bg-white shadow-lg'>
+          <div className='overflow-x-auto'>
             {/* Header Row */}
-            <div className="grid grid-cols-8 gap-0 sticky top-0 bg-white z-10">
-              <div className="col-span-1 bg-blue-500 text-white p-4 border-b-2 border-r-2 border-white">
-                <div className="space-y-2">
-                  <p className="font-extrabold text-xl">
+            <div className='grid grid-cols-8 gap-0 sticky top-0 bg-white z-10'>
+              <div className='col-span-1 bg-blue-500 text-white p-4 border-b-2 border-r-2 border-white'>
+                <div className='space-y-2'>
+                  <p className='font-extrabold text-xl'>
                     {roomData?.room_name}
                   </p>
-                  <div className="text-sm font-semibold space-y-1.5">
-                    <div className="flex items-center">
+                  <div className='text-sm font-semibold space-y-1.5'>
+                    <div className='flex items-center'>
                       <span>Сиғим: {totalBeds}</span>
                     </div>
-                    <div className="flex items-center">
+                    <div className='flex items-center'>
                       <span>Банд: {occupiedBeds}</span>
                     </div>
-                    <div className="flex items-center">
+                    <div className='flex items-center'>
                       <span
                         className={
                           availableBeds === 0
-                            ? "text-red-400"
-                            : "text-green-300"
+                            ? 'text-red-400'
+                            : 'text-green-300'
                         }
                       >
                         Бўш: {availableBeds}
@@ -371,27 +375,29 @@ const RoomCalendar = () => {
               </div>
               {weekDays.map((day, index) => {
                 const isToday =
-                  format(day, "yyyy-MM-dd") ===
-                  format(new Date(), "yyyy-MM-dd");
+                  format(day, 'yyyy-MM-dd') ===
+                  format(new Date(), 'yyyy-MM-dd');
                 return (
                   <div
                     key={index}
-                    className={`text-center p-3 border-b-2 border-r border-white ${isToday
-                        ? "bg-blue-400 text-white font-bold"
-                        : "bg-blue-500 text-white"
-                      }`}
+                    className={`text-center p-3 border-b-2 border-r border-white ${
+                      isToday
+                        ? 'bg-blue-400 text-white font-bold'
+                        : 'bg-blue-500 text-white'
+                    }`}
                   >
-                    <p className="text-xs font-semibold uppercase">
-                      {format(day, "EEEEEE", { locale: uz })}
+                    <p className='text-xs font-semibold uppercase'>
+                      {format(day, 'EEEEEE', { locale: uz })}
                     </p>
                     <p
-                      className={`font-bold ${isToday ? "text-3xl" : "text-2xl"
-                        }`}
+                      className={`font-bold ${
+                        isToday ? 'text-3xl' : 'text-2xl'
+                      }`}
                     >
-                      {format(day, "dd")}
+                      {format(day, 'dd')}
                     </p>
-                    <p className="text-xs opacity-90">
-                      {format(day, "MMM", { locale: uz })}
+                    <p className='text-xs opacity-90'>
+                      {format(day, 'MMM', { locale: uz })}
                     </p>
                   </div>
                 );
@@ -442,15 +448,15 @@ const RoomCalendar = () => {
                 // Bo'shalish sanasini aniqlash
                 let availabilityInfo = null;
                 if (bedAvailability) {
-                  if (bedAvailability.status === "available") {
-                    availabilityInfo = { text: "Бўш", color: "text-green-600" };
+                  if (bedAvailability.status === 'available') {
+                    availabilityInfo = { text: 'Бўш', color: 'text-green-600' };
                   } else if (bedAvailability.available_from) {
                     // Format: "14 Dek" (no year, short month)
                     const date = new Date(bedAvailability.available_from);
-                    const formatted = format(date, "d MMM", { locale: uz });
+                    const formatted = format(date, 'd MMM', { locale: uz });
                     availabilityInfo = {
                       text: formatted,
-                      color: "text-gray-700",
+                      color: 'text-gray-700',
                     };
                   }
                 } else {
@@ -462,27 +468,27 @@ const RoomCalendar = () => {
 
                   if (lastBooking) {
                     availabilityInfo = {
-                      text: format(parseISO(lastBooking.end_at), "d MMM", {
+                      text: format(parseISO(lastBooking.end_at), 'd MMM', {
                         locale: uz,
                       }),
-                      color: "text-gray-700",
+                      color: 'text-gray-700',
                     };
                   } else {
-                    availabilityInfo = { text: "Бўш", color: "text-green-600" };
+                    availabilityInfo = { text: 'Бўш', color: 'text-green-600' };
                   }
                 }
 
                 return (
-                  <div key={bedIndex} className="grid grid-cols-8 gap-0">
+                  <div key={bedIndex} className='grid grid-cols-8 gap-0'>
                     {/* Bed Label */}
-                    <div className="col-span-1 bg-gray-50 p-3 border-b border-r-2 border-gray-200">
-                      <div className="space-y-2">
-                        <p className="text-lg font-extrabold text-gray-800">
+                    <div className='col-span-1 bg-gray-50 p-3 border-b border-r-2 border-gray-200'>
+                      <div className='space-y-2'>
+                        <p className='text-lg font-extrabold text-gray-800'>
                           {bedIndex + 1}-жой
                         </p>
                         {availabilityInfo && (
                           <Badge
-                            variant="outline"
+                            variant='outline'
                             className={`text-sm font-semibold ${availabilityInfo.color}`}
                           >
                             {availabilityInfo.text}
@@ -500,18 +506,18 @@ const RoomCalendar = () => {
                       });
 
                       const isToday =
-                        format(day, "yyyy-MM-dd") ===
-                        format(new Date(), "yyyy-MM-dd");
+                        format(day, 'yyyy-MM-dd') ===
+                        format(new Date(), 'yyyy-MM-dd');
 
                       // Bu bronning birinchi yoki oxirgi kunimimi aniqlash
                       // isFirstDay: bronning boshlanish sanasi shu kunga to'g'ri kelsami
                       // isLastDay: bronning tugash sanasi shu kunga to'g'ri kelsami
-                      const dayStr = format(day, "yyyy-MM-dd");
+                      const dayStr = format(day, 'yyyy-MM-dd');
                       const isFirstDay = activeBooking
-                        ? activeBooking.start_at.split("T")[0] === dayStr
+                        ? activeBooking.start_at.split('T')[0] === dayStr
                         : false;
                       const isLastDay = activeBooking
-                        ? activeBooking.end_at.split("T")[0] === dayStr
+                        ? activeBooking.end_at.split('T')[0] === dayStr
                         : false;
                       const isMiddleDay =
                         activeBooking && !isFirstDay && !isLastDay;
@@ -519,8 +525,9 @@ const RoomCalendar = () => {
                       return (
                         <div
                           key={dayIndex}
-                          className={`p-2 border-b border-r border-gray-200 min-h-[70px] ${isToday ? "bg-red-50" : ""
-                            }`}
+                          className={`p-2 border-b border-r border-gray-200 min-h-[70px] ${
+                            isToday ? 'bg-red-50' : ''
+                          }`}
                         >
                           {activeBooking ? (
                             <TooltipProvider>
@@ -529,25 +536,41 @@ const RoomCalendar = () => {
                                   <div
                                     style={{
                                       borderTopLeftRadius: isFirstDay
-                                        ? "0.5rem"
-                                        : "0",
+                                        ? '0.5rem'
+                                        : '0',
                                       borderBottomLeftRadius: isFirstDay
-                                        ? "0.5rem"
-                                        : "0",
+                                        ? '0.5rem'
+                                        : '0',
                                       borderTopRightRadius: isLastDay
-                                        ? "0.5rem"
-                                        : "0",
+                                        ? '0.5rem'
+                                        : '0',
                                       borderBottomRightRadius: isLastDay
-                                        ? "0.5rem"
-                                        : "0",
+                                        ? '0.5rem'
+                                        : '0',
                                       borderLeft: isFirstDay
-                                        ? `6px solid ${activeBooking.is_real_patient ? "green" : "blue"}`
-                                        : "none",
+                                        ? `6px solid ${
+                                            activeBooking.is_real_patient
+                                              ? 'green'
+                                              : 'blue'
+                                          }`
+                                        : 'none',
                                       borderRight: isLastDay
-                                        ? `6px solid ${activeBooking.is_real_patient ? "green" : "blue"}`
-                                        : "none",
-                                      borderTop: `1px solid ${activeBooking.is_real_patient ? "green" : "blue"}`,
-                                      borderBottom: `1px solid ${activeBooking.is_real_patient ? "green" : "blue"}`,
+                                        ? `6px solid ${
+                                            activeBooking.is_real_patient
+                                              ? 'green'
+                                              : 'blue'
+                                          }`
+                                        : 'none',
+                                      borderTop: `1px solid ${
+                                        activeBooking.is_real_patient
+                                          ? 'green'
+                                          : 'blue'
+                                      }`,
+                                      borderBottom: `1px solid ${
+                                        activeBooking.is_real_patient
+                                          ? 'green'
+                                          : 'blue'
+                                      }`,
                                     }}
                                     className={`h-full min-h-[54px] p-2 cursor-pointer ${getBookingColor(
                                       activeBooking.is_real_patient || false
@@ -556,69 +579,75 @@ const RoomCalendar = () => {
                                       handleBookingClick(activeBooking)
                                     }
                                   >
-                                    <p className="font-extrabold text-sm truncate text-gray-900">
+                                    <p className='font-extrabold text-sm truncate text-gray-900'>
                                       {typeof activeBooking.patient_id ===
-                                        "object"
+                                      'object'
                                         ? activeBooking.patient_id.fullname
-                                          .split(" ")
-                                          .slice(0, 2)
-                                          .join(" ")
-                                        : "Номаълум"}
+                                            .split(' ')
+                                            .slice(0, 2)
+                                            .join(' ')
+                                        : 'Номаълум'}
                                     </p>
-                                    <p className="text-sm font-semibold text-gray-800 mt-1">
+                                    <p className='text-sm font-semibold text-gray-800 mt-1'>
                                       {
                                         activeBooking.start_at
-                                          .split("T")[0]
-                                          .split("-")[2]
-                                      }{" "}
-                                      -{" "}
+                                          .split('T')[0]
+                                          .split('-')[2]
+                                      }{' '}
+                                      -{' '}
                                       {
                                         activeBooking.end_at
-                                          .split("T")[0]
-                                          .split("-")[2]
+                                          .split('T')[0]
+                                          .split('-')[2]
                                       }
                                     </p>
-                                    <p className="text-xs font-medium text-gray-700 mt-0.5">
-                                      {getBookingLabel(activeBooking.is_real_patient || false)}
+                                    <p className='text-xs font-medium text-gray-700 mt-0.5'>
+                                      {getBookingLabel(
+                                        activeBooking.is_real_patient || false
+                                      )}
                                     </p>
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent
-                                  side="top"
-                                  className="max-w-xs p-3"
+                                  side='top'
+                                  className='max-w-xs p-3'
                                 >
-                                  <div className="space-y-1.5">
-                                    <p className="font-bold text-base">
+                                  <div className='space-y-1.5'>
+                                    <p className='font-bold text-base'>
                                       {typeof activeBooking.patient_id ===
-                                        "object"
+                                      'object'
                                         ? activeBooking.patient_id.fullname
-                                        : "Номаълум"}
+                                        : 'Номаълум'}
                                     </p>
                                     {typeof activeBooking.patient_id ===
-                                      "object" &&
+                                      'object' &&
                                       activeBooking.patient_id.phone && (
-                                        <p className="text-sm">
-                                          {formatPhoneNumber(activeBooking.patient_id.phone)}
+                                        <p className='text-sm'>
+                                          {formatPhoneNumber(
+                                            activeBooking.patient_id.phone
+                                          )}
                                         </p>
                                       )}
-                                    <p className="text-sm">
+                                    <p className='text-sm'>
                                       {format(
                                         parseISO(activeBooking.start_at),
-                                        "d MMMM",
+                                        'd MMMM',
                                         { locale: uz }
-                                      )}{" "}
-                                      -{" "}
+                                      )}{' '}
+                                      -{' '}
                                       {format(
                                         parseISO(activeBooking.end_at),
-                                        "d MMMM",
+                                        'd MMMM',
                                         { locale: uz }
-                                      )}{" "}
-                                      |{" "}
-                                      {getBookingLabel(activeBooking.is_real_patient || false)}
+                                      )}{' '}
+                                      |{' '}
+                                      {getBookingLabel(
+                                        activeBooking.is_real_patient || false
+                                      )}
                                     </p>
 
                                     {activeBooking?.note && (
-                                      <p className="text-sm">
+                                      <p className='text-sm'>
                                         {activeBooking?.note}
                                       </p>
                                     )}
@@ -628,10 +657,10 @@ const RoomCalendar = () => {
                             </TooltipProvider>
                           ) : (
                             <div
-                              className="h-full min-h-[54px] rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer"
+                              className='h-full min-h-[54px] rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer'
                               onClick={() => handleEmptyCellClick(day)}
                             >
-                              <span className="text-xs font-medium">Бўш</span>
+                              <span className='text-xs font-medium'>Бўш</span>
                             </div>
                           )}
                         </div>
@@ -649,7 +678,7 @@ const RoomCalendar = () => {
       <BookingModal
         open={showBookingModal}
         onOpenChange={setShowBookingModal}
-        corpusId={corpusId || ""}
+        corpusId={corpusId || ''}
         roomId={roomId}
         defaultStartDate={selectedDate || new Date().toISOString()}
       />

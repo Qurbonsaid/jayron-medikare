@@ -25,7 +25,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import getUser from '@/hooks/getUser/getUser';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import RBS from '@/hooks/RBS/Role_Based_Security';
+import { useRouteActions } from '@/hooks/RBS';
 import {
   AlertTriangle,
   Calendar,
@@ -52,6 +52,13 @@ const PatientProfile = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
+
+  // RBS Permission checks
+  const {
+    canUpdate: canUpdatePatient,
+    canDelete: canDeletePatient,
+  } = useRouteActions('/patient/:id');
+  const { canCreate: canCreateExam } = useRouteActions('/new-visit');
 
   const {
     data: patientData,
@@ -158,15 +165,17 @@ const PatientProfile = () => {
           </div>
           {/* Patient Info */}
           <div className='flex flex-wrap gap-2 mt-4 md:mt-0 justify-center md:justify-end lg:max-w-sm'>
-            <Button
-              variant='outline'
-              size='sm'
-              className='flex-1 sm:flex-none'
-              onClick={() => setIsEditModalOpen(true)}
-            >
-              <Edit className='w-4 h-4 sm:mr-2' />
-              <span className='hidden sm:inline'>Таҳрирлаш</span>
-            </Button>
+            {canUpdatePatient && (
+              <Button
+                variant='outline'
+                size='sm'
+                className='flex-1 sm:flex-none'
+                onClick={() => setIsEditModalOpen(true)}
+              >
+                <Edit className='w-4 h-4 sm:mr-2' />
+                <span className='hidden sm:inline'>Таҳрирлаш</span>
+              </Button>
+            )}
             <Button
               variant='outline'
               size='sm'
@@ -176,15 +185,17 @@ const PatientProfile = () => {
               <FileText className='w-4 h-4 sm:mr-2' />
               <span className='hidden sm:inline'>PDF кўриш</span>
             </Button>
-            <Button
-              size='sm'
-              className='gradient-primary px-6 text-md'
-              onClick={() => setIsNewVisitOpen(true)}
-            >
-              <Plus className='w-4 h-4 sm:mr-2' />
-              <span className='hidden sm:inline'>Янги Кўрик Яратиш</span>
-            </Button>
-            <RBS role={me.role} allowed={['ceo']}>
+            {canCreateExam && (
+              <Button
+                size='sm'
+                className='gradient-primary px-6 text-md'
+                onClick={() => setIsNewVisitOpen(true)}
+              >
+                <Plus className='w-4 h-4 sm:mr-2' />
+                <span className='hidden sm:inline'>Янги Кўрик Яратиш</span>
+              </Button>
+            )}
+            {canDeletePatient && (
               <Button
                 variant='outline'
                 size='sm'
@@ -194,7 +205,7 @@ const PatientProfile = () => {
                 <FileX className='w-4 h-4 sm:mr-2' />
                 <span className='hidden sm:inline'>Ўчириш</span>
               </Button>
-            </RBS>
+            )}
           </div>
         </Card>
 

@@ -8,7 +8,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { doctors, statusOptions } from '@/constants/doctors';
-import { usePermission } from '@/hooks/usePermission';
 import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import DayView from './components/DayView';
@@ -29,7 +28,6 @@ interface Appointment {
 }
 
 const Appointments = () => {
-  const { canCreate } = usePermission('appointments');
   const [view, setView] = useState<'day' | 'week' | 'month'>('week');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
@@ -312,7 +310,6 @@ const Appointments = () => {
         )}
 
         {/* Floating Action Button */}
-        {canCreate && (
           <Button
             size='lg'
             onClick={() => setIsNewAppointmentOpen(true)}
@@ -321,7 +318,6 @@ const Appointments = () => {
           >
             <Plus className='w-6 h-6 sm:w-6 sm:h-6 lg:w-7 lg:h-7 stroke-[2.5]' />
           </Button>
-        )}
 
         {/* New Appointment Modal */}
         <NewAppointment
