@@ -654,20 +654,6 @@ export const RoutePermissions: RoutePermission[] = [
   },
 ];
 
-// Helper function to check if user has access to a route
-/**
- * Normalize a path by converting URL parameters to route pattern format
- * e.g., '/patient/123' -> '/patient/:id'
- */
-const normalizePathPattern = (path: string): string => {
-  // If path already has :param pattern, return as is
-  if (path.includes(':')) {
-    return path;
-  }
-  // Convert UUID/ID-like segments to :id pattern
-  return path.replace(/\/[a-f0-9]{24}(?=\/|$)/gi, '/:id');
-};
-
 /**
  * Check if a path matches a route pattern
  * e.g., matchesRoutePattern('/patient/:id', '/patient/123') -> true

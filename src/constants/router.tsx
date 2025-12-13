@@ -107,7 +107,6 @@ const baseRouters = [
     element: <Rooms />,
   },
 
-  // None
   {
     path: '/inpatient-calendar',
     element: <RoomsList />,
@@ -117,7 +116,6 @@ const baseRouters = [
     element: <RoomCalendar />,
   },
 
-  // None
   {
     path: '/medicine',
     element: <Medicine />,
