@@ -83,5 +83,3 @@ profil—-»[ RoleConstants.CEO,
                RoleConstants.DOCTOR,
                RoleConstants.NURSE,
                RoleConstants.RECEPTIONIST,]
-
-ruxsatlar delete

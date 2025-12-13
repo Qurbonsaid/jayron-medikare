@@ -1,3 +1,4 @@
+import { useMeQuery } from '@/app/api/authApi/authApi';
 import { Button } from '@/components/ui/button';
 import {
   Collapsible,
@@ -19,7 +20,7 @@ import {
 import { menuCategories, systemMenu } from '@/constants/Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
 export function AppSidebar() {
@@ -32,13 +33,44 @@ export function AppSidebar() {
   const isMobile = useIsMobile();
   const prevPathRef = useRef<string>();
 
-  // Filter menu items based on read permission
-  const filteredMenuCategories = menuCategories
-    .filter((category) => category.items.length > 0);
+  // Get current user data
+  const { data: userData } = useMeQuery();
 
-  const filteredSystemMenu = {
-    ...systemMenu
-  };
+  // Filter menu items based on user role and route permissions
+  const filteredMenuCategories = useMemo(() => {
+    if (!userData?.data.role) return [];
+
+    return menuCategories
+      .map((category) => ({
+        ...category,
+        items: category.items.filter((item) => {
+          // If item.roles is null, it's accessible to everyone
+          if (item.roles === null) return true;
+
+          // Check if user's role is in the allowed roles list
+          return item.roles.includes(userData.data.role);
+        }),
+      }))
+      .filter((category) => category.items.length > 0);
+  }, [userData?.data.role]);
+
+  // Filter system menu items based on user role
+  const filteredSystemMenu = useMemo(() => {
+    if (!userData?.data.role) {
+      return { ...systemMenu, items: [] };
+    }
+
+    return {
+      ...systemMenu,
+      items: systemMenu.items.filter((item) => {
+        // If item.roles is null, it's accessible to everyone
+        if (item.roles === null) return true;
+
+        // Check if user's role is in the allowed roles list
+        return item.roles.includes(userData.data.role);
+      }),
+    };
+  }, [userData?.data.role]);
 
   const location = useLocation();
   const currentPath = location.pathname;

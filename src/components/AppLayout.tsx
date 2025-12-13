@@ -4,8 +4,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { navigator } from '@/constants/router';
 import getUser from '@/hooks/getUser/getUser';
-import { navigator } from '@/router';
 import { ArrowLeft, Globe } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -58,62 +58,63 @@ export function AppLayout({ children }: AppLayoutProps) {
         <SidebarInset className='flex-1'>
           {/* Top Header */}
           <header className='sticky top-0 z-10 bg-card border-b card-shadow flex items-center justify-between px-6 py-3 lg:px-2 max-sm:pr-0'>
-              <div className='flex items-center gap-4 md:px-4'>
-                <SidebarTrigger className='md:hidden' />
-                {currentLocation?.to && (
-                  <Link to={currentLocation?.to}>
-                    <ArrowLeft className='w-5 h-5' />
-                  </Link>
-                )}
-                <h1 className='text-xl font-bold'>{currentLocation?.title}</h1>
-              </div>
-              <div className='flex items-center gap-4 px-4'>
-                <div className='flex items-center gap-3'>
-                  {/* Language Selector */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      className='focus-visible:ring-0 focus-visible:ring-offset-0'
-                      asChild
-                    >
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='hover:bg-accent border-2 border-slate-400'
-                      >
-                        <Globe className='w-5 h-5' />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
-                      <DropdownMenuLabel>Тилни танланг</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <span>Ўзбек тили</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <span>Русский язык</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Profile Button */}
-                  <Link to='/profile' className='border-2 rounded-lg py-0.5 border-slate-400'>
+            <div className='flex items-center gap-4 md:px-4'>
+              <SidebarTrigger className='md:hidden' />
+              {currentLocation?.to && (
+                <Link to={currentLocation?.to}>
+                  <ArrowLeft className='w-5 h-5' />
+                </Link>
+              )}
+              <h1 className='text-xl font-bold'>{currentLocation?.title}</h1>
+            </div>
+            <div className='flex items-center gap-4 px-4'>
+              <div className='flex items-center gap-3'>
+                {/* Language Selector */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className='focus-visible:ring-0 focus-visible:ring-offset-0'
+                    asChild
+                  >
                     <Button
                       variant='ghost'
-                      className='flex items-center gap-3 hover:bg-accent  border-slate-400'
+                      size='icon'
+                      className='hover:bg-accent border-2 border-slate-400'
                     >
-                      <div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
-                        {nickName}
-                      </div>
-                      <div className='hidden md:block text-right'>
-                        <p className='text-sm font-medium'>{me.fullname}</p>
-                        <p className='text-xs text-muted-foreground'>
-                          {me.role}
-                        </p>
-                      </div>
+                      <Globe className='w-5 h-5' />
                     </Button>
-                  </Link>
-                </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end'>
+                    <DropdownMenuLabel>Тилни танланг</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <span>Ўзбек тили</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <span>Русский язык</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Profile Button */}
+                <Link
+                  to='/profile'
+                  className='border-2 rounded-lg py-0.5 border-slate-400'
+                >
+                  <Button
+                    variant='ghost'
+                    className='flex items-center gap-3 hover:bg-accent  border-slate-400'
+                  >
+                    <div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
+                      {nickName}
+                    </div>
+                    <div className='hidden md:block text-right'>
+                      <p className='text-sm font-medium'>{me.fullname}</p>
+                      <p className='text-xs text-muted-foreground'>{me.role}</p>
+                    </div>
+                  </Button>
+                </Link>
               </div>
+            </div>
           </header>
 
           {/* Main Content */}

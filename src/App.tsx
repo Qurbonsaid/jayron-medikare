@@ -12,7 +12,7 @@ import { Provider } from 'react-redux';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import store from './app/store';
 import { AppLayout } from './components/AppLayout';
-import { routers } from './router';
+import { routers } from './constants/router';
 
 function RoutesContent() {
   useGlobalShortcuts();
@@ -32,24 +32,25 @@ function RoutesContent() {
         onOpenChange={setShowShortcuts}
       />
       <Routes>
+        {/* Redirect defaults to patients */}
+        <Route path='/dashboard' element={<Navigate to={'/patients'} />} />
         <Route path='/' element={<Navigate to={'/patients'} />} />
+
+        {/* Public route - Login */}
         <Route path='/login' element={<Login />} />
 
-        {/* Protected Routes */}
+        {/* Protected Routes with authentication & authorization */}
         <Route element={<PrivateRoute />}>
-          {routers.map(({ path, element, permission }) => (
+          {routers.map(({ path, element }) => (
             <Route
               key={path}
               path={path}
-              element={
-                <AppLayout>
-                    {element}
-                </AppLayout>
-              }
+              element={<AppLayout>{element}</AppLayout>}
             />
           ))}
         </Route>
 
+        {/* Catch-all for undefined routes */}
         <Route path='*' element={<NotFound />} />
       </Routes>
     </>
