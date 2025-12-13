@@ -26,6 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { useRouteActions } from '@/hooks/RBS';
 import { Eye, FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -43,6 +44,9 @@ const Examinations = () => {
   const [treatmentTypeFilter, setTreatmentTypeFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // RBS Permission checks
+  const { canRead, canUpdate, canDelete } = useRouteActions('/examination/:id');
 
   // Modals
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -511,6 +515,8 @@ const Examinations = () => {
           handleDeleteFromDetail={handleDeleteFromDetail}
           handleCompleteExam={handleCompleteExam}
           isCompleting={isCompleting}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
         />
 
         {/* Edit Modal */}

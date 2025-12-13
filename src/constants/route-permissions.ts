@@ -37,6 +37,25 @@ export const RoutePermissions: RoutePermission[] = [
     description: 'View patient profile',
   },
   {
+    path: '/patient/:id',
+    name: 'Update Patient',
+    method: 'PUT',
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.RECEPTIONIST,
+    ],
+    description: 'Update patient profile',
+  },
+  {
+    path: '/patient/:id',
+    name: 'Delete Patient',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete patient',
+  },
+  {
     path: '/patients',
     name: 'Create Patient',
     method: 'POST',
@@ -58,6 +77,13 @@ export const RoutePermissions: RoutePermission[] = [
     description: 'Create new examination',
   },
   {
+    path: '/new-visit',
+    name: 'View New Examination',
+    method: 'GET',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'View new examination form',
+  },
+  {
     path: '/examinations',
     name: 'Examinations List',
     method: 'GET',
@@ -70,6 +96,20 @@ export const RoutePermissions: RoutePermission[] = [
     method: 'GET',
     roles: [RoleConstants.CEO, RoleConstants.ADMIN],
     description: 'View examination details',
+  },
+  {
+    path: '/examination/:id',
+    name: 'Update Examination',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update examination',
+  },
+  {
+    path: '/examination/:id',
+    name: 'Delete Examination',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete examination',
   },
 
   // Appointments Routes
@@ -100,6 +140,18 @@ export const RoutePermissions: RoutePermission[] = [
     ],
     description: 'View prescriptions',
   },
+  {
+    path: '/prescription',
+    name: 'Create Prescription',
+    method: 'POST',
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.NURSE,
+    ],
+    description: 'Create prescription',
+  },
 
   // Diagnosis/Disease Routes
   {
@@ -114,6 +166,27 @@ export const RoutePermissions: RoutePermission[] = [
       RoleConstants.RECEPTIONIST,
     ],
     description: 'View diseases/diagnosis',
+  },
+  {
+    path: '/disease',
+    name: 'Create Disease',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Create disease',
+  },
+  {
+    path: '/disease/:id',
+    name: 'Update Disease',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update disease',
+  },
+  {
+    path: '/disease/:id',
+    name: 'Delete Disease',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete disease',
   },
 
   // Medication Routes
@@ -131,6 +204,27 @@ export const RoutePermissions: RoutePermission[] = [
     ],
     description: 'View medications',
   },
+  {
+    path: '/medication',
+    name: 'Create Medication',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Create medication',
+  },
+  {
+    path: '/medication/:id',
+    name: 'Update Medication',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update medication',
+  },
+  {
+    path: '/medication/:id',
+    name: 'Delete Medication',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete medication',
+  },
 
   // Service Routes
   {
@@ -146,6 +240,27 @@ export const RoutePermissions: RoutePermission[] = [
     ],
     description: 'View services',
   },
+  {
+    path: '/service',
+    name: 'Create Service',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Create service',
+  },
+  {
+    path: '/service/:id',
+    name: 'Update Service',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update service',
+  },
+  {
+    path: '/service/:id',
+    name: 'Delete Service',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete service',
+  },
 
   // Diagnostics Routes
   {
@@ -154,6 +269,13 @@ export const RoutePermissions: RoutePermission[] = [
     method: 'POST',
     roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
     description: 'Add diagnostics',
+  },
+  {
+    path: '/add-diagnostika',
+    name: 'View Diagnostics Form',
+    method: 'GET',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'View diagnostics form',
   },
   {
     path: '/analysisById/:id',
@@ -168,6 +290,13 @@ export const RoutePermissions: RoutePermission[] = [
     ],
     description: 'View analysis parameters',
   },
+  {
+    path: '/analysisById/:id',
+    name: 'Update Analysis',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update analysis',
+  },
 
   // Lab Routes
   {
@@ -176,6 +305,13 @@ export const RoutePermissions: RoutePermission[] = [
     method: 'POST',
     roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
     description: 'Create lab order',
+  },
+  {
+    path: '/lab-order',
+    name: 'View Lab Orders',
+    method: 'GET',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'View lab orders',
   },
   {
     path: '/lab-results',
@@ -189,6 +325,13 @@ export const RoutePermissions: RoutePermission[] = [
       RoleConstants.RECEPTIONIST,
     ],
     description: 'View lab results',
+  },
+  {
+    path: '/lab-results/:id',
+    name: 'Update Lab Result',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update lab result',
   },
 
   // Radiology Routes
@@ -204,6 +347,27 @@ export const RoutePermissions: RoutePermission[] = [
       RoleConstants.RECEPTIONIST,
     ],
     description: 'View medical images',
+  },
+  {
+    path: '/radiology',
+    name: 'Upload Radiology',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Upload medical images',
+  },
+  {
+    path: '/radiology/:id',
+    name: 'Update Radiology',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update medical image',
+  },
+  {
+    path: '/radiology/:id',
+    name: 'Delete Radiology',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete medical image',
   },
 
   // Inpatient Routes
@@ -221,6 +385,27 @@ export const RoutePermissions: RoutePermission[] = [
     description: 'View inpatient list',
   },
   {
+    path: '/inpatient',
+    name: 'Create Inpatient',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Create inpatient',
+  },
+  {
+    path: '/inpatient/:id',
+    name: 'Update Inpatient',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update inpatient',
+  },
+  {
+    path: '/inpatient/:id',
+    name: 'Delete Inpatient',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete inpatient',
+  },
+  {
     path: '/inpatient-calendar',
     name: 'Inpatient Calendar',
     method: 'GET',
@@ -233,17 +418,16 @@ export const RoutePermissions: RoutePermission[] = [
     description: 'View inpatient calendar',
   },
   {
-    path: '/inpatient/:id',
-    name: 'Room Management',
+    path: '/inpatient-calendar/:corpusId/:roomId',
+    name: 'Room Calendar',
     method: 'GET',
     roles: [
       RoleConstants.CEO,
       RoleConstants.ADMIN,
       RoleConstants.DOCTOR,
-      RoleConstants.NURSE,
       RoleConstants.RECEPTIONIST,
     ],
-    description: 'View room details',
+    description: 'View room calendar',
   },
   {
     path: '/room/:id',
@@ -257,6 +441,20 @@ export const RoutePermissions: RoutePermission[] = [
       RoleConstants.RECEPTIONIST,
     ],
     description: 'View room detail',
+  },
+  {
+    path: '/room/:id',
+    name: 'Update Room',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update room',
+  },
+  {
+    path: '/room/:id',
+    name: 'Delete Room',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete room',
   },
 
   // Medicine Routes
@@ -274,6 +472,27 @@ export const RoutePermissions: RoutePermission[] = [
     ],
     description: 'View medicine inventory',
   },
+  {
+    path: '/medicine',
+    name: 'Create Medicine',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.PHARMACIST],
+    description: 'Create medicine',
+  },
+  {
+    path: '/medicine/:id',
+    name: 'Update Medicine',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.PHARMACIST],
+    description: 'Update medicine',
+  },
+  {
+    path: '/medicine/:id',
+    name: 'Delete Medicine',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete medicine',
+  },
 
   // Daily Checkup Routes
   {
@@ -289,6 +508,27 @@ export const RoutePermissions: RoutePermission[] = [
     ],
     description: 'View daily checkups',
   },
+  {
+    path: '/daily-checkup',
+    name: 'Create Daily Checkup',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Create daily checkup',
+  },
+  {
+    path: '/daily-checkup/:id',
+    name: 'Update Daily Checkup',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update daily checkup',
+  },
+  {
+    path: '/daily-checkup/:id',
+    name: 'Delete Daily Checkup',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete daily checkup',
+  },
 
   // Billing Routes
   {
@@ -297,6 +537,27 @@ export const RoutePermissions: RoutePermission[] = [
     method: 'GET',
     roles: [RoleConstants.CEO, RoleConstants.ADMIN],
     description: 'View billing information',
+  },
+  {
+    path: '/billing',
+    name: 'Create Billing',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Create billing record',
+  },
+  {
+    path: '/billing/:id',
+    name: 'Update Billing',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Update billing',
+  },
+  {
+    path: '/billing/:id',
+    name: 'Delete Billing',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Delete billing',
   },
 
   // Reports Routes
@@ -307,11 +568,25 @@ export const RoutePermissions: RoutePermission[] = [
     roles: [RoleConstants.CEO, RoleConstants.ADMIN],
     description: 'View reports',
   },
+  {
+    path: '/reports',
+    name: 'Generate Report',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    description: 'Generate report',
+  },
 
   // Settings Routes
   {
     path: '/settings',
     name: 'Settings',
+    method: 'GET',
+    roles: [RoleConstants.CEO],
+    description: 'View settings',
+  },
+  {
+    path: '/settings',
+    name: 'Update Settings',
     method: 'PUT',
     roles: [RoleConstants.CEO],
     description: 'Manage system settings',
@@ -331,6 +606,20 @@ export const RoutePermissions: RoutePermission[] = [
       RoleConstants.PHARMACIST,
     ],
     description: 'View user profile',
+  },
+  {
+    path: '/profile',
+    name: 'Update Profile',
+    method: 'PUT',
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.NURSE,
+      RoleConstants.RECEPTIONIST,
+      RoleConstants.PHARMACIST,
+    ],
+    description: 'Update user profile',
   },
 
   // Patient Portal (Public)

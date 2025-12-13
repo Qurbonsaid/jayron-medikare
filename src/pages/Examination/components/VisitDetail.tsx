@@ -19,6 +19,8 @@ interface Props {
   handleDeleteFromDetail: () => void;
   handleCompleteExam: () => void;
   isCompleting: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
 const VisitDetail = ({
@@ -29,6 +31,8 @@ const VisitDetail = ({
   handleDeleteFromDetail,
   handleCompleteExam,
   isCompleting,
+  canUpdate = true,
+  canDelete = true,
 }: Props) => {
   const navigate = useNavigate();
   return (
@@ -215,22 +219,26 @@ const VisitDetail = ({
                   <FilePlus className='w-4 h-4 mr-2' />
                   Рецепт Ёзиш
                 </Button>
-                <Button
-                  variant='outline'
-                  className='w-full text-red-600 hover:text-red-700'
-                  onClick={handleDeleteFromDetail}
-                >
-                  <Trash2 className='w-4 h-4 mr-2' />
-                  Ўчириш
-                </Button>
-                <Button
-                  variant='outline'
-                  className='w-full'
-                  onClick={handleEditFromDetail}
-                >
-                  <Edit className='w-4 h-4 mr-2' />
-                  Таҳрирлаш
-                </Button>
+                {canDelete && (
+                  <Button
+                    variant='outline'
+                    className='w-full text-red-600 hover:text-red-700'
+                    onClick={handleDeleteFromDetail}
+                  >
+                    <Trash2 className='w-4 h-4 mr-2' />
+                    Ўчириш
+                  </Button>
+                )}
+                {canUpdate && (
+                  <Button
+                    variant='outline'
+                    className='w-full'
+                    onClick={handleEditFromDetail}
+                  >
+                    <Edit className='w-4 h-4 mr-2' />
+                    Таҳрирлаш
+                  </Button>
+                )}
                 <Button
                   variant='default'
                   className='w-full bg-green-600 hover:bg-green-700'
