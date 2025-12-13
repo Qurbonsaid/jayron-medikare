@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { useRouteActions } from '@/hooks/RBS';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Edit, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -56,10 +56,17 @@ export default function DiagnosticsPage() {
   // Early return AFTER all hooks
   if (!canRead) {
     return (
-      <div className='flex items-center justify-center h-96'>
-        <p className='text-lg text-gray-500'>
-          Sizda bu sahifaga kirish huquqi yo'q.
-        </p>
+      <div className='min-h-screen bg-background flex items-center justify-center p-4'>
+        <Card className='p-8 max-w-md w-full text-center'>
+          <AlertTriangle className='w-12 h-12 text-warning mx-auto mb-4' />
+          <h2 className='text-xl font-bold mb-2'>Рухсат йўқ</h2>
+          <p className='text-muted-foreground mb-6'>
+            Сизда ушбу саҳифани кўриш учун рухсат йўқ.
+          </p>
+          <Button onClick={() => navigate('/patients')} className='w-full'>
+            Орқага қайтиш
+          </Button>
+        </Card>
       </div>
     );
   }

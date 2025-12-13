@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
-import { Printer, Save, Search, Send, User, X } from 'lucide-react'
+import { AlertTriangle, Printer, Save, Search, Send, User, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -31,6 +31,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { OnePatientRes } from '@/app/api/patientApi/types'
 import { useGetAllDiagnosticsQuery } from '@/app/api/diagnostic/diagnosticApi'
 import { CreateReq } from '@/app/api/patientAnalysisApi/types'
+import { useRouteActions } from '@/hooks/RBS'
 
 interface Test {
 	id: string
@@ -47,6 +48,7 @@ enum ExamLevel {
 const LabOrder = () => {
 	const navigate = useNavigate()
 	const location = useLocation()
+	const { canCreate, canRead } = useRouteActions('/lab-order')
 	const [clinicalIndications, setClinicalIndications] = useState('')
 	type Patient = OnePatientRes['data']
 	const [patient, setPatient] = useState<Patient | null>(null)
@@ -69,6 +71,23 @@ const LabOrder = () => {
 	})
 
 	const patients = patientsData?.data || []
+
+	if (!canRead) {
+    return (
+      <div className='min-h-screen bg-background flex items-center justify-center p-4'>
+        <Card className='p-8 max-w-md w-full text-center'>
+          <AlertTriangle className='w-12 h-12 text-warning mx-auto mb-4' />
+          <h2 className='text-xl font-bold mb-2'>Рухсат йўқ</h2>
+          <p className='text-muted-foreground mb-6'>
+            Сизда ушбу саҳифани кўриш учун рухсат йўқ.
+          </p>
+          <Button onClick={() => navigate('/patients')} className='w-full'>
+            Орқага қайтиш
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
 	useEffect(() => {
 		if (patientIdFromState && !selectedPatientId) {
@@ -499,15 +518,17 @@ const LabOrder = () => {
 							>
 								<X className='w-4 h-4 sm:w-5 sm:h-5 mr-2' />
 								Бекор қилиш
-							</Button>
-							<Button
-								size='lg'
-								className='gradient-success w-full sm:w-auto text-sm sm:text-base'
-								onClick={handleSave}
-								disabled={isCreating}
-							>
-								<Save className='w-4 h-4 sm:w-5 sm:h-5 mr-2' />
-								{isCreating ? 'Сақланмоқда...' : 'Сақлаш'}
+							{canCreate && (
+								<Button
+									size='lg'
+									className='gradient-success w-full sm:w-auto text-sm sm:text-base'
+									onClick={handleSave}
+									disabled={isCreating}
+								>
+									<Save className='w-4 h-4 sm:w-5 sm:h-5 mr-2' />
+									{isCreating ? 'Сақланмоқда...' : 'Сақлаш'}
+								</Button>
+							)}
 							</Button>
 						</div>
 					</>
