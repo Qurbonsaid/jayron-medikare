@@ -342,7 +342,7 @@ export const RoutePermissions: RoutePermission[] = [
     description: 'View lab results',
   },
   {
-    path: '/lab-results/:id',
+    path: '/lab-results',
     name: 'Update Lab Result',
     method: 'PUT',
     roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
