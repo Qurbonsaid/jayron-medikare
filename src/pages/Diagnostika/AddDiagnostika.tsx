@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { useRouteActions } from '@/hooks/RBS';
 import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -38,6 +39,11 @@ export default function DiagnosticsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Permission checks
+  const { canRead, canCreate, canUpdate, canDelete } =
+    useRouteActions('/add-diagnostika');
+
+  // All hooks MUST be called before any early returns
   const { data, isLoading, isError } = useGetAllDiagnosticsQuery();
   const [createDiagnostic, { isLoading: isCreating }] =
     useCreateDiagnosticMutation();
@@ -46,6 +52,17 @@ export default function DiagnosticsPage() {
   const [deleteDiagnostic, { isLoading: isDeleting }] =
     useDeleteDiagnosticMutation();
   const handleRequest = useHandleRequest();
+
+  // Early return AFTER all hooks
+  if (!canRead) {
+    return (
+      <div className='flex items-center justify-center h-96'>
+        <p className='text-lg text-gray-500'>
+          Sizda bu sahifaga kirish huquqi yo'q.
+        </p>
+      </div>
+    );
+  }
 
   // 🔍 Search filter
   const filtered = data?.data.filter(
@@ -165,6 +182,7 @@ export default function DiagnosticsPage() {
             className='w-full sm:w-64'
           />
         </div>
+        {canCreate && (
           <Button
             className='bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2'
             onClick={() => {
@@ -174,6 +192,7 @@ export default function DiagnosticsPage() {
           >
             <Plus size={18} /> Qo'shish
           </Button>
+        )}
       </div>
 
       {/* CREATE / EDIT DIALOG */}
@@ -291,6 +310,7 @@ export default function DiagnosticsPage() {
                 </p>
               </div>
               <div className='flex items-center gap-2'>
+                {canUpdate && (
                   <Button
                     size='icon'
                     variant='outline'
@@ -302,6 +322,8 @@ export default function DiagnosticsPage() {
                   >
                     <Edit size={16} />
                   </Button>
+                )}
+                {canDelete && (
                   <Button
                     size='icon'
                     variant='outline'
@@ -313,6 +335,7 @@ export default function DiagnosticsPage() {
                   >
                     <Trash2 size={16} />
                   </Button>
+                )}
               </div>
             </CardContent>
           </Card>

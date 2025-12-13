@@ -34,23 +34,21 @@ export const PrivateRoute = () => {
   }
 
   // Check role-based authorization
-  const currentRoute = routers.find((r) => {
-    // Use matchPath for dynamic routes like /patient/:id
-    return matchPath(r.path, location.pathname);
-  });
+  // const currentRoute = routers.find((r) => {
+  //   // Use matchPath for dynamic routes like /patient/:id
+  //   return matchPath(r.path, location.pathname);
+  // });
 
-  if (currentRoute && userData.data.role) {
-    const hasPermission = currentRoute.permission.some((perm) =>
-      perm.includes(userData.data.role)
-    );
+  // if (currentRoute && userData.data.role) {
+  //   const hasPermission = currentRoute.permission.includes(userData.data.role);
 
-    if (!hasPermission) {
-      console.warn(
-        `🔒 Access denied for role: ${userData.data.role} on path: ${location.pathname}`
-      );
-      return <Navigate to='/patients' replace />;
-    }
-  }
+  //   if (!hasPermission) {
+  //     console.warn(
+  //       `🔒 Access denied for role: ${userData.data.role} on path: ${location.pathname}`
+  //     );
+  //     return <Navigate to='/patients' replace />;
+  //   }
+  // }
 
   return <Outlet />;
 };

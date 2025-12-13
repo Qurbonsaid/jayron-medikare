@@ -83,14 +83,17 @@ function Medication() {
   const handleRequest = useHandleRequest();
 
   // Permission checks
-  const { canRead: canReadMedication, canCreate } = useRouteActions('/medication');
+  const { canRead: canReadMedication, canCreate } =
+    useRouteActions('/medication');
   const { canUpdate, canDelete } = useRouteActions('/medication/:id');
 
   if (!canReadMedication) {
     return (
       <div className='container mx-auto py-4 px-4 sm:py-6'>
         <div className='text-center py-10'>
-          <p className='text-muted-foreground'>Sizda bu bo'limga kirishga ruxsat yo'q</p>
+          <p className='text-muted-foreground'>
+            Sizda bu bo'limga kirishga ruxsat yo'q
+          </p>
         </div>
       </div>
     );

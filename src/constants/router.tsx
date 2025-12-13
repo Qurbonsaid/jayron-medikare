@@ -145,7 +145,7 @@ const baseRouters = [
   {
     path: '/patient-portal',
     element: <PatientPortal />,
-  },
+  }
 ] as const;
 
 export const routers: RouteConfig[] = baseRouters.map((route) => ({

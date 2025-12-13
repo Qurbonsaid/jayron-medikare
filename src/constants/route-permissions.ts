@@ -291,6 +291,20 @@ export const RoutePermissions: RoutePermission[] = [
     ],
     description: 'View analysis parameters',
   },
+  
+  {
+    path: '/analysisById/:id',
+    name: 'Analysis Parameters',
+    method: 'POST',
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.NURSE,
+      RoleConstants.RECEPTIONIST,
+    ],
+    description: 'View analysis parameters',
+  },
   {
     path: '/analysisById/:id',
     name: 'Update Analysis',
