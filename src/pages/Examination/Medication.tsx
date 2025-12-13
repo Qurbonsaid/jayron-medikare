@@ -40,6 +40,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { useRouteActions } from '@/hooks/RBS/useRoutePermission';
 import {
   Droplets,
   Eye,
@@ -80,6 +81,20 @@ function Medication() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const handleRequest = useHandleRequest();
+
+  // Permission checks
+  const { canRead: canReadMedication, canCreate } = useRouteActions('/medication');
+  const { canUpdate, canDelete } = useRouteActions('/medication/:id');
+
+  if (!canReadMedication) {
+    return (
+      <div className='container mx-auto py-4 px-4 sm:py-6'>
+        <div className='text-center py-10'>
+          <p className='text-muted-foreground'>Sizda bu bo'limga kirishga ruxsat yo'q</p>
+        </div>
+      </div>
+    );
+  }
 
   // RTK Query hooks
   const {
@@ -250,14 +265,16 @@ function Medication() {
             Barcha dorilarni ko'ring, tahrirlang va boshqaring
           </p>
         </div>
-        <Button
-          onClick={() => setIsCreateOpen(true)}
-          size='lg'
-          className='gap-2 w-full md:w-auto'
-        >
-          <Plus className='h-4 w-4' />
-          <span className='sm:inline'>Yangi dori qo'shish</span>
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setIsCreateOpen(true)}
+            size='lg'
+            className='gap-2 w-full md:w-auto'
+          >
+            <Plus className='h-4 w-4' />
+            <span className='sm:inline'>Yangi dori qo'shish</span>
+          </Button>
+        )}
       </div>
 
       {/* Filters and Search */}
@@ -451,25 +468,29 @@ function Medication() {
                           >
                             <Eye className='h-4 w-4' />
                           </Button>
-                          <Button
-                            size='icon'
-                            variant='ghost'
-                            onClick={() => handleEdit(medication)}
-                            className='h-8 w-8 hover:bg-amber-500/10 hover:text-amber-600'
-                          >
-                            <Pencil className='h-4 w-4' />
-                          </Button>
-                          <Button
-                            size='icon'
-                            variant='ghost'
-                            onClick={() => {
-                              setDeleteId(medication._id);
-                              setIsDeleteOpen(true);
-                            }}
-                            className='h-8 w-8 hover:bg-red-500/10 hover:text-red-600'
-                          >
-                            <Trash2 className='h-4 w-4' />
-                          </Button>
+                          {canUpdate && (
+                            <Button
+                              size='icon'
+                              variant='ghost'
+                              onClick={() => handleEdit(medication)}
+                              className='h-8 w-8 hover:bg-amber-500/10 hover:text-amber-600'
+                            >
+                              <Pencil className='h-4 w-4' />
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button
+                              size='icon'
+                              variant='ghost'
+                              onClick={() => {
+                                setDeleteId(medication._id);
+                                setIsDeleteOpen(true);
+                              }}
+                              className='h-8 w-8 hover:bg-red-500/10 hover:text-red-600'
+                            >
+                              <Trash2 className='h-4 w-4' />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -576,6 +597,7 @@ function Medication() {
                           <Eye className='h-4 w-4' />
                           Ko'rish
                         </Button>
+                        {canUpdate && (
                           <Button
                             size='sm'
                             variant='outline'
@@ -585,6 +607,8 @@ function Medication() {
                             <Pencil className='h-4 w-4' />
                             Tahrirlash
                           </Button>
+                        )}
+                        {canDelete && (
                           <Button
                             size='icon'
                             variant='ghost'
@@ -596,6 +620,7 @@ function Medication() {
                           >
                             <Trash2 className='h-4 w-4' />
                           </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>

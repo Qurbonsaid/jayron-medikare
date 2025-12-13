@@ -47,6 +47,7 @@ const Examinations = () => {
 
   // RBS Permission checks
   const { canRead, canUpdate, canDelete } = useRouteActions('/examination/:id');
+  const { canCreate } = useRouteActions('/new-visit');
 
   // Modals
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -88,11 +89,6 @@ const Examinations = () => {
   const exams = examsData?.data || [];
   const diagnoses = diagnosisData?.data || [];
 
-  // Open detail modal
-  const handleDetailClick = (exam: any) => {
-    setSelectedExam(exam);
-    setIsDetailModalOpen(true);
-  };
 
   // Open edit modal from detail
   const handleEditFromDetail = () => {
@@ -129,16 +125,6 @@ const Examinations = () => {
     });
   };
 
-  // Open edit modal
-  const handleEditClick = (exam: any) => {
-    setSelectedExam(exam);
-    setEditForm({
-      complaints: exam.complaints || '',
-      description: exam.description || '',
-      diagnosis: exam.diagnosis?._id || exam.diagnosis || '',
-    });
-    setIsEditModalOpen(true);
-  };
 
   // Handle update
   const handleUpdate = async () => {
@@ -250,13 +236,13 @@ const Examinations = () => {
                 <label className='block text-sm font-medium text-transparent mb-1.5'>
                   &nbsp;
                 </label>
-                <Button
+                {canCreate ? (<Button
                   className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full'
                   onClick={() => navigate('/new-visit')}
                 >
                   <Plus className='w-4 h-4 mr-2' />
                   Янги Кўрик
-                </Button>
+                </Button>) : ""}
               </div>
             </div>
           </div>
@@ -345,7 +331,7 @@ const Examinations = () => {
                         {new Date(exam.created_at).toLocaleDateString('uz-UZ')}
                       </TableCell>
                       <TableCell>
-                        <div className='flex justify-end gap-2'>
+                        {canRead ? (<div className='flex justify-end gap-2'>
                           <Button
                             size='sm'
                             variant='outline'
@@ -356,7 +342,7 @@ const Examinations = () => {
                             <Eye className='w-4 h-4 mr-1' />
                             Батафсил
                           </Button>
-                        </div>
+                        </div>):''}
                       </TableCell>
                     </TableRow>
                   ))}

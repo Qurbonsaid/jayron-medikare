@@ -24,6 +24,19 @@ export const RoutePermissions: RoutePermission[] = [
     description: 'View patients list',
   },
   {
+    path: '/patients',
+    name: 'Create Patient',
+    method: 'POST',
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.RECEPTIONIST,
+    ],
+    description: 'Create new patient',
+  },
+
+  {
     path: '/patient/:id',
     name: 'Patient Profile',
     method: 'GET',
@@ -54,18 +67,6 @@ export const RoutePermissions: RoutePermission[] = [
     method: 'DELETE',
     roles: [RoleConstants.CEO, RoleConstants.ADMIN],
     description: 'Delete patient',
-  },
-  {
-    path: '/patients',
-    name: 'Create Patient',
-    method: 'POST',
-    roles: [
-      RoleConstants.CEO,
-      RoleConstants.ADMIN,
-      RoleConstants.DOCTOR,
-      RoleConstants.RECEPTIONIST,
-    ],
-    description: 'Create new patient',
   },
 
   // Examination Routes
