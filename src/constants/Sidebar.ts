@@ -100,7 +100,7 @@ export const baseMenuCategories: MenuCategory[] = [
     icon: Microscope,
     items: [
       {
-        title: 'Диагностика қўшиш',
+        title: 'Tаҳлил тури яратиш',
         url: '/add-diagnostika',
         icon: CirclePlus,
         roles: [],
