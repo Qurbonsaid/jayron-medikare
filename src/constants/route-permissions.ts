@@ -408,6 +408,19 @@ export const RoutePermissions: RoutePermission[] = [
   },
   {
     path: '/inpatient/:id',
+    name: 'View Inpatient Rooms',
+    method: 'GET',
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.NURSE,
+      RoleConstants.RECEPTIONIST,
+    ],
+    description: 'View rooms for inpatient',
+  },
+  {
+    path: '/inpatient/:id',
     name: 'Update Inpatient',
     method: 'PUT',
     roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],

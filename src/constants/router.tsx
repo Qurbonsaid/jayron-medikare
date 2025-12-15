@@ -33,8 +33,53 @@ export interface RouteConfig {
   permission: RoleConstants[];
 }
 
+/**
+ * Check if a path matches a route pattern
+ * e.g., matchesRoutePattern('/patient/:id', '/patient/123') -> true
+ * Also handles: matchesRoutePattern('/patient/:id', '/patient/:id') -> true
+ */
+const matchesRoutePattern = (pattern: string, path: string): boolean => {
+  // Direct match (both are patterns or both are exact)
+  if (pattern === path) {
+    return true;
+  }
+
+  const patternParts = pattern.split('/').filter(Boolean);
+  const pathParts = path.split('/').filter(Boolean);
+
+  if (patternParts.length !== pathParts.length) {
+    return false;
+  }
+
+  return patternParts.every((part, index) => {
+    // If pattern part is a parameter like :id, it matches any path part
+    if (part.startsWith(':')) {
+      return true;
+    }
+    // Otherwise, must match exactly
+    return part === pathParts[index];
+  });
+};
+
 const selectPermission = (path: string) => {
-  return RoutePermissions.find((el) => el.path === path)?.roles || [];
+  // First try exact match with GET method (for page access)
+  const exactMatch = RoutePermissions.find(
+    (el) => el.path === path && el.method === 'GET'
+  );
+  if (exactMatch) {
+    return exactMatch.roles;
+  }
+
+  // If no exact match, try pattern matching with GET method
+  const patternMatch = RoutePermissions.find(
+    (el) => matchesRoutePattern(el.path, path) && el.method === 'GET'
+  );
+  if (patternMatch) {
+    return patternMatch.roles;
+  }
+
+  // Fallback: return empty array if no permission found
+  return [];
 };
 
 const baseRouters = [
@@ -147,7 +192,7 @@ const baseRouters = [
   {
     path: '/patient-portal',
     element: <PatientPortal />,
-  }
+  },
 ] as const;
 
 export const routers: RouteConfig[] = baseRouters.map((route) => ({

@@ -305,14 +305,16 @@ const Patients = () => {
                       </div>
                     </div>
                     <div className='space-y-2 mb-3'>
-                      <div className='flex items-center gap-2 text-xs sm:text-sm'>
-                        <Phone className='w-4 h-4 text-muted-foreground' />
-                        <span>{patient.phone}</span>
-                      </div>
-                      {patient.diagnosis && (
+                      {patient.phone && (
+                        <div className='flex items-center gap-2 text-xs sm:text-sm'>
+                          <Phone className='w-4 h-4 text-muted-foreground' />
+                          <span>{patient.phone}</span>
+                        </div>
+                      )}
+                      {patient.diagnosis?.doctor_id?.fullname && (
                         <div className='flex items-center gap-2 text-xs sm:text-sm'>
                           <Users className='w-4 h-4 text-muted-foreground' />
-                          <span>{patient?.diagnosis?.diagnosis_id?.name}</span>
+                          <span>{patient.diagnosis.doctor_id.fullname}</span>
                         </div>
                       )}
                     </div>
