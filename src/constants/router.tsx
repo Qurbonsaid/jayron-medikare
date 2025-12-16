@@ -263,7 +263,7 @@ export const navigator = [
   {
     path: '/add-diagnostika',
     to: null,
-    title: 'Диагностика қўшиш',
+    title: 'Tаҳлил тури яратиш',
   },
   {
     path: '/analysisById/:id',
