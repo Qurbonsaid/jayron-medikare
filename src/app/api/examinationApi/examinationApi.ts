@@ -6,11 +6,13 @@ import {
 	addImagesRes,
 	AllExamReq,
 	AllExamRes,
+	CreateExamWithPrescriptionAndServiceReq,
 	createPrescriptionDays,
 	createPrescriptionReq,
 	CreateService,
-	createServiceDays,
+	examCreateReq,
 	ExamRes,
+	ExamResponse,
 	GetAlldailyCheckup,
 	getAllPrescriptionReq,
 	getAllPrescriptionRes,
@@ -19,14 +21,11 @@ import {
 	getOneServiceRes,
 	imageReq,
 	MutationRes,
-	examCreateReq,
-	ExamResponse,
 	reomveimagesRes,
 	takeMedicine,
 	takeService,
 	UpdateExamReq,
 	updatePrescriptionReq,
-	CreateExamWithPrescriptionAndServiceReq,
 } from './types'
 
 export const examinationApi = baseApi.injectEndpoints({
@@ -193,11 +192,15 @@ export const examinationApi = baseApi.injectEndpoints({
 			invalidatesTags: [API_TAGS.EXAMS],
 		}),
 		takeService: builder.mutation<void, takeService>({
-			query: ({ id }) => ({
+			query: ({ id, item_id, day }) => ({
 				url: `service/take-item/${id}`,
 				method: 'PATCH',
+				body: {
+					item_id,
+					day,
+				},
 			}),
-			invalidatesTags: [API_TAGS.EXAMS],
+			invalidatesTags: [API_TAGS.EXAMS, API_TAGS.SERVICE],
 		}),
 
 		// daily-checkup

@@ -409,8 +409,8 @@ export interface createServiceDays {
 
 export interface takeService {
   id: string;
-  ItemId: string;
-  day: string;
+  item_id: string;
+  day: number;
 }
 
 export type Service = {
