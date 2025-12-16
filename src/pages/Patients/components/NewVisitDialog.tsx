@@ -378,7 +378,7 @@ const NewVisitDialog = ({
       items: Array<{
         service_type_id: string;
         notes: string;
-        days: Array<{ day: number; date: Date }>;
+        days: Array<{ day: number; date: string | null }>;
       }>;
     } | null = null;
 
@@ -386,11 +386,14 @@ const NewVisitDialog = ({
       const serviceItems = services.map((srv) => {
         const allDays = generateDays(serviceDuration, serviceStartDate);
         const markedDays = srv.markedDays || [];
-        // Only include marked days, or all days if none are marked
-        const daysToSave =
-          markedDays.length > 0
-            ? allDays.filter((day) => markedDays.includes(day.day))
-            : allDays;
+        // Include all days, but set date to null for unmarked days
+        const daysToSave = allDays.map((day) => ({
+          day: day.day,
+          date:
+            markedDays.includes(day.day) && day.date
+              ? format(day.date, 'yyyy-MM-dd')
+              : null,
+        }));
 
         return {
           service_type_id: srv.service_id,

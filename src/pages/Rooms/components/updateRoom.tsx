@@ -1,6 +1,5 @@
 import { useUpdateRoomMutation } from "@/app/api/roomApi";
 import {
-  CreatedRoomRequest,
   Room,
   UpdatedRoomRequest,
 } from "@/app/api/roomApi/types";

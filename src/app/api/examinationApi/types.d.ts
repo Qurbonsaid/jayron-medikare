@@ -417,13 +417,13 @@ export type Service = {
   service_type_id: string;
   days: Array<{
     day: number;
-    date: Date | null;
+    date: Date | string | null;
   }>;
   notes: string;
 };
 
 export interface CreateService {
-  id: string;
+  examination_id: string;
   duration: number;
   items: Array<Service & { _id: string }>;
 }
