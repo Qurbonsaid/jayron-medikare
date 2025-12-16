@@ -1,48 +1,40 @@
-import { useState, useEffect, useRef } from 'react'
+import { useMeQuery, useUpdateMeMutation } from '@/app/api/authApi'
+import { baseApi, clearAuthTokens } from '@/app/api/baseApi'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
 	DialogContent,
+	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogFooter,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { ArrowLeft, User, Mail, Phone, Shield, Edit, Trash } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { useMeQuery, useUpdateMeMutation } from '@/app/api/authApi'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
-import { toast } from 'sonner'
 import { profileSchema } from '@/validation/validationProfile'
-import { baseApi, clearAuthTokens } from '@/app/api/baseApi'
+import { Phone, Shield, User } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 export default function ProfilePage() {
 	const navigate = useNavigate()
 	const [editOpen, setEditOpen] = useState(false)
 	const [logoutOpen, setLogoutOpen] = useState(false)
-	const [menuOpen, setMenuOpen] = useState(false)
 	const handleRequest = useHandleRequest()
 
-	const menuRef = useRef<HTMLDivElement | null>(null)
-
-	// 🔹 Tashqariga bosilganda menyuni yopish
+	// 🔹 Listen to custom events from AppLayout header menu
 	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-				setMenuOpen(false)
-			}
-		}
+		const handleEdit = () => setEditOpen(true)
+		const handleLogout = () => setLogoutOpen(true)
 
-		if (menuOpen) {
-			document.addEventListener('mousedown', handleClickOutside)
-		} else {
-			document.removeEventListener('mousedown', handleClickOutside)
-		}
+		window.addEventListener('profile-edit', handleEdit)
+		window.addEventListener('profile-logout', handleLogout)
 
 		return () => {
-			document.removeEventListener('mousedown', handleClickOutside)
+			window.removeEventListener('profile-edit', handleEdit)
+			window.removeEventListener('profile-logout', handleLogout)
 		}
-	}, [menuOpen])
+	}, [])
 
 	// 🔹 RTK Query: profilni olish
 	const { data: user, isLoading, isError } = useMeQuery()
@@ -59,7 +51,7 @@ export default function ProfilePage() {
 		license_number: '',
 	})
 
-	const { refetch } = useMeQuery(undefined, { skip: false });
+	const { refetch } = useMeQuery(undefined, { skip: false })
 
 	// Ma’lumotlarni tahrirlash modal ochilganda formni to‘ldirish
 	useEffect(() => {
@@ -95,15 +87,19 @@ export default function ProfilePage() {
 	}
 
 	const OnSaveUpdate = () => {
+		console.log('OnSaveUpdate called', formData)
 		const result = profileSchema().safeParse(formData)
+		console.log('Validation result:', result)
 		if (!result.success) {
 			const newErrors = {}
 			result.error.errors.forEach(err => {
 				newErrors[err.path[0]] = err.message
 			})
+			console.log('Validation errors:', newErrors)
 			setErrors(newErrors)
 			return
 		}
+		console.log('Calling handleSubmit')
 		handleSubmit()
 	}
 
@@ -129,69 +125,6 @@ export default function ProfilePage() {
 
 	return (
 		<div className='min-h-screen bg-background flex flex-col'>
-			{/* Header */}
-			<header className='bg-card border-b sticky top-0 z-10'>
-				<div className='w-full px-4 sm:px-6 py-4 flex flex-row flex-wrap items-center justify-between gap-3'>
-					{/* Chap taraf */}
-					<div className='flex items-center gap-3 min-w-0'>
-						{/* <Button
-							variant='ghost'
-							size='icon'
-							onClick={() => navigate('/patients')}
-						>
-							<ArrowLeft className='w-5 h-5' />
-						</Button> */}
-						<div className='min-w-0'>
-							<h1 className='text-lg sm:text-xl font-bold truncate'>Profil</h1>
-							<p className='text-xs sm:text-sm text-muted-foreground truncate'>
-								Foydalanuvchi profili
-							</p>
-						</div>
-					</div>
-
-					{/* 3 chiziqli menyu */}
-					<div ref={menuRef} className='relative flex-shrink-0'>
-						<button
-							className='flex flex-col justify-center items-center gap-1 w-8 h-8 p-1 rounded hover:bg-gray-200 transition'
-							onClick={() => setMenuOpen(prev => !prev)}
-						>
-							<span className='w-5 h-0.5 bg-gray-600 block rounded' />
-							<span className='w-5 h-0.5 bg-gray-600 block rounded' />
-							<span className='w-5 h-0.5 bg-gray-600 block rounded' />
-						</button>
-
-						{menuOpen && (
-							<div className='absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-20'>
-								<button
-									className='flex gap-2 items-center w-full text-left px-3 py-2 hover:bg-gray-100'
-									onClick={() => {
-										setEditOpen(true)
-										setMenuOpen(false)
-									}}
-								>
-									<span>
-										<Edit size={12} />
-									</span>
-									<span> Tahrirlash</span>
-								</button>
-								<button
-									className='flex gap-2 items-center w-full text-left px-3 py-2 hover:bg-gray-100 text-red-600'
-									onClick={() => {
-										setLogoutOpen(true)
-										setMenuOpen(false)
-									}}
-								>
-									<span>
-										<Trash size={13} />
-									</span>
-									<span>Logout</span>
-								</button>
-							</div>
-						)}
-					</div>
-				</div>
-			</header>
-
 			{/* Asosiy kontent */}
 			<main className='flex-grow w-full flex flex-col items-center justify-start py-8 sm:py-12 px-3 sm:px-6'>
 				<div className='w-full max-w-4xl flex flex-col gap-10'>
@@ -419,7 +352,7 @@ export default function ProfilePage() {
 							onClick={() => {
 								clearAuthTokens()
 								navigate('/login')
-								localStorage.removeItem('rtk_cache');
+								localStorage.removeItem('rtk_cache')
 								baseApi.util.resetApiState()
 								refetch()
 							}}

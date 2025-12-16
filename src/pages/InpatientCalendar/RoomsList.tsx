@@ -250,19 +250,17 @@ const RoomsList = () => {
                   )}
 
                   {/* Availability Status */}
-                  {availableBeds > 0 ? (
-                    <div className='flex items-center gap-2 text-green-600 dark:text-green-400 text-xs sm:text-sm'>
-                      <div className='w-2 h-2 rounded-full bg-green-500 animate-pulse' />
-                      <span className='font-medium'>
-                        {availableBeds} та бўш
-                      </span>
+                  {/* availableBeds > 0 ? (
+                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-xs sm:text-sm">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <span className="font-medium">{availableBeds} та бўш</span>
                     </div>
                   ) : (
                     <div className='flex items-center gap-2 text-destructive text-xs sm:text-sm'>
                       <div className='w-2 h-2 rounded-full bg-destructive' />
                       <span className='font-medium'>Тўлиқ банд</span>
                     </div>
-                  )}
+                  ) */}
                 </div>
               </Card>
             );

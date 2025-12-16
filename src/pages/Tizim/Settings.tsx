@@ -50,7 +50,7 @@ export type Settings = {
 	clinic_name: string
 	address: string
 	phone: string
-	email: string
+	// email: string
 	work_start_time: string
 	work_end_time: string
 	logo_path: string
@@ -122,7 +122,7 @@ const Settings = () => {
 	const [form, setForm] = useState<UserCreateResponse>({
 		fullname: '',
 		username: '',
-		email: '',
+		// email: '',
 		phone: '',
 		password: '',
 		role: '',
@@ -140,7 +140,7 @@ const Settings = () => {
 				setForm({
 					fullname: '',
 					username: '',
-					email: '',
+					// email: '',
 					phone: '',
 					password: '',
 					role: '',
@@ -358,7 +358,7 @@ const Settings = () => {
 		setForm({
 			fullname: '',
 			username: '',
-			email: '',
+			// email: '',
 			phone: '+998',
 			password: '',
 			role: '',
@@ -517,7 +517,7 @@ const Settings = () => {
 		const formData: UserCreateResponse = {
 			fullname: user.fullname,
 			username: user.username,
-			email: user.email,
+			// email: user.email,
 			phone: user.phone,
 			password: '',
 			role: user.role,
@@ -548,7 +548,7 @@ const Settings = () => {
 			setForm({
 				fullname: user.fullname,
 				username: user.username,
-				email: user.email,
+				// email: user.email,
 				phone: user.phone,
 				password: '', // agar foydalanuvchi o'zgartirmasa bo'sh qoldiramiz
 				role: user.role,
@@ -664,10 +664,10 @@ const Settings = () => {
 																{user.section}
 															</span>
 														</p>
-														<p className='text-[10px] sm:text-xs text-muted-foreground truncate'>
+														{/* <p className='text-[10px] sm:text-xs text-muted-foreground truncate'>
 															Email:{' '}
 															<span className='font-medium'>{user.email}</span>
-														</p>
+														</p> */}
 														<p className='text-[10px] sm:text-xs text-muted-foreground'>
 															Ҳолат:{' '}
 															<Badge
@@ -772,7 +772,7 @@ const Settings = () => {
 														'ФИО',
 														'Рол',
 														'Бўлим',
-														'Email',
+														// 'Email',
 														'Ҳолат',
 														'Ҳаракатлар',
 													].map(i => (
@@ -806,9 +806,9 @@ const Settings = () => {
 															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
 																{user.section}
 															</td>
-															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm text-muted-foreground'>
+															{/* <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm text-muted-foreground'>
 																{user.email}
-															</td>
+															</td> */}
 															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
 																<Badge
 																	className={
@@ -983,7 +983,7 @@ const Settings = () => {
 											</p>
 										)}
 									</div>
-									<div>
+									{/* <div>
 										<Label className='text-xs sm:text-sm'>Email</Label>
 										<Input
 											value={getAllSettings?.email || ''}
@@ -995,7 +995,7 @@ const Settings = () => {
 												{errors.email}
 											</p>
 										)}
-									</div>
+									</div> */}
 								</div>
 
 								<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
@@ -1261,7 +1261,7 @@ const Settings = () => {
 						setForm({
 							fullname: '',
 							username: '',
-							email: '',
+							// email: '',
 							phone: '+998',
 							password: '',
 							role: '',
@@ -1310,7 +1310,7 @@ const Settings = () => {
 								)}
 							</div>
 						</div>
-						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+						{/* <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 							<div>
 								<Label className='text-xs sm:text-sm'>Email</Label>
 								<Input
@@ -1340,7 +1340,7 @@ const Settings = () => {
 									</p>
 								)}
 							</div>
-						</div>
+						</div> */}
 						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 							<div>
 								<Label className='text-xs sm:text-sm'>Рол</Label>
