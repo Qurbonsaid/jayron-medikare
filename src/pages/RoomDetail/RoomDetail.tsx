@@ -199,7 +199,8 @@ const RoomDetail = () => {
 													? 'border-red-500 bg-red-100 hover:bg-red-200'
 													: 'bg-green-100 border-green-500/50 hover:bg-green-200'
 													}`}
-											>												<div className='absolute top-4 right-4'>
+											>
+												<div className='absolute top-4 right-4'>
 													<DropdownMenu>
 														<DropdownMenuTrigger>
 															<Button
