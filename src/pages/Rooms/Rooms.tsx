@@ -96,9 +96,9 @@ const Rooms = () => {
     const leave = room.patients?.some((patient) => {
       const leaveDate = new Date(patient.estimated_leave_time);
       return (
-        leaveDate.getDate() === today.getDate() &&
-        leaveDate.getMonth() === today.getMonth() &&
-        leaveDate.getFullYear() === today.getFullYear()
+        leaveDate.getDate() <= today.getDate() &&
+        leaveDate.getMonth() <= today.getMonth() &&
+        leaveDate.getFullYear() <= today.getFullYear()
       );
     });
     return leave;
