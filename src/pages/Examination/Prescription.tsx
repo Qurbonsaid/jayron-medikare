@@ -37,7 +37,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -220,8 +220,7 @@ const Prescription = () => {
     useUpdatePrescriptionMutation();
   const [addServiceToExam, { isLoading: isAddingService }] =
     useAddServiceMutation();
-  const [updateService] =
-    useUpdateServiceMutation();
+  const [updateService] = useUpdateServiceMutation();
   const handleRequest = useHandleRequest();
 
   // Fetch services by patient_id to check if services exist
@@ -1657,12 +1656,17 @@ const Prescription = () => {
                       </Label>
                       <Input
                         type='number'
-                        min={1}
+                        min={0}
                         max={30}
-                        value={serviceDuration}
+                        value={serviceDuration === 0 ? '' : serviceDuration}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value) || 7;
-                          if (val >= 1 && val <= 30) {
+                          const inputValue = e.target.value;
+                          if (inputValue === '') {
+                            setServiceDuration(0);
+                            return;
+                          }
+                          const val = parseInt(inputValue) || 0;
+                          if (val >= 0 && val <= 30) {
                             setServiceDuration(val);
                             // Auto-adjust marked days when duration changes
                             setServices(
@@ -1769,9 +1773,8 @@ const Prescription = () => {
                             let daysToShow = 8; // Default to 8
 
                             if (services.length > 0) {
-                              // If adding new services, use serviceDuration
-                              daysToShow =
-                                serviceDuration > 0 ? serviceDuration : 8;
+                              // If adding new services, use serviceDuration (minimum 1)
+                              daysToShow = Math.max(serviceDuration, 1);
                             } else if (patientServices.length > 0) {
                               // If only existing services, find max duration
                               const maxDuration = patientServices.reduce(
@@ -1907,7 +1910,7 @@ const Prescription = () => {
                         {/* New services being added */}
                         {services.map((srv) => {
                           const days = generateDays(
-                            serviceDuration,
+                            Math.max(serviceDuration, 1),
                             serviceStartDate
                           );
                           const markedDays = srv.markedDays || [];
