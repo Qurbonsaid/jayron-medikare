@@ -353,7 +353,7 @@ const Medicine = () => {
 						id: confirmModal.prescriptionId!,
 						body: {
 							item_id: confirmModal.itemId!,
-							day: confirmModal.day!,
+							day: Number(confirmModal.day!),
 						},
 					}),
 				onSuccess: () => {
@@ -585,7 +585,7 @@ const Medicine = () => {
 																								record.prescriptionData!._id,
 																								null,
 																								item._id,
-																								String(day.day),
+																								day.day,
 																								'medicine'
 																							)
 																						}}
@@ -633,6 +633,8 @@ const Medicine = () => {
 														{/* Mobile vertical layout */}
 														<div className='block sm:hidden space-y-3'>
 															<div className='px-2'>
+																prescriptionda yana day string bo'lib ketayapti
+																?
 																<Select
 																	value={selectedServiceItems[record._id] || ''}
 																	onValueChange={value =>
@@ -714,7 +716,7 @@ const Medicine = () => {
 																							null,
 																							record.serviceData!._id,
 																							selectedService._id,
-																							String(day.day),
+																							day.day,
 																							'service'
 																						)
 																					}}
@@ -878,7 +880,7 @@ const Medicine = () => {
 																									null,
 																									record.serviceData!._id,
 																									selectedService._id,
-																									String(day.day),
+																									day.day,
 																									'service'
 																								)
 																							}}
