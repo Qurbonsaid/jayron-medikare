@@ -476,33 +476,37 @@ const Rooms = () => {
                       </div>
                     </div>
                     <div className='space-y-2 mb-3'>
-                      <div className='flex items-center gap-2 text-xs sm:text-sm'>
-                        <span>
-                          Хона нархи {formatNumber(room.room_price)} сўм
-                        </span>
-                      </div>
-                      <div className='flex items-center gap-2 text-xs sm:text-sm'>
-                        <span>
-                          Сиғим: {room.patient_capacity} кишилик |{' '}
-                          <span
-                            className={`text-center font-bold ${
-                              room.patient_occupied
-                                ? room.patient_occupied ===
-                                  room.patient_capacity
-                                  ? 'text-red-600'
-                                  : 'text-yellow-600'
-                                : 'text-green-600'
-                            }`}
-                          >
-                            Бандлик:{' '}
-                            {room.patient_occupied
-                              ? room.patient_occupied === room.patient_capacity
-                                ? 'Тўлиқ банд'
-                                : `${room.patient_occupied} та банд`
-                              : 'бўш'}
-                          </span>{' '}
-                        </span>
-                      </div>
+                      {room.room_price !== undefined && room.room_price !== null && (
+                        <div className='flex items-center gap-2 text-xs sm:text-sm'>
+                          <span>
+                            Хона нархи {formatNumber(room.room_price)} сўм
+                          </span>
+                        </div>
+                      )}
+                      {room.patient_capacity !== undefined && room.patient_capacity !== null && (
+                        <div className='flex items-center gap-2 text-xs sm:text-sm'>
+                          <span>
+                            Сиғим: {room.patient_capacity} кишилик |{' '}
+                            <span
+                              className={`text-center font-bold ${
+                                room.patient_occupied
+                                  ? room.patient_occupied ===
+                                    room.patient_capacity
+                                    ? 'text-red-600'
+                                    : 'text-yellow-600'
+                                  : 'text-green-600'
+                              }`}
+                            >
+                              Бандлик:{' '}
+                              {room.patient_occupied
+                                ? room.patient_occupied === room.patient_capacity
+                                  ? 'Тўлиқ банд'
+                                  : `${room.patient_occupied} та банд`
+                                : 'бўш'}
+                            </span>{' '}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className='flex items-center justify-center gap-4 absolute top-4 right-4'>
                       <DropdownMenu>
