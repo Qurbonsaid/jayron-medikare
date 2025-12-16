@@ -162,55 +162,51 @@ export const examinationApi = baseApi.injectEndpoints({
 			invalidatesTags: [API_TAGS.IMAGES],
 		}),
 
-		//service
-		getManyService: builder.query<getAllServiceRes, getAllPrescriptionReq>({
-			query: params => ({
-				url: 'service/get-all',
-				params,
-			}),
-			providesTags: [API_TAGS.SERVICE],
-		}),
-		getOneService: builder.query<getOneServiceRes, string>({
-			query: id => ({
-				url: 'service/get-one/' + id,
-			}),
-			providesTags: [API_TAGS.SERVICE],
-		}),
-		addService: builder.mutation<MutationRes, CreateService>({
-			query: body => ({
-				url: 'service/create',
-				method: 'POST',
-				body,
-			}),
-			invalidatesTags: [API_TAGS.SERVICE],
-		}),
-		updateService: builder.mutation<MutationRes, CreateService>({
-			query: body => ({
-				url: '/service/update/' + body.examination_id,
-				method: 'PATCH',
-				body,
-			}),
-			invalidatesTags: [API_TAGS.EXAMS],
-		}),
-		createServiceDays: builder.mutation<void, createServiceDays>({
-			query: ({ id, serviceId, data }) => ({
-				url: `${PATHS.UPDATE_EXAM}${id}/service/${serviceId}`,
-				method: 'PATCH',
-				body: data,
-			}),
-			invalidatesTags: [API_TAGS.EXAMS],
-		}),
-		takeService: builder.mutation<void, takeService>({
-			query: ({ id, item_id, day }) => ({
-				url: `service/take-item/${id}`,
-				method: 'PATCH',
-				body: {
-					item_id,
-					day,
-				},
-			}),
-			invalidatesTags: [API_TAGS.EXAMS, API_TAGS.SERVICE],
-		}),
+    //service
+    getManyService: builder.query<getAllServiceRes, getAllPrescriptionReq>({
+      query: (params) => ({
+        url: 'service/get-all',
+        params,
+      }),
+      providesTags: [API_TAGS.SERVICE],
+    }),
+    getOneService: builder.query<getOneServiceRes, string>({
+      query: (id) => ({
+        url: 'service/get-one/' + id,
+      }),
+      providesTags: [API_TAGS.SERVICE],
+    }),
+    addService: builder.mutation<MutationRes, CreateService>({
+      query: (body) => ({
+        url: 'service/create',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [API_TAGS.SERVICE],
+    }),
+    updateService: builder.mutation<MutationRes, CreateService>({
+      query: (body) => ({
+        url: '/service/update/' + body.examination_id,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: [API_TAGS.EXAMS , API_TAGS.SERVICE],
+    }),
+    createServiceDays: builder.mutation<void, createServiceDays>({
+      query: ({ id, serviceId, data }) => ({
+        url: `${PATHS.UPDATE_EXAM}${id}/service/${serviceId}`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: [API_TAGS.EXAMS],
+    }),
+    takeService: builder.mutation<void, takeService>({
+      query: ({ id, item_id, day }) => ({
+        url: `${PATHS.TAKE_MEDICINE}${id}/service/${item_id}/day/${day}`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: [API_TAGS.EXAMS],
+    }),
 
 		// daily-checkup
 

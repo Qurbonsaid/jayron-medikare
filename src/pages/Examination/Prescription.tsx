@@ -1,7 +1,9 @@
 import {
   useAddServiceMutation,
   useGetAllExamsQuery,
+  useGetManyServiceQuery,
   useGetOneExamQuery,
+  useUpdateServiceMutation,
 } from '@/app/api/examinationApi/examinationApi';
 import type { Prescription } from '@/app/api/examinationApi/types';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
@@ -35,7 +37,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -108,11 +110,15 @@ const Prescription = () => {
   const [editingPrescriptionId, setEditingPrescriptionId] = useState<
     string | null
   >(null);
+  const [editingPrescriptionDocId, setEditingPrescriptionDocId] = useState<
+    string | null
+  >(null);
   const [editPrescriptionForm, setEditPrescriptionForm] = useState({
     medication_id: '',
     frequency: '',
     duration: '',
     instructions: '',
+    addons: '',
   });
   const [editMedicationSearch, setEditMedicationSearch] = useState('');
 
@@ -214,9 +220,52 @@ const Prescription = () => {
     useUpdatePrescriptionMutation();
   const [addServiceToExam, { isLoading: isAddingService }] =
     useAddServiceMutation();
+  const [updateService] =
+    useUpdateServiceMutation();
   const handleRequest = useHandleRequest();
 
+  // Fetch services by patient_id to check if services exist
+  const { data: patientServicesData } = useGetManyServiceQuery(
+    {
+      page: 1,
+      limit: 100,
+      patient_id: examinationData?.data.patient_id?._id || '',
+    },
+    { skip: !examinationData?.data.patient_id?._id }
+  );
+  const patientServices = patientServicesData?.data || [];
+
   const availableServices = serviceOptions;
+
+  // Helper function to get service by ID
+  const getServiceById = (serviceId: string) => {
+    return (
+      serviceOptions.find((s: any) => s._id === serviceId) ||
+      patientServices
+        .flatMap((doc: any) => doc.items || [])
+        .find((item: any) => {
+          const itemServiceId =
+            typeof item.service_type_id === 'object'
+              ? item.service_type_id?._id
+              : item.service_type_id;
+          return itemServiceId === serviceId;
+        })?.service_type_id
+    );
+  };
+
+  // Update serviceDuration based on existing services
+  useEffect(() => {
+    if (patientServices.length > 0 && patientServices[0]?.duration) {
+      const existingDuration = patientServices[0].duration;
+      // Only update if services array is empty (not adding new services)
+      if (services.length === 0) {
+        setServiceDuration(existingDuration);
+      }
+    } else if (patientServices.length === 0 && services.length === 0) {
+      // Reset to default 7 if no existing services and no new services
+      setServiceDuration(7);
+    }
+  }, [patientServices, services.length]);
 
   // Update examinations list when new data arrives
   useEffect(() => {
@@ -371,8 +420,19 @@ const Prescription = () => {
 
   // Service handlers
   const addService = () => {
+    // Get duration from existing services if available, otherwise use serviceDuration
+    const existingDuration =
+      patientServices.length > 0 && patientServices[0]?.duration
+        ? patientServices[0].duration
+        : serviceDuration;
+
+    // Update serviceDuration if it doesn't match existing services
+    if (patientServices.length > 0 && existingDuration !== serviceDuration) {
+      setServiceDuration(existingDuration);
+    }
+
     // Mark all days by default
-    const allDays = Array.from({ length: serviceDuration }, (_, i) => i + 1);
+    const allDays = Array.from({ length: existingDuration }, (_, i) => i + 1);
     const newService: ServiceItem = {
       id: Date.now().toString(),
       service_id: '',
@@ -542,13 +602,53 @@ const Prescription = () => {
       addons: med.addons || '',
     }));
 
+    // Check if prescription already exists
+    const hasExistingPrescription =
+      examinationData?.data?.prescription?._id &&
+      examinationData.data.prescription.items &&
+      examinationData.data.prescription.items.length > 0;
+
     await handleRequest({
       request: async () => {
-        const res = await createPrescription({
-          examination_id: selectedExaminationId,
-          items: medicationItems,
-        }).unwrap();
-        return res;
+        if (hasExistingPrescription) {
+          // Use updatePrescription - merge new items with existing ones
+          const existingItems = examinationData.data.prescription.items.map(
+            (item: any) => ({
+              _id: item._id,
+              medication_id:
+                typeof item.medication_id === 'object'
+                  ? item.medication_id._id
+                  : item.medication_id,
+              frequency: item.frequency,
+              duration: item.duration,
+              instructions: item.instructions || '',
+              addons: item.addons || '',
+            })
+          );
+
+          // Combine existing items with new items
+          // New items don't have _id - API will create them
+          // We'll use type assertion since new items don't have _id yet
+          const allItems = [
+            ...existingItems,
+            ...(medicationItems as any), // New items without _id
+          ];
+
+          const res = await updatePrescription({
+            id: examinationData.data.prescription._id,
+            body: {
+              items: allItems as any, // Type assertion for new items without _id
+            },
+          }).unwrap();
+          return res;
+        } else {
+          // Use createPrescription for new prescription
+          const res = await createPrescription({
+            examination_id: selectedExaminationId,
+            items: medicationItems,
+          }).unwrap();
+          return res;
+        }
       },
       onSuccess: () => {
         toast.success(`${medications.length} та дори муваффақиятли сақланди`);
@@ -614,31 +714,75 @@ const Prescription = () => {
       return;
     }
 
-    const serviceItems = services.map((srv) => {
-      const allDays = generateDays(serviceDuration, serviceStartDate);
-      const markedDays = srv.markedDays || [];
-      // Include all days, but set date to null for unmarked days
-      const daysToSave = allDays.map((day) => ({
-        day: day.day,
-        date: markedDays.includes(day.day) && day.date
-          ? format(day.date, 'yyyy-MM-dd')
-          : null,
-      }));
+    const hasExistingServices = patientServices.length > 0;
 
-      return {
-        _id: srv.id,
-        service_type_id: srv.service_id,
-        days: daysToSave,
-        notes: srv.notes,
-      };
-    });
+    // Prepare items array
+    let itemsToSave = services.map((srv) => ({
+      service_type_id: srv.service_id,
+      days: (() => {
+        const allDays = generateDays(serviceDuration, serviceStartDate);
+        const markedDays = srv.markedDays || [];
+        // Include all days, but set date to null for unmarked days
+        return allDays.map((day) => ({
+          day: day.day,
+          date:
+            markedDays.includes(day.day) && day.date
+              ? format(day.date, 'yyyy-MM-dd')
+              : null,
+        }));
+      })(),
+      notes: srv.notes,
+    }));
+
+    // If adding new items to existing service document, preserve all existing items
+    if (hasExistingServices) {
+      const existingServiceDoc = patientServices[0]; // Use first service document
+      if (existingServiceDoc && existingServiceDoc.items) {
+        const existingItems = existingServiceDoc.items.map((item: any) => ({
+          _id: item._id,
+          service_type_id:
+            typeof item.service_type_id === 'object'
+              ? item.service_type_id._id
+              : item.service_type_id,
+          days: (item.days || []).map((day: any) => ({
+            day: day.day,
+            date: day.date
+              ? typeof day.date === 'string'
+                ? day.date
+                : format(new Date(day.date), 'yyyy-MM-dd')
+              : null,
+          })),
+          notes: item.notes || '',
+        }));
+
+        // Combine new items with existing items
+        itemsToSave = [...existingItems, ...itemsToSave];
+      }
+    }
+
+    const payload = {
+      examination_id: selectedExaminationId,
+      duration: serviceDuration,
+      items: itemsToSave,
+    };
 
     await handleRequest({
       request: async () => {
+        // If existing services exist, use update
+        // Otherwise, use create
+        if (hasExistingServices) {
+          // Get service document ID from existing services
+          const serviceDocId = patientServices[0]?._id;
+          if (serviceDocId) {
+            payload.examination_id = serviceDocId;
+            const res = await updateService(payload as any).unwrap();
+            return res;
+          }
+        }
         const res = await addServiceToExam({
-          id: selectedExaminationId,
+          examination_id: selectedExaminationId,
           duration: serviceDuration,
-          items: serviceItems,
+          items: itemsToSave as any,
         }).unwrap();
         return res;
       },
@@ -652,8 +796,12 @@ const Prescription = () => {
     });
   };
 
-  const startEditPrescription = (prescription: any) => {
+  const startEditPrescription = (
+    prescription: any,
+    prescriptionDocId: string
+  ) => {
     setEditingPrescriptionId(prescription._id);
+    setEditingPrescriptionDocId(prescriptionDocId);
     // Extract medication_id - it may be an object (populated) or a string
     const medId =
       typeof prescription.medication_id === 'object' &&
@@ -665,22 +813,30 @@ const Prescription = () => {
       frequency: prescription.frequency?.toString() || '',
       duration: prescription.duration?.toString() || '',
       instructions: prescription.instructions || '',
+      addons: prescription.addons || '',
     });
     setEditMedicationSearch('');
   };
 
   const cancelEditPrescription = () => {
     setEditingPrescriptionId(null);
+    setEditingPrescriptionDocId(null);
     setEditPrescriptionForm({
       medication_id: '',
       frequency: '',
       duration: '',
       instructions: '',
+      addons: '',
     });
     setEditMedicationSearch('');
   };
 
-  const handleUpdatePrescription = async (prescriptionId: string) => {
+  const handleUpdatePrescription = async () => {
+    if (!editingPrescriptionId || !editingPrescriptionDocId) {
+      toast.error('Рецепт маълумотлари топилмади');
+      return;
+    }
+
     if (!editPrescriptionForm.medication_id.trim()) {
       toast.error('Илтимос, дорини танланг');
       return;
@@ -702,19 +858,40 @@ const Prescription = () => {
 
     await handleRequest({
       request: async () => {
+        // Get all existing items from prescription
+        const existingItems =
+          examinationData?.data?.prescription?.items?.map((item: any) => ({
+            _id: item._id,
+            medication_id:
+              typeof item.medication_id === 'object'
+                ? item.medication_id._id
+                : item.medication_id,
+            frequency: item.frequency,
+            duration: item.duration,
+            instructions: item.instructions || '',
+            addons: item.addons || '',
+          })) || [];
+
+        // Find and replace the item being edited
+        const updatedItems = existingItems.map((item: any) => {
+          if (item._id === editingPrescriptionId) {
+            // Replace with updated item
+            return {
+              _id: editingPrescriptionId,
+              medication_id: editPrescriptionForm.medication_id,
+              frequency: parseInt(editPrescriptionForm.frequency),
+              duration: parseInt(editPrescriptionForm.duration),
+              instructions: editPrescriptionForm.instructions,
+              addons: editPrescriptionForm.addons || '',
+            };
+          }
+          return item;
+        });
+
         const res = await updatePrescription({
-          id: prescriptionId,
+          id: editingPrescriptionDocId, // Document ID
           body: {
-            items: [
-              {
-                _id: prescriptionId,
-                medication_id: editPrescriptionForm.medication_id,
-                frequency: parseInt(editPrescriptionForm.frequency),
-                duration: parseInt(editPrescriptionForm.duration),
-                instructions: editPrescriptionForm.instructions,
-                addons: '',
-              },
-            ],
+            items: updatedItems, // Send all items (existing + updated)
           },
         }).unwrap();
         return res;
@@ -726,9 +903,11 @@ const Prescription = () => {
           frequency: '',
           duration: '',
           instructions: '',
+          addons: '',
         });
         setEditMedicationSearch('');
         setEditingPrescriptionId(null);
+        setEditingPrescriptionDocId(null);
       },
       onError: (error) => {
         toast.error(error?.data?.error?.msg || 'Рецептни янгилашда хатолик');
@@ -950,228 +1129,7 @@ const Prescription = () => {
                 </Button>
               </CardHeader>
               <CardContent className='space-y-3 sm:space-y-4'>
-                {/* New Medications */}
-                {medications.length > 0 && (
-                  <div className='text-xs font-medium text-muted-foreground mb-2 mt-4'>
-                    Янги дорилар
-                  </div>
-                )}
-                {medications.length === 0 &&
-                (!examinationData?.data?.prescription?.items ||
-                  examinationData.data.prescription.items.length === 0) ? (
-                  <div className='text-center py-8 sm:py-12'>
-                    <p className='text-muted-foreground text-sm sm:text-base mb-2'>
-                      Ҳали дорилар қўшилмаган
-                    </p>
-                    <p className='text-xs sm:text-sm text-muted-foreground'>
-                      "Дори Қўшиш" тугмасини босинг
-                    </p>
-                  </div>
-                ) : (
-                  medications.map((med, index) => (
-                    <Card
-                      key={med.id}
-                      className='border border-border shadow-sm'
-                    >
-                      <CardContent className='pt-3 sm:pt-4'>
-                        <div className='flex items-center justify-between mb-3'>
-                          <span className='text-xs sm:text-sm font-medium text-muted-foreground'>
-                            Дори #{index + 1}
-                          </span>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() => removeMedication(med.id)}
-                            className='h-8 w-8 p-0 text-destructive hover:text-destructive'
-                          >
-                            <Trash2 className='h-4 w-4' />
-                          </Button>
-                        </div>
-                        <div className='space-y-3 sm:space-y-4'>
-                          {/* First row: Dori and Qo'shimcha */}
-                          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-                            <div>
-                              <Label className='text-xs sm:text-sm'>
-                                Дори <span className='text-red-500'>*</span>
-                              </Label>
-                              <Select
-                                value={med.medication_id}
-                                onValueChange={(value) =>
-                                  updateMedication(
-                                    med.id,
-                                    'medication_id',
-                                    value
-                                  )
-                                }
-                              >
-                                <SelectTrigger
-                                  className={`text-sm mt-1 ${
-                                    formErrors.medications[med.id]
-                                      ?.medication_id
-                                      ? 'border-red-500 focus:ring-red-500'
-                                      : ''
-                                  }`}
-                                >
-                                  <SelectValue placeholder='Дорини танланг' />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <div className='p-2'>
-                                    <Input
-                                      placeholder='Дори қидириш...'
-                                      value={medicationSearch}
-                                      onChange={(e) =>
-                                        setMedicationSearch(e.target.value)
-                                      }
-                                      className='text-sm mb-2'
-                                    />
-                                  </div>
-                                  {medicationsData?.data &&
-                                  medicationsData.data.length > 0 ? (
-                                    medicationsData.data.map(
-                                      (medication: any) => (
-                                        <SelectItem
-                                          key={medication._id}
-                                          value={medication._id}
-                                        >
-                                          <div className='flex flex-col'>
-                                            <span className='font-medium'>
-                                              {medication.name}
-                                            </span>
-                                            <span className='text-xs text-muted-foreground'>
-                                              {medication.dosage}
-                                            </span>
-                                          </div>
-                                        </SelectItem>
-                                      )
-                                    )
-                                  ) : (
-                                    <div className='p-4 text-center text-sm text-muted-foreground'>
-                                      Дори топилмади
-                                    </div>
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <Label className='text-xs sm:text-sm'>
-                                Қўшимча
-                              </Label>
-                              <Input
-                                placeholder='Қўшимча маълумот...'
-                                value={med.addons}
-                                onChange={(e) =>
-                                  updateMedication(
-                                    med.id,
-                                    'addons',
-                                    e.target.value
-                                  )
-                                }
-                                className='text-sm mt-1'
-                              />
-                            </div>
-                          </div>
-                          {/* Second row: Muddat, Qabul qilish, Ko'rsatmalar */}
-                          <div className='flex items-start gap-3'>
-                            <div className='w-28 shrink-0'>
-                              <Label className='text-xs sm:text-sm'>
-                                Муддат (кун){' '}
-                                <span className='text-red-500'>*</span>
-                              </Label>
-                              <Input
-                                type='number'
-                                min='0'
-                                placeholder='7'
-                                value={med.duration}
-                                onKeyDown={(e) => {
-                                  if (
-                                    e.key === ',' ||
-                                    e.key === 'e' ||
-                                    e.key === 'E' ||
-                                    e.key === '+' ||
-                                    e.key === '-'
-                                  ) {
-                                    e.preventDefault();
-                                  }
-                                }}
-                                onChange={(e) =>
-                                  updateMedication(
-                                    med.id,
-                                    'duration',
-                                    e.target.value
-                                  )
-                                }
-                                className={`text-sm mt-1 ${
-                                  formErrors.medications[med.id]?.duration
-                                    ? 'border-red-500 focus:ring-red-500'
-                                    : ''
-                                }`}
-                              />
-                            </div>
-                            <div className='w-24 shrink-0'>
-                              <Label className='text-xs sm:text-sm'>
-                                Марта/кун{' '}
-                                <span className='text-red-500'>*</span>
-                              </Label>
-                              <Input
-                                type='number'
-                                min='0'
-                                placeholder='3'
-                                value={med.frequency}
-                                onKeyDown={(e) => {
-                                  if (
-                                    e.key === ',' ||
-                                    e.key === 'e' ||
-                                    e.key === 'E' ||
-                                    e.key === '+' ||
-                                    e.key === '-'
-                                  ) {
-                                    e.preventDefault();
-                                  }
-                                }}
-                                onChange={(e) =>
-                                  updateMedication(
-                                    med.id,
-                                    'frequency',
-                                    e.target.value
-                                  )
-                                }
-                                className={`text-sm mt-1 ${
-                                  formErrors.medications[med.id]?.frequency
-                                    ? 'border-red-500 focus:ring-red-500'
-                                    : ''
-                                }`}
-                              />
-                            </div>
-                            <div className='flex-1 min-w-0'>
-                              <Label className='text-xs sm:text-sm'>
-                                Қўшимча Кўрсатмалар{' '}
-                                <span className='text-red-500'>*</span>
-                              </Label>
-                              <Input
-                                value={med.instructions}
-                                onChange={(e) =>
-                                  updateMedication(
-                                    med.id,
-                                    'instructions',
-                                    e.target.value
-                                  )
-                                }
-                                placeholder='Овқатдан кейин...'
-                                className={`text-sm mt-1 ${
-                                  formErrors.medications[med.id]?.instructions
-                                    ? 'border-red-500 focus:ring-red-500'
-                                    : ''
-                                }`}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-
-                {/* Existing Prescriptions */}
+                {/* Existing Prescriptions - Show first */}
                 {examinationData?.data?.prescription?.items &&
                   examinationData.data.prescription.items.length > 0 && (
                     <>
@@ -1316,6 +1274,21 @@ const Prescription = () => {
                                       rows={2}
                                     />
                                   </div>
+                                  <div className='space-y-2'>
+                                    <Label className='text-xs sm:text-sm'>
+                                      Қўшимча
+                                    </Label>
+                                    <Input
+                                      placeholder='Қўшимча маълумот...'
+                                      value={editPrescriptionForm.addons}
+                                      onChange={(e) =>
+                                        setEditPrescriptionForm({
+                                          ...editPrescriptionForm,
+                                          addons: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
                                   <div className='flex gap-2 justify-end'>
                                     <Button
                                       variant='outline'
@@ -1328,11 +1301,7 @@ const Prescription = () => {
                                     </Button>
                                     <Button
                                       size='sm'
-                                      onClick={() =>
-                                        handleUpdatePrescription(
-                                          prescription._id
-                                        )
-                                      }
+                                      onClick={handleUpdatePrescription}
                                       disabled={isUpdating}
                                     >
                                       {isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
@@ -1354,7 +1323,11 @@ const Prescription = () => {
                                         variant='ghost'
                                         size='sm'
                                         onClick={() =>
-                                          startEditPrescription(prescription)
+                                          startEditPrescription(
+                                            prescription,
+                                            examinationData.data.prescription
+                                              ._id
+                                          )
                                         }
                                         disabled={
                                           editingPrescriptionId !== null
@@ -1363,19 +1336,6 @@ const Prescription = () => {
                                       >
                                         <Edit className='h-3.5 w-3.5' />
                                       </Button>
-                                      {/* <Button
-                                        variant='ghost'
-                                        size='sm'
-                                        onClick={() =>
-                                          handleDeletePrescription(
-                                            prescription._id
-                                          )
-                                        }
-                                        disabled={isDeleting}
-                                        className='h-7 w-7 p-0 text-destructive hover:text-destructive'
-                                      >
-                                        <Trash2 className='h-3.5 w-3.5' />
-                                      </Button> */}
                                     </div>
                                   </div>
                                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
@@ -1414,6 +1374,16 @@ const Prescription = () => {
                                         {prescription.instructions || '-'}
                                       </p>
                                     </div>
+                                    {prescription.addons && (
+                                      <div>
+                                        <Label className='text-xs text-muted-foreground'>
+                                          Қўшимча
+                                        </Label>
+                                        <p className='text-sm'>
+                                          {prescription.addons}
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
                                 </>
                               )}
@@ -1423,6 +1393,216 @@ const Prescription = () => {
                       )}
                     </>
                   )}
+
+                {/* New Medications - Show at the bottom */}
+                {medications.length > 0 && (
+                  <>
+                    <div className='text-xs font-medium text-muted-foreground mb-2 mt-4'>
+                      Янги дорилар
+                    </div>
+                    {medications.map((med, index) => (
+                      <Card
+                        key={med.id}
+                        className='border border-border shadow-sm'
+                      >
+                        <CardContent className='pt-3 sm:pt-4'>
+                          <div className='flex items-center justify-between mb-3'>
+                            <span className='text-xs sm:text-sm font-medium text-muted-foreground'>
+                              Дори #{index + 1}
+                            </span>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => removeMedication(med.id)}
+                              className='h-8 w-8 p-0 text-destructive hover:text-destructive'
+                            >
+                              <Trash2 className='h-4 w-4' />
+                            </Button>
+                          </div>
+                          <div className='space-y-3 sm:space-y-4'>
+                            {/* First row: Dori and Qo'shimcha */}
+                            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+                              <div>
+                                <Label className='text-xs sm:text-sm'>
+                                  Дори <span className='text-red-500'>*</span>
+                                </Label>
+                                <Select
+                                  value={med.medication_id}
+                                  onValueChange={(value) =>
+                                    updateMedication(
+                                      med.id,
+                                      'medication_id',
+                                      value
+                                    )
+                                  }
+                                >
+                                  <SelectTrigger
+                                    className={`text-sm mt-1 ${
+                                      formErrors.medications[med.id]
+                                        ?.medication_id
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : ''
+                                    }`}
+                                  >
+                                    <SelectValue placeholder='Дорини танланг' />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <div className='p-2'>
+                                      <Input
+                                        placeholder='Дори қидириш...'
+                                        value={medicationSearch}
+                                        onChange={(e) =>
+                                          setMedicationSearch(e.target.value)
+                                        }
+                                        className='text-sm mb-2'
+                                      />
+                                    </div>
+                                    {medicationsData?.data &&
+                                    medicationsData.data.length > 0 ? (
+                                      medicationsData.data.map(
+                                        (medication: any) => (
+                                          <SelectItem
+                                            key={medication._id}
+                                            value={medication._id}
+                                          >
+                                            <div className='flex flex-col'>
+                                              <span className='font-medium'>
+                                                {medication.name}
+                                              </span>
+                                              <span className='text-xs text-muted-foreground'>
+                                                {medication.dosage}
+                                              </span>
+                                            </div>
+                                          </SelectItem>
+                                        )
+                                      )
+                                    ) : (
+                                      <div className='p-4 text-center text-sm text-muted-foreground'>
+                                        Дори топилмади
+                                      </div>
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label className='text-xs sm:text-sm'>
+                                  Қўшимча
+                                </Label>
+                                <Input
+                                  placeholder='Қўшимча маълумот...'
+                                  value={med.addons}
+                                  onChange={(e) =>
+                                    updateMedication(
+                                      med.id,
+                                      'addons',
+                                      e.target.value
+                                    )
+                                  }
+                                  className='text-sm mt-1'
+                                />
+                              </div>
+                            </div>
+                            {/* Second row: Muddat, Qabul qilish, Ko'rsatmalar */}
+                            <div className='flex items-start gap-3'>
+                              <div className='w-28 shrink-0'>
+                                <Label className='text-xs sm:text-sm'>
+                                  Муддат (кун){' '}
+                                  <span className='text-red-500'>*</span>
+                                </Label>
+                                <Input
+                                  type='number'
+                                  min='0'
+                                  placeholder='7'
+                                  value={med.duration}
+                                  onKeyDown={(e) => {
+                                    if (
+                                      e.key === ',' ||
+                                      e.key === 'e' ||
+                                      e.key === 'E' ||
+                                      e.key === '+' ||
+                                      e.key === '-'
+                                    ) {
+                                      e.preventDefault();
+                                    }
+                                  }}
+                                  onChange={(e) =>
+                                    updateMedication(
+                                      med.id,
+                                      'duration',
+                                      e.target.value
+                                    )
+                                  }
+                                  className={`text-sm mt-1 ${
+                                    formErrors.medications[med.id]?.duration
+                                      ? 'border-red-500 focus:ring-red-500'
+                                      : ''
+                                  }`}
+                                />
+                              </div>
+                              <div className='w-24 shrink-0'>
+                                <Label className='text-xs sm:text-sm'>
+                                  Марта/кун{' '}
+                                  <span className='text-red-500'>*</span>
+                                </Label>
+                                <Input
+                                  type='number'
+                                  min='0'
+                                  placeholder='3'
+                                  value={med.frequency}
+                                  onKeyDown={(e) => {
+                                    if (
+                                      e.key === ',' ||
+                                      e.key === 'e' ||
+                                      e.key === 'E' ||
+                                      e.key === '+' ||
+                                      e.key === '-'
+                                    ) {
+                                      e.preventDefault();
+                                    }
+                                  }}
+                                  onChange={(e) =>
+                                    updateMedication(
+                                      med.id,
+                                      'frequency',
+                                      e.target.value
+                                    )
+                                  }
+                                  className={`text-sm mt-1 ${
+                                    formErrors.medications[med.id]?.frequency
+                                      ? 'border-red-500 focus:ring-red-500'
+                                      : ''
+                                  }`}
+                                />
+                              </div>
+                              <div className='flex-1 min-w-0'>
+                                <Label className='text-xs sm:text-sm'>
+                                  Қўшимча Кўрсатмалар{' '}
+                                  <span className='text-red-500'>*</span>
+                                </Label>
+                                <Input
+                                  value={med.instructions}
+                                  onChange={(e) =>
+                                    updateMedication(
+                                      med.id,
+                                      'instructions',
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder='Овқатдан кейин...'
+                                  className={`text-sm mt-1 ${
+                                    formErrors.medications[med.id]?.instructions
+                                      ? 'border-red-500 focus:ring-red-500'
+                                      : ''
+                                  }`}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </>
+                )}
 
                 {/* Dorilarni saqlash tugmasi */}
                 {medications.length > 0 && (
@@ -1450,7 +1630,15 @@ const Prescription = () => {
                   type='button'
                   variant='outline'
                   size='sm'
-                  onClick={addService}
+                  onClick={() => {
+                    // Get duration from existing services if available
+                    const existingDuration =
+                      patientServices.length > 0 && patientServices[0]?.duration
+                        ? patientServices[0].duration
+                        : 7;
+                    setServiceDuration(existingDuration);
+                    addService();
+                  }}
                   className='gap-1'
                 >
                   <Plus className='w-4 h-4' />
@@ -1458,11 +1646,8 @@ const Prescription = () => {
                 </Button>
               </div>
 
-              {services.length === 0 ? (
-                <p className='text-sm text-muted-foreground text-center py-4'>
-                  Хизматлар қўшилмаган
-                </p>
-              ) : (
+              {/* Unified Services Table - Show if services exist or adding */}
+              {(patientServices.length > 0 || services.length > 0) && (
                 <div className='space-y-3'>
                   {/* Common Settings */}
                   <div className='flex items-end gap-2 p-2 bg-muted/30 rounded-lg border'>
@@ -1577,16 +1762,149 @@ const Prescription = () => {
                           <th className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'>
                             Хизмат
                           </th>
-                          {Array.from({ length: 8 }, (_, i) => (
-                            <th
-                              key={i}
-                              className='border px-1 py-1.5 text-center min-w-[70px]'
-                            ></th>
-                          ))}
+                          {(() => {
+                            // Determine the number of days to show in header
+                            // If adding new services, use serviceDuration
+                            // If only existing services, find max duration
+                            let daysToShow = 8; // Default to 8
+
+                            if (services.length > 0) {
+                              // If adding new services, use serviceDuration
+                              daysToShow =
+                                serviceDuration > 0 ? serviceDuration : 8;
+                            } else if (patientServices.length > 0) {
+                              // If only existing services, find max duration
+                              const maxDuration = patientServices.reduce(
+                                (max: number, doc: any) => {
+                                  const docMax =
+                                    doc.items?.reduce(
+                                      (itemMax: number, item: any) => {
+                                        const itemDuration =
+                                          item.duration ||
+                                          item.days?.length ||
+                                          0;
+                                        return Math.max(itemMax, itemDuration);
+                                      },
+                                      0
+                                    ) || 0;
+                                  return Math.max(max, docMax);
+                                },
+                                0
+                              );
+                              daysToShow = maxDuration > 0 ? maxDuration : 8;
+                            }
+
+                            // Show days based on duration, but limit to 8 per row
+                            // If duration is more than 8, show 8 (first row), otherwise show exact duration
+                            const columnsToShow = Math.min(daysToShow, 8);
+
+                            return Array.from(
+                              { length: columnsToShow },
+                              (_, i) => (
+                                <th
+                                  key={i}
+                                  className='border px-1 py-1.5 text-center min-w-[70px]'
+                                ></th>
+                              )
+                            );
+                          })()}
                           <th className='border px-1 py-1.5 text-center font-semibold w-10 sticky right-0 bg-muted/50 z-20'></th>
                         </tr>
                       </thead>
                       <tbody>
+                        {/* Existing services - show in table */}
+                        {patientServices.map((serviceDoc: any) =>
+                          serviceDoc.items?.map((service: any) => {
+                            const serviceDays = service.days || [];
+                            const totalDays =
+                              service.duration || serviceDays.length || 0;
+
+                            // Split days into chunks of 8
+                            const dayChunks: Array<Array<any>> = [];
+                            for (let i = 0; i < totalDays; i += 8) {
+                              const chunk = [];
+                              for (
+                                let j = i;
+                                j < Math.min(i + 8, totalDays);
+                                j++
+                              ) {
+                                const dayData = serviceDays[j];
+                                chunk.push({
+                                  dayNumber: j + 1,
+                                  dayData: dayData || null,
+                                });
+                              }
+                              dayChunks.push(chunk);
+                            }
+
+                            if (dayChunks.length === 0) {
+                              dayChunks.push([]);
+                            }
+
+                            return dayChunks.map((chunk, chunkIndex) => (
+                              <tr
+                                key={`${service._id}-chunk-${chunkIndex}`}
+                                className='hover:bg-muted/30'
+                              >
+                                {chunkIndex === 0 ? (
+                                  <td
+                                    className='border px-3 py-2 font-medium sticky left-0 bg-background z-10'
+                                    rowSpan={dayChunks.length}
+                                  >
+                                    {service.service_type_id?.name ||
+                                      'Номаълум'}
+                                  </td>
+                                ) : null}
+                                {chunk.map((dayItem, idx) => (
+                                  <td
+                                    key={idx}
+                                    className='border px-1 py-1 text-center group relative min-w-[70px]'
+                                  >
+                                    <span className='font-bold text-xs block'>
+                                      {dayItem.dayNumber}-кун
+                                    </span>
+                                    {dayItem.dayData?.date ? (
+                                      <div className='flex items-center justify-center'>
+                                        <span className='text-xs text-primary'>
+                                          {format(
+                                            dayItem.dayData.date,
+                                            'dd/MM'
+                                          )}
+                                        </span>
+                                        <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none'>
+                                          {new Date(
+                                            dayItem.dayData.date
+                                          ).toLocaleDateString('uz-UZ')}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <span className='text-muted-foreground text-xs'>
+                                        —
+                                      </span>
+                                    )}
+                                  </td>
+                                ))}
+                                {chunk.length < 8 &&
+                                  Array.from(
+                                    { length: 8 - chunk.length },
+                                    (_, i) => (
+                                      <td
+                                        key={`empty-${i}`}
+                                        className='border px-1 py-1'
+                                      ></td>
+                                    )
+                                  )}
+                                {chunkIndex === 0 ? (
+                                  <td
+                                    className='border px-1 py-1 text-center sticky right-0 bg-background z-10'
+                                    rowSpan={dayChunks.length}
+                                  ></td>
+                                ) : null}
+                              </tr>
+                            ));
+                          })
+                        )}
+                        {/* New services being added */}
                         {services.map((srv) => {
                           const days = generateDays(
                             serviceDuration,

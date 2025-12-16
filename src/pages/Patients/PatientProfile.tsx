@@ -54,10 +54,8 @@ const PatientProfile = () => {
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
   // RBS Permission checks
-  const {
-    canUpdate: canUpdatePatient,
-    canDelete: canDeletePatient,
-  } = useRouteActions('/patient/:id');
+  const { canUpdate: canUpdatePatient, canDelete: canDeletePatient } =
+    useRouteActions('/patient/:id');
   const { canCreate: canCreateExam } = useRouteActions('/new-visit');
 
   const {
@@ -437,19 +435,19 @@ const PatientProfile = () => {
                               </span>
                             </TableCell>
                             <TableCell>
-                              {exam.diagnosis?.diagnosis_id?.name ? (
+                              {exam.diagnosis?.name ? (
                                 <div className='text-sm'>
                                   <p className='font-medium line-clamp-1'>
-                                    {exam.diagnosis.diagnosis_id.name}
+                                    {exam.diagnosis.name}
                                   </p>
-                                  {exam.diagnosis.diagnosis_id.code && (
+                                  {exam.diagnosis.code && (
                                     <p className='text-xs text-muted-foreground'>
-                                      {exam.diagnosis.diagnosis_id.code}
+                                      {exam.diagnosis.code}
                                     </p>
                                   )}
                                 </div>
                               ) : (
-                                <span className='text-xs text-muted-foreground mx-auto'>
+                                <span className='text-xs text-muted-foreground'>
                                   —
                                 </span>
                               )}

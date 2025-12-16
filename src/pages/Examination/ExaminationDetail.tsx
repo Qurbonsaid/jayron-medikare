@@ -175,6 +175,9 @@ const ExaminationDetail = () => {
   const [isAddingService, setIsAddingService] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [services, setServices] = useState<ServiceItem[]>([]);
+  const [deletingServiceId, setDeletingServiceId] = useState<string | null>(
+    null
+  );
   const [serviceStartDate, setServiceStartDate] = useState<Date>(new Date());
   const [serviceDuration, setServiceDuration] = useState(7); // Default 7, min 0
   const [serviceSearch, setServiceSearch] = useState('');
@@ -642,9 +645,13 @@ const ExaminationDetail = () => {
         // If existing services exist or editing, use update
         // Otherwise, use create
         if (hasExistingServices || isEdit) {
-          payload.examination_id = exam.service._id;
-          const res = await updateService(payload).unwrap();
-          return res;
+          // Get service document ID from existing services
+          const serviceDocId = patientServices[0]?._id;
+          if (serviceDocId) {
+            payload.examination_id = serviceDocId;
+            const res = await updateService(payload).unwrap();
+            return res;
+          }
         }
         const res = await addServiceMutation(payload).unwrap();
         return res;
@@ -678,9 +685,67 @@ const ExaminationDetail = () => {
     toast.error('Хизматни янгилаш функцияси ҳозирча мавжуд эмас');
   };
 
-  const handleRemoveService = async (serviceId: string) => {
-    // Remove service functionality is currently disabled in the API
-    toast.error('Хизматни ўчириш функцияси ҳозирча мавжуд эмас');
+  const handleDeleteService = async (serviceId: string) => {
+    if (!serviceId) {
+      toast.error('Хизмат маълумотлари топилмади');
+      return;
+    }
+
+    // Find the service document that contains the item to delete
+    const serviceDoc = patientServices.find((doc: any) =>
+      doc.items?.some((item: any) => item._id === serviceId)
+    );
+
+    if (!serviceDoc || !serviceDoc.items) {
+      toast.error('Хизмат топилмади');
+      return;
+    }
+
+    // Get all items except the one being deleted
+    const remainingItems = serviceDoc.items
+      .filter((item: any) => item._id !== serviceId)
+      .map((item: any) => ({
+        _id: item._id,
+        service_type_id:
+          typeof item.service_type_id === 'object'
+            ? item.service_type_id._id
+            : item.service_type_id,
+        days: (item.days || []).map((day: any) => ({
+          day: day.day,
+          date: day.date
+            ? typeof day.date === 'string'
+              ? day.date
+              : format(new Date(day.date), 'yyyy-MM-dd')
+            : null,
+        })),
+        notes: item.notes || '',
+      }));
+
+    // If no items remain, we might want to handle this differently
+    // For now, we'll update with empty items array
+    const payload = {
+      examination_id: serviceDoc._id,
+      duration: serviceDoc.duration || 7,
+      items: remainingItems,
+    };
+
+    setDeletingServiceId(serviceId);
+
+    await handleRequest({
+      request: async () => {
+        const res = await updateService(payload).unwrap();
+        return res;
+      },
+      onSuccess: () => {
+        toast.success('Хизмат муваффақиятли ўчирилди');
+        setDeletingServiceId(null);
+        refetchPatientServices();
+      },
+      onError: (error) => {
+        toast.error(error?.data?.error?.msg || 'Хизматни ўчиришда хатолик');
+        setDeletingServiceId(null);
+      },
+    });
   };
 
   const startEditService = (service: any) => {
@@ -1741,7 +1806,13 @@ const ExaminationDetail = () => {
                         size='sm'
                         onClick={() => {
                           setIsAddingService(true);
-                          setServiceDuration(7);
+                          // Get duration from existing services if available
+                          const existingDuration =
+                            patientServices.length > 0 &&
+                            patientServices[0]?.duration
+                              ? patientServices[0].duration
+                              : 7;
+                          setServiceDuration(existingDuration);
                           if (services.length === 0) {
                             addService();
                           }
@@ -2193,33 +2264,46 @@ const ExaminationDetail = () => {
                                               rowSpan={dayChunks.length}
                                             >
                                               <div className='flex items-center justify-center gap-1'>
-                                                {isBeingEdited ? (
-                                                  <Button
-                                                    variant='ghost'
-                                                    size='sm'
-                                                    onClick={() => {
-                                                      if (editingService) {
-                                                        removeService(
-                                                          editingService.id
-                                                        );
+                                              <>
+                                                    <Button
+                                                      variant='ghost'
+                                                      size='sm'
+                                                      onClick={() =>
+                                                        startEditService(
+                                                          service
+                                                        )
                                                       }
-                                                    }}
-                                                    className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-                                                  >
-                                                    <Trash2 className='h-3 w-3' />
-                                                  </Button>
-                                                ) : (
-                                                  <Button
-                                                    variant='ghost'
-                                                    size='sm'
-                                                    onClick={() =>
-                                                      startEditService(service)
-                                                    }
-                                                    className='h-6 w-6 p-0'
-                                                  >
-                                                    <Edit className='h-3 w-3' />
-                                                  </Button>
-                                                )}
+                                                      className='h-6 w-6 p-0 mr-2.5'
+                                                      disabled={
+                                                        deletingServiceId ===
+                                                        service._id
+                                                      }
+                                                    >
+                                                      <Edit className='h-3 w-3' />
+                                                    </Button>
+                                                    <Button
+                                                      variant='ghost'
+                                                      size='sm'
+                                                      onClick={() =>
+                                                        handleDeleteService(
+                                                          service._id
+                                                        )
+                                                      }
+                                                      className='h-6 w-6 p-0 text-destructive hover:text-destructive'
+                                                      disabled={
+                                                        deletingServiceId ===
+                                                          service._id ||
+                                                        isAddingService
+                                                      }
+                                                    >
+                                                      {deletingServiceId ===
+                                                      service._id ? (
+                                                        <Loader2 className='h-3 w-3 animate-spin' />
+                                                      ) : (
+                                                        <Trash2 className='h-3 w-3' />
+                                                      )}
+                                                    </Button>
+                                                  </>
                                               </div>
                                             </td>
                                           ) : null}
@@ -2529,7 +2613,13 @@ const ExaminationDetail = () => {
                           <Button
                             onClick={() => {
                               setIsAddingService(true);
-                              setServiceDuration(7); // Default 7
+                              // Get duration from existing services if available
+                              const existingDuration =
+                                patientServices.length > 0 &&
+                                patientServices[0]?.duration
+                                  ? patientServices[0].duration
+                                  : 7;
+                              setServiceDuration(existingDuration);
                               // Add default one row
                               if (services.length === 0) {
                                 addService();
