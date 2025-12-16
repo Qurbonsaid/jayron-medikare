@@ -633,8 +633,6 @@ const Medicine = () => {
 														{/* Mobile vertical layout */}
 														<div className='block sm:hidden space-y-3'>
 															<div className='px-2'>
-																prescriptionda yana day string bo'lib ketayapti
-																?
 																<Select
 																	value={selectedServiceItems[record._id] || ''}
 																	onValueChange={value =>
