@@ -617,10 +617,13 @@ const Prescription = () => {
     const serviceItems = services.map((srv) => {
       const allDays = generateDays(serviceDuration, serviceStartDate);
       const markedDays = srv.markedDays || [];
-      const daysToSave =
-        markedDays.length > 0
-          ? allDays.filter((day) => markedDays.includes(day.day))
-          : allDays;
+      // Include all days, but set date to null for unmarked days
+      const daysToSave = allDays.map((day) => ({
+        day: day.day,
+        date: markedDays.includes(day.day) && day.date
+          ? format(day.date, 'yyyy-MM-dd')
+          : null,
+      }));
 
       return {
         _id: srv.id,
