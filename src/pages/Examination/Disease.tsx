@@ -23,10 +23,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { usePermission } from '@/hooks/usePermission';
+import { useRouteActions } from '@/hooks/RBS/useRoutePermission';
 import { Edit, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface FormState {
@@ -52,9 +51,11 @@ const initialFormState: FormState = {
 };
 
 export default function AnalysisParamsModal() {
-  const navigate = useNavigate();
   const handleRequest = useHandleRequest();
-  const { canCreate, canUpdate, canDelete } = usePermission('disease');
+
+  const { canRead: canReadDisease, canCreate } = useRouteActions('/disease');
+  const { canUpdate: canUpdateDiseaseDetail, canDelete: canDeleteDisease } =
+    useRouteActions('/disease/:id');
 
   const [page, setPage] = useState(1);
   const [limit] = useState(100);
@@ -65,7 +66,6 @@ export default function AnalysisParamsModal() {
     limit,
     search: searchQuery || undefined,
   });
-
   const [createDisease, { isLoading: creating }] = useCreateDiseaseMutation();
   const [updateDisease, { isLoading: updating }] = useUpdateDiseaseMutation();
   const [deleteDisease, { isLoading: deleting }] = useDeleteDiseaseMutation();
@@ -233,6 +233,10 @@ export default function AnalysisParamsModal() {
   if (isLoading) return <p className='p-4'>Yuklanmoqda...</p>;
   if (isError || !data)
     return <p className='p-4 text-red-500'>Xatolik yuz berdi!</p>;
+  if (!canReadDisease)
+    return (
+      <div className='p-4 text-red-500'>Ushbu bo'limga kirish ruxsati yo'q</div>
+    );
 
   return (
     <div className='min-h-screen bg-background flex flex-col'>
@@ -331,7 +335,7 @@ export default function AnalysisParamsModal() {
 
               {/* Actions */}
               <div className='flex gap-1.5 pt-2'>
-                {canUpdate && (
+                {canUpdateDiseaseDetail && (
                   <Button
                     variant='outline'
                     size='sm'
@@ -343,7 +347,7 @@ export default function AnalysisParamsModal() {
                   </Button>
                 )}
 
-                {canDelete && (
+                {canDeleteDisease && (
                   <Dialog
                     open={deleteId === param._id}
                     onOpenChange={(isOpen) => {
@@ -453,7 +457,7 @@ export default function AnalysisParamsModal() {
                     </td>
                     <td className='px-3 xl:px-5 py-3 xl:py-4'>
                       <div className='flex justify-center gap-3'>
-                        {canUpdate && (
+                        {canUpdateDiseaseDetail && (
                           <Button
                             size='icon'
                             variant='outline'
@@ -464,7 +468,7 @@ export default function AnalysisParamsModal() {
                           </Button>
                         )}
 
-                        {canDelete && (
+                        {canDeleteDisease && (
                           <Dialog
                             open={deleteId === param._id}
                             onOpenChange={(isOpen) => {

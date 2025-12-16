@@ -1,5 +1,4 @@
 import Appointments from '@/pages/Appointments/Appointments';
-// import Dashboard from "@/pages/Dashboard";
 import LabOrder from '@/pages/Diagnostika/LabOrder';
 import LabResults from '@/pages/Diagnostika/LabResults';
 import Inpatient from '@/pages/Inpatient/Inpatient';
@@ -9,108 +8,203 @@ import Patients from '@/pages/Patients/Patients';
 import Radiology from '@/pages/Radiology/RadiologyNew';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Tizim/Settings';
-import { Navigate } from 'react-router-dom';
-import Billing from './pages/Billing/Billing';
-import AddDiagnostika from './pages/Diagnostika/AddDiagnostika';
-import AnalysisParamsModal from './pages/Diagnostika/AnalysisParamsModal';
-import Disease from './pages/Examination/Disease';
-import ExaminationDetail from './pages/Examination/ExaminationDetail';
-import Examinations from './pages/Examination/Examinations';
-import Medication from './pages/Examination/Medication';
-import NewVisit from './pages/Examination/NewVisit';
-import Prescription from './pages/Examination/Prescription';
-import Service from './pages/Examination/Service';
-import { RoomCalendar, RoomsList } from './pages/InpatientCalendar';
-import Medicine from './pages/Medicine/Medicine';
-import RoomDetail from './pages/RoomDetail/RoomDetail';
-import Rooms from './pages/Rooms/Rooms';
-import Permissions from './pages/Tizim/Permissions';
-import Profil from './pages/Tizim/Profil';
-import DailyCheckup from './pages/DailyCheckup/DailyCheckup'
+import Billing from '../pages/Billing/Billing';
+import DailyCheckup from '../pages/DailyCheckup/DailyCheckup';
+import AddDiagnostika from '../pages/Diagnostika/AddDiagnostika';
+import AnalysisParamsModal from '../pages/Diagnostika/AnalysisParamsModal';
+import Disease from '../pages/Examination/Disease';
+import ExaminationDetail from '../pages/Examination/ExaminationDetail';
+import Examinations from '../pages/Examination/Examinations';
+import Medication from '../pages/Examination/Medication';
+import NewVisit from '../pages/Examination/NewVisit';
+import Prescription from '../pages/Examination/Prescription';
+import Service from '../pages/Examination/Service';
+import { RoomCalendar, RoomsList } from '../pages/InpatientCalendar';
+import Medicine from '../pages/Medicine/Medicine';
+import RoomDetail from '../pages/RoomDetail/RoomDetail';
+import Rooms from '../pages/Rooms/Rooms';
+import Profil from '../pages/Tizim/Profil';
+import { RoleConstants } from './Roles';
+import { RoutePermissions } from './route-permissions';
 
 export interface RouteConfig {
   path: string;
   element: React.ReactNode;
-  permission: string | null; // null = har kim ko'ra oladi
+  permission: RoleConstants[];
 }
 
-export const routers: RouteConfig[] = [
+/**
+ * Check if a path matches a route pattern
+ * e.g., matchesRoutePattern('/patient/:id', '/patient/123') -> true
+ * Also handles: matchesRoutePattern('/patient/:id', '/patient/:id') -> true
+ */
+const matchesRoutePattern = (pattern: string, path: string): boolean => {
+  // Direct match (both are patterns or both are exact)
+  if (pattern === path) {
+    return true;
+  }
+
+  const patternParts = pattern.split('/').filter(Boolean);
+  const pathParts = path.split('/').filter(Boolean);
+
+  if (patternParts.length !== pathParts.length) {
+    return false;
+  }
+
+  return patternParts.every((part, index) => {
+    // If pattern part is a parameter like :id, it matches any path part
+    if (part.startsWith(':')) {
+      return true;
+    }
+    // Otherwise, must match exactly
+    return part === pathParts[index];
+  });
+};
+
+const selectPermission = (path: string) => {
+  // First try exact match with GET method (for page access)
+  const exactMatch = RoutePermissions.find(
+    (el) => el.path === path && el.method === 'GET'
+  );
+  if (exactMatch) {
+    return exactMatch.roles;
+  }
+
+  // If no exact match, try pattern matching with GET method
+  const patternMatch = RoutePermissions.find(
+    (el) => matchesRoutePattern(el.path, path) && el.method === 'GET'
+  );
+  if (patternMatch) {
+    return patternMatch.roles;
+  }
+
+  // Fallback: return empty array if no permission found
+  return [];
+};
+
+const baseRouters = [
   {
-    path: '/dashboard',
-    element: <Navigate to={'/patients'} />,
-    permission: null,
+    path: '/patients',
+    element: <Patients />,
   },
-  { path: '/patients', element: <Patients />, permission: 'patient' },
-  { path: '/patient/:id', element: <PatientProfile />, permission: 'patient' },
-  { path: '/new-visit', element: <NewVisit />, permission: 'examination' },
+  {
+    path: '/patient/:id',
+    element: <PatientProfile />,
+  },
+  {
+    path: '/new-visit',
+    element: <NewVisit />,
+  },
   {
     path: '/examinations',
     element: <Examinations />,
-    permission: 'examination',
   },
   {
     path: '/examination/:id',
     element: <ExaminationDetail />,
-    permission: 'examination',
   },
   {
     path: '/appointments',
     element: <Appointments />,
-    permission: 'examination',
   },
   {
     path: '/prescription',
     element: <Prescription />,
-    permission: 'prescription',
   },
-  { path: '/disease', element: <Disease />, permission: 'diagnosis' },
-  { path: '/medication', element: <Medication />, permission: 'medication' },
-  { path: '/service', element: <Service />, permission: 'service_type' },
+  {
+    path: '/disease',
+    element: <Disease />,
+  },
+  {
+    path: '/medication',
+    element: <Medication />,
+  },
+  {
+    path: '/service',
+    element: <Service />,
+  },
   {
     path: '/add-diagnostika',
     element: <AddDiagnostika />,
-    permission: 'analysis',
   },
   {
     path: '/analysisById/:id',
     element: <AnalysisParamsModal />,
-    permission: 'analysis',
   },
-  { path: '/lab-order', element: <LabOrder />, permission: 'patient_analysis' },
+  {
+    path: '/lab-order',
+    element: <LabOrder />,
+  },
   {
     path: '/lab-results',
     element: <LabResults />,
-    permission: 'patient_analysis',
   },
-  { path: '/radiology', element: <Radiology />, permission: 'medical_image' },
-  { path: '/inpatient', element: <Inpatient />, permission: 'room' },
+  {
+    path: '/radiology',
+    element: <Radiology />,
+  },
+  {
+    path: '/inpatient',
+    element: <Inpatient />,
+  },
+  {
+    path: '/inpatient/:id',
+    element: <Rooms />,
+  },
+
   {
     path: '/inpatient-calendar',
     element: <RoomsList />,
-    permission: 'room',
   },
   {
     path: '/inpatient-calendar/:corpusId/:roomId',
     element: <RoomCalendar />,
-    permission: 'room',
   },
-  { path: '/inpatient/:id', element: <Rooms />, permission: 'room' },
-  { path: '/room/:id', element: <RoomDetail />, permission: 'room' },
-  { path: '/medicine', element: <Medicine />, permission: 'medication' },
-  {path:"/daily-checkup",element:<DailyCheckup/> , permission:"daily_checkup"},
-  { path: '/billing', element: <Billing />, permission: 'billing' },
-  { path: '/reports', element: <Reports />, permission: 'reports' },
-  { path: '/settings', element: <Settings />, permission: 'ceo_only' },
-  { path: '/profile', element: <Profil />, permission: null },
-  { path: '/permissions', element: <Permissions />, permission: 'ceo_only' },
-  { path: '/patient-portal', element: <PatientPortal />, permission: null },
-];
+
+  {
+    path: '/medicine',
+    element: <Medicine />,
+  },
+  {
+    path: '/room/:id',
+    element: <RoomDetail />,
+  },
+  {
+    path: '/daily-checkup',
+    element: <DailyCheckup />,
+  },
+  {
+    path: '/billing',
+    element: <Billing />,
+  },
+  {
+    path: '/reports',
+    element: <Reports />,
+  },
+  {
+    path: '/settings',
+    element: <Settings />,
+  },
+  {
+    path: '/profile',
+    element: <Profil />,
+  },
+  {
+    path: '/patient-portal',
+    element: <PatientPortal />,
+  },
+] as const;
+
+export const routers: RouteConfig[] = baseRouters.map((route) => ({
+  ...route,
+  permission: selectPermission(route.path),
+}));
 
 export const navigator = [
   {
     path: '/patients',
     to: null,
-    title: 'Беморлар',
+    title: 'Беморлар рўйхати',
   },
   {
     path: '/patient/:id',
@@ -169,7 +263,7 @@ export const navigator = [
   {
     path: '/add-diagnostika',
     to: null,
-    title: 'Диагностика қўшиш',
+    title: 'Tаҳлил тури яратиш',
   },
   {
     path: '/analysisById/:id',
@@ -254,20 +348,6 @@ export const navigator = [
     path: '/profile',
     to: null,
     title: 'Профил',
-  },
-  {
-    path: '/permissions',
-    to: null,
-    title: (
-      <div className='flex items-center gap-4'>
-        <div>
-          <h1 className='text-xl font-bold'>Рухсатлар</h1>
-          <p className='text-sm text-muted-foreground'>
-            Тизим рухсатларини бошқариш
-          </p>
-        </div>
-      </div>
-    ),
   },
   {
     path: '/patient-portal',

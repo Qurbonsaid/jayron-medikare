@@ -17,17 +17,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { useRouteActions } from '@/hooks/RBS';
+import { AlertTriangle, Edit, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { CreateAnalysisRequest } from '@/app/api/diagnostic/types';
-import { usePermission } from '@/hooks/usePermission';
 import { addDiagnosticSchema } from '@/validation/validationAddDiagnostic/validationAddDiagnostic';
 
 export default function DiagnosticsPage() {
-  const { canCreate, canUpdate, canDelete } = usePermission('diagnostic');
   const navigate = useNavigate();
   const [searchCode, setSearchCode] = useState('');
   const [searchName, setSearchName] = useState('');
@@ -40,6 +39,11 @@ export default function DiagnosticsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Permission checks
+  const { canRead, canCreate, canUpdate, canDelete } =
+    useRouteActions('/add-diagnostika');
+
+  // All hooks MUST be called before any early returns
   const { data, isLoading, isError } = useGetAllDiagnosticsQuery();
   const [createDiagnostic, { isLoading: isCreating }] =
     useCreateDiagnosticMutation();
@@ -48,6 +52,24 @@ export default function DiagnosticsPage() {
   const [deleteDiagnostic, { isLoading: isDeleting }] =
     useDeleteDiagnosticMutation();
   const handleRequest = useHandleRequest();
+
+  // Early return AFTER all hooks
+  if (!canRead) {
+    return (
+      <div className='min-h-screen bg-background flex items-center justify-center p-4'>
+        <Card className='p-8 max-w-md w-full text-center'>
+          <AlertTriangle className='w-12 h-12 text-warning mx-auto mb-4' />
+          <h2 className='text-xl font-bold mb-2'>Рухсат йўқ</h2>
+          <p className='text-muted-foreground mb-6'>
+            Сизда ушбу саҳифани кўриш учун рухсат йўқ.
+          </p>
+          <Button onClick={() => navigate('/patients')} className='w-full'>
+            Орқага қайтиш
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   // 🔍 Search filter
   const filtered = data?.data.filter(

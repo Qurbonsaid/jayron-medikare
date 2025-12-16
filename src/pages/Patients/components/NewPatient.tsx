@@ -59,11 +59,6 @@ const patientSchema = z.object({
   phone: z
     .string()
     .regex(phoneRegex, 'Телефон рақами нотўғри форматда (+998 XX XXX XX XX)'),
-  email: z
-    .string()
-    .email('Email нотўғри форматда')
-    .optional()
-    .or(z.literal('')),
   address: z.string().min(5, 'Манзил камида 5 та белгидан иборат бўлиши керак'),
   allergies: z.array(z.string()).optional().default([]),
 
@@ -99,7 +94,7 @@ interface NewPatientProps {
 const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
   const [medicineInput, setMedicineInput] = useState('');
   const [scheduleInput, setScheduleInput] = useState('');
-  const [dateInput, setDateInput] = useState('');
+  const [dateInput, setDateInput] = useState<string | null>(null);
   const [allergyInput, setAllergyInput] = useState('');
 
   const form = useForm<PatientFormData>({
@@ -115,7 +110,6 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
       passportSeries: 'AB',
       passportNumber: '1234567',
       phone: '+998912345678',
-      email: 'info@artikmuratov.uz',
       address: "Palonchayev Pismadoin ko'chasi 4053-uy",
       allergies: ['Пенициллин', 'Аспирин'],
       regular_medications: [
@@ -136,7 +130,6 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
       gender: data.gender,
       date_of_birth: format(data.date_of_birth, 'yyyy-MM-dd'),
       address: data.address,
-      email: data.email,
       allergies: data.allergies,
       regular_medications: data.regular_medications,
       passport: {
@@ -275,10 +268,11 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                               className='border-slate-400 border-2 flex-1'
                               placeholder='КК.ОО.ЙЙЙЙ (01.01.1990)'
                               value={
-                                dateInput ||
-                                (field.value
+                                dateInput !== null && dateInput !== undefined
+                                  ? dateInput
+                                  : field.value
                                   ? format(field.value, 'dd.MM.yyyy')
-                                  : '')
+                                  : ''
                               }
                               onChange={(e) => {
                                 let value = e.target.value.replace(
@@ -286,7 +280,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                                   ''
                                 );
 
-                                // If empty, clear the field and date
+                                // If empty, clear the field and date completely
                                 if (value === '') {
                                   setDateInput('');
                                   field.onChange(undefined);
@@ -315,7 +309,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
 
                                 setDateInput(formatted);
 
-                                // Parse complete date
+                                // Parse complete date only if it's exactly 10 characters
                                 if (formatted.length === 10) {
                                   const [day, month, year] =
                                     formatted.split('.');
@@ -338,11 +332,33 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                                     );
                                     if (date.getDate() === dayNum) {
                                       field.onChange(date);
+                                    } else {
+                                      // Invalid date, clear it
+                                      field.onChange(undefined);
                                     }
+                                  } else {
+                                    // Invalid date values, clear it
+                                    field.onChange(undefined);
                                   }
                                 } else {
-                                  // Clear field if not complete date
+                                  // Not complete date, clear field value
                                   field.onChange(undefined);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                // Allow Backspace and Delete to work properly
+                                if (
+                                  e.key === 'Backspace' ||
+                                  e.key === 'Delete'
+                                ) {
+                                  // If the field is empty or user is trying to delete, allow it
+                                  if (
+                                    dateInput === '' ||
+                                    e.currentTarget.value === ''
+                                  ) {
+                                    setDateInput('');
+                                    field.onChange(undefined);
+                                  }
                                 }
                               }}
                               maxLength={10}
@@ -529,27 +545,9 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
 
                   <FormField
                     control={form.control}
-                    name='email'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            className='border-slate-400 border-2'
-                            placeholder='email@example.com'
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
                     name='address'
                     render={({ field }) => (
-                      <FormItem className='sm:col-span-2'>
+                      <FormItem className='sm:col-span-1'>
                         <FormLabel>
                           Манзил <span className='text-red-500'>*</span>
                         </FormLabel>

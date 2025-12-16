@@ -1,3 +1,4 @@
+import { useMeQuery } from '@/app/api/authApi/authApi';
 import { Button } from '@/components/ui/button';
 import {
   Collapsible,
@@ -18,35 +19,58 @@ import {
 } from '@/components/ui/sidebar';
 import { menuCategories, systemMenu } from '@/constants/Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { usePermissions } from '@/hooks/usePermissions';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
 export function AppSidebar() {
   const {
     open,
     setOpen,
-    openMobile,
     setOpenMobile,
     isMobile: isMobileContext,
   } = useSidebar();
   const isMobile = useIsMobile();
   const prevPathRef = useRef<string>();
-  const { canRead, isLoading: permissionsLoading } = usePermissions();
 
-  // Filter menu items based on read permission
-  const filteredMenuCategories = menuCategories
-    .map((category) => ({
-      ...category,
-      items: category.items.filter((item) => canRead(item.permission)),
-    }))
-    .filter((category) => category.items.length > 0);
+  // Get current user data
+  const { data: userData } = useMeQuery();
 
-  const filteredSystemMenu = {
-    ...systemMenu,
-    items: systemMenu.items.filter((item) => canRead(item.permission)),
-  };
+  // Filter menu items based on user role and route permissions
+  const filteredMenuCategories = useMemo(() => {
+    if (!userData?.data.role) return [];
+
+    return menuCategories
+      .map((category) => ({
+        ...category,
+        items: category.items.filter((item) => {
+          // If item.roles is null, it's accessible to everyone
+          if (item.roles === null) return true;
+
+          // Check if user's role is in the allowed roles list
+          return item.roles.includes(userData.data.role);
+        }),
+      }))
+      .filter((category) => category.items.length > 0);
+  }, [userData?.data.role]);
+
+  // Filter system menu items based on user role
+  const filteredSystemMenu = useMemo(() => {
+    if (!userData?.data.role) {
+      return { ...systemMenu, items: [] };
+    }
+
+    return {
+      ...systemMenu,
+      items: systemMenu.items.filter((item) => {
+        // If item.roles is null, it's accessible to everyone
+        if (item.roles === null) return true;
+
+        // Check if user's role is in the allowed roles list
+        return item.roles.includes(userData.data.role);
+      }),
+    };
+  }, [userData?.data.role]);
 
   const location = useLocation();
   const currentPath = location.pathname;

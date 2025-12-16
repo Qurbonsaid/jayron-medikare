@@ -2,13 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
+/* Design tokens — all colors stay HSL */
 @layer base {
   :root {
-    /* Medical EHR Theme - JAYRON MEDSERVIS */
     --background: 0 0% 98%;
     --foreground: 0 0% 13%;
 
@@ -18,23 +14,19 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 13%;
 
-    /* Medical Blue Primary */
     --primary: 207 90% 54%;
     --primary-foreground: 0 0% 100%;
     --primary-light: 207 90% 64%;
     --primary-dark: 207 90% 44%;
 
-    /* Success Green */
     --success: 122 39% 49%;
     --success-foreground: 0 0% 100%;
     --success-light: 122 39% 96%;
 
-    /* Warning Amber */
     --warning: 45 100% 51%;
     --warning-foreground: 0 0% 13%;
     --warning-light: 45 100% 96%;
 
-    /* Danger Red */
     --danger: 4 90% 58%;
     --danger-foreground: 0 0% 100%;
     --danger-light: 4 90% 96%;
@@ -57,20 +49,17 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(207, 90%, 54%), hsl(207, 90%, 64%));
     --gradient-success: linear-gradient(135deg, hsl(122, 39%, 49%), hsl(122, 39%, 59%));
     --gradient-warning: linear-gradient(135deg, hsl(45, 100%, 51%), hsl(45, 100%, 61%));
     --gradient-danger: linear-gradient(135deg, hsl(4, 90%, 58%), hsl(4, 90%, 68%));
 
-    /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --shadow-card: 0 2px 8px rgba(33, 150, 243, 0.08);
     --shadow-card-hover: 0 4px 12px rgba(33, 150, 243, 0.15);
 
-    /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 13%;
     --sidebar-primary: 207 90% 54%;
@@ -130,7 +119,12 @@ All colors MUST be HSL.
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold;
   }
 }

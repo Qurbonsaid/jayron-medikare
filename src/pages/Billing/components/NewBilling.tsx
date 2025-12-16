@@ -22,10 +22,12 @@ import { PAYMENT } from '@/constants/payment';
 import { CreditCard, Plus, Printer, Send } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
-import { formatCurrency, Service } from '../Billing';
+import { Service } from '../Billing';
 import { AnalysisItem } from './AnalysisItem';
+import { formatCurrency } from './BillingBadge';
 import { RoomItem } from './RoomItem';
 import { ServiceItem } from './ServiceItem';
+import { service_type } from '@/app/api/billingApi/types';
 
 interface Props {
   isInvoiceModalOpen: boolean;
@@ -41,16 +43,16 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
   // Analysis, Room, Service states
   const [paymentAmount, setPaymentAmount] = React.useState('');
   const [paymentMethod, setPaymentMethod] = React.useState('cash');
+  const [paymentType, setPaymentType] = React.useState<service_type>('XIZMAT');
   const [selectedExaminationId, setSelectedExaminationId] = React.useState('');
-  const [selectedAnalysis, setSelectedAnalysis] = React.useState<string[]>([]);
   const [selectedRooms, setSelectedRooms] = React.useState<string[]>([]);
-  const [selectedServices, setSelectedServices] = React.useState<string[]>([]);
 
   // General services state (local to NewBilling)
   const [services, setServices] = React.useState<Service[]>([
     {
       id: Date.now().toString(),
       name: '',
+      service_type: 'XIZMAT',
       quantity: 1,
       unitPrice: 0,
       total: 0,
@@ -64,6 +66,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     const newService: Service = {
       id: Date.now().toString(),
       name: '',
+      service_type: 'XIZMAT',
       quantity: 1,
       unitPrice: 0,
       total: 0,
@@ -112,9 +115,10 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
       page,
       limit: 20,
       status: 'pending',
+      has_billing:false
     },
     {
-      refetchOnMountOrArgChange: true, // Always refetch when component mounts or args change
+      refetchOnMountOrArgChange: true,
     }
   );
 
@@ -159,20 +163,13 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
   }, [selectedExam]);
 
   const serviceIds = React.useMemo(() => {
-    if (!selectedExam?.services) return [];
-    return selectedExam.services.map((s: any) =>
+    if (!selectedExam?.service?.items) return [];
+    return selectedExam.service.items.map((s: any) =>
       typeof s.service_type_id === 'object'
         ? s.service_type_id._id
         : s.service_type_id
     );
   }, [selectedExam]);
-
-  // Auto-select all items from examination
-  React.useEffect(() => {
-    if (selectedExam && analysisIds.length > 0) {
-      setSelectedAnalysis(analysisIds);
-    }
-  }, [analysisIds, selectedExam]);
 
   React.useEffect(() => {
     if (selectedExam && roomIds.length > 0) {
@@ -180,11 +177,6 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     }
   }, [roomIds, selectedExam]);
 
-  React.useEffect(() => {
-    if (selectedExam && serviceIds.length > 0) {
-      setSelectedServices(serviceIds);
-    }
-  }, [serviceIds, selectedExam]);
 
   const formatNumberWithSpaces = (num: number) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -208,10 +200,12 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
       setAllExams([]);
       setHasMore(true);
       setSelectedExaminationId('');
-      setSelectedAnalysis([]);
       setSelectedRooms([]);
-      setSelectedServices([]);
       setServices([]);
+      setPaymentType('XIZMAT');
+      setPaymentAmount('');
+      setPaymentMethod('cash');
+      setDiscount(0);
     }
   }, [isInvoiceModalOpen]);
 
@@ -258,29 +252,20 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     }
 
     try {
-      const billingData: any = {
+      const billingData = {
         examination_id: selectedExaminationId,
         services: services.map((s) => ({
           name: s.name,
           count: s.quantity,
           price: s.unitPrice,
+          service_type: s.service_type,
         })),
         payment: {
           payment_method: paymentMethod,
+          payment_type: paymentType,
           amount: parseFloat(paymentAmount),
         },
       };
-
-      // Add optional fields if selected
-      if (selectedAnalysis.length > 0) {
-        billingData.analysis_ids = selectedAnalysis;
-      }
-      if (selectedRooms.length > 0) {
-        billingData.room_ids = selectedRooms;
-      }
-      if (selectedServices.length > 0) {
-        billingData.service_ids = selectedServices;
-      }
 
       const result = await createBilling(billingData).unwrap();
 
@@ -291,9 +276,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
         setSelectedExaminationId('');
         setPaymentAmount('');
         setDiscount(0);
-        setSelectedAnalysis([]);
         setSelectedRooms([]);
-        setSelectedServices([]);
       }
     } catch (error: any) {
       toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
@@ -455,10 +438,10 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                           </tr>
                         </thead>
                         <tbody>
-                          {selectedAnalysis.map((analysisId) => (
+                          {selectedExam?.analyses?.map((analysis: any) => (
                             <AnalysisItem
-                              key={analysisId}
-                              analysisId={analysisId}
+                              key={analysis._id}
+                              analysis={analysis}
                             />
                           ))}
                         </tbody>
@@ -467,10 +450,10 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
 
                     {/* Mobile Card View */}
                     <div className='md:hidden'>
-                      {selectedAnalysis.map((analysisId) => (
+                      {selectedExam?.analyses?.map((analysis: any) => (
                         <AnalysisItem
-                          key={analysisId}
-                          analysisId={analysisId}
+                          key={analysis._id}
+                          analysis={analysis}
                           isMobile
                         />
                       ))}
@@ -527,13 +510,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                                   : r.room_id) === roomId
                             );
                             return (
-                              <RoomItem
-                                key={roomId}
-                                roomId={roomId}
-                                checkInDate={roomData?.start_date}
-                                checkOutDate={roomData?.end_date}
-                                days={roomData?.days}
-                              />
+                              <RoomItem key={roomData?._id} room={roomData} />
                             );
                           })}
                         </tbody>
@@ -551,11 +528,8 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                         );
                         return (
                           <RoomItem
-                            key={roomId}
-                            roomId={roomId}
-                            checkInDate={roomData?.start_date}
-                            checkOutDate={roomData?.end_date}
-                            days={roomData?.days}
+                            key={roomData?._id}
+                            room={roomData}
                             isMobile
                           />
                         );
@@ -602,45 +576,18 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                           </tr>
                         </thead>
                         <tbody>
-                          {selectedServices.map((serviceId) => {
-                            const serviceData = selectedExam?.services?.find(
-                              (s: any) =>
-                                (typeof s.service_type_id === 'object'
-                                  ? s.service_type_id._id
-                                  : s.service_type_id) === serviceId
-                            );
-                            return (
-                              <ServiceItem
-                                key={serviceId}
-                                serviceId={serviceId}
-                                quantity={serviceData?.quantity || 1}
-                                price={serviceData?.price}
-                              />
-                            );
-                          })}
+                          {selectedExam?.service?.items?.map((item: any) => (
+                            <ServiceItem key={item._id} service={item} />
+                          ))}
                         </tbody>
                       </table>
                     </div>
 
                     {/* Mobile Card View */}
                     <div className='md:hidden'>
-                      {selectedServices.map((serviceId) => {
-                        const serviceData = selectedExam?.services?.find(
-                          (s: any) =>
-                            (typeof s.service_type_id === 'object'
-                              ? s.service_type_id._id
-                              : s.service_type_id) === serviceId
-                        );
-                        return (
-                          <ServiceItem
-                            key={serviceId}
-                            serviceId={serviceId}
-                            quantity={serviceData?.quantity || 1}
-                            price={serviceData?.price}
-                            isMobile
-                          />
-                        );
-                      })}
+                      {selectedExam?.service?.items?.map((item: any) => (
+                        <ServiceItem key={item._id} service={item} isMobile />
+                      ))}
                     </div>
                   </div>
                 ) : (
@@ -669,14 +616,14 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                       <th className='text-left py-3 px-4 font-medium text-sm'>
                         Хизмат номи
                       </th>
-                      <th className='text-center py-3 px-4 font-medium text-sm'>
+                      <th className='text-left py-3 px-4 font-medium text-sm w-[170px]'>
+                        Хизмат тури
+                      </th>
+                      <th className='text-center py-3 px-4 font-medium text-sm w-24'>
                         Сони
                       </th>
-                      <th className='text-right py-3 px-4 font-medium text-sm'>
+                      <th className='text-right py-3 px-4 font-medium text-sm w-48'>
                         Нархи
-                      </th>
-                      <th className='text-right py-3 px-4 font-medium text-sm'>
-                        Жами
                       </th>
                       <th className='w-16'></th>
                     </tr>
@@ -695,6 +642,25 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                           />
                         </td>
                         <td className='py-2 px-4'>
+                          <Select
+                            value={service.service_type}
+                            onValueChange={(value: service_type) =>
+                              updateService(service.id, 'service_type', value)
+                            }
+                          >
+                            <SelectTrigger className='h-9 text-sm w-[170px]'>
+                              <SelectValue placeholder='Турини танланг' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='KORIK'>Кўрик</SelectItem>
+                              <SelectItem value='XIZMAT'>Хизмат</SelectItem>
+                              <SelectItem value='XONA'>Хона</SelectItem>
+                              <SelectItem value='TASVIR'>Тасвир</SelectItem>
+                              <SelectItem value='TAHLIL'>Таҳлил</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className='py-2 px-4'>
                           <Input
                             type='text'
                             inputMode='numeric'
@@ -711,7 +677,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                                 parseInt(value) || 0
                               );
                             }}
-                            className='w-20 mx-auto text-center text-sm'
+                            className='w-16 mx-auto text-center text-sm'
                           />
                         </td>
                         <td className='py-2 px-4'>
@@ -729,11 +695,8 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                                 parseInt(value) || 0
                               );
                             }}
-                            className='text-right text-sm'
+                            className='text-right text-sm w-36 ml-auto'
                           />
-                        </td>
-                        <td className='py-2 px-4 text-right font-semibold text-sm'>
-                          {formatCurrency(service.total)}
                         </td>
                         <td className='py-2 px-4'>
                           <Button
@@ -779,6 +742,29 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                           placeholder='Хизмат номи...'
                           className='text-sm'
                         />
+                      </div>
+
+                      <div>
+                        <Label className='text-xs text-muted-foreground mb-1.5 block'>
+                          Хизмат тури
+                        </Label>
+                        <Select
+                          value={service.service_type}
+                          onValueChange={(value: service_type) =>
+                            updateService(service.id, 'service_type', value)
+                          }
+                        >
+                          <SelectTrigger className='text-sm'>
+                            <SelectValue placeholder='Турини танланг' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='KORIK'>Кўрик</SelectItem>
+                            <SelectItem value='XIZMAT'>Хизмат</SelectItem>
+                            <SelectItem value='XONA'>Хона</SelectItem>
+                            <SelectItem value='TASVIR'>Тасвир</SelectItem>
+                            <SelectItem value='TAHLIL'>Таҳлил</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className='grid grid-cols-2 gap-3'>
@@ -828,15 +814,6 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                         </div>
                       </div>
 
-                      <div className='pt-2 min-w-52 border-t flex justify-between items-center'>
-                        <span className='text-xs text-muted-foreground'>
-                          Жами:
-                        </span>
-                        <span className='font-semibold text-sm'>
-                          {formatCurrency(service.total)}
-                        </span>
-                      </div>
-
                       <Button
                         variant='ghost'
                         size='sm'
@@ -848,6 +825,17 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                     </div>
                   </Card>
                 ))}
+
+                {/* Mobile Add Service Button */}
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={addService}
+                  className='w-full text-sm bg-blue-500 text-white'
+                >
+                  <Plus className='w-4 h-4 mr-2' />
+                  Хизмат қўшиш
+                </Button>
               </div>
             </div>
           )}
@@ -855,44 +843,14 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
           {/* Payment Section */}
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
             <div className='space-y-3 sm:space-y-4'>
-              <div>
-                <Label className='text-sm'>Чегирма (сўм)</Label>
-                <Input
-                  type='text'
-                  inputMode='numeric'
-                  value={formatNumberWithSpaces(discount)}
-                  onChange={(e) => {
-                    const value = e.target.value
-                      .replace(/\s/g, '')
-                      .replace(/[^0-9]/g, '');
-                    setDiscount(parseInt(value) || 0);
-                  }}
-                  placeholder='0'
-                  className='text-sm'
-                />
-              </div>
 
-              <Card className='p-3 sm:p-4 bg-primary/5'>
-                <div className='flex justify-between items-center mb-2 text-sm'>
-                  <span className='text-muted-foreground'>Оралиқ жами:</span>
-                  <span className='font-semibold'>
-                    {formatCurrency(calculateSubtotal())}
-                  </span>
-                </div>
-                <div className='flex justify-between items-center mb-2 text-sm'>
-                  <span className='text-muted-foreground'>Чегирма:</span>
-                  <span className='text-danger'>
-                    -{formatCurrency(discount)}
-                  </span>
-                </div>
-                <div className='border-t pt-2 flex justify-between items-center'>
-                  <span className='text-base sm:text-lg font-semibold'>
-                    Жами тўлов:
-                  </span>
-                  <span className='text-lg sm:text-2xl font-bold text-primary'>
-                    {formatCurrency(calculateGrandTotal())}
-                  </span>
-                </div>
+              <Card className='p-3 sm:p-4 bg-primary/5 flex justify-between items-center'>
+                <span className='text-base sm:text-lg font-semibold'>
+                  Жами тўлов:
+                </span>
+                <span className='text-lg sm:text-2xl font-bold text-primary'>
+                  {formatCurrency(calculateGrandTotal())}
+                </span>
               </Card>
             </div>
 
@@ -933,6 +891,27 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                     </SelectItem>
                     <SelectItem value={PAYMENT.CARD}>Карта</SelectItem>
                     <SelectItem value={PAYMENT.ONLINE}>Online</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className='text-sm'>Тўлов тури</Label>
+                <Select
+                  value={paymentType}
+                  onValueChange={(
+                    value: service_type
+                  ) => setPaymentType(value)}
+                >
+                  <SelectTrigger className='text-sm'>
+                    <SelectValue placeholder='Тўлов турини танланг' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='KORIK'>Кўрик</SelectItem>
+                    <SelectItem value='XIZMAT'>Хизмат</SelectItem>
+                    <SelectItem value='XONA'>Хона</SelectItem>
+                    <SelectItem value='TASVIR'>Тасвир</SelectItem>
+                    <SelectItem value='TAHLIL'>Таҳлил</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
