@@ -190,7 +190,7 @@ export const examinationApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [API_TAGS.EXAMS],
+      invalidatesTags: [API_TAGS.EXAMS , API_TAGS.SERVICE],
     }),
     createServiceDays: builder.mutation<void, createServiceDays>({
       query: ({ id, serviceId, data }) => ({
