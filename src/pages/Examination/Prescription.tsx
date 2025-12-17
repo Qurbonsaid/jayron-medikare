@@ -254,17 +254,43 @@ const Prescription = () => {
     );
   };
 
-  // Update serviceDuration based on existing services
+  // Update serviceDuration and serviceStartDate based on existing services
   useEffect(() => {
-    if (patientServices.length > 0 && patientServices[0]?.duration) {
-      const existingDuration = patientServices[0].duration;
-      // Only update if services array is empty (not adding new services)
-      if (services.length === 0) {
-        setServiceDuration(existingDuration);
+    // Only update if services array is empty (not adding new services)
+    if (services.length === 0 && patientServices.length > 0) {
+      // Get max duration from all existing services
+      const durations = patientServices
+        .flatMap(
+          (doc: any) =>
+            doc.items?.map(
+              (item: any) => item.duration || item.days?.length || 0
+            ) || []
+        )
+        .filter((d: number) => d > 0);
+      if (durations.length > 0) {
+        const maxDuration = Math.max(...durations);
+        setServiceDuration(maxDuration);
+      }
+
+      // Get start date from existing services (first date found in days)
+      const firstDate = patientServices
+        .flatMap((doc: any) => doc.items || [])
+        .flatMap((item: any) => item.days || [])
+        .map((day: any) => day.date)
+        .filter((date: any) => date !== null && date !== undefined)
+        .sort((a: any, b: any) => {
+          const dateA = new Date(a).getTime();
+          const dateB = new Date(b).getTime();
+          return dateA - dateB;
+        })[0];
+
+      if (firstDate) {
+        setServiceStartDate(new Date(firstDate));
       }
     } else if (patientServices.length === 0 && services.length === 0) {
       // Reset to default 7 if no existing services and no new services
       setServiceDuration(7);
+      setServiceStartDate(new Date());
     }
   }, [patientServices, services.length]);
 
@@ -1661,10 +1687,12 @@ const Prescription = () => {
                       let maxDuration = 7;
                       if (patientServices.length > 0) {
                         const durations = patientServices
-                          .flatMap((doc: any) =>
-                            doc.items?.map((item: any) => 
-                              item.duration || item.days?.length || 0
-                            ) || []
+                          .flatMap(
+                            (doc: any) =>
+                              doc.items?.map(
+                                (item: any) =>
+                                  item.duration || item.days?.length || 0
+                              ) || []
                           )
                           .filter((d: number) => d > 0);
                         if (durations.length > 0) {
@@ -1672,6 +1700,24 @@ const Prescription = () => {
                         }
                       }
                       setServiceDuration(maxDuration);
+                    }
+                    // Ensure start date is set from existing services if available
+                    if (patientServices.length > 0) {
+                      const firstDate = patientServices
+                        .flatMap((doc: any) => doc.items || [])
+                        .flatMap((item: any) => item.days || [])
+                        .map((day: any) => day.date)
+                        .filter(
+                          (date: any) => date !== null && date !== undefined
+                        )
+                        .sort((a: any, b: any) => {
+                          const dateA = new Date(a).getTime();
+                          const dateB = new Date(b).getTime();
+                          return dateA - dateB;
+                        })[0];
+                      if (firstDate) {
+                        setServiceStartDate(new Date(firstDate));
+                      }
                     }
                     addService();
                   }}
@@ -1700,25 +1746,40 @@ const Prescription = () => {
                           const inputValue = e.target.value;
                           if (inputValue === '') {
                             setServiceDuration(0);
+                            setServices(
+                              services.map((srv) => ({
+                                ...srv,
+                                markedDays: [],
+                              }))
+                            );
                             return;
                           }
                           const val = parseInt(inputValue) || 0;
                           if (val >= 0 && val <= 30) {
                             setServiceDuration(val);
-                            // Auto-adjust marked days when duration changes
+
+                            // Update all services' marked days based on new duration
                             setServices(
                               services.map((srv) => {
                                 const currentMarked = srv.markedDays || [];
-                                
+
+                                if (val === 0) {
+                                  return { ...srv, markedDays: [] };
+                                }
+
                                 // If all previous days were marked (1, 2, 3, ..., max)
                                 // then mark all new days too when duration increases
                                 if (currentMarked.length > 0) {
-                                  const sortedMarked = [...currentMarked].sort((a, b) => a - b);
-                                  const maxMarked = sortedMarked[sortedMarked.length - 1];
-                                  const isAllDaysMarked = sortedMarked.every(
-                                    (day, idx) => day === idx + 1
-                                  ) && sortedMarked.length === maxMarked;
-                                  
+                                  const sortedMarked = [...currentMarked].sort(
+                                    (a, b) => a - b
+                                  );
+                                  const maxMarked =
+                                    sortedMarked[sortedMarked.length - 1];
+                                  const isAllDaysMarked =
+                                    sortedMarked.every(
+                                      (day, idx) => day === idx + 1
+                                    ) && sortedMarked.length === maxMarked;
+
                                   if (isAllDaysMarked && val > maxMarked) {
                                     // All previous days were marked consecutively, mark all new days too
                                     const allDays = Array.from(
@@ -1727,25 +1788,25 @@ const Prescription = () => {
                                     );
                                     return { ...srv, markedDays: allDays };
                                   }
-                                }
-                                
-                                // Keep only marked days that are within new duration
-                                const adjustedMarked = currentMarked.filter(
-                                  (day) => day <= val
-                                );
-                                
-                                // If pattern is every other day, extend pattern to new duration
-                                if (adjustedMarked.length > 0) {
-                                  const sortedAdjusted = [...adjustedMarked].sort((a, b) => a - b);
-                                  const isEveryOtherDay = sortedAdjusted.every(
-                                    (day, idx) =>
-                                      idx === 0 ||
-                                      day === sortedAdjusted[idx - 1] + 2
-                                  );
+
+                                  // If pattern is every other day, extend pattern to new duration
+                                  const sortedMarkedForPattern = [
+                                    ...currentMarked,
+                                  ].sort((a, b) => a - b);
+                                  const isEveryOtherDay =
+                                    sortedMarkedForPattern.every(
+                                      (day, idx) =>
+                                        idx === 0 ||
+                                        day ===
+                                          sortedMarkedForPattern[idx - 1] + 2
+                                    );
                                   if (
                                     isEveryOtherDay &&
-                                    sortedAdjusted[0] === 1 &&
-                                    val > sortedAdjusted[sortedAdjusted.length - 1]
+                                    sortedMarkedForPattern[0] === 1 &&
+                                    val >
+                                      sortedMarkedForPattern[
+                                        sortedMarkedForPattern.length - 1
+                                      ]
                                   ) {
                                     // Extend pattern for new days
                                     const newMarked = Array.from(
@@ -1755,6 +1816,21 @@ const Prescription = () => {
                                     return { ...srv, markedDays: newMarked };
                                   }
                                 }
+
+                                // Keep only marked days that are within new duration
+                                const adjustedMarked = currentMarked.filter(
+                                  (day) => day <= val
+                                );
+
+                                // If no days were marked before, mark all days by default
+                                if (adjustedMarked.length === 0 && val > 0) {
+                                  const allDays = Array.from(
+                                    { length: val },
+                                    (_, i) => i + 1
+                                  );
+                                  return { ...srv, markedDays: allDays };
+                                }
+
                                 return { ...srv, markedDays: adjustedMarked };
                               })
                             );
@@ -1830,7 +1906,32 @@ const Prescription = () => {
 
                           if (services.length > 0) {
                             // If adding new services, use serviceDuration (minimum 1)
-                            daysToShow = Math.max(serviceDuration, 1);
+                            // Also consider existing services' duration
+                            let maxExistingDuration = 0;
+                            if (patientServices.length > 0) {
+                              maxExistingDuration = patientServices.reduce(
+                                (max: number, doc: any) => {
+                                  const docMax =
+                                    doc.items?.reduce(
+                                      (itemMax: number, item: any) => {
+                                        const itemDuration =
+                                          item.duration ||
+                                          item.days?.length ||
+                                          0;
+                                        return Math.max(itemMax, itemDuration);
+                                      },
+                                      0
+                                    ) || 0;
+                                  return Math.max(max, docMax);
+                                },
+                                0
+                              );
+                            }
+                            daysToShow = Math.max(
+                              serviceDuration,
+                              maxExistingDuration,
+                              1
+                            );
                           } else if (patientServices.length > 0) {
                             // If only existing services, find max duration
                             const maxDuration = patientServices.reduce(
@@ -1839,9 +1940,7 @@ const Prescription = () => {
                                   doc.items?.reduce(
                                     (itemMax: number, item: any) => {
                                       const itemDuration =
-                                        item.duration ||
-                                        item.days?.length ||
-                                        0;
+                                        item.duration || item.days?.length || 0;
                                       return Math.max(itemMax, itemDuration);
                                     },
                                     0
@@ -1874,7 +1973,10 @@ const Prescription = () => {
                           }
 
                           return headerChunks.map((chunk, chunkIndex) => (
-                            <tr key={`header-${chunkIndex}`} className='bg-muted/50'>
+                            <tr
+                              key={`header-${chunkIndex}`}
+                              className='bg-muted/50'
+                            >
                               {chunkIndex === 0 && (
                                 <th
                                   className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'
@@ -1887,9 +1989,7 @@ const Prescription = () => {
                                 <th
                                   key={dayNum}
                                   className='border px-1 py-1.5 text-center min-w-[70px]'
-                                >
-                                  {dayNum}-кун
-                                </th>
+                                ></th>
                               ))}
                               {chunk.length < daysPerRow &&
                                 Array.from(
@@ -1918,8 +2018,14 @@ const Prescription = () => {
                         {patientServices.map((serviceDoc: any) =>
                           serviceDoc.items?.map((service: any) => {
                             const serviceDays = service.days || [];
-                            const totalDays =
+                            const originalDuration =
                               service.duration || serviceDays.length || 0;
+
+                            // If new services are being added, use the maximum of serviceDuration and original duration
+                            const totalDays =
+                              services.length > 0
+                                ? Math.max(serviceDuration, originalDuration)
+                                : originalDuration;
 
                             // Split days into chunks of 8
                             const dayChunks: Array<Array<any>> = [];
@@ -1930,10 +2036,11 @@ const Prescription = () => {
                                 j < Math.min(i + 8, totalDays);
                                 j++
                               ) {
-                                const dayData = serviceDays[j];
+                                // If day exists in original data, use it, otherwise create empty day
+                                const dayData = serviceDays[j] || null;
                                 chunk.push({
                                   dayNumber: j + 1,
-                                  dayData: dayData || null,
+                                  dayData: dayData,
                                 });
                               }
                               dayChunks.push(chunk);
@@ -2187,7 +2294,9 @@ const Prescription = () => {
                                             variant='ghost'
                                             size='sm'
                                             onClick={() =>
-                                              markEveryOtherDayForService(srv.id)
+                                              markEveryOtherDayForService(
+                                                srv.id
+                                              )
                                             }
                                             className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
                                             disabled={!srv.service_id}

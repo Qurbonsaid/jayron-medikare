@@ -2145,20 +2145,122 @@ const ExaminationDetail = () => {
                           <div className='overflow-x-auto'>
                             <table className='w-full border-collapse border text-sm'>
                               <thead>
-                                <tr className='bg-muted/50'>
-                                  <th className='border px-3 py-2 text-left font-semibold min-w-[150px]'>
-                                    Хизмат номи
-                                  </th>
-                                  {Array.from({ length: 8 }, (_, i) => (
-                                    <th
-                                      key={i}
-                                      className='border px-2 py-2 text-center font-semibold min-w-[70px]'
-                                    ></th>
-                                  ))}
-                                  <th className='border px-2 py-2 text-center font-semibold w-12'>
-                                    Харакатлар
-                                  </th>
-                                </tr>
+                                {(() => {
+                                  // Determine the number of days to show in header
+                                  // If adding new services, use serviceDuration
+                                  // If only existing services, find max duration
+                                  let daysToShow = 8; // Default to 8
+
+                                  if (services.length > 0 || isAddingService) {
+                                    // If adding new services, use serviceDuration (minimum 1)
+                                    // Also consider existing services' duration
+                                    let maxExistingDuration = 0;
+                                    if (patientServices.length > 0) {
+                                      maxExistingDuration = patientServices.reduce(
+                                        (max: number, doc: any) => {
+                                          const docMax =
+                                            doc.items?.reduce(
+                                              (itemMax: number, item: any) => {
+                                                const itemDuration =
+                                                  item.duration ||
+                                                  item.days?.length ||
+                                                  0;
+                                                return Math.max(itemMax, itemDuration);
+                                              },
+                                              0
+                                            ) || 0;
+                                          return Math.max(max, docMax);
+                                        },
+                                        0
+                                      );
+                                    }
+                                    daysToShow = Math.max(
+                                      serviceDuration,
+                                      maxExistingDuration,
+                                      1
+                                    );
+                                  } else if (patientServices.length > 0) {
+                                    // If only existing services, find max duration
+                                    const maxDuration = patientServices.reduce(
+                                      (max: number, doc: any) => {
+                                        const docMax =
+                                          doc.items?.reduce(
+                                            (itemMax: number, item: any) => {
+                                              const itemDuration =
+                                                item.duration ||
+                                                item.days?.length ||
+                                                0;
+                                              return Math.max(itemMax, itemDuration);
+                                            },
+                                            0
+                                          ) || 0;
+                                        return Math.max(max, docMax);
+                                      },
+                                      0
+                                    );
+                                    daysToShow = maxDuration > 0 ? maxDuration : 8;
+                                  }
+
+                                  // Split days into chunks of 8 for multiple rows
+                                  const daysPerRow = 8;
+                                  const headerChunks: number[][] = [];
+                                  for (let i = 0; i < daysToShow; i += daysPerRow) {
+                                    const chunk = [];
+                                    for (
+                                      let j = i;
+                                      j < Math.min(i + daysPerRow, daysToShow);
+                                      j++
+                                    ) {
+                                      chunk.push(j + 1);
+                                    }
+                                    headerChunks.push(chunk);
+                                  }
+
+                                  // If no chunks, create at least one empty chunk
+                                  if (headerChunks.length === 0) {
+                                    headerChunks.push([]);
+                                  }
+
+                                  return headerChunks.map((chunk, chunkIndex) => (
+                                    <tr
+                                      key={`header-${chunkIndex}`}
+                                      className='bg-muted/50'
+                                    >
+                                      {chunkIndex === 0 && (
+                                        <th
+                                          className='border px-3 py-2 text-left font-semibold min-w-[150px]'
+                                          rowSpan={headerChunks.length}
+                                        >
+                                          Хизмат номи
+                                        </th>
+                                      )}
+                                      {chunk.map((dayNum) => (
+                                        <th
+                                          key={dayNum}
+                                          className='border px-2 py-2 text-center font-semibold min-w-[70px]'
+                                        ></th>
+                                      ))}
+                                      {chunk.length < daysPerRow &&
+                                        Array.from(
+                                          { length: daysPerRow - chunk.length },
+                                          (_, i) => (
+                                            <th
+                                              key={`empty-${i}`}
+                                              className='border px-2 py-2'
+                                            ></th>
+                                          )
+                                        )}
+                                      {chunkIndex === 0 && (
+                                        <th
+                                          className='border px-2 py-2 text-center font-semibold w-12'
+                                          rowSpan={headerChunks.length}
+                                        >
+                                          Харакатлар
+                                        </th>
+                                      )}
+                                    </tr>
+                                  ));
+                                })()}
                               </thead>
                               <tbody>
                                 {/* Existing services - show in their original position, editable if being edited */}
@@ -2179,13 +2281,19 @@ const ExaminationDetail = () => {
                                     const serviceDays = editingService
                                       ? editingService.days || []
                                       : service.days || [];
-                                    const totalDays = editingService
+                                    const originalDuration = editingService
                                       ? editingService.duration ||
                                         serviceDays.length ||
                                         0
                                       : service.duration ||
                                         serviceDays.length ||
                                         0;
+                                    
+                                    // If new services are being added, use the maximum of serviceDuration and original duration
+                                    const totalDays =
+                                      services.length > 0 && !isBeingEdited
+                                        ? Math.max(serviceDuration, originalDuration)
+                                        : originalDuration;
 
                                     // Split days into chunks of 8
                                     const dayChunks: Array<Array<any>> = [];
