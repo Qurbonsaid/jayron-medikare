@@ -1310,8 +1310,8 @@ const Settings = () => {
 								)}
 							</div>
 						</div>
-						{/* <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-							<div>
+						 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+							{/* <div>
 								<Label className='text-xs sm:text-sm'>Email</Label>
 								<Input
 									value={form.email}
@@ -1324,7 +1324,7 @@ const Settings = () => {
 										{errorsUser.email}
 									</p>
 								)}
-							</div>
+							</div> */}
 							<div>
 								<Label className='text-xs sm:text-sm'>Телефон</Label>
 								<Input
@@ -1340,7 +1340,7 @@ const Settings = () => {
 									</p>
 								)}
 							</div>
-						</div> */}
+						</div> 
 						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 							<div>
 								<Label className='text-xs sm:text-sm'>Рол</Label>
