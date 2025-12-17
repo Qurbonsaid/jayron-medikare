@@ -31,9 +31,11 @@ import { format } from 'date-fns';
 import {
   Activity,
   AlertCircle,
+  CalendarDays,
   Edit,
   Loader2,
   Plus,
+  Repeat,
   Trash2,
   X,
 } from 'lucide-react';
@@ -419,19 +421,11 @@ const Prescription = () => {
 
   // Service handlers
   const addService = () => {
-    // Get duration from existing services if available, otherwise use serviceDuration
-    const existingDuration =
-      patientServices.length > 0 && patientServices[0]?.duration
-        ? patientServices[0].duration
-        : serviceDuration;
-
-    // Update serviceDuration if it doesn't match existing services
-    if (patientServices.length > 0 && existingDuration !== serviceDuration) {
-      setServiceDuration(existingDuration);
-    }
+    // Use serviceDuration from input directly (minimum 1)
+    const duration = Math.max(serviceDuration, 1);
 
     // Mark all days by default
-    const allDays = Array.from({ length: existingDuration }, (_, i) => i + 1);
+    const allDays = Array.from({ length: duration }, (_, i) => i + 1);
     const newService: ServiceItem = {
       id: Date.now().toString(),
       service_id: '',
@@ -525,6 +519,38 @@ const Prescription = () => {
           (_, i) => i + 1
         ); // Mark all days: 1, 2, 3, 4...
         return { ...srv, markedDays: allDays };
+      })
+    );
+  };
+
+  // Mark every day for a specific service
+  const markEveryDayForService = (serviceId: string) => {
+    setServices(
+      services.map((srv) => {
+        if (srv.id === serviceId) {
+          const allDays = Array.from(
+            { length: serviceDuration },
+            (_, i) => i + 1
+          ); // Mark all days: 1, 2, 3, 4...
+          return { ...srv, markedDays: allDays };
+        }
+        return srv;
+      })
+    );
+  };
+
+  // Mark every other day for a specific service
+  const markEveryOtherDayForService = (serviceId: string) => {
+    setServices(
+      services.map((srv) => {
+        if (srv.id === serviceId) {
+          const everyOtherDay = Array.from(
+            { length: serviceDuration },
+            (_, i) => i + 1
+          ).filter((day) => day % 2 === 1); // Mark odd days: 1, 3, 5, 7...
+          return { ...srv, markedDays: everyOtherDay };
+        }
+        return srv;
       })
     );
   };
@@ -1630,12 +1656,23 @@ const Prescription = () => {
                   variant='outline'
                   size='sm'
                   onClick={() => {
-                    // Get duration from existing services if available
-                    const existingDuration =
-                      patientServices.length > 0 && patientServices[0]?.duration
-                        ? patientServices[0].duration
-                        : 7;
-                    setServiceDuration(existingDuration);
+                    // If no duration set, use max from existing services or default 7
+                    if (serviceDuration === 0 || !serviceDuration) {
+                      let maxDuration = 7;
+                      if (patientServices.length > 0) {
+                        const durations = patientServices
+                          .flatMap((doc: any) =>
+                            doc.items?.map((item: any) => 
+                              item.duration || item.days?.length || 0
+                            ) || []
+                          )
+                          .filter((d: number) => d > 0);
+                        if (durations.length > 0) {
+                          maxDuration = Math.max(...durations);
+                        }
+                      }
+                      setServiceDuration(maxDuration);
+                    }
                     addService();
                   }}
                   className='gap-1'
@@ -1672,20 +1709,43 @@ const Prescription = () => {
                             setServices(
                               services.map((srv) => {
                                 const currentMarked = srv.markedDays || [];
+                                
+                                // If all previous days were marked (1, 2, 3, ..., max)
+                                // then mark all new days too when duration increases
+                                if (currentMarked.length > 0) {
+                                  const sortedMarked = [...currentMarked].sort((a, b) => a - b);
+                                  const maxMarked = sortedMarked[sortedMarked.length - 1];
+                                  const isAllDaysMarked = sortedMarked.every(
+                                    (day, idx) => day === idx + 1
+                                  ) && sortedMarked.length === maxMarked;
+                                  
+                                  if (isAllDaysMarked && val > maxMarked) {
+                                    // All previous days were marked consecutively, mark all new days too
+                                    const allDays = Array.from(
+                                      { length: val },
+                                      (_, i) => i + 1
+                                    );
+                                    return { ...srv, markedDays: allDays };
+                                  }
+                                }
+                                
                                 // Keep only marked days that are within new duration
                                 const adjustedMarked = currentMarked.filter(
                                   (day) => day <= val
                                 );
+                                
                                 // If pattern is every other day, extend pattern to new duration
                                 if (adjustedMarked.length > 0) {
-                                  const isEveryOtherDay = adjustedMarked.every(
+                                  const sortedAdjusted = [...adjustedMarked].sort((a, b) => a - b);
+                                  const isEveryOtherDay = sortedAdjusted.every(
                                     (day, idx) =>
                                       idx === 0 ||
-                                      day === adjustedMarked[idx - 1] + 2
+                                      day === sortedAdjusted[idx - 1] + 2
                                   );
                                   if (
                                     isEveryOtherDay &&
-                                    adjustedMarked[0] === 1
+                                    sortedAdjusted[0] === 1 &&
+                                    val > sortedAdjusted[sortedAdjusted.length - 1]
                                   ) {
                                     // Extend pattern for new days
                                     const newMarked = Array.from(
@@ -1762,57 +1822,96 @@ const Prescription = () => {
                   <div className='overflow-x-auto max-h-[400px] scroll-auto'>
                     <table className='w-full border-collapse border text-xs'>
                       <thead className='sticky top-0 bg-background z-10'>
-                        <tr className='bg-muted/50'>
-                          <th className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'>
-                            Хизмат
-                          </th>
-                          {(() => {
-                            // Determine the number of days to show in header
-                            // If adding new services, use serviceDuration
+                        {(() => {
+                          // Determine the number of days to show in header
+                          // If adding new services, use serviceDuration
+                          // If only existing services, find max duration
+                          let daysToShow = 8; // Default to 8
+
+                          if (services.length > 0) {
+                            // If adding new services, use serviceDuration (minimum 1)
+                            daysToShow = Math.max(serviceDuration, 1);
+                          } else if (patientServices.length > 0) {
                             // If only existing services, find max duration
-                            let daysToShow = 8; // Default to 8
-
-                            if (services.length > 0) {
-                              // If adding new services, use serviceDuration (minimum 1)
-                              daysToShow = Math.max(serviceDuration, 1);
-                            } else if (patientServices.length > 0) {
-                              // If only existing services, find max duration
-                              const maxDuration = patientServices.reduce(
-                                (max: number, doc: any) => {
-                                  const docMax =
-                                    doc.items?.reduce(
-                                      (itemMax: number, item: any) => {
-                                        const itemDuration =
-                                          item.duration ||
-                                          item.days?.length ||
-                                          0;
-                                        return Math.max(itemMax, itemDuration);
-                                      },
-                                      0
-                                    ) || 0;
-                                  return Math.max(max, docMax);
-                                },
-                                0
-                              );
-                              daysToShow = maxDuration > 0 ? maxDuration : 8;
-                            }
-
-                            // Show days based on duration, but limit to 8 per row
-                            // If duration is more than 8, show 8 (first row), otherwise show exact duration
-                            const columnsToShow = Math.min(daysToShow, 8);
-
-                            return Array.from(
-                              { length: columnsToShow },
-                              (_, i) => (
-                                <th
-                                  key={i}
-                                  className='border px-1 py-1.5 text-center min-w-[70px]'
-                                ></th>
-                              )
+                            const maxDuration = patientServices.reduce(
+                              (max: number, doc: any) => {
+                                const docMax =
+                                  doc.items?.reduce(
+                                    (itemMax: number, item: any) => {
+                                      const itemDuration =
+                                        item.duration ||
+                                        item.days?.length ||
+                                        0;
+                                      return Math.max(itemMax, itemDuration);
+                                    },
+                                    0
+                                  ) || 0;
+                                return Math.max(max, docMax);
+                              },
+                              0
                             );
-                          })()}
-                          <th className='border px-1 py-1.5 text-center font-semibold w-10 sticky right-0 bg-muted/50 z-20'></th>
-                        </tr>
+                            daysToShow = maxDuration > 0 ? maxDuration : 8;
+                          }
+
+                          // Split days into chunks of 8 for multiple rows
+                          const daysPerRow = 8;
+                          const headerChunks: number[][] = [];
+                          for (let i = 0; i < daysToShow; i += daysPerRow) {
+                            const chunk = [];
+                            for (
+                              let j = i;
+                              j < Math.min(i + daysPerRow, daysToShow);
+                              j++
+                            ) {
+                              chunk.push(j + 1);
+                            }
+                            headerChunks.push(chunk);
+                          }
+
+                          // If no chunks, create at least one empty chunk
+                          if (headerChunks.length === 0) {
+                            headerChunks.push([]);
+                          }
+
+                          return headerChunks.map((chunk, chunkIndex) => (
+                            <tr key={`header-${chunkIndex}`} className='bg-muted/50'>
+                              {chunkIndex === 0 && (
+                                <th
+                                  className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'
+                                  rowSpan={headerChunks.length}
+                                >
+                                  Хизмат
+                                </th>
+                              )}
+                              {chunk.map((dayNum) => (
+                                <th
+                                  key={dayNum}
+                                  className='border px-1 py-1.5 text-center min-w-[70px]'
+                                >
+                                  {dayNum}-кун
+                                </th>
+                              ))}
+                              {chunk.length < daysPerRow &&
+                                Array.from(
+                                  { length: daysPerRow - chunk.length },
+                                  (_, i) => (
+                                    <th
+                                      key={`empty-${i}`}
+                                      className='border px-1 py-1.5'
+                                    ></th>
+                                  )
+                                )}
+                              {chunkIndex === 0 && (
+                                <th
+                                  className='border px-1 py-1.5 text-center font-semibold w-12 sticky right-0 bg-muted/50 z-20'
+                                  rowSpan={headerChunks.length}
+                                >
+                                  Харакатлар
+                                </th>
+                              )}
+                            </tr>
+                          ));
+                        })()}
                       </thead>
                       <tbody>
                         {/* Existing services - show in table */}
@@ -2065,18 +2164,49 @@ const Prescription = () => {
                                     )}
                                   {chunkIndex === 0 && (
                                     <td
-                                      className='border px-1 py-1 text-center sticky right-0 bg-background z-10'
+                                      className='border px-1 py-2 text-center sticky right-0 bg-background z-10 w-12'
                                       rowSpan={dayChunks.length}
                                     >
-                                      <Button
-                                        type='button'
-                                        variant='ghost'
-                                        size='sm'
-                                        onClick={() => removeService(srv.id)}
-                                        className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-                                      >
-                                        <Trash2 className='w-3 h-3' />
-                                      </Button>
+                                      <div className='flex flex-col items-center gap-1'>
+                                        <div className='flex gap-1'>
+                                          <Button
+                                            type='button'
+                                            variant='ghost'
+                                            size='sm'
+                                            onClick={() =>
+                                              markEveryDayForService(srv.id)
+                                            }
+                                            className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
+                                            disabled={!srv.service_id}
+                                            title='Ҳар куни'
+                                          >
+                                            <CalendarDays className='w-3 h-3' />
+                                          </Button>
+                                          <Button
+                                            type='button'
+                                            variant='ghost'
+                                            size='sm'
+                                            onClick={() =>
+                                              markEveryOtherDayForService(srv.id)
+                                            }
+                                            className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
+                                            disabled={!srv.service_id}
+                                            title='2 кунда бир'
+                                          >
+                                            <Repeat className='w-3 h-3' />
+                                          </Button>
+                                        </div>
+                                        <Button
+                                          type='button'
+                                          variant='ghost'
+                                          size='sm'
+                                          onClick={() => removeService(srv.id)}
+                                          className='h-6 w-6 p-0 text-destructive hover:text-destructive'
+                                          title='Ўчириш'
+                                        >
+                                          <Trash2 className='w-3 h-3' />
+                                        </Button>
+                                      </div>
                                     </td>
                                   )}
                                 </tr>
