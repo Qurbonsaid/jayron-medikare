@@ -89,8 +89,11 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   };
 
-  const getPaymentMethodDisplay = (method: string,purpose:"type"|"purpose") => {
-    if(purpose === 'purpose'){
+  const getPaymentMethodDisplay = (
+    method: string,
+    purpose: 'type' | 'purpose'
+  ) => {
+    if (purpose === 'purpose') {
       switch (method) {
         case 'KORIK':
           return '💵 Кўрик';
@@ -105,7 +108,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
         default:
           return method;
       }
-    }else{
+    } else {
       const lowerMethod = method?.toLowerCase() || '';
       switch (lowerMethod) {
         case 'cash':
@@ -278,7 +281,8 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                           _id: s._id,
                           id: s._id,
                           name: s.name,
-                          service_type: (s.service_type ?? 'XIZMAT') as ServiceType,
+                          service_type: (s.service_type ??
+                            'XIZMAT') as ServiceType,
                           count: s.count,
                           price: s.price,
                           total_price: s.total_price,
@@ -496,8 +500,8 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
               )}
 
             {/* Services from Examination Section */}
-            {billingData.data.examination_id?.services &&
-              billingData.data.examination_id.services.length > 0 && (
+            {(billingData.data.examination_id as any)?.services &&
+              (billingData.data.examination_id as any).services.length > 0 && (
                 <div>
                   <Label className='text-base sm:text-lg font-semibold mb-3 block'>
                     Кўрик хизматлари
@@ -526,8 +530,8 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {billingData.data.examination_id.services.map(
-                          (service) => (
+                        {(billingData.data.examination_id as any).services.map(
+                          (service: any) => (
                             <ServiceItem key={service._id} service={service} />
                           )
                         )}
@@ -537,11 +541,13 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
 
                   {/* Mobile Cards */}
                   <div className='md:hidden space-y-3'>
-                    {billingData.data.examination_id.services.map((service) => (
-                      <Card key={service._id} className='p-0 overflow-hidden'>
-                        <ServiceItem service={service} isMobile />
-                      </Card>
-                    ))}
+                    {(billingData.data.examination_id as any).services.map(
+                      (service: any) => (
+                        <Card key={service._id} className='p-0 overflow-hidden'>
+                          <ServiceItem service={service} isMobile />
+                        </Card>
+                      )
+                    )}
                   </div>
                 </div>
               )}
@@ -683,13 +689,23 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                 )}
                               </td>
                               <td className='py-2 px-4 text-center text-sm'>
-                                {room.end_date ? (
-                                  format(new Date(room.end_date), 'dd.MM.yyyy')
-                                ) : (
-                                  <span className='text-yellow-600'>
-                                    Давом этмоқда
-                                  </span>
-                                )}
+                                {room.end_date
+                                  ? format(
+                                      new Date(room.end_date),
+                                      'dd.MM.yyyy'
+                                    )
+                                  : (room as any).estimated_leave_time && (
+                                      <span className='text-yellow-600'>
+                                        Давом этмоқда (
+                                        {format(
+                                          new Date(
+                                            (room as any).estimated_leave_time
+                                          ),
+                                          'dd.MM.yyyy'
+                                        )}
+                                        )
+                                      </span>
+                                    )}
                               </td>
                               <td className='py-2 px-4 text-right font-semibold text-sm'>
                                 {formatCurrency(room.room_price || 0)}
@@ -712,11 +728,6 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                 <div className='font-medium text-sm'>
                                   {room.room_name || 'Номаълум'}
                                 </div>
-                                {/* {room.room_id && (
-                                  <div className='text-xs text-muted-foreground mt-0.5'>
-                                    ID: {room.room_id}
-                                  </div>
-                                )} */}
                               </div>
                               {room.floor_number && (
                                 <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700'>
@@ -747,6 +758,13 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                       new Date(room.end_date),
                                       'dd.MM.yyyy'
                                     )
+                                  ) : (room as any).estimated_leave_time ? (
+                                    format(
+                                      new Date(
+                                        (room as any).estimated_leave_time
+                                      ),
+                                      'dd.MM.yyyy'
+                                    )
                                   ) : (
                                     <span className='text-yellow-600'>
                                       Давом этмоқда
@@ -772,6 +790,117 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                 </div>
               )}
 
+            {/* Patient Service Items Section */}
+            {billingData.data.examination_id?.service?.items &&
+              billingData.data.examination_id.service.items.length > 0 && (
+                <div>
+                  <Label className='text-base sm:text-lg font-semibold mb-3 block'>
+                    Хизматлар
+                  </Label>
+
+                  {/* Desktop Table */}
+                  <div className='hidden md:block border rounded-lg overflow-hidden'>
+                    <table className='w-full'>
+                      <thead className='bg-muted'>
+                        <tr>
+                          <th className='text-left py-3 px-4 font-medium text-sm'>
+                            Хизмат номи
+                          </th>
+                          <th className='text-left py-3 px-4 font-medium text-sm'>
+                            Изоҳ
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Кунлар сони
+                          </th>
+                          <th className='text-center py-3 px-4 font-medium text-sm'>
+                            Бажарилган кунлар
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {billingData.data.examination_id.service.items.map(
+                          (item: any) => (
+                            <tr key={item._id} className='border-b'>
+                              <td className='py-2 px-4 text-sm'>
+                                {item.service_type_id?.name || 'Номаълум'}
+                              </td>
+                              <td className='py-2 px-4 text-sm text-muted-foreground'>
+                                {item?.service_type_id?.description || '-'}
+                              </td>
+                              <td className='py-2 px-4 text-center text-sm'>
+                                {item.days?.filter(
+                                  (i: any) =>
+                                    i.date !== null && i.date !== undefined
+                                ).length || 0}
+                              </td>
+                              <td className='py-2 px-4 text-center text-sm'>
+                                <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700'>
+                                  {item.days?.filter(
+                                    (day: any) => day.is_completed
+                                  ).length || 0}
+                                </span>
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className='md:hidden space-y-3'>
+                    {billingData.data.examination_id.service.items.map(
+                      (item: any) => (
+                        <Card key={item._id} className='p-3'>
+                          <div className='space-y-2'>
+                            <div>
+                              <Label className='text-xs text-muted-foreground'>
+                                Хизмат номи
+                              </Label>
+                              <div className='text-sm font-medium mt-1'>
+                                {item.service_type_id?.name || 'Номаълум'}
+                              </div>
+                            </div>
+
+                            {item.notes && (
+                              <div className='pt-2 border-t'>
+                                <Label className='text-xs text-muted-foreground'>
+                                  Изоҳ
+                                </Label>
+                                <div className='text-sm mt-1'>{item.notes}</div>
+                              </div>
+                            )}
+
+                            <div className='grid grid-cols-2 gap-2 pt-2 border-t'>
+                              <div>
+                                <Label className='text-xs text-muted-foreground'>
+                                  Кунлар сони
+                                </Label>
+                                <div className='text-sm mt-1'>
+                                  {item.days?.length || 0}
+                                </div>
+                              </div>
+                              <div>
+                                <Label className='text-xs text-muted-foreground'>
+                                  Бажарилган кунлар
+                                </Label>
+                                <div className='text-sm mt-1'>
+                                  <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700'>
+                                    {item.days?.filter(
+                                      (day: any) => day.is_completed
+                                    ).length || 0}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
             {/* Services */}
             <div>
               <Label className='text-base sm:text-lg font-semibold mb-3 block'>
@@ -786,7 +915,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       <th className='text-left py-3 px-4 font-medium text-sm'>
                         Хизмат номи
                       </th>
-                      <th className='text-left py-3 px-4 font-medium text-sm w-[170px]'>
+                      <th className='text-center py-3 px-4 font-medium text-sm w-[170px]'>
                         Тури
                       </th>
                       <th className='text-center py-3 px-4 font-medium text-sm w-24'>
@@ -1158,13 +1287,19 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                         >
                           <div className='flex items-center gap-4'>
                             <span>
-                              {getPaymentMethodDisplay(payment.payment_method,'type')}
+                              {getPaymentMethodDisplay(
+                                payment.payment_method,
+                                'type'
+                              )}
                             </span>
                             <span className='text-muted-foreground'>
                               {format(payment.payment_date, 'dd.MM.yyyy HH:mm')}
                             </span>
                             <span>
-                              {getPaymentMethodDisplay(payment.payment_type,'purpose')}
+                              {getPaymentMethodDisplay(
+                                payment.payment_type,
+                                'purpose'
+                              )}
                             </span>
                           </div>
                           <span className='font-semibold'>
@@ -1239,9 +1374,9 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                     <Label className='text-sm mb-1.5 block'>Тўлов тури</Label>
                     <Select
                       value={paymentType}
-                      onValueChange={(
-                        value: ServiceType
-                      ) => setPaymentType(value)}
+                      onValueChange={(value: ServiceType) =>
+                        setPaymentType(value)
+                      }
                     >
                       <SelectTrigger className='text-sm'>
                         <SelectValue placeholder='Тўлов турини танланг' />

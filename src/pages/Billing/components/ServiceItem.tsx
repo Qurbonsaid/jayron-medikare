@@ -41,8 +41,13 @@ export const ServiceItem = ({ service, isMobile = false }: Props) => {
     return null;
   }
 
-  // Quantity can come from either `quantity` or `days.length`
-  const quantity = service.quantity ?? service.days?.length ?? 1;
+  // Quantity can come from either `quantity` or `days.length` (only days with non-null date)
+  const quantity =
+    service.quantity ??
+    service.days?.filter(
+      (day) => day.date !== null && day.date !== undefined
+    ).length ??
+    1;
 
   // Unit price can come from `service_type_id.price` or the service's own `price`
   const unitPrice = serviceType.price ?? service.price ?? 0;

@@ -1,4 +1,5 @@
 import { useCreateBillingMutation } from '@/app/api/billingApi/billingApi';
+import { service_type } from '@/app/api/billingApi/types';
 import { useGetAllExamsQuery } from '@/app/api/examinationApi/examinationApi';
 import { getStatusBadge } from '@/components/common/StatusBadge';
 import {
@@ -27,7 +28,6 @@ import { AnalysisItem } from './AnalysisItem';
 import { formatCurrency } from './BillingBadge';
 import { RoomItem } from './RoomItem';
 import { ServiceItem } from './ServiceItem';
-import { service_type } from '@/app/api/billingApi/types';
 
 interface Props {
   isInvoiceModalOpen: boolean;
@@ -101,9 +101,68 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     return services.reduce((sum, service) => sum + service.total, 0);
   };
 
+  // Calculate examination services total (analyses, rooms, services)
+  const calculateExaminationServicesTotal = () => {
+    if (!selectedExam) return 0;
+
+    let total = 0;
+
+    // Calculate analyses total
+    if (selectedExam.analyses && selectedExam.analyses.length > 0) {
+      selectedExam.analyses.forEach((analysis: any) => {
+        const analysisType =
+          typeof analysis.analysis_type === 'object'
+            ? analysis.analysis_type
+            : null;
+        const price = analysisType?.price ?? analysis.price ?? 0;
+        total += price;
+      });
+    }
+
+    // Calculate rooms total
+    if (selectedExam.rooms && selectedExam.rooms.length > 0) {
+      selectedExam.rooms.forEach((room: any) => {
+        const days = Math.ceil(
+          (new Date(
+            room?.end_date || room?.estimated_leave_time || new Date()
+          ).getTime() -
+            new Date(room?.start_date).getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
+        const roomTotal =
+          days > 0 ? (room?.room_price || 0) * days : room?.room_price || 0;
+        total += roomTotal;
+      });
+    }
+
+    // Calculate services total (from examination.service.items)
+    if (selectedExam.service?.items && selectedExam.service.items.length > 0) {
+      selectedExam.service.items.forEach((item: any) => {
+        const serviceType =
+          typeof item.service_type_id === 'object'
+            ? item.service_type_id
+            : null;
+        if (serviceType) {
+          const quantity =
+            item.quantity ??
+            item.days?.filter(
+              (day: any) => day.date !== null && day.date !== undefined
+            ).length ??
+            1;
+          const unitPrice = serviceType.price ?? item.price ?? 0;
+          const itemTotal = item.total_price ?? unitPrice * quantity;
+          total += itemTotal;
+        }
+      });
+    }
+
+    return total;
+  };
+
   const calculateGrandTotal = () => {
     const subtotal = calculateSubtotal();
-    return subtotal - discount;
+    const examinationServicesTotal = calculateExaminationServicesTotal();
+    return subtotal + examinationServicesTotal - discount;
   };
 
   const {
@@ -115,7 +174,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
       page,
       limit: 20,
       status: 'pending',
-      has_billing:false
+      has_billing: false,
     },
     {
       refetchOnMountOrArgChange: true,
@@ -177,7 +236,6 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     }
   }, [roomIds, selectedExam]);
 
-
   const formatNumberWithSpaces = (num: number) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   };
@@ -216,9 +274,12 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
       return;
     }
 
-    // Validate general services
-    if (services.length === 0) {
-      toast.error('Илтимос, камида битта умумий хизмат қўшинг');
+    // Validate services - either general services or examination services should exist
+    const examinationServicesTotal = calculateExaminationServicesTotal();
+    if (services.length === 0 && examinationServicesTotal === 0) {
+      toast.error(
+        'Илтимос, камида битта хизмат қўшинг ёки кўрикда хизматлар бўлиши керак'
+      );
       return;
     }
 
@@ -252,14 +313,101 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     }
 
     try {
-      const billingData = {
-        examination_id: selectedExaminationId,
-        services: services.map((s) => ({
+      // Prepare examination services for backend
+      const examinationServices: Array<{
+        name: string;
+        count: number;
+        price: number;
+        service_type: service_type;
+      }> = [];
+
+      // Add analyses as services
+      if (selectedExam?.analyses && selectedExam.analyses.length > 0) {
+        selectedExam.analyses.forEach((analysis: any) => {
+          const analysisType =
+            typeof analysis.analysis_type === 'object'
+              ? analysis.analysis_type
+              : null;
+          const price = analysisType?.price ?? analysis.price ?? 0;
+          if (price > 0) {
+            examinationServices.push({
+              name: analysisType?.name || 'Таҳлил',
+              count: 1,
+              price: price,
+              service_type: 'TAHLIL',
+            });
+          }
+        });
+      }
+
+      // Add rooms as services
+      if (selectedExam?.rooms && selectedExam.rooms.length > 0) {
+        selectedExam.rooms.forEach((room: any) => {
+          const days = Math.ceil(
+            (new Date(
+              room?.end_date || room?.estimated_leave_time || new Date()
+            ).getTime() -
+              new Date(room?.start_date).getTime()) /
+              (1000 * 60 * 60 * 24)
+          );
+          const roomTotal =
+            days > 0 ? (room?.room_price || 0) * days : room?.room_price || 0;
+          if (roomTotal > 0) {
+            examinationServices.push({
+              name: room?.room_name || 'Палата',
+              count: days > 0 ? days : 1,
+              price: room?.room_price || 0,
+              service_type: 'XONA',
+            });
+          }
+        });
+      }
+
+      // Add services from examination.service.items
+      if (
+        selectedExam?.service?.items &&
+        selectedExam.service.items.length > 0
+      ) {
+        selectedExam.service.items.forEach((item: any) => {
+          const serviceType =
+            typeof item.service_type_id === 'object'
+              ? item.service_type_id
+              : null;
+          if (serviceType) {
+            const quantity =
+              item.quantity ??
+              item.days?.filter(
+                (day: any) => day.date !== null && day.date !== undefined
+              ).length ??
+              1;
+            const unitPrice = serviceType.price ?? item.price ?? 0;
+            const itemTotal = item.total_price ?? unitPrice * quantity;
+            if (itemTotal > 0) {
+              examinationServices.push({
+                name: serviceType.name || 'Хизмат',
+                count: quantity,
+                price: unitPrice,
+                service_type: 'XIZMAT',
+              });
+            }
+          }
+        });
+      }
+
+      // Combine general services with examination services
+      const allServices = [
+        ...services.map((s) => ({
           name: s.name,
           count: s.quantity,
           price: s.unitPrice,
           service_type: s.service_type,
         })),
+        ...examinationServices,
+      ];
+
+      const billingData = {
+        examination_id: selectedExaminationId,
+        services: allServices,
         payment: {
           payment_method: paymentMethod,
           payment_type: paymentType,
@@ -843,7 +991,6 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
           {/* Payment Section */}
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
             <div className='space-y-3 sm:space-y-4'>
-
               <Card className='p-3 sm:p-4 bg-primary/5 flex justify-between items-center'>
                 <span className='text-base sm:text-lg font-semibold'>
                   Жами тўлов:
@@ -899,9 +1046,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                 <Label className='text-sm'>Тўлов тури</Label>
                 <Select
                   value={paymentType}
-                  onValueChange={(
-                    value: service_type
-                  ) => setPaymentType(value)}
+                  onValueChange={(value: service_type) => setPaymentType(value)}
                 >
                   <SelectTrigger className='text-sm'>
                     <SelectValue placeholder='Тўлов турини танланг' />

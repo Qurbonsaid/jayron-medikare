@@ -45,13 +45,22 @@ export const RoomItem = ({ isMobile, room }: Props) => {
                   {new Date(room.end_date).toLocaleDateString('uz-UZ')}
                 </div>
               </div>
+            ) : room?.estimated_leave_time ? (
+              <div>
+                <span className='text-muted-foreground'>Чиқиш:</span>
+                <div className='font-medium text-yellow-600'>
+                  Давом этмоқда (
+                  {new Date(room.estimated_leave_time).toLocaleDateString(
+                    'uz-UZ'
+                  )}
+                  )
+                </div>
+              </div>
             ) : (
               <div>
                 <span className='text-muted-foreground'>Чиқиш:</span>
-                <div className='font-medium'>
-                  {new Date(room?.estimated_leave_time).toLocaleDateString(
-                    'uz-UZ'
-                  )}
+                <div className='font-medium text-yellow-600'>
+                  Давом этмоқда
                 </div>
               </div>
             )}
@@ -91,12 +100,15 @@ export const RoomItem = ({ isMobile, room }: Props) => {
           {new Date(room?.end_date).toLocaleDateString('uz-UZ')}
         </td>
       ) : room?.estimated_leave_time ? (
-        <td className='py-3 px-4 text-sm text-muted-foreground text-center'>
-          <span className=' bg-orange-500 p-2 rounded-lg text-white'>{new Date(room?.estimated_leave_time).toLocaleDateString('uz-UZ')}</span>
+        <td className='py-3 px-4 text-sm text-center'>
+          <span className='text-yellow-600'>
+            Давом этмоқда (
+            {new Date(room?.estimated_leave_time).toLocaleDateString('uz-UZ')})
+          </span>
         </td>
       ) : (
-        <td className='py-3 px-4 text-sm text-muted-foreground text-center'>
-          -
+        <td className='py-3 px-4 text-sm text-center'>
+          <span className='text-yellow-600'>Давом этмоқда</span>
         </td>
       )}
 
