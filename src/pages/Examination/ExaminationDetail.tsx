@@ -61,8 +61,8 @@ import {
   AlertTriangle,
   ArrowLeft,
   Brain,
-  Check,
   CalendarDays,
+  Check,
   CheckCircle2,
   ChevronsUpDown,
   Edit,
@@ -370,17 +370,18 @@ const ExaminationDetail = () => {
     // Only update if services array is empty (not adding new services) and patientServices exist
     if (services.length === 0 && patientServices.length > 0) {
       const durations = patientServices
-        .flatMap((doc: any) =>
-          doc.items?.map((item: any) => 
-            item.duration || item.days?.length || 0
-          ) || []
+        .flatMap(
+          (doc: any) =>
+            doc.items?.map(
+              (item: any) => item.duration || item.days?.length || 0
+            ) || []
         )
         .filter((d: number) => d > 0);
       if (durations.length > 0) {
         const maxDuration = Math.max(...durations);
         setServiceDuration(maxDuration);
       }
-      
+
       // Get start date from existing services (first date found in days)
       const firstDate = patientServices
         .flatMap((doc: any) => doc.items || [])
@@ -392,7 +393,7 @@ const ExaminationDetail = () => {
           const dateB = new Date(b).getTime();
           return dateA - dateB;
         })[0];
-      
+
       if (firstDate) {
         setServiceStartDate(new Date(firstDate));
       }
@@ -672,50 +673,98 @@ const ExaminationDetail = () => {
 
       if (serviceDoc && serviceDoc.items) {
         // Get all items from the service document except the one being edited
+        // and ensure all items' days arrays match the new duration
         const otherItems = serviceDoc.items
           .filter((item: any) => item._id !== editingServiceId)
-          .map((item: any) => ({
-            _id: item._id,
-            service_type_id:
-              typeof item.service_type_id === 'object'
-                ? item.service_type_id._id
-                : item.service_type_id,
-            days: (item.days || []).map((day: any) => ({
+          .map((item: any) => {
+            const existingDays = (item.days || []).map((day: any) => ({
               day: day.day,
               date: day.date
                 ? typeof day.date === 'string'
                   ? day.date
                   : format(new Date(day.date), 'yyyy-MM-dd')
                 : null,
-            })),
-            notes: item.notes || '',
-          }));
+            })) as Array<{ day: number; date: string | null }>;
 
-        // Combine edited item with other existing items
+            // Always ensure days array length equals current serviceDuration
+            // If duration changed or days array is shorter/longer, adjust to match new duration
+            const daysMap = new Map(
+              existingDays.map(
+                (d) => [d.day, d.date] as [number, string | null]
+              )
+            );
+
+            // Generate days array matching the new duration
+            const paddedDays: Array<{ day: number; date: string | null }> =
+              Array.from({ length: serviceDuration }, (_, i) => {
+                const dayNumber = i + 1;
+                // If day exists in existing days, use its date, otherwise null
+                return {
+                  day: dayNumber,
+                  date: daysMap.get(dayNumber) ?? null,
+                };
+              });
+
+            return {
+              _id: item._id,
+              service_type_id:
+                typeof item.service_type_id === 'object'
+                  ? item.service_type_id._id
+                  : item.service_type_id,
+              days: paddedDays,
+              notes: item.notes || '',
+            };
+          });
+
+        // Combine edited item with other existing items (all with updated duration)
         itemsToSave = [...itemsToSave, ...otherItems];
       }
     } else if (hasExistingServices && !isEdit) {
       // If adding new items to existing service document, preserve all existing items
+      // and ensure all items' days arrays match the new duration
       const existingServiceDoc = patientServices[0]; // Use first service document
       if (existingServiceDoc && existingServiceDoc.items) {
-        const existingItems = existingServiceDoc.items.map((item: any) => ({
-          _id: item._id,
-          service_type_id:
-            typeof item.service_type_id === 'object'
-              ? item.service_type_id._id
-              : item.service_type_id,
-          days: (item.days || []).map((day: any) => ({
+        // Update all existing items to match the new duration
+        // This ensures all items' days arrays are synchronized with the current serviceDuration
+        const existingItems = existingServiceDoc.items.map((item: any) => {
+          const existingDays = (item.days || []).map((day: any) => ({
             day: day.day,
             date: day.date
               ? typeof day.date === 'string'
                 ? day.date
                 : format(new Date(day.date), 'yyyy-MM-dd')
               : null,
-          })),
-          notes: item.notes || '',
-        }));
+          })) as Array<{ day: number; date: string | null }>;
 
-        // Combine new items with existing items
+          // Always ensure days array length equals current serviceDuration
+          // If duration changed or days array is shorter/longer, adjust to match new duration
+          const daysMap = new Map(
+            existingDays.map((d) => [d.day, d.date] as [number, string | null])
+          );
+
+          // Generate days array matching the new duration
+          const paddedDays: Array<{ day: number; date: string | null }> =
+            Array.from({ length: serviceDuration }, (_, i) => {
+              const dayNumber = i + 1;
+              // If day exists in existing days, use its date, otherwise null
+              return {
+                day: dayNumber,
+                date: daysMap.get(dayNumber) ?? null,
+              };
+            });
+
+          return {
+            _id: item._id,
+            service_type_id:
+              typeof item.service_type_id === 'object'
+                ? item.service_type_id._id
+                : item.service_type_id,
+            days: paddedDays,
+            notes: item.notes || '',
+          };
+        });
+
+        // Combine new items with existing items (all with updated duration)
         itemsToSave = [...existingItems, ...itemsToSave];
       }
     }
@@ -731,13 +780,9 @@ const ExaminationDetail = () => {
         // If existing services exist or editing, use update
         // Otherwise, use create
         if (hasExistingServices || isEdit) {
-          // Get service document ID from existing services
-          const serviceDocId = patientServices[0]?._id;
-          if (serviceDocId) {
-            payload.examination_id = serviceDocId;
-            const res = await updateService(payload).unwrap();
-            return res;
-          }
+          payload.examination_id = exam.service._id;
+          const res = await updateService(payload).unwrap();
+          return res;
         }
         const res = await addServiceMutation(payload).unwrap();
         return res;
@@ -1897,10 +1942,12 @@ const ExaminationDetail = () => {
                             let maxDuration = 7; // Default
                             if (patientServices.length > 0) {
                               const durations = patientServices
-                                .flatMap((doc: any) =>
-                                  doc.items?.map((item: any) => 
-                                    item.duration || item.days?.length || 0
-                                  ) || []
+                                .flatMap(
+                                  (doc: any) =>
+                                    doc.items?.map(
+                                      (item: any) =>
+                                        item.duration || item.days?.length || 0
+                                    ) || []
                                 )
                                 .filter((d: number) => d > 0);
                               if (durations.length > 0) {
@@ -1915,7 +1962,10 @@ const ExaminationDetail = () => {
                               .flatMap((doc: any) => doc.items || [])
                               .flatMap((item: any) => item.days || [])
                               .map((day: any) => day.date)
-                              .filter((date: any) => date !== null && date !== undefined)
+                              .filter(
+                                (date: any) =>
+                                  date !== null && date !== undefined
+                              )
                               .sort((a: any, b: any) => {
                                 const dateA = new Date(a).getTime();
                                 const dateB = new Date(b).getTime();
@@ -1982,28 +2032,40 @@ const ExaminationDetail = () => {
                                         setServices(
                                           services.map((srv) => {
                                             const currentDays = srv.days || [];
-                                            
+
                                             // If all previous days were marked (all have dates), mark all new days too
                                             if (currentDays.length > 0) {
-                                              const allDaysMarked = currentDays.every((day) => day.date !== null);
-                                              const currentMaxDay = currentDays.length;
-                                              
-                                              if (allDaysMarked && newDuration > currentMaxDay) {
-                                                // All previous days were marked, so mark all new days too
-                                                const newDays: ServiceDay[] = Array.from(
-                                                  { length: newDuration },
-                                                  (_, idx) => {
-                                                    if (idx < currentMaxDay) {
-                                                      return currentDays[idx];
-                                                    }
-                                                    const dayDate = new Date(serviceStartDate);
-                                                    dayDate.setDate(dayDate.getDate() + idx);
-                                                    return {
-                                                      day: idx + 1,
-                                                      date: dayDate,
-                                                    };
-                                                  }
+                                              const allDaysMarked =
+                                                currentDays.every(
+                                                  (day) => day.date !== null
                                                 );
+                                              const currentMaxDay =
+                                                currentDays.length;
+
+                                              if (
+                                                allDaysMarked &&
+                                                newDuration > currentMaxDay
+                                              ) {
+                                                // All previous days were marked, so mark all new days too
+                                                const newDays: ServiceDay[] =
+                                                  Array.from(
+                                                    { length: newDuration },
+                                                    (_, idx) => {
+                                                      if (idx < currentMaxDay) {
+                                                        return currentDays[idx];
+                                                      }
+                                                      const dayDate = new Date(
+                                                        serviceStartDate
+                                                      );
+                                                      dayDate.setDate(
+                                                        dayDate.getDate() + idx
+                                                      );
+                                                      return {
+                                                        day: idx + 1,
+                                                        date: dayDate,
+                                                      };
+                                                    }
+                                                  );
                                                 return {
                                                   ...srv,
                                                   duration: newDuration,
@@ -2011,21 +2073,23 @@ const ExaminationDetail = () => {
                                                 };
                                               }
                                             }
-                                            
+
                                             // Otherwise, extend days but keep existing ones
-                                            const newDays: ServiceDay[] = Array.from(
-                                              { length: newDuration },
-                                              (_, idx) => {
-                                                const existingDay = currentDays[idx];
-                                                if (existingDay) {
-                                                  return existingDay;
+                                            const newDays: ServiceDay[] =
+                                              Array.from(
+                                                { length: newDuration },
+                                                (_, idx) => {
+                                                  const existingDay =
+                                                    currentDays[idx];
+                                                  if (existingDay) {
+                                                    return existingDay;
+                                                  }
+                                                  return {
+                                                    day: idx + 1,
+                                                    date: null,
+                                                  };
                                                 }
-                                                return {
-                                                  day: idx + 1,
-                                                  date: null,
-                                                };
-                                              }
-                                            );
+                                              );
                                             return {
                                               ...srv,
                                               duration: newDuration,
@@ -2098,14 +2162,21 @@ const ExaminationDetail = () => {
                                   onClick={() => {
                                     setIsAddingService(true);
                                     // Ensure duration is set from existing services if available
-                                    if (serviceDuration === 0 || !serviceDuration) {
+                                    if (
+                                      serviceDuration === 0 ||
+                                      !serviceDuration
+                                    ) {
                                       let maxDuration = 7; // Default
                                       if (patientServices.length > 0) {
                                         const durations = patientServices
-                                          .flatMap((doc: any) =>
-                                            doc.items?.map((item: any) => 
-                                              item.duration || item.days?.length || 0
-                                            ) || []
+                                          .flatMap(
+                                            (doc: any) =>
+                                              doc.items?.map(
+                                                (item: any) =>
+                                                  item.duration ||
+                                                  item.days?.length ||
+                                                  0
+                                              ) || []
                                           )
                                           .filter((d: number) => d > 0);
                                         if (durations.length > 0) {
@@ -2120,14 +2191,19 @@ const ExaminationDetail = () => {
                                         .flatMap((doc: any) => doc.items || [])
                                         .flatMap((item: any) => item.days || [])
                                         .map((day: any) => day.date)
-                                        .filter((date: any) => date !== null && date !== undefined)
+                                        .filter(
+                                          (date: any) =>
+                                            date !== null && date !== undefined
+                                        )
                                         .sort((a: any, b: any) => {
                                           const dateA = new Date(a).getTime();
                                           const dateB = new Date(b).getTime();
                                           return dateA - dateB;
                                         })[0];
                                       if (firstDate) {
-                                        setServiceStartDate(new Date(firstDate));
+                                        setServiceStartDate(
+                                          new Date(firstDate)
+                                        );
                                       }
                                     }
                                     if (services.length === 0) {
@@ -2156,23 +2232,30 @@ const ExaminationDetail = () => {
                                     // Also consider existing services' duration
                                     let maxExistingDuration = 0;
                                     if (patientServices.length > 0) {
-                                      maxExistingDuration = patientServices.reduce(
-                                        (max: number, doc: any) => {
-                                          const docMax =
-                                            doc.items?.reduce(
-                                              (itemMax: number, item: any) => {
-                                                const itemDuration =
-                                                  item.duration ||
-                                                  item.days?.length ||
-                                                  0;
-                                                return Math.max(itemMax, itemDuration);
-                                              },
-                                              0
-                                            ) || 0;
-                                          return Math.max(max, docMax);
-                                        },
-                                        0
-                                      );
+                                      maxExistingDuration =
+                                        patientServices.reduce(
+                                          (max: number, doc: any) => {
+                                            const docMax =
+                                              doc.items?.reduce(
+                                                (
+                                                  itemMax: number,
+                                                  item: any
+                                                ) => {
+                                                  const itemDuration =
+                                                    item.duration ||
+                                                    item.days?.length ||
+                                                    0;
+                                                  return Math.max(
+                                                    itemMax,
+                                                    itemDuration
+                                                  );
+                                                },
+                                                0
+                                              ) || 0;
+                                            return Math.max(max, docMax);
+                                          },
+                                          0
+                                        );
                                     }
                                     daysToShow = Math.max(
                                       serviceDuration,
@@ -2190,7 +2273,10 @@ const ExaminationDetail = () => {
                                                 item.duration ||
                                                 item.days?.length ||
                                                 0;
-                                              return Math.max(itemMax, itemDuration);
+                                              return Math.max(
+                                                itemMax,
+                                                itemDuration
+                                              );
                                             },
                                             0
                                           ) || 0;
@@ -2198,13 +2284,18 @@ const ExaminationDetail = () => {
                                       },
                                       0
                                     );
-                                    daysToShow = maxDuration > 0 ? maxDuration : 8;
+                                    daysToShow =
+                                      maxDuration > 0 ? maxDuration : 8;
                                   }
 
                                   // Split days into chunks of 8 for multiple rows
                                   const daysPerRow = 8;
                                   const headerChunks: number[][] = [];
-                                  for (let i = 0; i < daysToShow; i += daysPerRow) {
+                                  for (
+                                    let i = 0;
+                                    i < daysToShow;
+                                    i += daysPerRow
+                                  ) {
                                     const chunk = [];
                                     for (
                                       let j = i;
@@ -2221,45 +2312,49 @@ const ExaminationDetail = () => {
                                     headerChunks.push([]);
                                   }
 
-                                  return headerChunks.map((chunk, chunkIndex) => (
-                                    <tr
-                                      key={`header-${chunkIndex}`}
-                                      className='bg-muted/50'
-                                    >
-                                      {chunkIndex === 0 && (
-                                        <th
-                                          className='border px-3 py-2 text-left font-semibold min-w-[150px]'
-                                          rowSpan={headerChunks.length}
-                                        >
-                                          Хизмат номи
-                                        </th>
-                                      )}
-                                      {chunk.map((dayNum) => (
-                                        <th
-                                          key={dayNum}
-                                          className='border px-2 py-2 text-center font-semibold min-w-[70px]'
-                                        ></th>
-                                      ))}
-                                      {chunk.length < daysPerRow &&
-                                        Array.from(
-                                          { length: daysPerRow - chunk.length },
-                                          (_, i) => (
-                                            <th
-                                              key={`empty-${i}`}
-                                              className='border px-2 py-2'
-                                            ></th>
-                                          )
+                                  return headerChunks.map(
+                                    (chunk, chunkIndex) => (
+                                      <tr
+                                        key={`header-${chunkIndex}`}
+                                        className='bg-muted/50'
+                                      >
+                                        {chunkIndex === 0 && (
+                                          <th
+                                            className='border px-3 py-2 text-left font-semibold min-w-[150px]'
+                                            rowSpan={headerChunks.length}
+                                          >
+                                            Хизмат номи
+                                          </th>
                                         )}
-                                      {chunkIndex === 0 && (
-                                        <th
-                                          className='border px-2 py-2 text-center font-semibold w-12'
-                                          rowSpan={headerChunks.length}
-                                        >
-                                          Харакатлар
-                                        </th>
-                                      )}
-                                    </tr>
-                                  ));
+                                        {chunk.map((dayNum) => (
+                                          <th
+                                            key={dayNum}
+                                            className='border px-2 py-2 text-center font-semibold min-w-[70px]'
+                                          ></th>
+                                        ))}
+                                        {chunk.length < daysPerRow &&
+                                          Array.from(
+                                            {
+                                              length: daysPerRow - chunk.length,
+                                            },
+                                            (_, i) => (
+                                              <th
+                                                key={`empty-${i}`}
+                                                className='border px-2 py-2'
+                                              ></th>
+                                            )
+                                          )}
+                                        {chunkIndex === 0 && (
+                                          <th
+                                            className='border px-2 py-2 text-center font-semibold w-12'
+                                            rowSpan={headerChunks.length}
+                                          >
+                                            Харакатлар
+                                          </th>
+                                        )}
+                                      </tr>
+                                    )
+                                  );
                                 })()}
                               </thead>
                               <tbody>
@@ -2288,11 +2383,14 @@ const ExaminationDetail = () => {
                                       : service.duration ||
                                         serviceDays.length ||
                                         0;
-                                    
+
                                     // If new services are being added, use the maximum of serviceDuration and original duration
                                     const totalDays =
                                       services.length > 0 && !isBeingEdited
-                                        ? Math.max(serviceDuration, originalDuration)
+                                        ? Math.max(
+                                            serviceDuration,
+                                            originalDuration
+                                          )
                                         : originalDuration;
 
                                     // Split days into chunks of 8
@@ -2880,7 +2978,9 @@ const ExaminationDetail = () => {
                                                         )
                                                       }
                                                       className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
-                                                      disabled={!service.service_type_id}
+                                                      disabled={
+                                                        !service.service_type_id
+                                                      }
                                                       title='Ҳар куни'
                                                     >
                                                       <CalendarDays className='w-3 h-3' />
@@ -2894,7 +2994,9 @@ const ExaminationDetail = () => {
                                                         )
                                                       }
                                                       className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
-                                                      disabled={!service.service_type_id}
+                                                      disabled={
+                                                        !service.service_type_id
+                                                      }
                                                       title='2 кунда бир'
                                                     >
                                                       <Repeat className='w-3 h-3' />
@@ -2979,10 +3081,14 @@ const ExaminationDetail = () => {
                                 let maxDuration = 7; // Default
                                 if (patientServices.length > 0) {
                                   const durations = patientServices
-                                    .flatMap((doc: any) =>
-                                      doc.items?.map((item: any) => 
-                                        item.duration || item.days?.length || 0
-                                      ) || []
+                                    .flatMap(
+                                      (doc: any) =>
+                                        doc.items?.map(
+                                          (item: any) =>
+                                            item.duration ||
+                                            item.days?.length ||
+                                            0
+                                        ) || []
                                     )
                                     .filter((d: number) => d > 0);
                                   if (durations.length > 0) {
@@ -2997,7 +3103,10 @@ const ExaminationDetail = () => {
                                   .flatMap((doc: any) => doc.items || [])
                                   .flatMap((item: any) => item.days || [])
                                   .map((day: any) => day.date)
-                                  .filter((date: any) => date !== null && date !== undefined)
+                                  .filter(
+                                    (date: any) =>
+                                      date !== null && date !== undefined
+                                  )
                                   .sort((a: any, b: any) => {
                                     const dateA = new Date(a).getTime();
                                     const dateB = new Date(b).getTime();

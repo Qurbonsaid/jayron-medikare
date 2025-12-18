@@ -798,27 +798,51 @@ const Prescription = () => {
     }));
 
     // If adding new items to existing service document, preserve all existing items
+    // and ensure all items' days arrays match the new duration
     if (hasExistingServices) {
       const existingServiceDoc = patientServices[0]; // Use first service document
       if (existingServiceDoc && existingServiceDoc.items) {
-        const existingItems = existingServiceDoc.items.map((item: any) => ({
-          _id: item._id,
-          service_type_id:
-            typeof item.service_type_id === 'object'
-              ? item.service_type_id._id
-              : item.service_type_id,
-          days: (item.days || []).map((day: any) => ({
+        // Update all existing items to match the new duration
+        // This ensures all items' days arrays are synchronized with the current serviceDuration
+        const existingItems = existingServiceDoc.items.map((item: any) => {
+          const existingDays = (item.days || []).map((day: any) => ({
             day: day.day,
             date: day.date
               ? typeof day.date === 'string'
                 ? day.date
                 : format(new Date(day.date), 'yyyy-MM-dd')
               : null,
-          })),
-          notes: item.notes || '',
-        }));
+          })) as Array<{ day: number; date: string | null }>;
 
-        // Combine new items with existing items
+          // Always ensure days array length equals current serviceDuration
+          // If duration changed or days array is shorter/longer, adjust to match new duration
+          const daysMap = new Map(
+            existingDays.map((d) => [d.day, d.date] as [number, string | null])
+          );
+
+          // Generate days array matching the new duration
+          const paddedDays: Array<{ day: number; date: string | null }> =
+            Array.from({ length: serviceDuration }, (_, i) => {
+              const dayNumber = i + 1;
+              // If day exists in existing days, use its date, otherwise null
+              return {
+                day: dayNumber,
+                date: daysMap.get(dayNumber) ?? null,
+              };
+            });
+
+          return {
+            _id: item._id,
+            service_type_id:
+              typeof item.service_type_id === 'object'
+                ? item.service_type_id._id
+                : item.service_type_id,
+            days: paddedDays,
+            notes: item.notes || '',
+          };
+        });
+
+        // Combine new items with existing items (all with updated duration)
         itemsToSave = [...existingItems, ...itemsToSave];
       }
     }

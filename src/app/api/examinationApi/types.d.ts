@@ -112,12 +112,11 @@ export type ExamDataItem = {
   description: string;
   complaints: string;
   treatment_type: 'stasionar' | 'ambulator';
-  analyses: Array<Analysis> | null;
+  analyses: Array<Analysis> | [];
   billing_id: string | null;
   images: Array<Image> | [];
-  status: status;
-  prescription:getOnePrescriptionRes|null;
-  service:string|null;
+  prescription: getOnePrescriptionRes | null;
+  service: getOneServiceRes | null;
   status: status;
   neurological_status_id: string | null;
   daily_checkup_id: string | null;
@@ -357,7 +356,7 @@ export type Service = {
   service_type_id: string;
   days: Array<{
     day: number;
-    date: Date | null;
+    date: Date | string | null;
   }>;
   notes: string;
 };
@@ -365,7 +364,7 @@ export type Service = {
 export interface CreateService {
   examination_id: string;
   duration: number;
-  items: Array<Service>;
+  items: Array<Service & { _id: string }>;
 }
 
 export interface RemoveService {
