@@ -23,9 +23,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import getUser from '@/hooks/getUser/getUser';
+import { RoleConstants } from '@/constants/Roles';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import RBS from '@/hooks/RBS/Role_Based_Security';
+import { useRouteActions } from '@/hooks/RBS';
 import {
   AlertTriangle,
   Calendar,
@@ -33,18 +33,17 @@ import {
   Eye,
   FileText,
   FileX,
-  Mail,
   MapPin,
   Phone,
   Plus,
   User,
 } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import NewVisitDialog from '../Examination/components/NewVisitDialog';
+import PatientPDFModal from '../../components/PDF/PatientPDFModal';
 import EditPatientModal from './components/EditPatientModal';
-import PatientPDFModal from './components/PatientPDFModal';
+import NewVisitDialog from './components/NewVisitDialog';
 
 const PatientProfile = () => {
   const navigate = useNavigate();
@@ -53,6 +52,18 @@ const PatientProfile = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
+
+  // RBS Permission checks - optimized: single call for patient route with userRole
+  const {
+    canUpdate: canUpdatePatient,
+    canDelete: canDeletePatient,
+    userRole,
+  } = useRouteActions('/patient/:id');
+  const { canCreate: canCreateExam } = useRouteActions('/new-visit');
+
+  // Check if user is CEO or Admin to show patient details section
+  const canViewPatientDetails =
+    userRole === RoleConstants.CEO || userRole === RoleConstants.ADMIN;
 
   const {
     data: patientData,
@@ -88,10 +99,6 @@ const PatientProfile = () => {
   const patient = patientData?.data;
   const exams = examsData?.data || [];
 
-  const handleEditSuccess = () => {
-    refetch();
-  };
-
   const onDelete = async () => {
     await handleRequest({
       request: async () => {
@@ -109,8 +116,6 @@ const PatientProfile = () => {
     });
   };
 
-  const me = getUser();
-
   if (isLoading) {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
@@ -126,122 +131,97 @@ const PatientProfile = () => {
     <div className='min-h-screen bg-background'>
       <main className='container px-2 sm:px-2 lg:px-2 py-2 sm:py-2 lg:py-2'>
         {/* Patient Header Card */}
-        <Card className='card-shadow mb-4 sm:mb-6'>
-          <div className='p-4 sm:p-6'>
-            <div className='flex flex-col md:flex-row gap-6'>
-              {/* Profile Photo */}
-              <div className='flex-shrink-0 mx-auto md:mx-0'>
-                <div className='w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 gradient-primary rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl md:text-4xl font-bold'>
-                  {patient.fullname
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')}
+        <Card className='card-shadow mb-4 sm:mb-6 flex flex-wrap items-center justify-between p-2'>
+          <div className='flex-shrink-0 mx-auto md:mx-0 flex space-x-3'>
+            <div className='w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 gradient-primary rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl md:text-4xl font-bold'>
+              {patient.fullname
+                .split(' ')
+                .map((n) => n[0])
+                .join('')}
+            </div>
+            <div>
+              <h1 className='text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-center md:text-left'>
+                {patient.fullname}
+              </h1>
+              <div className='flex flex-wrap gap-2 sm:gap-4 text-sm sm:text-base text-muted-foreground justify-center md:justify-start'>
+                <span>ID: {patient.patient_id}</span>
+                <span>•</span>
+                <span>
+                  {new Date(patient.date_of_birth).toLocaleDateString('uz-UZ')}
+                </span>
+                <span>•</span>
+                <span>{patient.gender === 'male' ? 'Эркак' : 'Аёл'}</span>
+              </div>
+              <div className='py-2 space-y-2'>
+                <div className='flex items-center gap-2'>
+                  <Phone className='w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0' />
+                  <span className='text-sm sm:text-base'>{patient.phone}</span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <MapPin className='w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0 mt-0.5' />
+                  <span className='text-xs sm:text-sm text-center md:text-left'>
+                    {patient.address}
+                  </span>
                 </div>
               </div>
-
-              {/* Patient Info */}
-              <div className='flex-1'>
-                <div className='flex flex-col md:flex-row justify-between mb-4'>
-                  <div>
-                    <h1 className='text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-center md:text-left'>
-                      {patient.fullname}
-                    </h1>
-                    <div className='flex flex-wrap gap-2 sm:gap-4 text-sm sm:text-base text-muted-foreground justify-center md:justify-start'>
-                      <span>
-                        {new Date(patient.date_of_birth).toLocaleDateString(
-                          'uz-UZ'
-                        )}
-                      </span>
-                      <span>•</span>
-                      <span>{patient.gender === 'male' ? 'Эркак' : 'Аёл'}</span>
-                      <span>•</span>
-                      <span>ID: {patient.patient_id}</span>
-                    </div>
-                  </div>
-
-                  <div className='flex flex-wrap gap-2 mt-4 md:mt-0 justify-center md:justify-end lg:max-w-md'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='flex-1 sm:flex-none'
-                      onClick={() => setIsEditModalOpen(true)}
-                    >
-                      <Edit className='w-4 h-4 sm:mr-2' />
-                      <span className='hidden sm:inline'>Таҳрирлаш</span>
-                    </Button>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='flex-1 sm:flex-none'
-                      onClick={() => setIsPDFModalOpen(true)}
-                    >
-                      <FileText className='w-4 h-4 sm:mr-2' />
-                      <span className='hidden sm:inline'>PDF кўриш</span>
-                    </Button>
-                    <RBS role={me.role} allowed={['ceo']}>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        className='flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white hover:text-white'
-                        onClick={() => setIsDeleteModalOpen(true)}
-                      >
-                        <FileX className='w-4 h-4 sm:mr-2' />
-                        <span className='hidden sm:inline'>Ўчириш</span>
-                      </Button>
-                    </RBS>
-                    <Button
-                      size='sm'
-                      className='gradient-primary px-6 text-md'
-                      onClick={() => setIsNewVisitOpen(true)}
-                    >
-                      <Plus className='w-4 h-4 sm:mr-2' />
-                      <span className='hidden sm:inline'>
-                        Янги Кўрик Яратиш
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className='mt-4 sm:mt-6 flex justify-center'></div>
             </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 mt-4 px-2 lg:grid-cols-3 gap-3 sm:gap-4'>
-              <div className='flex items-center gap-2 justify-center md:justify-start'>
-                <Phone className='w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0' />
-                <span className='text-sm sm:text-base'>{patient.phone}</span>
-              </div>
-              <div className='flex items-center gap-2 justify-center md:justify-start'>
-                <Mail className='w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0' />
-                <span className='text-sm sm:text-base break-all'>
-                  {patient.email}
-                </span>
-              </div>
-              <div className='flex items-start gap-2 justify-center md:justify-start sm:col-span-2 lg:col-span-1'>
-                <MapPin className='w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0 mt-0.5' />
-                <span className='text-xs sm:text-sm text-center md:text-left'>
-                  {patient.address}
-                </span>
-              </div>
-            </div>
+          </div>
+          {/* Patient Info */}
+          <div className='flex flex-wrap gap-2 mt-4 md:mt-0 justify-center md:justify-end lg:max-w-sm'>
+            {canUpdatePatient && (
+              <Button
+                variant='outline'
+                size='sm'
+                className='flex-1 sm:flex-none'
+                onClick={() => setIsEditModalOpen(true)}
+              >
+                <Edit className='w-4 h-4 sm:mr-2' />
+                <span className='hidden sm:inline'>Таҳрирлаш</span>
+              </Button>
+            )}
+            <Button
+              variant='outline'
+              size='sm'
+              className='flex-1 sm:flex-none'
+              onClick={() => setIsPDFModalOpen(true)}
+            >
+              <FileText className='w-4 h-4 sm:mr-2' />
+              <span className='hidden sm:inline'>PDF кўриш</span>
+            </Button>
+            {canCreateExam && (
+              <Button
+                size='sm'
+                className='gradient-primary px-6 text-md'
+                onClick={() => setIsNewVisitOpen(true)}
+              >
+                <Plus className='w-4 h-4 sm:mr-2' />
+                <span className='hidden sm:inline'>Янги Кўрик Яратиш</span>
+              </Button>
+            )}
+            {canDeletePatient && (
+              <Button
+                variant='outline'
+                size='sm'
+                className='flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white hover:text-white'
+                onClick={() => setIsDeleteModalOpen(true)}
+              >
+                <FileX className='w-4 h-4 sm:mr-2' />
+                <span className='hidden sm:inline'>Ўчириш</span>
+              </Button>
+            )}
           </div>
         </Card>
 
         {/* Allergy Warning */}
         {patient.allergies && patient.allergies.length > 0 && (
-          <Card className='bg-gradient-to-r from-danger/10 to-warning/10 border-danger mb-4 sm:mb-6'>
-            <div className='p-3 sm:p-4'>
-              <div className='flex items-center gap-2 sm:gap-3'>
-                <AlertTriangle className='w-6 h-6 sm:w-8 sm:h-8 text-danger flex-shrink-0' />
-                <div>
-                  <h3 className='font-bold text-base sm:text-lg mb-1'>
-                    АЛЛЕРГИЯЛАР:
-                  </h3>
-                  <p className='text-danger font-semibold text-sm sm:text-base'>
-                    {patient.allergies.join(', ')}
-                  </p>
-                </div>
-              </div>
-            </div>
+          <Card className='bg-gradient-to-r from-danger/10 to-warning/10 border-danger mb-4 sm:mb-6 flex items-center gap-2 p-2'>
+            <AlertTriangle className='w-6 h-6 sm:w-8 sm:h-8 text-danger flex-shrink-0' />
+            <h3 className='font-bold text-base sm:text-lg mb-1'>
+              АЛЛЕРГИЯЛАР:
+            </h3>
+            <p className='text-danger font-semibold text-sm sm:text-base'>
+              {patient.allergies.join(', ')}
+            </p>
           </Card>
         )}
 
@@ -264,29 +244,33 @@ const PatientProfile = () => {
 
           <TabsContent value='general' className='space-y-4 sm:space-y-6'>
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
-              {/* Patient Information */}
+              {/* Patient Information - Only visible to CEO and Admin */}
               <Card className='card-shadow'>
                 <div className='p-4 sm:p-6'>
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
                     Бемор маълумотлари
                   </h3>
                   <div className='space-y-3'>
-                    <div className='flex justify-between py-2 border-b'>
-                      <span className='text-sm text-muted-foreground'>
-                        Паспорт серияси:
-                      </span>
-                      <span className='font-semibold'>
-                        {patient.passport.series}
-                      </span>
-                    </div>
-                    <div className='flex justify-between py-2 border-b'>
-                      <span className='text-sm text-muted-foreground'>
-                        Паспорт рақами:
-                      </span>
-                      <span className='font-semibold'>
-                        {patient.passport.number}
-                      </span>
-                    </div>
+                    {canViewPatientDetails && (
+                      <React.Fragment>
+                        <div className='flex justify-between py-2 border-b'>
+                          <span className='text-sm text-muted-foreground'>
+                            Паспорт серияси:
+                          </span>
+                          <span className='font-semibold'>
+                            {patient.passport.series}
+                          </span>
+                        </div>
+                        <div className='flex justify-between py-2 border-b'>
+                          <span className='text-sm text-muted-foreground'>
+                            Паспорт рақами:
+                          </span>
+                          <span className='font-semibold'>
+                            {patient.passport.number}
+                          </span>
+                        </div>
+                      </React.Fragment>
+                    )}
                     <div className='flex justify-between py-2 border-b'>
                       <span className='text-sm text-muted-foreground'>
                         Рўйхатдан ўтган сана:
@@ -384,14 +368,6 @@ const PatientProfile = () => {
                   <div className='space-y-3'>
                     <div className='p-3 bg-accent rounded-lg'>
                       <p className='text-xs text-muted-foreground mb-1'>
-                        Email
-                      </p>
-                      <p className='text-sm font-medium break-all'>
-                        {patient.email || 'Кўрсатилмаган'}
-                      </p>
-                    </div>
-                    <div className='p-3 bg-accent rounded-lg'>
-                      <p className='text-xs text-muted-foreground mb-1'>
                         Манзил
                       </p>
                       <p className='text-sm font-medium'>{patient.address}</p>
@@ -443,6 +419,7 @@ const PatientProfile = () => {
                         <TableRow>
                           <TableHead>Шифокор</TableHead>
                           <TableHead>Шикоят</TableHead>
+                          <TableHead>Диагноз</TableHead>
                           <TableHead>Статус</TableHead>
                           <TableHead>Сана</TableHead>
                           <TableHead className='text-right'>
@@ -465,6 +442,24 @@ const PatientProfile = () => {
                               <span className='text-sm line-clamp-2'>
                                 {exam.complaints}
                               </span>
+                            </TableCell>
+                            <TableCell>
+                              {exam.diagnosis?.name ? (
+                                <div className='text-sm'>
+                                  <p className='font-medium line-clamp-1'>
+                                    {exam.diagnosis.name}
+                                  </p>
+                                  {exam.diagnosis.code && (
+                                    <p className='text-xs text-muted-foreground'>
+                                      {exam.diagnosis.code}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className='text-xs text-muted-foreground'>
+                                  —
+                                </span>
+                              )}
                             </TableCell>
                             <TableCell>
                               {(() => {
@@ -585,6 +580,23 @@ const PatientProfile = () => {
                             </p>
                           </div>
 
+                          {/* Diagnosis */}
+                          {exam.diagnosis?.diagnosis_id?.name && (
+                            <div>
+                              <p className='text-xs text-muted-foreground mb-1'>
+                                Диагноз:
+                              </p>
+                              <p className='text-sm font-medium'>
+                                {exam.diagnosis.diagnosis_id.name}
+                                {exam.diagnosis.diagnosis_id.code && (
+                                  <span className='text-xs text-muted-foreground ml-1'>
+                                    ({exam.diagnosis.diagnosis_id.code})
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          )}
+
                           {/* Date */}
                           <div className='flex items-center gap-2 text-xs text-muted-foreground'>
                             <Calendar className='w-3 h-3' />
@@ -622,7 +634,7 @@ const PatientProfile = () => {
               open={isEditModalOpen}
               onOpenChange={setIsEditModalOpen}
               patient={patient}
-              onSuccess={handleEditSuccess}
+              onSuccess={refetch}
             />
 
             {/* Delete Confirmation Modal */}

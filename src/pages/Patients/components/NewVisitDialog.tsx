@@ -536,7 +536,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Doctor Selection and Treatment Type in one row */}
-              <div className='flex items-end gap-4 shadow-lg border p-2 rounded-lg'>
+              <div className='flex items-end gap-4 shadow-sm border p-2 rounded-lg'>
                 <div className='flex-1 space-y-2'>
                   <Label className='flex items-center gap-2'>
                     <UserCog className='w-4 h-4 text-primary' />
@@ -598,7 +598,7 @@ const NewVisitDialog = ({
                       onClick={() => setTreatmentType('ambulator')}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         treatmentType === 'ambulator'
-                          ? 'bg-primary text-white shadow-md'
+                          ? 'bg-primary text-white shadow-sm'
                           : 'bg-muted text-muted-foreground hover:bg-muted/80'
                       }`}
                     >
@@ -609,7 +609,7 @@ const NewVisitDialog = ({
                       onClick={() => setTreatmentType('stasionar')}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         treatmentType === 'stasionar'
-                          ? 'bg-primary text-white shadow-md'
+                          ? 'bg-primary text-white shadow-sm'
                           : 'bg-muted text-muted-foreground hover:bg-muted/80'
                       }`}
                     >
@@ -620,7 +620,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Subjective - Complaints */}
-              <div className='space-y-2 shadow-lg border p-2 rounded-lg'>
+              <div className='space-y-2 shadow-sm border p-2 rounded-lg'>
                 <Label className='flex items-center gap-2'>
                   <FileText className='w-4 h-4 text-primary' />
                   Бемор шикояти (Subjective)
@@ -636,7 +636,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Description */}
-              <div className='space-y-2 shadow-lg border p-2 rounded-lg'>
+              <div className='space-y-2 shadow-sm border p-2 rounded-lg'>
                 <Label className='flex items-center gap-2'>
                   <Activity className='w-4 h-4 text-primary' />
                   Изоҳ (Objective)
@@ -650,7 +650,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Prescriptions Section */}
-              <div className='space-y-3 border rounded-lg p-4 bg-muted/30 shadow-lg'>
+              <div className='space-y-3 border rounded-lg p-4 bg-muted/30 shadow-sm'>
                 <div className='flex items-center justify-between'>
                   <Label className='flex items-center gap-2'>
                     <Pill className='w-4 h-4 text-primary' />
@@ -829,7 +829,7 @@ const NewVisitDialog = ({
               </div>
 
               {/* Services Section */}
-              <div className='space-y-3 border rounded-lg p-4 bg-muted/30 shadow-lg'>
+              <div className='space-y-3 border rounded-lg p-4 bg-muted/30 shadow-sm'>
                 <div className='flex items-center justify-between'>
                   <Label className='flex items-center gap-2'>
                     <Activity className='w-4 h-4 text-primary' />

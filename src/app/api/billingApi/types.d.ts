@@ -112,20 +112,34 @@ export interface GetOneBillingRes {
         }>;
         _id: string;
       }>;
-      services: Array<{
-        service_type_id: {
-          _id: string;
-          code: string;
-          name: string;
-          description: string;
-        };
-        price: number;
-        quantity: number;
-        total_price: number;
-        status: string;
-        notes: string;
+      service: {
         _id: string;
-      }>;
+        patient_id: string;
+        doctor_id: string;
+        examination_id: string;
+        duration: number;
+        items: Array<
+          {
+            service_type_id: {
+              _id: string;
+              name: string;
+              description: string;
+            };
+            notes: string;
+            days: Array<
+              {
+                day: number;
+                is_completed: boolean;
+                date: Date | null;
+                _id: string;
+              }
+            >;
+            _id: string;
+          }
+        >;
+        created_at: '2025-12-17T04:27:34.001Z';
+        updated_at: '2025-12-17T04:27:34.001Z';
+      };
       rooms: Array<{
         room_id: string;
         start_date: string;
