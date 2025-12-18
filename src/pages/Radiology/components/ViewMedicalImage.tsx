@@ -238,10 +238,11 @@ export const ViewMedicalImage = ({
                   )}
                   
                   {currentFileType === "pdf" && (
-                    <div className="w-full h-full p-4">
-                      <PDFViewer
+                    <div className="w-full h-full p-4 flex items-center justify-center">
+                      <DownloadOnlyCard
                         url={getImageUrl(currentFilePath)}
                         filename={currentFilePath.split('/').pop()}
+                        fileType="pdf"
                       />
                     </div>
                   )}
@@ -265,19 +266,21 @@ export const ViewMedicalImage = ({
                   )}
                   
                   {currentFileType === "rtf" && (
-                    <div className="w-full h-full p-4">
-                      <RTFViewer
+                    <div className="w-full h-full p-4 flex items-center justify-center">
+                      <DownloadOnlyCard
                         url={getImageUrl(currentFilePath)}
                         filename={currentFilePath.split('/').pop()}
+                        fileType="rtf"
                       />
                     </div>
                   )}
                   
                   {currentFileType === "mdfx" && (
-                    <div className="w-full h-full p-4">
-                      <MDFXViewer
+                    <div className="w-full h-full p-4 flex items-center justify-center">
+                      <DownloadOnlyCard
                         url={getImageUrl(currentFilePath)}
                         filename={currentFilePath.split('/').pop()}
+                        fileType="mdfx"
                       />
                     </div>
                   )}
