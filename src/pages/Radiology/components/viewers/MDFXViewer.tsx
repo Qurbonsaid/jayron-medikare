@@ -81,7 +81,6 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = ({ url, filename }) => {
         
         setPatientData(data);
       } catch (err) {
-        console.error('❌ MDFX файлни юклашда хато:', err);
         setError('MDFX файлни юклаб бўлмади. Пастдаги тугмадан юклаб олинг.');
       } finally {
         setLoading(false);

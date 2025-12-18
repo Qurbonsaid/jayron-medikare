@@ -42,7 +42,6 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ url, filename }) => {
         
         setSheets(sheetsData);
       } catch (err) {
-        console.error('❌ Excel файлни юклашда хато:', err);
         setError('Файлни юклаб бўлмади. Пастдаги тугмадан юклаб олинг.');
       } finally {
         setLoading(false);

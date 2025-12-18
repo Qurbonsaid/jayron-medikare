@@ -28,12 +28,7 @@ export const WordViewer: React.FC<WordViewerProps> = ({ url, filename }) => {
         // Convert to HTML using mammoth
         const result = await mammoth.convertToHtml({ arrayBuffer });
         setHtmlContent(result.value);
-        
-        if (result.messages.length > 0) {
-          console.warn('Mammoth warnings:', result.messages);
-        }
       } catch (err) {
-        console.error('❌ Word файлни юклашда хато:', err);
         setError('Файлни юклаб бўлмади. Пастдаги тугмадан юклаб олинг.');
       } finally {
         setLoading(false);

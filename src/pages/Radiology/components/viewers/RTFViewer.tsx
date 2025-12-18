@@ -28,7 +28,6 @@ export const RTFViewer: React.FC<RTFViewerProps> = ({ url, filename }) => {
         // In production, you might want to use a library like rtf-parser
         setContent(text);
       } catch (err) {
-        console.error('❌ RTF файлни юклашда хато:', err);
         setError('Файлни юклаб бўлмади. Пастдаги тугмадан юклаб олинг.');
       } finally {
         setLoading(false);

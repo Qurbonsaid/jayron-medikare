@@ -82,15 +82,8 @@ export const ViewMedicalImage = ({
   const currentFileInfo = getFileTypeInfo(currentFilePath);
   const currentFileType = currentFileInfo.type;
   const isImage = currentFileType === "image";
-  
-  // Debug log
-    console.log("📂 Жорий файл:", {
-      йўл: currentFilePath,
-      тури: currentFileType,
-      кенгайтма: currentFileInfo.extension,
-      кўришМумкин: currentFileInfo.canPreview,
-      расмми: isImage
-    });  // Helper functions (defined before useEffect)
+
+  // Helper functions (defined before useEffect)
   const handleResetView = () => {
     setZoom(100);
     setRotation(0);
