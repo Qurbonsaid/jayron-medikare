@@ -571,7 +571,7 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/billing',
     name: 'Create Billing',
     method: 'POST',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN , RoleConstants.RECEPTIONIST],
     description: 'Create billing record',
   },
   {
