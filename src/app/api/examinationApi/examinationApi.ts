@@ -255,6 +255,7 @@ export const {
 	useCompleteExamsMutation,
 	useCreatePrescriptionMutation,
 	useCreatePrescriptionDaysMutation,
+	useCreateServiceDaysMutation,
 	useDeleteExamMutation,
 	useGetAllExamsQuery,
 	useGetOneExamQuery,
