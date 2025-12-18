@@ -85,8 +85,6 @@ export const RoutePermissions: RoutePermission[] = [
       RoleConstants.CEO,
       RoleConstants.ADMIN,
       RoleConstants.DOCTOR,
-      RoleConstants.NURSE,
-      RoleConstants.RECEPTIONIST,
     ],
     description: 'View new examination form',
   },
@@ -566,7 +564,7 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/billing',
     name: 'Billing',
     method: 'GET',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN , RoleConstants.RECEPTIONIST],
     description: 'View billing information',
   },
   {

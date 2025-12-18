@@ -14,7 +14,6 @@ import {
   PillBottle,
   ScanLine,
   Settings,
-  Shield,
   Stethoscope,
   TestTube,
   User,
@@ -65,7 +64,7 @@ export const menuCategories: MenuCategory[] = [
         title: 'Кўриклар',
         url: '/examinations',
         icon: Calendar,
-        permission: 'examination',
+        permission: 'examinations',
       },
       {
         title: 'Рецепт ёзиш',
@@ -99,7 +98,7 @@ export const menuCategories: MenuCategory[] = [
     icon: Microscope,
     items: [
       {
-        title: 'Диагностика қўшиш',
+        title: 'Таҳлил тури қўшиш',
         url: '/add-diagnostika',
         icon: CirclePlus,
         permission: 'analysis',

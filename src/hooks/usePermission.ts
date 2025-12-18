@@ -28,8 +28,14 @@ const collectionToRouteMap: Record<
     delete: '/patient/:id',
   },
   examination: {
-    read: '/examinations',
+    read: '/new-visit', // GET endpoint for viewing new visit form
     create: '/new-visit',
+    update: '/examination/:id',
+    delete: '/examination/:id',
+  },
+  examinations: {
+    read: '/examinations', // GET endpoint for viewing examinations list
+    create: '/examinations',
     update: '/examination/:id',
     delete: '/examination/:id',
   },
@@ -107,7 +113,7 @@ const collectionToRouteMap: Record<
     delete: '/analysisById/:id',
   },
   patient_analysis: {
-    read: '/lab-results',
+    read: '/lab-order', // GET endpoint for viewing lab orders
     create: '/lab-order',
     update: '/lab-results',
     delete: '/lab-results',
