@@ -94,23 +94,16 @@ export const getFileTypeName = (fileType: FileType): string => {
 };
 
 /**
- * Download file from URL
+ * Download file from URL (CORS muammosi bo'lsa ham ishlaydi)
  */
-export const downloadFile = async (url: string, filename?: string) => {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = filename || url.split('/').pop() || 'download';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(downloadUrl);
-  } catch (error) {
-    console.error('Download failed:', error);
-    // Fallback: open in new tab
-    window.open(url, '_blank');
-  }
+export const downloadFile = (url: string, filename?: string) => {
+  // CORS muammosini chetlab o'tish uchun to'g'ridan-to'g'ri <a> tag ishlatamiz
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename || url.split('/').pop() || 'download';
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
