@@ -1018,16 +1018,21 @@ const NewVisit = () => {
           doctor_id: selectedDoctorId,
           complaints: subjective,
           treatment_type: treatmentType,
-          prescription_data: {
-            items: prescriptionItems,
-          },
         };
 
         if (description.trim()) {
           request.description = description;
         }
 
-        if (serviceData) {
+        // Only include prescription_data if there are prescription items
+        if (prescriptionItems.length > 0) {
+          request.prescription_data = {
+            items: prescriptionItems,
+          };
+        }
+
+        // Only include service_data if there are services
+        if (serviceData && serviceData.items.length > 0) {
           request.service_data = serviceData;
         }
 
