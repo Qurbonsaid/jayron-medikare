@@ -59,10 +59,10 @@ const collectionToRouteMap: Record<
     delete: '/service/:id',
   },
   diagnostic: {
-    read: '/diagnostic',
-    create: '/diagnostic',
-    update: '/diagnostic/:id',
-    delete: '/diagnostic/:id',
+    read: '/add-diagnostika',
+    create: '/add-diagnostika',
+    update: '/analysisById/:id',
+    delete: '/analysisById/:id',
   },
   billing: {
     read: '/billing',
@@ -71,10 +71,10 @@ const collectionToRouteMap: Record<
     delete: '/billing/:id',
   },
   inpatient: {
-    read: '/rooms',
-    create: '/rooms',
-    update: '/room/:id',
-    delete: '/room/:id',
+    read: '/inpatient',
+    create: '/inpatient',
+    update: '/inpatient/:id',
+    delete: '/inpatient/:id',
   },
   appointments: {
     read: '/appointments',
@@ -87,6 +87,73 @@ const collectionToRouteMap: Record<
     create: '/settings',
     update: '/settings',
     delete: '/settings',
+  },
+  // Additional mappings for Sidebar/router permissions
+  prescription: {
+    read: '/prescription',
+    create: '/prescription',
+    update: '/prescription',
+    delete: '/prescription',
+  },
+  diagnosis: {
+    read: '/disease',
+    create: '/disease',
+    update: '/disease/:id',
+    delete: '/disease/:id',
+  },
+  service_type: {
+    read: '/service',
+    create: '/service',
+    update: '/service/:id',
+    delete: '/service/:id',
+  },
+  analysis: {
+    read: '/add-diagnostika',
+    create: '/add-diagnostika',
+    update: '/analysisById/:id',
+    delete: '/analysisById/:id',
+  },
+  patient_analysis: {
+    read: '/lab-results',
+    create: '/lab-order',
+    update: '/lab-results',
+    delete: '/lab-results',
+  },
+  medical_image: {
+    read: '/radiology',
+    create: '/radiology',
+    update: '/radiology',
+    delete: '/radiology',
+  },
+  booking: {
+    read: '/inpatient-calendar',
+    create: '/inpatient-calendar',
+    update: '/inpatient-calendar/:corpusId/:roomId',
+    delete: '/inpatient-calendar/:corpusId/:roomId',
+  },
+  corpus: {
+    read: '/inpatient',
+    create: '/inpatient',
+    update: '/inpatient/:id',
+    delete: '/inpatient/:id',
+  },
+  room: {
+    read: '/inpatient',
+    create: '/inpatient',
+    update: '/room/:id',
+    delete: '/room/:id',
+  },
+  daily_checkup: {
+    read: '/daily-checkup',
+    create: '/daily-checkup',
+    update: '/daily-checkup/:id',
+    delete: '/daily-checkup/:id',
+  },
+  reports: {
+    read: '/reports',
+    create: '/reports',
+    update: '/reports',
+    delete: '/reports',
   },
 };
 
