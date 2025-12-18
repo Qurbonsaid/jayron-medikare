@@ -170,7 +170,7 @@ interface AllPrescriptionsPDFProps {
 
 const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
   exam,
-  prescriptions,
+  prescriptions: propPrescriptions,
 }) => {
   // Sana formatini o'zgartirish
   const formatDate = (date: Date | string): string => {
@@ -188,6 +188,17 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
     if (typeof exam.diagnosis === 'string') return exam.diagnosis;
     return exam.diagnosis.name;
   };
+
+  // Flatten prescriptions if they contain items arrays
+  let prescriptions = propPrescriptions || [];
+  if (prescriptions.length > 0 && prescriptions[0]?.items) {
+    prescriptions = prescriptions.flatMap((presc: any) => presc.items || []);
+  }
+
+  // Also check exam.prescription.items as fallback
+  if (prescriptions.length === 0 && exam.prescription?.items) {
+    prescriptions = exam.prescription.items;
+  }
 
   return (
     <Document>
@@ -256,11 +267,12 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
 
           {/* Jadval qatorlari */}
           {prescriptions.map((prescription: any, index: number) => {
+            // Prescriptions are already flattened, so use directly
             const medication = prescription.medication_id;
             const medicationName =
               typeof medication === 'object' && medication
                 ? medication.name
-                : "Noma'lum";
+                : medication || "Noma'lum";
             const dosage =
               typeof medication === 'object' && medication
                 ? `${medication.dosage || ''} ${
@@ -270,6 +282,11 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
             const medicationWithDosage = dosage
               ? `${medicationName} - ${dosage}`
               : medicationName;
+
+            // Get frequency, duration, instructions
+            const frequency = prescription.frequency ?? 0;
+            const duration = prescription.duration ?? 0;
+            const instructions = prescription.instructions || '-';
 
             return (
               <View
@@ -298,17 +315,17 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
                       { textAlign: 'left', fontSize: 8 },
                     ]}
                   >
-                    {prescription.instructions || '-'}
+                    {instructions}
                   </Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 0.6 }]}>
                   <Text style={styles.tableCell}>
-                    {prescription.frequency} marta
+                    {frequency ? `${frequency} marta` : '-'}
                   </Text>
                 </View>
                 <View style={[styles.tableColLast, { flex: 0.6 }]}>
                   <Text style={styles.tableCell}>
-                    {prescription.duration} kun
+                    {duration ? `${duration} kun` : '-'}
                   </Text>
                 </View>
               </View>
@@ -616,105 +633,129 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
         )}
 
         {/* Retseptlar (agar mavjud bo'lsa) */}
-        {exam.prescriptions && exam.prescriptions.length > 0 && (
-          <View style={[styles.tableContainer, { marginTop: 8 }]}>
-            <Text style={styles.sectionTitle}>
-              RETSEPTLAR ({exam.prescriptions.length} ta)
-            </Text>
-
-            {/* Jadval sarlavhasi */}
-            <View
-              style={[
-                styles.tableRow,
-                styles.tableHeader,
-                {
-                  borderTopWidth: 1,
-                  borderTopColor: '#000',
-                  borderTopStyle: 'solid',
-                  borderLeftWidth: 1,
-                  borderLeftColor: '#000',
-                  borderLeftStyle: 'solid',
-                },
-              ]}
-            >
-              <View style={[styles.tableCol, { flex: 0.3 }]}>
-                <Text style={styles.tableCell}>#</Text>
-              </View>
-              <View style={[styles.tableCol, { flex: 2 }]}>
-                <Text style={styles.tableCell}>Dori nomi</Text>
-              </View>
-              <View style={[styles.tableCol, { flex: 0.6 }]}>
-                <Text style={styles.tableCell}>Kuniga</Text>
-              </View>
-              <View style={[styles.tableCol, { flex: 1.2 }]}>
-                <Text style={styles.tableCell}>Ko'rsatmalar</Text>
-              </View>
-              <View style={[styles.tableColLast, { flex: 0.6 }]}>
-                <Text style={styles.tableCell}>Muddati</Text>
-              </View>
-            </View>
-
-            {/* Jadval qatorlari */}
-            {exam.prescriptions.map((prescription: any, index: number) => {
-              const medication = prescription.medication_id;
-              const medicationName =
-                typeof medication === 'object' && medication
-                  ? medication.name
-                  : "Noma'lum";
-              const dosage =
-                typeof medication === 'object' && medication
-                  ? `${medication.dosage || ''} ${
-                      medication.dosage_unit || ''
-                    }`.trim()
-                  : '';
-              const medicationWithDosage = dosage
-                ? `${medicationName} - ${dosage}`
-                : medicationName;
-              return (
-                <View
-                  key={prescription._id || index}
-                  style={[
-                    styles.tableRow,
-                    {
-                      borderLeftWidth: 1,
-                      borderLeftColor: '#000',
-                      borderLeftStyle: 'solid',
-                    },
-                  ]}
-                >
-                  <View style={[styles.tableCol, { flex: 0.3 }]}>
-                    <Text style={styles.tableCell}>{index + 1}</Text>
-                  </View>
-                  <View style={[styles.tableCol, { flex: 2 }]}>
-                    <Text style={[styles.tableCell, { textAlign: 'left' }]}>
-                      {medicationWithDosage}
-                    </Text>
-                  </View>
-                  <View style={[styles.tableCol, { flex: 0.6 }]}>
-                    <Text style={styles.tableCell}>
-                      {prescription.frequency} marta
-                    </Text>
-                  </View>
-                  <View style={[styles.tableCol, { flex: 1.2 }]}>
-                    <Text
-                      style={[
-                        styles.tableCell,
-                        { textAlign: 'left', fontSize: 5 },
-                      ]}
-                    >
-                      {prescription.instructions || '-'}
-                    </Text>
-                  </View>
-                  <View style={[styles.tableColLast, { flex: 0.6 }]}>
-                    <Text style={styles.tableCell}>
-                      {prescription.duration} kun
-                    </Text>
-                  </View>
-                </View>
+        {(() => {
+          // Get prescriptions from exam.prescription.items or exam.prescriptions
+          let prescriptionItems: any[] = [];
+          if (exam.prescription?.items && exam.prescription.items.length > 0) {
+            prescriptionItems = exam.prescription.items;
+          } else if (exam.prescriptions && exam.prescriptions.length > 0) {
+            // If prescriptions is array of GetOnePresc objects, extract items
+            if (exam.prescriptions[0]?.items) {
+              prescriptionItems = exam.prescriptions.flatMap(
+                (presc: any) => presc.items || []
               );
-            })}
-          </View>
-        )}
+            } else {
+              prescriptionItems = exam.prescriptions;
+            }
+          }
+
+          if (prescriptionItems.length === 0) return null;
+
+          return (
+            <View style={[styles.tableContainer, { marginTop: 8 }]}>
+              <Text style={styles.sectionTitle}>
+                RETSEPTLAR ({prescriptionItems.length} ta)
+              </Text>
+
+              {/* Jadval sarlavhasi */}
+              <View
+                style={[
+                  styles.tableRow,
+                  styles.tableHeader,
+                  {
+                    borderTopWidth: 1,
+                    borderTopColor: '#000',
+                    borderTopStyle: 'solid',
+                    borderLeftWidth: 1,
+                    borderLeftColor: '#000',
+                    borderLeftStyle: 'solid',
+                  },
+                ]}
+              >
+                <View style={[styles.tableCol, { flex: 0.3 }]}>
+                  <Text style={styles.tableCell}>#</Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 2 }]}>
+                  <Text style={styles.tableCell}>Dori nomi</Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 0.6 }]}>
+                  <Text style={styles.tableCell}>Kuniga</Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 1.2 }]}>
+                  <Text style={styles.tableCell}>Ko'rsatmalar</Text>
+                </View>
+                <View style={[styles.tableColLast, { flex: 0.6 }]}>
+                  <Text style={styles.tableCell}>Muddati</Text>
+                </View>
+              </View>
+
+              {/* Jadval qatorlari */}
+              {prescriptionItems.map((prescription: any, index: number) => {
+                const medication = prescription.medication_id;
+                const medicationName =
+                  typeof medication === 'object' && medication
+                    ? medication.name
+                    : medication || "Noma'lum";
+                const dosage =
+                  typeof medication === 'object' && medication
+                    ? `${medication.dosage || ''} ${
+                        medication.dosage_unit || ''
+                      }`.trim()
+                    : '';
+                const medicationWithDosage = dosage
+                  ? `${medicationName} - ${dosage}`
+                  : medicationName;
+
+                const frequency = prescription.frequency ?? 0;
+                const duration = prescription.duration ?? 0;
+                const instructions = prescription.instructions || '-';
+
+                return (
+                  <View
+                    key={prescription._id || index}
+                    style={[
+                      styles.tableRow,
+                      {
+                        borderLeftWidth: 1,
+                        borderLeftColor: '#000',
+                        borderLeftStyle: 'solid',
+                      },
+                    ]}
+                  >
+                    <View style={[styles.tableCol, { flex: 0.3 }]}>
+                      <Text style={styles.tableCell}>{index + 1}</Text>
+                    </View>
+                    <View style={[styles.tableCol, { flex: 2 }]}>
+                      <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                        {medicationWithDosage}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { flex: 0.6 }]}>
+                      <Text style={styles.tableCell}>
+                        {frequency ? `${frequency} marta` : '-'}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { flex: 1.2 }]}>
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          { textAlign: 'left', fontSize: 5 },
+                        ]}
+                      >
+                        {instructions}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableColLast, { flex: 0.6 }]}>
+                      <Text style={styles.tableCell}>
+                        {duration ? `${duration} kun` : '-'}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          );
+        })()}
 
         {/* Analizlar (agar mavjud bo'lsa) */}
         {exam.analyses && exam.analyses.length > 0 && (
@@ -934,7 +975,18 @@ const AllPrescriptionsDownloadButton: React.FC<
   const [isGenerating, setIsGenerating] = React.useState(false);
 
   // Use prop prescriptions or fall back to exam.prescriptions
-  const prescriptions = propPrescriptions || exam.prescriptions || [];
+  // If prescriptions is array of GetOnePresc objects, extract items from each
+  let prescriptions = propPrescriptions || exam.prescriptions || [];
+
+  // If prescriptions contains objects with 'items' array, flatten them
+  if (prescriptions.length > 0 && prescriptions[0]?.items) {
+    prescriptions = prescriptions.flatMap((presc: any) => presc.items || []);
+  }
+
+  // Also check exam.prescription.items as fallback
+  if (prescriptions.length === 0 && exam.prescription?.items) {
+    prescriptions = exam.prescription.items;
+  }
 
   const handleDownloadAllPrescriptions = async () => {
     if (prescriptions.length === 0) {
@@ -1012,7 +1064,18 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
   const getTotalPrice = (): number => {
     if (!exam.services || exam.services.length === 0) return 0;
     return exam.services.reduce((total: number, service: any) => {
-      return total + (service.price || 0) * (service.quantity || 1);
+      const serviceType = service.service_type_id;
+      const servicePrice =
+        typeof serviceType === 'object' && serviceType
+          ? serviceType.price
+          : service.price || 0;
+      const quantity =
+        service.quantity ??
+        service.days?.filter(
+          (day: any) => day.date !== null && day.date !== undefined
+        ).length ??
+        1;
+      return total + servicePrice * quantity;
     }, 0);
   };
 
@@ -1089,17 +1152,52 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
 
           {/* Jadval qatorlari */}
           {exam.services?.map((service: any, index: number) => {
+            // Handle service_type_id - can be object or string
+            const serviceType = service.service_type_id;
             const serviceName =
-              typeof service.service_type_id === 'object' &&
-              service.service_type_id
-                ? service.service_type_id.name
-                : "Noma'lum";
+              typeof serviceType === 'object' && serviceType
+                ? serviceType.name
+                : serviceType || "Noma'lum";
+
+            // Get price from service_type_id or service itself
+            const servicePrice =
+              typeof serviceType === 'object' && serviceType
+                ? serviceType.price
+                : service.price || 0;
+
+            // Get quantity - can be from days array length or quantity field
+            const quantity =
+              service.quantity ??
+              service.days?.filter(
+                (day: any) => day.date !== null && day.date !== undefined
+              ).length ??
+              1;
+
             const serviceStatus: Record<string, string> = {
               pending: 'Kutilmoqda',
               active: 'Faol',
               completed: 'Yakunlangan',
             };
-            const itemTotal = (service.price || 0) * (service.quantity || 1);
+            const itemTotal = servicePrice * quantity;
+
+            // Get status - check if service has status field, otherwise check days completion
+            const getStatus = (): string => {
+              if (service.status) {
+                return serviceStatus[service.status] || service.status;
+              }
+              // If no status, check if all days are completed
+              if (service.days && service.days.length > 0) {
+                const completedDays = service.days.filter(
+                  (day: any) => day.is_completed
+                ).length;
+                if (completedDays === service.days.length) {
+                  return 'Yakunlangan';
+                } else if (completedDays > 0) {
+                  return 'Faol';
+                }
+              }
+              return 'Faol';
+            };
 
             return (
               <View
@@ -1122,22 +1220,24 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
                   </Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 0.6 }]}>
-                  <Text style={styles.tableCell}>{service.quantity || 1}</Text>
+                  <Text style={styles.tableCell}>{quantity}</Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 1 }]}>
                   <Text style={styles.tableCell}>
-                    {service.price?.toLocaleString() || '-'} so'm
+                    {servicePrice > 0
+                      ? `${servicePrice.toLocaleString()} so'm`
+                      : '-'}
                   </Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 1 }]}>
                   <Text style={styles.tableCell}>
-                    {itemTotal.toLocaleString()} so'm
+                    {itemTotal > 0
+                      ? `${itemTotal.toLocaleString()} so'm`
+                      : `0 so'm`}
                   </Text>
                 </View>
                 <View style={[styles.tableColLast, { flex: 0.8 }]}>
-                  <Text style={styles.tableCell}>
-                    {serviceStatus[service.status] || service.status}
-                  </Text>
+                  <Text style={styles.tableCell}>{getStatus()}</Text>
                 </View>
               </View>
             );
@@ -1209,12 +1309,24 @@ interface ServicesDownloadButtonProps {
 
 const ServicesDownloadButton: React.FC<ServicesDownloadButtonProps> = ({
   exam,
-  services,
+  services: propServices,
 }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
 
-  // Use services from props or fall back to exam.services
-  const allServices = services || exam.services || [];
+  // Flatten services if they contain items arrays (GetOneServiceRes format)
+  let allServices: any[] = propServices || exam.services || [];
+
+  // If services contains objects with 'items' array, flatten them
+  if (allServices.length > 0 && allServices[0]?.items) {
+    allServices = allServices.flatMap(
+      (serviceDoc: any) => serviceDoc.items || []
+    );
+  }
+
+  // Also check exam.service.items as fallback
+  if (allServices.length === 0 && exam.service?.items) {
+    allServices = exam.service.items;
+  }
 
   const handleDownloadServices = async () => {
     if (allServices.length === 0) {
