@@ -25,6 +25,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { format } from 'date-fns';
@@ -36,6 +44,7 @@ import {
   Loader2,
   Plus,
   Repeat,
+  Search,
   Trash2,
   X,
 } from 'lucide-react';
@@ -131,6 +140,9 @@ const Prescription = () => {
 
   // Medication search states
   const [medicationSearch, setMedicationSearch] = useState('');
+
+  // Examination search state
+  const [examinationSearch, setExaminationSearch] = useState('');
 
   // Infinite scroll states
   const [page, setPage] = useState(1);
@@ -786,27 +798,51 @@ const Prescription = () => {
     }));
 
     // If adding new items to existing service document, preserve all existing items
+    // and ensure all items' days arrays match the new duration
     if (hasExistingServices) {
       const existingServiceDoc = patientServices[0]; // Use first service document
       if (existingServiceDoc && existingServiceDoc.items) {
-        const existingItems = existingServiceDoc.items.map((item: any) => ({
-          _id: item._id,
-          service_type_id:
-            typeof item.service_type_id === 'object'
-              ? item.service_type_id._id
-              : item.service_type_id,
-          days: (item.days || []).map((day: any) => ({
+        // Update all existing items to match the new duration
+        // This ensures all items' days arrays are synchronized with the current serviceDuration
+        const existingItems = existingServiceDoc.items.map((item: any) => {
+          const existingDays = (item.days || []).map((day: any) => ({
             day: day.day,
             date: day.date
               ? typeof day.date === 'string'
                 ? day.date
                 : format(new Date(day.date), 'yyyy-MM-dd')
               : null,
-          })),
-          notes: item.notes || '',
-        }));
+          })) as Array<{ day: number; date: string | null }>;
 
-        // Combine new items with existing items
+          // Always ensure days array length equals current serviceDuration
+          // If duration changed or days array is shorter/longer, adjust to match new duration
+          const daysMap = new Map(
+            existingDays.map((d) => [d.day, d.date] as [number, string | null])
+          );
+
+          // Generate days array matching the new duration
+          const paddedDays: Array<{ day: number; date: string | null }> =
+            Array.from({ length: serviceDuration }, (_, i) => {
+              const dayNumber = i + 1;
+              // If day exists in existing days, use its date, otherwise null
+              return {
+                day: dayNumber,
+                date: daysMap.get(dayNumber) ?? null,
+              };
+            });
+
+          return {
+            _id: item._id,
+            service_type_id:
+              typeof item.service_type_id === 'object'
+                ? item.service_type_id._id
+                : item.service_type_id,
+            days: paddedDays,
+            notes: item.notes || '',
+          };
+        });
+
+        // Combine new items with existing items (all with updated duration)
         itemsToSave = [...existingItems, ...itemsToSave];
       }
     }
@@ -988,65 +1024,126 @@ const Prescription = () => {
               <CardTitle>Кўрикни танланг</CardTitle>
             </CardHeader>
             <CardContent>
-              <Select
-                value={selectedExaminationId}
-                onValueChange={setSelectedExaminationId}
-              >
-                <SelectTrigger className='h-10 sm:h-12'>
-                  <SelectValue placeholder='Кўрикни танланг...' />
-                </SelectTrigger>
-                <SelectContent
-                  className='max-h-[300px]'
-                  onScroll={handleScroll}
-                >
-                  {isLoadingExaminations && examinations.length === 0 ? (
-                    <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
-                      <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
-                      Юкланмоқда...
-                    </div>
-                  ) : examinations.length === 0 ? (
-                    <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
-                      Актив кўриклар топилмади
-                    </div>
-                  ) : (
-                    <>
-                      {examinations.map((exam: any) => (
-                        <SelectItem key={exam._id} value={exam._id}>
-                          <div className='flex flex-col'>
-                            <span className='font-medium'>
-                              {exam.patient_id?.fullname || 'Номаълум'} -{' '}
-                              {exam.doctor_id?.fullname || 'Номаълум'}
-                            </span>
-                            <span className='text-xs text-muted-foreground'>
-                              Кўрик #{exam._id?.slice(-6) || 'N/A'} •{' '}
-                              {exam.created_at
-                                ? new Date(exam.created_at).toLocaleDateString(
-                                    'uz-UZ'
-                                  )
-                                : 'Маълумот йўқ'}{' '}
-                              • {exam.complaints?.slice(0, 50) || 'Шикоят йўқ'}
-                              ...
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                      {isLoadingMore && (
-                        <div className='px-2 py-4 text-center'>
-                          <Loader2 className='h-4 w-4 animate-spin mx-auto text-primary' />
-                          <p className='text-xs text-muted-foreground mt-2'>
-                            Юкланмоқда...
-                          </p>
-                        </div>
-                      )}
-                      {!hasMore && examinations.length > 0 && (
-                        <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
-                          Барча кўриклар юкланди
-                        </div>
-                      )}
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
+              <div className='space-y-4'>
+                <div className='relative'>
+                  <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
+                  <Input
+                    placeholder='Бемор, шифокор ёки кўрик ID орқали қидириш...'
+                    value={examinationSearch}
+                    onChange={(e) => setExaminationSearch(e.target.value)}
+                    className='pl-9 h-10 sm:h-12 text-sm sm:text-base'
+                  />
+                </div>
+                <Card>
+                  <div
+                    className='max-h-[400px] overflow-auto'
+                    onScroll={handleScroll}
+                  >
+                    {isLoadingExaminations && examinations.length === 0 ? (
+                      <div className='p-6 text-center text-sm text-muted-foreground'>
+                        <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
+                        Юкланмоқда...
+                      </div>
+                    ) : examinations.length === 0 ? (
+                      <div className='p-6 text-center text-sm text-muted-foreground'>
+                        Актив кўриклар топилмади
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Бемор</TableHead>
+                            <TableHead>Шифокор</TableHead>
+                            <TableHead>Сана</TableHead>
+                            <TableHead>Шикоят</TableHead>
+                            <TableHead className='text-right'>
+                              Ҳаракат
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {examinations
+                            .filter((exam: any) => {
+                              if (!examinationSearch.trim()) return true;
+                              const query = examinationSearch.toLowerCase();
+                              return (
+                                exam.patient_id?.fullname
+                                  ?.toLowerCase()
+                                  .includes(query) ||
+                                exam.doctor_id?.fullname
+                                  ?.toLowerCase()
+                                  .includes(query) ||
+                                exam._id?.toLowerCase().includes(query) ||
+                                exam.complaints?.toLowerCase().includes(query)
+                              );
+                            })
+                            .map((exam: any) => (
+                              <TableRow
+                                key={exam._id}
+                                className={`cursor-pointer hover:bg-accent ${
+                                  selectedExaminationId === exam._id
+                                    ? 'bg-primary/10'
+                                    : ''
+                                }`}
+                                onClick={() =>
+                                  setSelectedExaminationId(exam._id)
+                                }
+                              >
+                                <TableCell className='font-medium'>
+                                  {exam.patient_id?.fullname || 'Номаълум'}
+                                </TableCell>
+                                <TableCell>
+                                  {exam.doctor_id?.fullname || 'Номаълум'}
+                                </TableCell>
+                                <TableCell>
+                                  {exam.created_at
+                                    ? new Date(
+                                        exam.created_at
+                                      ).toLocaleDateString('uz-UZ')
+                                    : '-'}
+                                </TableCell>
+                                <TableCell className='max-w-[200px] truncate text-xs'>
+                                  {exam.complaints?.slice(0, 50) ||
+                                    'Шикоят йўқ'}
+                                  {exam.complaints?.length > 50 ? '...' : ''}
+                                </TableCell>
+                                <TableCell className='text-right'>
+                                  <Button
+                                    size='sm'
+                                    variant={
+                                      selectedExaminationId === exam._id
+                                        ? 'default'
+                                        : 'outline'
+                                    }
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedExaminationId(exam._id);
+                                    }}
+                                  >
+                                    {selectedExaminationId === exam._id
+                                      ? 'Танланган'
+                                      : 'Танлаш'}
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                    {isLoadingMore && (
+                      <div className='p-4 text-center text-sm text-muted-foreground'>
+                        <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
+                        Юкланмоқда...
+                      </div>
+                    )}
+                    {!hasMore && examinations.length > 0 && (
+                      <div className='p-2 text-center text-xs text-muted-foreground'>
+                        Барча кўриклар юкланди
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
             </CardContent>
           </Card>
         ) : (

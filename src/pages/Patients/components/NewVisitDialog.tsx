@@ -769,6 +769,23 @@ const NewVisitDialog = ({
                         {/* Second row: Marta, Kun, Qo'llanish */}
                         <div className='flex items-center gap-2'>
                           <div className='w-20 shrink-0'>
+                            <Label className='text-xs mb-1 block'>Кун</Label>
+                            <Input
+                              type='number'
+                              placeholder='7'
+                              className='h-9'
+                              min={0}
+                              value={med.duration}
+                              onChange={(e) =>
+                                updateMedication(
+                                  med.id,
+                                  'duration',
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                          <div className='w-20 shrink-0'>
                             <Label className='text-xs mb-1 block'>
                               Марта/кун
                             </Label>
@@ -782,23 +799,6 @@ const NewVisitDialog = ({
                                 updateMedication(
                                   med.id,
                                   'frequency',
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </div>
-                          <div className='w-20 shrink-0'>
-                            <Label className='text-xs mb-1 block'>Кун</Label>
-                            <Input
-                              type='number'
-                              placeholder='7'
-                              className='h-9'
-                              min={0}
-                              value={med.duration}
-                              onChange={(e) =>
-                                updateMedication(
-                                  med.id,
-                                  'duration',
                                   e.target.value
                                 )
                               }
@@ -863,10 +863,23 @@ const NewVisitDialog = ({
                           type='number'
                           min={1}
                           max={30}
-                          value={serviceDuration}
+                          value={
+                            serviceDuration === 0
+                              ? ''
+                              : serviceDuration.toString()
+                          }
                           onChange={(e) => {
-                            const val = parseInt(e.target.value) || 7;
-                            if (val >= 1 && val <= 30) {
+                            const inputValue = e.target.value;
+
+                            // Allow empty string for deletion - set to 0 temporarily
+                            if (inputValue === '') {
+                              setServiceDuration(0);
+                              return;
+                            }
+
+                            const val = parseInt(inputValue);
+                            // Only update if valid number and within range
+                            if (!isNaN(val) && val >= 1 && val <= 30) {
                               setServiceDuration(val);
                               // Auto-adjust marked days when duration changes
                               setServices(
@@ -899,6 +912,19 @@ const NewVisitDialog = ({
                                   return { ...srv, markedDays: adjustedMarked };
                                 })
                               );
+                            }
+                          }}
+                          onBlur={(e) => {
+                            // If empty or invalid on blur, set to default 7
+                            const inputValue = e.target.value;
+                            const val = parseInt(inputValue);
+                            if (
+                              inputValue === '' ||
+                              isNaN(val) ||
+                              val < 1 ||
+                              val > 30
+                            ) {
+                              setServiceDuration(7);
                             }
                           }}
                           className='h-8 text-xs mt-1'
