@@ -23,7 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import getUser from '@/hooks/getUser/getUser';
+import { RoleConstants } from '@/constants/Roles';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { useRouteActions } from '@/hooks/RBS';
 import {
@@ -38,7 +38,7 @@ import {
   Plus,
   User,
 } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import PatientPDFModal from '../../components/PDF/PatientPDFModal';
@@ -53,10 +53,17 @@ const PatientProfile = () => {
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
-  // RBS Permission checks
-  const { canUpdate: canUpdatePatient, canDelete: canDeletePatient } =
-    useRouteActions('/patient/:id');
+  // RBS Permission checks - optimized: single call for patient route with userRole
+  const {
+    canUpdate: canUpdatePatient,
+    canDelete: canDeletePatient,
+    userRole,
+  } = useRouteActions('/patient/:id');
   const { canCreate: canCreateExam } = useRouteActions('/new-visit');
+
+  // Check if user is CEO or Admin to show patient details section
+  const canViewPatientDetails =
+    userRole === RoleConstants.CEO || userRole === RoleConstants.ADMIN;
 
   const {
     data: patientData,
@@ -108,8 +115,6 @@ const PatientProfile = () => {
       },
     });
   };
-
-  const me = getUser();
 
   if (isLoading) {
     return (
@@ -239,29 +244,33 @@ const PatientProfile = () => {
 
           <TabsContent value='general' className='space-y-4 sm:space-y-6'>
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
-              {/* Patient Information */}
+              {/* Patient Information - Only visible to CEO and Admin */}
               <Card className='card-shadow'>
                 <div className='p-4 sm:p-6'>
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
                     Бемор маълумотлари
                   </h3>
                   <div className='space-y-3'>
-                    <div className='flex justify-between py-2 border-b'>
-                      <span className='text-sm text-muted-foreground'>
-                        Паспорт серияси:
-                      </span>
-                      <span className='font-semibold'>
-                        {patient.passport.series}
-                      </span>
-                    </div>
-                    <div className='flex justify-between py-2 border-b'>
-                      <span className='text-sm text-muted-foreground'>
-                        Паспорт рақами:
-                      </span>
-                      <span className='font-semibold'>
-                        {patient.passport.number}
-                      </span>
-                    </div>
+                    {canViewPatientDetails && (
+                      <React.Fragment>
+                        <div className='flex justify-between py-2 border-b'>
+                          <span className='text-sm text-muted-foreground'>
+                            Паспорт серияси:
+                          </span>
+                          <span className='font-semibold'>
+                            {patient.passport.series}
+                          </span>
+                        </div>
+                        <div className='flex justify-between py-2 border-b'>
+                          <span className='text-sm text-muted-foreground'>
+                            Паспорт рақами:
+                          </span>
+                          <span className='font-semibold'>
+                            {patient.passport.number}
+                          </span>
+                        </div>
+                      </React.Fragment>
+                    )}
                     <div className='flex justify-between py-2 border-b'>
                       <span className='text-sm text-muted-foreground'>
                         Рўйхатдан ўтган сана:

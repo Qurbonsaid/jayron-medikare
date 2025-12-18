@@ -33,11 +33,6 @@ export interface RouteConfig {
   permission: RoleConstants[];
 }
 
-/**
- * Check if a path matches a route pattern
- * e.g., matchesRoutePattern('/patient/:id', '/patient/123') -> true
- * Also handles: matchesRoutePattern('/patient/:id', '/patient/:id') -> true
- */
 const matchesRoutePattern = (pattern: string, path: string): boolean => {
   // Direct match (both are patterns or both are exact)
   if (pattern === path) {
