@@ -101,66 +101,94 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     return services.reduce((sum, service) => sum + service.total, 0);
   };
 
+  // Calculate analyses total separately
+  const calculateAnalysesTotal = () => {
+    if (!selectedExam?.analyses || selectedExam.analyses.length === 0) return 0;
+
+    let total = 0;
+    selectedExam.analyses.forEach((analysis: any) => {
+      const analysisType =
+        typeof analysis.analysis_type === 'object'
+          ? analysis.analysis_type
+          : null;
+      const price = analysisType?.price ?? analysis.price ?? 0;
+      total += price;
+    });
+    return total;
+  };
+
+  // Calculate rooms total separately - using the same logic as displayed in the table
+  const calculateRoomsTotal = () => {
+    if (!selectedExam?.rooms || selectedExam.rooms.length === 0) return 0;
+    if (selectedRooms.length === 0) return 0;
+
+    let total = 0;
+    // Calculate exactly as shown in the table - iterate through selectedRooms and find corresponding room
+    selectedRooms.forEach((roomId) => {
+      const room = selectedExam.rooms.find((r: any) => {
+        const rId = typeof r.room_id === 'object' ? r.room_id._id : r.room_id;
+        return rId === roomId;
+      });
+
+      if (!room) return;
+
+      // Use EXACT same calculation as RoomItem component (line 12-16)
+      // Note: RoomItem uses room?.end_date || room?.estimated_leave_time without fallback to new Date()
+      const days = Math.ceil(
+        (new Date(room?.end_date || room?.estimated_leave_time).getTime() -
+          new Date(room?.start_date).getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+
+      // Use EXACT same calculation as RoomItem component (line 18)
+      const roomTotal = days
+        ? (room?.room_price || 0) * days
+        : room?.room_price || 0;
+      total += roomTotal;
+    });
+    return total;
+  };
+
+  // Calculate examination services items total separately
+  const calculateExaminationServicesItemsTotal = () => {
+    if (
+      !selectedExam?.service?.items ||
+      selectedExam.service.items.length === 0
+    )
+      return 0;
+
+    let total = 0;
+    selectedExam.service.items.forEach((item: any) => {
+      const serviceType =
+        typeof item.service_type_id === 'object' ? item.service_type_id : null;
+      if (serviceType) {
+        const quantity =
+          item.quantity ??
+          item.days?.filter(
+            (day: any) => day.date !== null && day.date !== undefined
+          ).length ??
+          1;
+        const unitPrice = serviceType.price ?? item.price ?? 0;
+        const itemTotal = item.total_price ?? unitPrice * quantity;
+        total += itemTotal;
+      }
+    });
+    return total;
+  };
+
   // Calculate examination services total (analyses, rooms, services)
   const calculateExaminationServicesTotal = () => {
     if (!selectedExam) return 0;
-
-    let total = 0;
-
-    // Calculate analyses total
-    if (selectedExam.analyses && selectedExam.analyses.length > 0) {
-      selectedExam.analyses.forEach((analysis: any) => {
-        const analysisType =
-          typeof analysis.analysis_type === 'object'
-            ? analysis.analysis_type
-            : null;
-        const price = analysisType?.price ?? analysis.price ?? 0;
-        total += price;
-      });
-    }
-
-    // Calculate rooms total
-    if (selectedExam.rooms && selectedExam.rooms.length > 0) {
-      selectedExam.rooms.forEach((room: any) => {
-        const days = Math.ceil(
-          (new Date(
-            room?.end_date || room?.estimated_leave_time || new Date()
-          ).getTime() -
-            new Date(room?.start_date).getTime()) /
-            (1000 * 60 * 60 * 24)
-        );
-        const roomTotal =
-          days > 0 ? (room?.room_price || 0) * days : room?.room_price || 0;
-        total += roomTotal;
-      });
-    }
-
-    // Calculate services total (from examination.service.items)
-    if (selectedExam.service?.items && selectedExam.service.items.length > 0) {
-      selectedExam.service.items.forEach((item: any) => {
-        const serviceType =
-          typeof item.service_type_id === 'object'
-            ? item.service_type_id
-            : null;
-        if (serviceType) {
-          const quantity =
-            item.quantity ??
-            item.days?.filter(
-              (day: any) => day.date !== null && day.date !== undefined
-            ).length ??
-            1;
-          const unitPrice = serviceType.price ?? item.price ?? 0;
-          const itemTotal = item.total_price ?? unitPrice * quantity;
-          total += itemTotal;
-        }
-      });
-    }
-
-    return total;
+    return (
+      calculateAnalysesTotal() +
+      calculateRoomsTotal() +
+      calculateExaminationServicesItemsTotal()
+    );
   };
 
   const calculateGrandTotal = () => {
     const subtotal = calculateSubtotal();
+    console.log('Services for calc', services);
     const examinationServicesTotal = calculateExaminationServicesTotal();
     return subtotal + examinationServicesTotal - discount;
   };
@@ -988,9 +1016,72 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
             </div>
           )}
 
+          {/* Payment Breakdown Section */}
+
           {/* Payment Section */}
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6'>
-            <div className='space-y-3 sm:space-y-4'>
+            {selectedExam && (
+              <Card className='p-4 bg-muted/30'>
+                <Label className='text-base sm:text-lg font-semibold mb-3 block'>
+                  Тўлов тафсилотлари
+                </Label>
+                <div className='space-y-2'>
+                  {calculateAnalysesTotal() > 0 && (
+                    <div className='flex justify-between items-center text-sm'>
+                      <span className='text-muted-foreground'>Таҳлиллар:</span>
+                      <span className='font-medium'>
+                        {formatCurrency(calculateAnalysesTotal())}
+                      </span>
+                    </div>
+                  )}
+                  {calculateRoomsTotal() > 0 && (
+                    <div className='flex justify-between items-center text-sm'>
+                      <span className='text-muted-foreground'>Палаталар:</span>
+                      <span className='font-medium'>
+                        {formatCurrency(calculateRoomsTotal())}
+                      </span>
+                    </div>
+                  )}
+                  {calculateExaminationServicesItemsTotal() > 0 && (
+                    <div className='flex justify-between items-center text-sm'>
+                      <span className='text-muted-foreground'>
+                        Кўрик хизматлари:
+                      </span>
+                      <span className='font-medium'>
+                        {formatCurrency(
+                          calculateExaminationServicesItemsTotal()
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {calculateSubtotal() > 0 && (
+                    <div className='flex justify-between items-center text-sm'>
+                      <span className='text-muted-foreground'>
+                        Умумий хизматлар:
+                      </span>
+                      <span className='font-medium'>
+                        {formatCurrency(calculateSubtotal())}
+                      </span>
+                    </div>
+                  )}
+                  {discount > 0 && (
+                    <div className='flex justify-between items-center text-sm text-red-600'>
+                      <span>Чегирма:</span>
+                      <span className='font-medium'>
+                        -{formatCurrency(discount)}
+                      </span>
+                    </div>
+                  )}
+                  <div className='border-t pt-2 mt-2 flex justify-between items-center'>
+                    <span className='text-base font-semibold'>Жами:</span>
+                    <span className='text-lg font-bold text-primary'>
+                      {formatCurrency(calculateGrandTotal())}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            )}
+            {/* <div className='space-y-3 sm:space-y-4'>
               <Card className='p-3 sm:p-4 bg-primary/5 flex justify-between items-center'>
                 <span className='text-base sm:text-lg font-semibold'>
                   Жами тўлов:
@@ -999,7 +1090,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   {formatCurrency(calculateGrandTotal())}
                 </span>
               </Card>
-            </div>
+            </div> */}
 
             <div className='space-y-3 sm:space-y-4'>
               <div>
