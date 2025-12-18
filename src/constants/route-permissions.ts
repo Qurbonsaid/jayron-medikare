@@ -88,14 +88,26 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/examinations',
     name: 'Examinations List',
     method: 'GET',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.NURSE,
+      RoleConstants.RECEPTIONIST,
+    ],
     description: 'View examinations list',
   },
   {
     path: '/examination/:id',
     name: 'Examination Detail',
     method: 'GET',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.NURSE,
+      RoleConstants.RECEPTIONIST,
+    ],
     description: 'View examination details',
   },
   {
@@ -109,7 +121,13 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/examination/:id',
     name: 'Delete Examination',
     method: 'DELETE',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.NURSE,
+      RoleConstants.RECEPTIONIST,
+    ],
     description: 'Delete examination',
   },
 
@@ -136,7 +154,6 @@ export const RoutePermissions: RoutePermission[] = [
       RoleConstants.CEO,
       RoleConstants.ADMIN,
       RoleConstants.DOCTOR,
-      RoleConstants.NURSE,
       RoleConstants.RECEPTIONIST,
     ],
     description: 'View prescriptions',
@@ -145,12 +162,7 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/prescription',
     name: 'Create Prescription',
     method: 'POST',
-    roles: [
-      RoleConstants.CEO,
-      RoleConstants.ADMIN,
-      RoleConstants.DOCTOR,
-      RoleConstants.NURSE,
-    ],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
     description: 'Create prescription',
   },
 
@@ -232,13 +244,7 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/service',
     name: 'Services',
     method: 'GET',
-    roles: [
-      RoleConstants.CEO,
-      RoleConstants.ADMIN,
-      RoleConstants.DOCTOR,
-      RoleConstants.NURSE,
-      RoleConstants.RECEPTIONIST,
-    ],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
     description: 'View services',
   },
   {
@@ -291,7 +297,7 @@ export const RoutePermissions: RoutePermission[] = [
     ],
     description: 'View analysis parameters',
   },
-  
+
   {
     path: '/analysisById/:id',
     name: 'Analysis Parameters',
@@ -354,13 +360,7 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/radiology',
     name: 'Radiology',
     method: 'GET',
-    roles: [
-      RoleConstants.CEO,
-      RoleConstants.ADMIN,
-      RoleConstants.DOCTOR,
-      RoleConstants.NURSE,
-      RoleConstants.RECEPTIONIST,
-    ],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
     description: 'View medical images',
   },
   {
@@ -532,7 +532,6 @@ export const RoutePermissions: RoutePermission[] = [
       RoleConstants.ADMIN,
       RoleConstants.DOCTOR,
       RoleConstants.NURSE,
-      RoleConstants.RECEPTIONIST,
     ],
     description: 'View daily checkups',
   },
@@ -540,7 +539,12 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/daily-checkup',
     name: 'Create Daily Checkup',
     method: 'POST',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.NURSE,
+    ],
     description: 'Create daily checkup',
   },
   {
@@ -631,7 +635,6 @@ export const RoutePermissions: RoutePermission[] = [
       RoleConstants.DOCTOR,
       RoleConstants.NURSE,
       RoleConstants.RECEPTIONIST,
-      RoleConstants.PHARMACIST,
     ],
     description: 'View user profile',
   },
@@ -645,7 +648,6 @@ export const RoutePermissions: RoutePermission[] = [
       RoleConstants.DOCTOR,
       RoleConstants.NURSE,
       RoleConstants.RECEPTIONIST,
-      RoleConstants.PHARMACIST,
     ],
     description: 'Update user profile',
   },

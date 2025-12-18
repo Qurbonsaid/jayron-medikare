@@ -62,6 +62,7 @@ import {
   ArrowLeft,
   Brain,
   Check,
+  CalendarDays,
   CheckCircle2,
   ChevronsUpDown,
   Edit,
@@ -69,6 +70,7 @@ import {
   FilePlus,
   Loader2,
   Plus,
+  Repeat,
   Save,
   Trash2,
   X,
@@ -363,6 +365,44 @@ const ExaminationDetail = () => {
     useDeleteNeurologicStatusMutation();
   const handleRequest = useHandleRequest();
 
+  // Update serviceDuration and serviceStartDate based on existing services when adding new services
+  useEffect(() => {
+    // Only update if services array is empty (not adding new services) and patientServices exist
+    if (services.length === 0 && patientServices.length > 0) {
+      const durations = patientServices
+        .flatMap((doc: any) =>
+          doc.items?.map((item: any) => 
+            item.duration || item.days?.length || 0
+          ) || []
+        )
+        .filter((d: number) => d > 0);
+      if (durations.length > 0) {
+        const maxDuration = Math.max(...durations);
+        setServiceDuration(maxDuration);
+      }
+      
+      // Get start date from existing services (first date found in days)
+      const firstDate = patientServices
+        .flatMap((doc: any) => doc.items || [])
+        .flatMap((item: any) => item.days || [])
+        .map((day: any) => day.date)
+        .filter((date: any) => date !== null && date !== undefined)
+        .sort((a: any, b: any) => {
+          const dateA = new Date(a).getTime();
+          const dateB = new Date(b).getTime();
+          return dateA - dateB;
+        })[0];
+      
+      if (firstDate) {
+        setServiceStartDate(new Date(firstDate));
+      }
+    } else if (services.length === 0 && patientServices.length === 0) {
+      // Reset to default 7 if no existing services and no new services
+      setServiceDuration(7);
+      setServiceStartDate(new Date());
+    }
+  }, [patientServices, services.length]);
+
   // Update form when exam changes
   useEffect(() => {
     if (exam) {
@@ -469,12 +509,14 @@ const ExaminationDetail = () => {
 
   // Service handlers
   const addService = () => {
+    // Use serviceDuration from input directly (minimum 1)
+    const duration = Math.max(serviceDuration, 1);
     const newService: ServiceItem = {
       id: `temp-${Date.now()}-${Math.random()}`,
       service_type_id: '',
-      duration: serviceDuration,
+      duration: duration,
       notes: '',
-      days: generateDays(serviceDuration, [], serviceStartDate),
+      days: generateDays(duration, [], serviceStartDate),
     };
     setServices([...services, newService]);
   };
@@ -547,6 +589,50 @@ const ExaminationDetail = () => {
           return { ...day, date: dayDate };
         });
         return { ...srv, days: updatedDays };
+      })
+    );
+  };
+
+  // Mark every day for a specific service
+  const markEveryDayForService = (serviceId: string) => {
+    setServices(
+      services.map((srv) => {
+        if (srv.id === serviceId) {
+          const updatedDays = srv.days.map((day, idx) => {
+            const dayDate = new Date(serviceStartDate);
+            dayDate.setDate(dayDate.getDate() + idx);
+            return { ...day, date: dayDate };
+          });
+          return { ...srv, days: updatedDays };
+        }
+        return srv;
+      })
+    );
+  };
+
+  // Mark every other day for a specific service
+  const markEveryOtherDayForService = (serviceId: string) => {
+    setServices(
+      services.map((srv) => {
+        if (srv.id === serviceId) {
+          const duration = srv.days.length || serviceDuration;
+          const everyOtherDay = Array.from(
+            { length: duration },
+            (_, i) => i + 1
+          ).filter((day) => day % 2 === 1);
+
+          const updatedDays = srv.days.map((day, idx) => {
+            if (everyOtherDay.includes(day.day)) {
+              const dayDate = new Date(serviceStartDate);
+              dayDate.setDate(dayDate.getDate() + idx);
+              return { ...day, date: dayDate };
+            }
+            return { ...day, date: null };
+          });
+
+          return { ...srv, days: updatedDays };
+        }
+        return srv;
       })
     );
   };
@@ -1806,13 +1892,39 @@ const ExaminationDetail = () => {
                         size='sm'
                         onClick={() => {
                           setIsAddingService(true);
-                          // Get duration from existing services if available
-                          const existingDuration =
-                            patientServices.length > 0 &&
-                            patientServices[0]?.duration
-                              ? patientServices[0].duration
-                              : 7;
-                          setServiceDuration(existingDuration);
+                          // Ensure duration is set from existing services if available
+                          if (serviceDuration === 0 || !serviceDuration) {
+                            let maxDuration = 7; // Default
+                            if (patientServices.length > 0) {
+                              const durations = patientServices
+                                .flatMap((doc: any) =>
+                                  doc.items?.map((item: any) => 
+                                    item.duration || item.days?.length || 0
+                                  ) || []
+                                )
+                                .filter((d: number) => d > 0);
+                              if (durations.length > 0) {
+                                maxDuration = Math.max(...durations);
+                              }
+                            }
+                            setServiceDuration(maxDuration);
+                          }
+                          // Ensure start date is set from existing services if available
+                          if (patientServices.length > 0) {
+                            const firstDate = patientServices
+                              .flatMap((doc: any) => doc.items || [])
+                              .flatMap((item: any) => item.days || [])
+                              .map((day: any) => day.date)
+                              .filter((date: any) => date !== null && date !== undefined)
+                              .sort((a: any, b: any) => {
+                                const dateA = new Date(a).getTime();
+                                const dateB = new Date(b).getTime();
+                                return dateA - dateB;
+                              })[0];
+                            if (firstDate) {
+                              setServiceStartDate(new Date(firstDate));
+                            }
+                          }
                           if (services.length === 0) {
                             addService();
                           }
@@ -1869,21 +1981,51 @@ const ExaminationDetail = () => {
                                       if (newDuration > 0) {
                                         setServices(
                                           services.map((srv) => {
-                                            const newDays: ServiceDay[] =
-                                              Array.from(
-                                                { length: newDuration },
-                                                (_, idx) => {
-                                                  const existingDay =
-                                                    srv.days[idx];
-                                                  if (existingDay) {
-                                                    return existingDay;
+                                            const currentDays = srv.days || [];
+                                            
+                                            // If all previous days were marked (all have dates), mark all new days too
+                                            if (currentDays.length > 0) {
+                                              const allDaysMarked = currentDays.every((day) => day.date !== null);
+                                              const currentMaxDay = currentDays.length;
+                                              
+                                              if (allDaysMarked && newDuration > currentMaxDay) {
+                                                // All previous days were marked, so mark all new days too
+                                                const newDays: ServiceDay[] = Array.from(
+                                                  { length: newDuration },
+                                                  (_, idx) => {
+                                                    if (idx < currentMaxDay) {
+                                                      return currentDays[idx];
+                                                    }
+                                                    const dayDate = new Date(serviceStartDate);
+                                                    dayDate.setDate(dayDate.getDate() + idx);
+                                                    return {
+                                                      day: idx + 1,
+                                                      date: dayDate,
+                                                    };
                                                   }
-                                                  return {
-                                                    day: idx + 1,
-                                                    date: null,
-                                                  };
+                                                );
+                                                return {
+                                                  ...srv,
+                                                  duration: newDuration,
+                                                  days: newDays,
+                                                };
+                                              }
+                                            }
+                                            
+                                            // Otherwise, extend days but keep existing ones
+                                            const newDays: ServiceDay[] = Array.from(
+                                              { length: newDuration },
+                                              (_, idx) => {
+                                                const existingDay = currentDays[idx];
+                                                if (existingDay) {
+                                                  return existingDay;
                                                 }
-                                              );
+                                                return {
+                                                  day: idx + 1,
+                                                  date: null,
+                                                };
+                                              }
+                                            );
                                             return {
                                               ...srv,
                                               duration: newDuration,
@@ -1953,7 +2095,45 @@ const ExaminationDetail = () => {
                                 <Button
                                   variant='outline'
                                   size='sm'
-                                  onClick={addService}
+                                  onClick={() => {
+                                    setIsAddingService(true);
+                                    // Ensure duration is set from existing services if available
+                                    if (serviceDuration === 0 || !serviceDuration) {
+                                      let maxDuration = 7; // Default
+                                      if (patientServices.length > 0) {
+                                        const durations = patientServices
+                                          .flatMap((doc: any) =>
+                                            doc.items?.map((item: any) => 
+                                              item.duration || item.days?.length || 0
+                                            ) || []
+                                          )
+                                          .filter((d: number) => d > 0);
+                                        if (durations.length > 0) {
+                                          maxDuration = Math.max(...durations);
+                                        }
+                                      }
+                                      setServiceDuration(maxDuration);
+                                    }
+                                    // Ensure start date is set from existing services if available
+                                    if (patientServices.length > 0) {
+                                      const firstDate = patientServices
+                                        .flatMap((doc: any) => doc.items || [])
+                                        .flatMap((item: any) => item.days || [])
+                                        .map((day: any) => day.date)
+                                        .filter((date: any) => date !== null && date !== undefined)
+                                        .sort((a: any, b: any) => {
+                                          const dateA = new Date(a).getTime();
+                                          const dateB = new Date(b).getTime();
+                                          return dateA - dateB;
+                                        })[0];
+                                      if (firstDate) {
+                                        setServiceStartDate(new Date(firstDate));
+                                      }
+                                    }
+                                    if (services.length === 0) {
+                                      addService();
+                                    }
+                                  }}
                                   className='h-8'
                                 >
                                   <Plus className='w-3 h-3 mr-1' />
@@ -1965,20 +2145,122 @@ const ExaminationDetail = () => {
                           <div className='overflow-x-auto'>
                             <table className='w-full border-collapse border text-sm'>
                               <thead>
-                                <tr className='bg-muted/50'>
-                                  <th className='border px-3 py-2 text-left font-semibold min-w-[150px]'>
-                                    Хизмат номи
-                                  </th>
-                                  {Array.from({ length: 8 }, (_, i) => (
-                                    <th
-                                      key={i}
-                                      className='border px-2 py-2 text-center font-semibold min-w-[70px]'
-                                    ></th>
-                                  ))}
-                                  <th className='border px-2 py-2 text-center font-semibold w-16'>
-                                    Ҳаракат
-                                  </th>
-                                </tr>
+                                {(() => {
+                                  // Determine the number of days to show in header
+                                  // If adding new services, use serviceDuration
+                                  // If only existing services, find max duration
+                                  let daysToShow = 8; // Default to 8
+
+                                  if (services.length > 0 || isAddingService) {
+                                    // If adding new services, use serviceDuration (minimum 1)
+                                    // Also consider existing services' duration
+                                    let maxExistingDuration = 0;
+                                    if (patientServices.length > 0) {
+                                      maxExistingDuration = patientServices.reduce(
+                                        (max: number, doc: any) => {
+                                          const docMax =
+                                            doc.items?.reduce(
+                                              (itemMax: number, item: any) => {
+                                                const itemDuration =
+                                                  item.duration ||
+                                                  item.days?.length ||
+                                                  0;
+                                                return Math.max(itemMax, itemDuration);
+                                              },
+                                              0
+                                            ) || 0;
+                                          return Math.max(max, docMax);
+                                        },
+                                        0
+                                      );
+                                    }
+                                    daysToShow = Math.max(
+                                      serviceDuration,
+                                      maxExistingDuration,
+                                      1
+                                    );
+                                  } else if (patientServices.length > 0) {
+                                    // If only existing services, find max duration
+                                    const maxDuration = patientServices.reduce(
+                                      (max: number, doc: any) => {
+                                        const docMax =
+                                          doc.items?.reduce(
+                                            (itemMax: number, item: any) => {
+                                              const itemDuration =
+                                                item.duration ||
+                                                item.days?.length ||
+                                                0;
+                                              return Math.max(itemMax, itemDuration);
+                                            },
+                                            0
+                                          ) || 0;
+                                        return Math.max(max, docMax);
+                                      },
+                                      0
+                                    );
+                                    daysToShow = maxDuration > 0 ? maxDuration : 8;
+                                  }
+
+                                  // Split days into chunks of 8 for multiple rows
+                                  const daysPerRow = 8;
+                                  const headerChunks: number[][] = [];
+                                  for (let i = 0; i < daysToShow; i += daysPerRow) {
+                                    const chunk = [];
+                                    for (
+                                      let j = i;
+                                      j < Math.min(i + daysPerRow, daysToShow);
+                                      j++
+                                    ) {
+                                      chunk.push(j + 1);
+                                    }
+                                    headerChunks.push(chunk);
+                                  }
+
+                                  // If no chunks, create at least one empty chunk
+                                  if (headerChunks.length === 0) {
+                                    headerChunks.push([]);
+                                  }
+
+                                  return headerChunks.map((chunk, chunkIndex) => (
+                                    <tr
+                                      key={`header-${chunkIndex}`}
+                                      className='bg-muted/50'
+                                    >
+                                      {chunkIndex === 0 && (
+                                        <th
+                                          className='border px-3 py-2 text-left font-semibold min-w-[150px]'
+                                          rowSpan={headerChunks.length}
+                                        >
+                                          Хизмат номи
+                                        </th>
+                                      )}
+                                      {chunk.map((dayNum) => (
+                                        <th
+                                          key={dayNum}
+                                          className='border px-2 py-2 text-center font-semibold min-w-[70px]'
+                                        ></th>
+                                      ))}
+                                      {chunk.length < daysPerRow &&
+                                        Array.from(
+                                          { length: daysPerRow - chunk.length },
+                                          (_, i) => (
+                                            <th
+                                              key={`empty-${i}`}
+                                              className='border px-2 py-2'
+                                            ></th>
+                                          )
+                                        )}
+                                      {chunkIndex === 0 && (
+                                        <th
+                                          className='border px-2 py-2 text-center font-semibold w-12'
+                                          rowSpan={headerChunks.length}
+                                        >
+                                          Харакатлар
+                                        </th>
+                                      )}
+                                    </tr>
+                                  ));
+                                })()}
                               </thead>
                               <tbody>
                                 {/* Existing services - show in their original position, editable if being edited */}
@@ -1999,13 +2281,19 @@ const ExaminationDetail = () => {
                                     const serviceDays = editingService
                                       ? editingService.days || []
                                       : service.days || [];
-                                    const totalDays = editingService
+                                    const originalDuration = editingService
                                       ? editingService.duration ||
                                         serviceDays.length ||
                                         0
                                       : service.duration ||
                                         serviceDays.length ||
                                         0;
+                                    
+                                    // If new services are being added, use the maximum of serviceDuration and original duration
+                                    const totalDays =
+                                      services.length > 0 && !isBeingEdited
+                                        ? Math.max(serviceDuration, originalDuration)
+                                        : originalDuration;
 
                                     // Split days into chunks of 8
                                     const dayChunks: Array<Array<any>> = [];
@@ -2260,50 +2548,90 @@ const ExaminationDetail = () => {
                                             )}
                                           {chunkIndex === 0 ? (
                                             <td
-                                              className='border px-1 py-1 text-center'
+                                              className='border px-1 py-2 text-center w-12'
                                               rowSpan={dayChunks.length}
                                             >
-                                              <div className='flex items-center justify-center gap-1'>
-                                              <>
-                                                    <Button
-                                                      variant='ghost'
-                                                      size='sm'
-                                                      onClick={() =>
-                                                        startEditService(
-                                                          service
-                                                        )
-                                                      }
-                                                      className='h-6 w-6 p-0 mr-2.5'
-                                                      disabled={
-                                                        deletingServiceId ===
+                                              <div className='flex flex-col items-center gap-1'>
+                                                <div className='flex gap-1'>
+                                                  {isBeingEdited && (
+                                                    <>
+                                                      <Button
+                                                        variant='ghost'
+                                                        size='sm'
+                                                        onClick={() =>
+                                                          markEveryDayForService(
+                                                            editingService?.id ||
+                                                              ''
+                                                          )
+                                                        }
+                                                        className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
+                                                        disabled={
+                                                          !editingService?.service_type_id
+                                                        }
+                                                        title='Ҳар куни'
+                                                      >
+                                                        <CalendarDays className='w-3 h-3' />
+                                                      </Button>
+                                                      <Button
+                                                        variant='ghost'
+                                                        size='sm'
+                                                        onClick={() =>
+                                                          markEveryOtherDayForService(
+                                                            editingService?.id ||
+                                                              ''
+                                                          )
+                                                        }
+                                                        className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
+                                                        disabled={
+                                                          !editingService?.service_type_id
+                                                        }
+                                                        title='2 кунда бир'
+                                                      >
+                                                        <Repeat className='w-3 h-3' />
+                                                      </Button>
+                                                    </>
+                                                  )}
+                                                </div>
+                                                <div className='flex gap-1'>
+                                                  <Button
+                                                    variant='ghost'
+                                                    size='sm'
+                                                    onClick={() =>
+                                                      startEditService(service)
+                                                    }
+                                                    className='h-6 w-6 p-0'
+                                                    disabled={
+                                                      deletingServiceId ===
+                                                      service._id
+                                                    }
+                                                    title='Таҳрирлаш'
+                                                  >
+                                                    <Edit className='h-3 w-3' />
+                                                  </Button>
+                                                  <Button
+                                                    variant='ghost'
+                                                    size='sm'
+                                                    onClick={() =>
+                                                      handleDeleteService(
                                                         service._id
-                                                      }
-                                                    >
-                                                      <Edit className='h-3 w-3' />
-                                                    </Button>
-                                                    <Button
-                                                      variant='ghost'
-                                                      size='sm'
-                                                      onClick={() =>
-                                                        handleDeleteService(
-                                                          service._id
-                                                        )
-                                                      }
-                                                      className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-                                                      disabled={
-                                                        deletingServiceId ===
-                                                          service._id ||
-                                                        isAddingService
-                                                      }
-                                                    >
-                                                      {deletingServiceId ===
-                                                      service._id ? (
-                                                        <Loader2 className='h-3 w-3 animate-spin' />
-                                                      ) : (
-                                                        <Trash2 className='h-3 w-3' />
-                                                      )}
-                                                    </Button>
-                                                  </>
+                                                      )
+                                                    }
+                                                    className='h-6 w-6 p-0 text-destructive hover:text-destructive'
+                                                    disabled={
+                                                      deletingServiceId ===
+                                                        service._id ||
+                                                      isAddingService
+                                                    }
+                                                    title='Ўчириш'
+                                                  >
+                                                    {deletingServiceId ===
+                                                    service._id ? (
+                                                      <Loader2 className='h-3 w-3 animate-spin' />
+                                                    ) : (
+                                                      <Trash2 className='h-3 w-3' />
+                                                    )}
+                                                  </Button>
+                                                </div>
                                               </div>
                                             </td>
                                           ) : null}
@@ -2538,19 +2866,52 @@ const ExaminationDetail = () => {
                                               )}
                                             {chunkIndex === 0 ? (
                                               <td
-                                                className='border px-1 py-1 text-center'
+                                                className='border px-1 py-2 text-center w-12'
                                                 rowSpan={dayChunks.length}
                                               >
-                                                <Button
-                                                  variant='ghost'
-                                                  size='sm'
-                                                  onClick={() =>
-                                                    removeService(service.id)
-                                                  }
-                                                  className='h-8 w-8 p-0 text-destructive hover:text-destructive'
-                                                >
-                                                  <Trash2 className='h-4 w-4' />
-                                                </Button>
+                                                <div className='flex flex-col items-center gap-1'>
+                                                  <div className='flex gap-1'>
+                                                    <Button
+                                                      variant='ghost'
+                                                      size='sm'
+                                                      onClick={() =>
+                                                        markEveryDayForService(
+                                                          service.id
+                                                        )
+                                                      }
+                                                      className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
+                                                      disabled={!service.service_type_id}
+                                                      title='Ҳар куни'
+                                                    >
+                                                      <CalendarDays className='w-3 h-3' />
+                                                    </Button>
+                                                    <Button
+                                                      variant='ghost'
+                                                      size='sm'
+                                                      onClick={() =>
+                                                        markEveryOtherDayForService(
+                                                          service.id
+                                                        )
+                                                      }
+                                                      className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
+                                                      disabled={!service.service_type_id}
+                                                      title='2 кунда бир'
+                                                    >
+                                                      <Repeat className='w-3 h-3' />
+                                                    </Button>
+                                                  </div>
+                                                  <Button
+                                                    variant='ghost'
+                                                    size='sm'
+                                                    onClick={() =>
+                                                      removeService(service.id)
+                                                    }
+                                                    className='h-6 w-6 p-0 text-destructive hover:text-destructive'
+                                                    title='Ўчириш'
+                                                  >
+                                                    <Trash2 className='w-3 h-3' />
+                                                  </Button>
+                                                </div>
                                               </td>
                                             ) : null}
                                           </tr>
@@ -2613,13 +2974,39 @@ const ExaminationDetail = () => {
                           <Button
                             onClick={() => {
                               setIsAddingService(true);
-                              // Get duration from existing services if available
-                              const existingDuration =
-                                patientServices.length > 0 &&
-                                patientServices[0]?.duration
-                                  ? patientServices[0].duration
-                                  : 7;
-                              setServiceDuration(existingDuration);
+                              // Ensure duration is set from existing services if available
+                              if (serviceDuration === 0 || !serviceDuration) {
+                                let maxDuration = 7; // Default
+                                if (patientServices.length > 0) {
+                                  const durations = patientServices
+                                    .flatMap((doc: any) =>
+                                      doc.items?.map((item: any) => 
+                                        item.duration || item.days?.length || 0
+                                      ) || []
+                                    )
+                                    .filter((d: number) => d > 0);
+                                  if (durations.length > 0) {
+                                    maxDuration = Math.max(...durations);
+                                  }
+                                }
+                                setServiceDuration(maxDuration);
+                              }
+                              // Ensure start date is set from existing services if available
+                              if (patientServices.length > 0) {
+                                const firstDate = patientServices
+                                  .flatMap((doc: any) => doc.items || [])
+                                  .flatMap((item: any) => item.days || [])
+                                  .map((day: any) => day.date)
+                                  .filter((date: any) => date !== null && date !== undefined)
+                                  .sort((a: any, b: any) => {
+                                    const dateA = new Date(a).getTime();
+                                    const dateB = new Date(b).getTime();
+                                    return dateA - dateB;
+                                  })[0];
+                                if (firstDate) {
+                                  setServiceStartDate(new Date(firstDate));
+                                }
+                              }
                               // Add default one row
                               if (services.length === 0) {
                                 addService();

@@ -47,12 +47,6 @@ export const useRoutePermission = (
   };
 };
 
-/**
- * Get all allowed actions (GET, POST, PUT, DELETE, PATCH) for a specific UI route path
- * This replaces the old useRouteActions for route-name based checking
- * @param path - The UI route path (e.g., '/patients')
- * @returns CRUD permission flags
- */
 export const useRouteActions = (path: string) => {
   const { data: userData, isLoading } = useMeQuery();
   const userRole = userData?.data?.role as RoleConstants;
