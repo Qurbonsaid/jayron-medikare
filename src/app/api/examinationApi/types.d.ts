@@ -116,7 +116,7 @@ export type ExamDataItem = {
   billing_id: string | null;
   images: Array<Image> | [];
   status: status;
-  prescription:string|null;
+  prescription:getOnePrescriptionRes|null;
   service:string|null;
   status: status;
   neurological_status_id: string | null;
@@ -396,4 +396,32 @@ export interface GetAlldailyCheckup {
     notes: string;
     _id: string;
   }[];
+}
+
+interface CreateExamWithPrescriptionAndServiceReq {
+  patient_id: string;
+  doctor_id: string;
+  description: string;
+  complaints: string;
+  treatment_type: 'stasionar' | 'ambulator';
+  service_data?: {
+    duration: number;
+    items: Array<{
+      service_type_id: string;
+      notes?: string;
+      days: Array<{
+        day: number;
+        date: Date;
+      }>;
+    }>;
+  };
+  prescription_data?: {
+    items: Array<{
+      medication_id: string;
+      addons: string;
+      frequency: number;
+      duration: number;
+      instructions: string;
+    }>;
+  };
 }
