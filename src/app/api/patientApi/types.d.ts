@@ -1,4 +1,4 @@
-import { Analysis, Room } from '../examinationApi/types';
+import { Analysis, Room } from "../examinationApi/types";
 
 export type CreatePatientReq = {
   fullname: string;
@@ -69,37 +69,37 @@ export type AllPatientRes = {
         doctor_id: string;
         diagnosis: string;
         complaints: string;
-        analyses: Array<Analysis>;
+        analyses:  Array<Analysis>;
         billing_id: string | null;
         images: Array<string>;
         status: string;
         status: status;
-        prescriptions: Array<{
-          medication: string;
-          dosage: number;
-          frequency: number;
-          duration: number;
-          instructions: string;
-          _id: string;
-          days: Day[];
-        }>;
-        services: Array<{
-          service_type_id:
-            | {
-                _id: string;
-                name: string;
-                price: number;
-              }
-            | string;
-          price: number;
-          quantity: number;
-          status: string;
-          notes: string;
-          _id: string;
-        }>;
-        rooms: Array<Room>;
-        created_at: Date;
-        updated_at: Date;
+					prescriptions: Array<{
+						medication: string;
+						dosage: number;
+						frequency: number;
+						duration: number;
+						instructions: string;
+						_id: string;
+						days: Day[];
+					}>;
+					services: Array<{
+						service_type_id:
+							| {
+									_id: string;
+									name: string;
+									price: number;
+								}
+							| string;
+						price: number;
+						quantity: number;
+						status: string;
+						notes: string;
+						_id: string;
+					}>;
+					rooms: Array<Room>;
+					created_at: Date;
+					updated_at: Date;
         description: string;
       };
       diagnosis_id: {
@@ -139,46 +139,13 @@ export type OnePatientRes = {
         email: string;
         phone: string;
       };
-      examination_id: {
-        _id: string;
-        patient_id: string;
-        doctor_id: string;
-        diagnosis:
-          | {
-              _id: string;
-              name: string;
-            }
-          | string
-          | null;
-        description: string;
-        complaints: string;
-        treatment_type: 'stasionar' | 'ambulator';
-        analyses: Array<Analysis>;
-        billing_id: string | null;
-        images: Array<string>;
-        prescription: string;
-        service: Array<{
-          service_type_id: string;
-          price: number;
-          frequency: number;
-          duration: number;
-          status: status;
-          days: Array<Day>;
-          _id: string;
-        }> | null;
-        status;
-        neurological_status_id: string | null;
-        daily_checkup_id: string | null;
-        rooms: Array<Room>;
-        created_at: Date;
-        updated_at: Date;
-      };
+      examination_id: string;
       diagnosis_id: {
         _id: string;
         name: string;
         code: string;
         description: string;
-      } | null;
+      };
       _id: string;
     };
     fullname: string;

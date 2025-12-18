@@ -1,163 +1,125 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 import {
-	SidebarInset,
-	SidebarProvider,
-	SidebarTrigger,
-} from '@/components/ui/sidebar'
-import { navigator } from '@/constants/router'
-import getUser from '@/hooks/getUser/getUser'
-import { ArrowLeft, Edit, Globe, Trash } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { AppSidebar } from './AppSidebar'
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import getUser from '@/hooks/getUser/getUser';
+import { navigator } from '@/router';
+import { ArrowLeft, Globe } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { AppSidebar } from './AppSidebar';
 import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from './ui/dropdown-menu'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 interface AppLayoutProps {
-	children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-	const [sidebarOpen, setSidebarOpen] = useState(() => {
-		const saved = localStorage.getItem('sidebar-state')
-		return saved !== 'false'
-	})
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebar-state');
+    return saved !== 'false';
+  });
 
-	const location = useLocation()
+  const location = useLocation();
 
-	useEffect(() => {
-		localStorage.setItem('sidebar-state', String(sidebarOpen))
-	}, [sidebarOpen])
+  useEffect(() => {
+    localStorage.setItem('sidebar-state', String(sidebarOpen));
+  }, [sidebarOpen]);
 
-	const currentLocation = navigator.find(item => {
-		if (item.path === location.pathname) return true
+  const currentLocation = navigator.find((item) => {
+    if (item.path === location.pathname) return true;
 
-		// Pattern match for dynamic routes (e.g., /patient/:id)
-		const pattern = item.path.replace(/:[^/]+/g, '[^/]+')
-		const regex = new RegExp(`^${pattern}$`)
-		return regex.test(location.pathname)
-	})
+    // Pattern match for dynamic routes (e.g., /patient/:id)
+    const pattern = item.path.replace(/:[^/]+/g, '[^/]+');
+    const regex = new RegExp(`^${pattern}$`);
+    return regex.test(location.pathname);
+  });
 
-	const me = getUser()
+  const me = getUser();
 
-	const nickName = me.fullname
-		?.split(' ')
-		?.map(i => i[0])
-		?.join('')
+  const nickName = me.fullname
+    ?.split(' ')
+    ?.map((i) => i[0])
+    ?.join('');
 
-	return (
-		<SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
-			<div className='flex min-h-screen w-full'>
-				<AppSidebar />
-				<SidebarInset className='flex-1'>
-					{/* Top Header */}
-					<header className='sticky top-0 z-10 bg-card border-b card-shadow flex items-center justify-between px-6 py-3 lg:px-2 max-sm:pr-0'>
-						<div className='flex items-center gap-4 md:px-4'>
-							<SidebarTrigger className='md:hidden' />
-							{currentLocation?.to && (
-								<Link to={currentLocation?.to}>
-									<ArrowLeft className='w-5 h-5' />
-								</Link>
-							)}
-							<h1 className='text-xl font-bold'>{currentLocation?.title}</h1>
-						</div>
-						<div className='flex items-center gap-4 px-4'>
-							<div className='flex items-center gap-3'>
-								{/* 3-line Profile Menu */}
-								{location.pathname === '/profile' && (
-									<DropdownMenu>
-										<DropdownMenuTrigger
-											className='focus-visible:ring-0 focus-visible:ring-offset-0'
-											asChild
-										>
-											<button className='flex flex-col justify-center items-center gap-1 w-8 h-8 p-1 rounded hover:bg-gray-200 transition'>
-												<span className='w-5 h-0.5 bg-gray-600 block rounded' />
-												<span className='w-5 h-0.5 bg-gray-600 block rounded' />
-												<span className='w-5 h-0.5 bg-gray-600 block rounded' />
-											</button>
-										</DropdownMenuTrigger>
-										<DropdownMenuContent align='end'>
-											<DropdownMenuItem
-												onClick={() => {
-													window.dispatchEvent(new CustomEvent('profile-edit'))
-												}}
-											>
-												<Edit className='w-4 h-4 mr-2' />
-												<span>Tahrirlash</span>
-											</DropdownMenuItem>
-											<DropdownMenuItem
-												className='text-red-600'
-												onClick={() => {
-													window.dispatchEvent(
-														new CustomEvent('profile-logout')
-													)
-												}}
-											>
-												<Trash className='w-4 h-4 mr-2' />
-												<span>Logout</span>
-											</DropdownMenuItem>
-										</DropdownMenuContent>
-									</DropdownMenu>
-								)}
+  return (
+    <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+      <div className='flex min-h-screen w-full'>
+        <AppSidebar />
+        <SidebarInset className='flex-1'>
+          {/* Top Header */}
+          <header className='sticky top-0 z-10 bg-card border-b card-shadow flex items-center justify-between px-6 py-3 lg:px-2 max-sm:pr-0'>
+              <div className='flex items-center gap-4 md:px-4'>
+                <SidebarTrigger className='md:hidden' />
+                {currentLocation?.to && (
+                  <Link to={currentLocation?.to}>
+                    <ArrowLeft className='w-5 h-5' />
+                  </Link>
+                )}
+                <h1 className='text-xl font-bold'>{currentLocation?.title}</h1>
+              </div>
+              <div className='flex items-center gap-4 px-4'>
+                <div className='flex items-center gap-3'>
+                  {/* Language Selector */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className='focus-visible:ring-0 focus-visible:ring-offset-0'
+                      asChild
+                    >
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='hover:bg-accent border-2 border-slate-400'
+                      >
+                        <Globe className='w-5 h-5' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                      <DropdownMenuLabel>Тилни танланг</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <span>Ўзбек тили</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <span>Русский язык</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
 
-								{/* Language Selector */}
-								<DropdownMenu>
-									<DropdownMenuTrigger
-										className='focus-visible:ring-0 focus-visible:ring-offset-0'
-										asChild
-									>
-										<Button
-											variant='ghost'
-											size='icon'
-											className='hover:bg-accent border-2 border-slate-400'
-										>
-											<Globe className='w-5 h-5' />
-										</Button>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent align='end'>
-										<DropdownMenuLabel>Тилни танланг</DropdownMenuLabel>
-										<DropdownMenuSeparator />
-										<DropdownMenuItem>
-											<span>Ўзбек тили</span>
-										</DropdownMenuItem>
-										<DropdownMenuItem>
-											<span>Русский язык</span>
-										</DropdownMenuItem>
-									</DropdownMenuContent>
-								</DropdownMenu>
+                  {/* Profile Button */}
+                  <Link to='/profile' className='border-2 rounded-lg py-0.5 border-slate-400'>
+                    <Button
+                      variant='ghost'
+                      className='flex items-center gap-3 hover:bg-accent  border-slate-400'
+                    >
+                      <div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
+                        {nickName}
+                      </div>
+                      <div className='hidden md:block text-right'>
+                        <p className='text-sm font-medium'>{me.fullname}</p>
+                        <p className='text-xs text-muted-foreground'>
+                          {me.role}
+                        </p>
+                      </div>
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+          </header>
 
-								{/* Profile Button */}
-								<Link
-									to='/profile'
-									className='border-2 rounded-lg py-0.5 border-slate-400'
-								>
-									<Button
-										variant='ghost'
-										className='flex items-center gap-3 hover:bg-accent  border-slate-400'
-									>
-										<div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
-											{nickName}
-										</div>
-										<div className='hidden md:block text-right'>
-											<p className='text-sm font-medium'>{me.fullname}</p>
-											<p className='text-xs text-muted-foreground'>{me.role}</p>
-										</div>
-									</Button>
-								</Link>
-							</div>
-						</div>
-					</header>
-
-					{/* Main Content */}
-					<main className='flex-1'>{children}</main>
-				</SidebarInset>
-			</div>
-		</SidebarProvider>
-	)
+          {/* Main Content */}
+          <main className='flex-1'>{children}</main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  );
 }

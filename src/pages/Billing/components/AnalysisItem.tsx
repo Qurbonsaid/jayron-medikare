@@ -1,13 +1,27 @@
-import { Analysis } from '@/app/api/examinationApi/types';
+import { useGetPatientAnalysisByIdQuery } from '@/app/api/patientAnalysisApi/patientAnalysisApi';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface Props {
-  analysis: Analysis;
+  analysisId: string;
   isMobile?: boolean;
 }
 
-export const AnalysisItem = ({ analysis, isMobile = false }: Props) => {
-  const analysisType = analysis.analysis_type;
-  const code = (analysisType as any)?.code || analysisType?.description || '-';
+export const AnalysisItem = ({ analysisId, isMobile = false }: Props) => {
+  const { data, isLoading } = useGetPatientAnalysisByIdQuery(analysisId);
+
+  if (isLoading) {
+    return (
+      <div className='py-3 px-4 text-center'>
+        <LoadingSpinner className='w-4 h-4 mx-auto' />
+      </div>
+    );
+  }
+
+  if (!data?.data) {
+    return null;
+  }
+
+  const analysis = data.data;
 
   if (isMobile) {
     return (
@@ -16,10 +30,10 @@ export const AnalysisItem = ({ analysis, isMobile = false }: Props) => {
           <div className='flex justify-between items-start'>
             <div>
               <div className='font-semibold text-sm'>
-                {analysisType?.name || '-'}
+                {analysis.analysis_type.name}
               </div>
               <div className='text-xs text-primary font-medium mt-1'>
-                {code}
+                {analysis.analysis_type.code}
               </div>
             </div>
             <span className='inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 uppercase'>
@@ -36,9 +50,11 @@ export const AnalysisItem = ({ analysis, isMobile = false }: Props) => {
 
   return (
     <tr className='border-b last:border-0'>
-      <td className='py-3 px-4 text-sm'>{analysisType?.name || '-'}</td>
+      <td className='py-3 px-4 text-sm'>{analysis.analysis_type.name}</td>
       <td className='py-3 px-4 text-sm'>
-        <span className='text-primary font-medium'>{code}</span>
+        <span className='text-primary font-medium'>
+          {analysis.analysis_type.code}
+        </span>
       </td>
       <td className='py-3 px-4 text-sm text-muted-foreground'>-</td>
       <td className='py-3 px-4'>

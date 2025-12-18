@@ -26,7 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { useRouteActions } from '@/hooks/RBS';
+import { usePermission } from '@/hooks/usePermission';
 import { Eye, FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -38,16 +38,13 @@ import ExamFilter from './components/ExamFilter';
 import VisitDetail from './components/VisitDetail';
 
 const Examinations = () => {
+  const { canCreate } = usePermission('examination');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [treatmentTypeFilter, setTreatmentTypeFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  // RBS Permission checks
-  const { canRead, canUpdate, canDelete } = useRouteActions('/examination/:id');
-  const { canCreate } = useRouteActions('/new-visit');
 
   // Modals
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -89,6 +86,11 @@ const Examinations = () => {
   const exams = examsData?.data || [];
   const diagnoses = diagnosisData?.data || [];
 
+  // Open detail modal
+  const handleDetailClick = (exam: any) => {
+    setSelectedExam(exam);
+    setIsDetailModalOpen(true);
+  };
 
   // Open edit modal from detail
   const handleEditFromDetail = () => {
@@ -125,6 +127,16 @@ const Examinations = () => {
     });
   };
 
+  // Open edit modal
+  const handleEditClick = (exam: any) => {
+    setSelectedExam(exam);
+    setEditForm({
+      complaints: exam.complaints || '',
+      description: exam.description || '',
+      diagnosis: exam.diagnosis?._id || exam.diagnosis || '',
+    });
+    setIsEditModalOpen(true);
+  };
 
   // Handle update
   const handleUpdate = async () => {
@@ -178,11 +190,32 @@ const Examinations = () => {
   return (
     <div className='min-h-screen bg-background'>
       <main className='container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
+        {/* Page Header */}
+        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8'>
+          <div>
+            <h1 className='text-2xl sm:text-3xl font-bold mb-1 sm:mb-2'>
+              Кўриклар
+            </h1>
+            <p className='text-sm sm:text-base text-muted-foreground'>
+              Барча кўрикларни кўриш ва бошқариш
+            </p>
+          </div>
+          {canCreate && (
+            <Button
+              className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
+              onClick={() => navigate('/new-visit')}
+            >
+              <Plus className='w-4 h-4 mr-2' />
+              Янги Кўрик
+            </Button>
+          )}
+        </div>
+
         {/* Search and Filters */}
         <Card className='card-shadow mb-4 sm:mb-6'>
           <div className='p-4 sm:p-6'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4'>
-              <div className='sm:col-span-2 lg:col-span-5'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
+              <div className='sm:col-span-2'>
                 <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
                   Қидирув
                 </label>
@@ -197,7 +230,7 @@ const Examinations = () => {
                 </div>
               </div>
 
-              <div className='lg:col-span-2'>
+              <div>
                 <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
                   Статус
                 </label>
@@ -213,7 +246,7 @@ const Examinations = () => {
                 </Select>
               </div>
 
-              <div className='lg:col-span-2'>
+              <div>
                 <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
                   Даволаш тури
                 </label>
@@ -230,19 +263,6 @@ const Examinations = () => {
                     <SelectItem value='stasionar'>Стационар</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className='lg:col-span-3'>
-                <label className='block text-sm font-medium text-transparent mb-1.5'>
-                  &nbsp;
-                </label>
-                {canCreate ? (<Button
-                  className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full'
-                  onClick={() => navigate('/new-visit')}
-                >
-                  <Plus className='w-4 h-4 mr-2' />
-                  Янги Кўрик
-                </Button>) : ""}
               </div>
             </div>
           </div>
@@ -331,7 +351,7 @@ const Examinations = () => {
                         {new Date(exam.created_at).toLocaleDateString('uz-UZ')}
                       </TableCell>
                       <TableCell>
-                        {canRead ? (<div className='flex justify-end gap-2'>
+                        <div className='flex justify-end gap-2'>
                           <Button
                             size='sm'
                             variant='outline'
@@ -342,7 +362,7 @@ const Examinations = () => {
                             <Eye className='w-4 h-4 mr-1' />
                             Батафсил
                           </Button>
-                        </div>):''}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -501,8 +521,6 @@ const Examinations = () => {
           handleDeleteFromDetail={handleDeleteFromDetail}
           handleCompleteExam={handleCompleteExam}
           isCompleting={isCompleting}
-          canUpdate={canUpdate}
-          canDelete={canDelete}
         />
 
         {/* Edit Modal */}

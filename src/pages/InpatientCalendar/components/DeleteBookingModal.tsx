@@ -58,46 +58,46 @@ export const DeleteBookingModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2 text-red-600">
-            <Trash2 className="w-6 h-6" />
+      <DialogContent className="max-w-md sm:max-w-lg p-4 sm:p-6">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2 text-red-600">
+            <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" />
             Броньни Ўчириш
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm sm:text-base">
             Ушбу амални бекор қилиб бўлмайди
           </DialogDescription>
         </DialogHeader>
 
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
+          <AlertDescription className="text-sm">
             Сиз ҳақиқатан ҳам ушбу броньни ўчирмоқчимисиз?
           </AlertDescription>
         </Alert>
 
         {/* Booking Info */}
-        <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-          <div className="space-y-1 text-sm">
-            <div>
+        <div className="p-3 sm:p-4 bg-gray-50 rounded-lg space-y-2">
+          <div className="space-y-1.5 text-xs sm:text-sm">
+            <div className="break-words">
               <span className="text-gray-600">Бемор:</span>{" "}
               <strong className="text-gray-900">
                 {patient?.fullname || "Номаълум"}
               </strong>
             </div>
-            <div>
+            <div className="break-words">
               <span className="text-gray-600">Телефон:</span>{" "}
               <strong className="text-gray-900">
                 {formatPhoneNumber(patient?.phone)}
               </strong>
             </div>
-            <div>
+            <div className="break-words">
               <span className="text-gray-600">Хона:</span>{" "}
               <strong className="text-gray-900">
                 {room?.room_name || "Номаълум"}
               </strong>
             </div>
-            <div>
+            <div className="break-words">
               <span className="text-gray-600">Даври:</span>{" "}
               <strong className="text-gray-900">
                 {format(new Date(booking.start_at), "dd MMM yyyy", {
@@ -110,7 +110,7 @@ export const DeleteBookingModal = ({
               </strong>
             </div>
             {booking.note && (
-              <div>
+              <div className="break-words">
                 <span className="text-gray-600">Изоҳ:</span>{" "}
                 <span className="text-gray-900 italic">{booking.note}</span>
               </div>
@@ -118,12 +118,13 @@ export const DeleteBookingModal = ({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
+            className="w-full sm:w-auto text-sm sm:text-base"
           >
             Бекор қилиш
           </Button>
@@ -132,12 +133,13 @@ export const DeleteBookingModal = ({
             variant="destructive"
             onClick={handleDelete}
             disabled={isLoading}
+            className="w-full sm:w-auto text-sm sm:text-base"
           >
             {isLoading ? (
               <LoadingSpinner size="sm" />
             ) : (
               <>
-                <Trash2 className="w-4 h-4 mr-2" />
+                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
                 Ўчириш
               </>
             )}

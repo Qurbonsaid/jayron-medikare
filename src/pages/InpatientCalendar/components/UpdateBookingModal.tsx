@@ -110,36 +110,36 @@ export const UpdateBookingModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Edit2 className="w-6 h-6 text-blue-600" />
+      <DialogContent className="max-w-xl sm:max-w-2xl p-4 sm:p-6">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
+            <Edit2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             Броньни Таҳрирлаш
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm sm:text-base">
             Бронь маълумотларини янгиланг
           </DialogDescription>
         </DialogHeader>
 
         {/* Current Booking Info */}
-        <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
+        <div className="p-3 sm:p-4 bg-gray-50 rounded-lg space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+            <div className="break-words">
               <span className="text-gray-600">Бемор:</span>{" "}
               <strong>{patient?.fullname || "Номаълум"}</strong>
             </div>
-            <div>
+            <div className="break-words">
               <span className="text-gray-600">Хона:</span>{" "}
               <strong>{room?.room_name || "Номаълум"}</strong>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Date Range */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start_date">
+              <Label htmlFor="start_date" className="text-sm sm:text-base">
                 Бошланиш санаси <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -148,10 +148,11 @@ export const UpdateBookingModal = ({
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
+                className="text-sm h-10 sm:h-11"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="end_date">
+              <Label htmlFor="end_date" className="text-sm sm:text-base">
                 Тугаш санаси <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -161,42 +162,45 @@ export const UpdateBookingModal = ({
                 onChange={(e) => setEndDate(e.target.value)}
                 required
                 min={startDate}
+                className="text-sm h-10 sm:h-11"
               />
             </div>
           </div>
 
           {/* Note */}
           <div className="space-y-2">
-            <Label htmlFor="note">Изоҳ (ихтиёрий)</Label>
+            <Label htmlFor="note" className="text-sm sm:text-base">Изоҳ (ихтиёрий)</Label>
             <Textarea
               id="note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Махсус диета, аллергия ва бошқа маълумотлар..."
               rows={3}
+              className="text-sm sm:text-base resize-none"
             />
           </div>
 
           {/* Footer */}
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              className="w-full sm:w-auto text-sm sm:text-base"
             >
               Бекор қилиш
             </Button>
             <Button
               type="submit"
               disabled={isLoading || !startDate || !endDate}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 w-full sm:w-auto text-sm sm:text-base"
             >
               {isLoading ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <Save className="w-4 h-4 mr-2" />
+                  <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
                   Сақлаш
                 </>
               )}

@@ -3,6 +3,7 @@ import { KeyboardShortcutsDialog } from '@/components/ui/keyboard-shortcuts-dial
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { PermissionRoute } from '@/hooks/Router/PermissionRoute';
 import { PrivateRoute } from '@/hooks/Router/PrivateRouter';
 import { useGlobalShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import Login from '@/pages/Login/Login';
@@ -12,7 +13,7 @@ import { Provider } from 'react-redux';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import store from './app/store';
 import { AppLayout } from './components/AppLayout';
-import { routers } from './constants/router';
+import { routers } from './router';
 
 function RoutesContent() {
   useGlobalShortcuts();
@@ -32,25 +33,26 @@ function RoutesContent() {
         onOpenChange={setShowShortcuts}
       />
       <Routes>
-        {/* Redirect defaults to patients */}
-        <Route path='/dashboard' element={<Navigate to={'/patients'} />} />
         <Route path='/' element={<Navigate to={'/patients'} />} />
-
-        {/* Public route - Login */}
         <Route path='/login' element={<Login />} />
 
-        {/* Protected Routes with authentication & authorization */}
+        {/* Protected Routes */}
         <Route element={<PrivateRoute />}>
-          {routers.map(({ path, element }) => (
+          {routers.map(({ path, element, permission }) => (
             <Route
               key={path}
               path={path}
-              element={<AppLayout>{element}</AppLayout>}
+              element={
+                <AppLayout>
+                  <PermissionRoute permission={permission}>
+                    {element}
+                  </PermissionRoute>
+                </AppLayout>
+              }
             />
           ))}
         </Route>
 
-        {/* Catch-all for undefined routes */}
         <Route path='*' element={<NotFound />} />
       </Routes>
     </>

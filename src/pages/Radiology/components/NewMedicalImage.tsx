@@ -362,7 +362,7 @@ export const NewMedicalImage = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Тасвирлар <span className="text-red-500">*</span>
+                      Файллар (Расм, PDF, Word, Excel, RTF, MDFX) <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <div className="space-y-3">
@@ -378,12 +378,13 @@ export const NewMedicalImage = ({
                             disabled={isUploading}
                           >
                             <Upload className="mr-2 h-4 w-4" />
-                            {isUploading ? "Юкланмоқда..." : "Файл танланг (расм, PDF, Word ва б.)"}
+                            {isUploading ? "Юкланмоқда..." : "Файл танланг (расм, PDF, Word, Excel, RTF, MDFX)"}
                           </Button>
                           <input
                             id="image-upload"
                             type="file"
                             multiple
+                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.rtf,.mdfx"
                             className="hidden"
                             onChange={(e) => handleFileUpload(e.target.files)}
                           />

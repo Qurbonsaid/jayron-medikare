@@ -14,20 +14,19 @@ import {
   PillBottle,
   ScanLine,
   Settings,
+  Shield,
   Stethoscope,
   TestTube,
   User,
   Users,
   Wallet,
 } from 'lucide-react';
-import { RoleConstants } from './Roles';
-import { RoutePermissions } from './route-permissions';
 
 export interface MenuItem {
   title: string;
   url: string;
   icon: LucideIcon;
-  roles: RoleConstants[];
+  permission: string | null;
 }
 
 export interface MenuCategory {
@@ -37,7 +36,7 @@ export interface MenuCategory {
   items: MenuItem[];
 }
 
-export const baseMenuCategories: MenuCategory[] = [
+export const menuCategories: MenuCategory[] = [
   {
     id: 'patients',
     title: 'БЕМОРЛАР',
@@ -47,7 +46,7 @@ export const baseMenuCategories: MenuCategory[] = [
         title: 'Беморлар рўйхати',
         url: '/patients',
         icon: List,
-        roles: [],
+        permission: 'patient',
       },
     ],
   },
@@ -60,37 +59,37 @@ export const baseMenuCategories: MenuCategory[] = [
         title: 'Янги кўрик',
         url: '/new-visit',
         icon: FileEdit,
-        roles: [],
+        permission: 'examination',
       },
       {
         title: 'Кўриклар',
         url: '/examinations',
         icon: Calendar,
-        roles: [],
+        permission: 'examination',
       },
       {
         title: 'Рецепт ёзиш',
         url: '/prescription',
         icon: Pill,
-        roles: [],
+        permission: 'prescription',
       },
       {
         title: 'Касалликлар',
         url: '/disease',
         icon: HeartPulse,
-        roles: [],
+        permission: 'diagnosis',
       },
       {
         title: 'Хизматлар',
         url: '/service',
         icon: ClipboardCheck,
-        roles: [],
+        permission: 'service_type',
       },
       {
         title: 'Дори-дармонлар',
         url: '/medication',
         icon: PillBottle,
-        roles: [],
+        permission: 'medication',
       },
     ],
   },
@@ -100,28 +99,28 @@ export const baseMenuCategories: MenuCategory[] = [
     icon: Microscope,
     items: [
       {
-        title: 'Tаҳлил тури яратиш',
+        title: 'Диагностика қўшиш',
         url: '/add-diagnostika',
         icon: CirclePlus,
-        roles: [],
+        permission: 'analysis',
       },
       {
         title: 'Таҳлил буюртмаси',
         url: '/lab-order',
         icon: TestTube,
-        roles: [],
+        permission: 'patient_analysis',
       },
       {
         title: 'Таҳлил натижалари',
         url: '/lab-results',
         icon: ClipboardCheck,
-        roles: [],
+        permission: 'patient_analysis',
       },
       {
         title: 'Рентген/МРТ/КТ',
         url: '/radiology',
         icon: ScanLine,
-        roles: [],
+        permission: 'medical_image',
       },
     ],
   },
@@ -134,25 +133,25 @@ export const baseMenuCategories: MenuCategory[] = [
         title: 'Стационар календари',
         url: '/inpatient-calendar',
         icon: CalendarDays,
-        roles: [],
+        permission: 'booking',
       },
       {
         title: 'Стационар бошқаруви',
         url: '/inpatient',
         icon: BedDouble,
-        roles: [],
+        permission: 'corpus',
       },
       {
         title: 'Дори va lichenya Бериsh',
         url: '/medicine',
         icon: Pill,
-        roles: [],
+        permission: 'medication',
       },
       {
         title: 'Кунлик кўрик',
         url: '/daily-checkup',
         icon: ClipboardCheck,
-        roles: [],
+        permission: 'daily_checkup',
       },
     ],
   },
@@ -165,7 +164,7 @@ export const baseMenuCategories: MenuCategory[] = [
         title: 'Ҳисоб-китоб',
         url: '/billing',
         icon: Wallet,
-        roles: [],
+        permission: 'billing',
       },
     ],
   },
@@ -178,13 +177,13 @@ export const baseMenuCategories: MenuCategory[] = [
         title: 'Ҳисоботлар',
         url: '/reports',
         icon: BarChart3,
-        roles: [],
+        permission: 'reports',
       },
     ],
   },
 ];
 
-export const baseSystemMenu: MenuCategory = {
+export const systemMenu: MenuCategory = {
   id: 'system',
   title: 'ТИЗИМ',
   icon: Settings,
@@ -193,38 +192,14 @@ export const baseSystemMenu: MenuCategory = {
       title: 'Созламалар',
       url: '/settings',
       icon: Settings,
-      roles: [],
+      permission: 'ceo_only',
     },
+    { title: 'Профил', url: '/profile', icon: User, permission: null }, // har kim ko'ra oladi
     {
-      title: 'Профил',
-      url: '/profile',
-      icon: User,
-      roles: [], // har kim ko'ra oladi
+      title: 'Рухсатлар',
+      url: '/permissions',
+      icon: Shield,
+      permission: 'ceo_only',
     },
   ],
 };
-
-const selectPermission = (path: string): RoleConstants[] => {
-  return (
-    RoutePermissions.find((el) => el.path === path && el.method === 'GET')
-      ?.roles || []
-  );
-};
-
-export const systemMenu: MenuCategory = {
-  ...baseSystemMenu,
-  items: baseSystemMenu.items.map((item) => ({
-    ...item,
-    roles: selectPermission(item.url),
-  })),
-};
-
-export const menuCategories: MenuCategory[] = baseMenuCategories.map(
-  (category) => ({
-    ...category,
-    items: category.items.map((item) => ({
-      ...item,
-      roles: selectPermission(item.url),
-    })),
-  })
-);

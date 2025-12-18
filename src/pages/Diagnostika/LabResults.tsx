@@ -1,18 +1,13 @@
-import { useGetAllDiagnosticsQuery } from '@/app/api/diagnostic/diagnosticApi'
+import { useState, useEffect } from 'react'
 import {
 	useGetAllPatientAnalysisQuery,
 	useGetPatientAnalysisByIdQuery,
 } from '@/app/api/patientAnalysisApi/patientAnalysisApi'
+import { useGetDiagnosticByIdQuery } from '@/app/api/diagnostic/diagnosticApi'
 import { useGetAllPatientQuery } from '@/app/api/patientApi/patientApi'
-import { useRouteActions } from '@/hooks/RBS'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useGetAllDiagnosticsQuery } from '@/app/api/diagnostic/diagnosticApi'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
 	Select,
@@ -21,22 +16,29 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 
+import { CheckCircle, Clock, FileText, Loader2, X } from 'lucide-react'
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
-	DialogTitle
+	DialogTitle,
 } from '@/components/ui/dialog'
-import { AlertTriangle, CheckCircle, Clock, FileText, Loader2 } from 'lucide-react'
 // import { GetByIdRes } from '@/app/api/patientAnalysisApi/types'
 
 // --- fayl boshida importlarga qo'shing:
 import { useUpdatePatientAnalysisMutation } from '@/app/api/patientAnalysisApi/patientAnalysisApi'
+import type { UpdateReq } from '@/app/api/patientAnalysisApi/types' // agar export qilsangiz
+import { PATHS } from '@/app/api/patientAnalysisApi/path'
 
 enum ExamLevel {
 	ODDIY = 'ODDIY',
@@ -145,12 +147,9 @@ interface GetByIdResults {
 	}
 	analysis_parameter_value: number | string
 	_id: string
-	error?: boolean
 }
 
 const LabResults = () => {
-	const navigate = useNavigate()
-	const { canRead, canUpdate } = useRouteActions('/lab-results')
 	const [filters, setFilters] = useState<Filters>({ page: 1, limit: 10 })
 	const [isModalOpen, setIsModalOpen] = useState(false)
 	const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
@@ -263,7 +262,7 @@ const LabResults = () => {
 				}
 			})
 
-			const body = {
+			const body: UpdateReq = {
 				results: resultsPayload,
 				status: ExamStatus.COMPLETED, // talab qilindingizdek
 				level:
@@ -277,7 +276,7 @@ const LabResults = () => {
 			// yuborish
 			const res = await updatePatientAnalysis({
 				id: selectedOrderId,
-				body: body as any,
+				body,
 			}).unwrap()
 			setShowErrors(false)
 
@@ -394,10 +393,12 @@ const LabResults = () => {
 				error: false, // 🔥 validation uchun qo‘shdik
 			}))
 
-			setTestParameters(cleaned as any)
+			setTestParameters(cleaned)
 			setComments(diagnosticData.data.comment ?? '')
 		}
 	}, [diagnosticData])
+
+	const patientGender = diagnosticData?.data?.patient?.gender
 
 	const getGenderRange = (param: GetByIdResults) => {
 		const range = param.analysis_parameter_type.normal_range
@@ -411,28 +412,10 @@ const LabResults = () => {
 		}
 
 		// MALE_FEMALE bo‘lsa patient genderga qarab
-		const gender = diagnosticData?.data?.patient?.gender
-		if (gender === 'male') return range.male
-		if (gender === 'female') return range.female
+		if (patientGender === 'male') return range.male
+		if (patientGender === 'female') return range.female
 
 		return range.general
-	}
-
-	if (!canRead) {
-		return (
-			<div className='min-h-screen bg-background flex items-center justify-center p-4'>
-				<Card className='p-8 max-w-md w-full text-center'>
-					<AlertTriangle className='w-12 h-12 text-warning mx-auto mb-4' />
-					<h2 className='text-xl font-bold mb-2'>Рухсат йўқ</h2>
-					<p className='text-muted-foreground mb-6'>
-						Сизда ушбу саҳифани кўриш учун рухсат йўқ.
-					</p>
-					<Button onClick={() => navigate('/patients')} className='w-full'>
-						Орқага қайтиш
-					</Button>
-				</Card>
-			</div>
-		)
 	}
 
 	if (isFetching) {
@@ -698,8 +681,9 @@ const LabResults = () => {
 											{testParameters.map((param, i) => {
 												const flag =
 													param.analysis_parameter_value &&
+													patientGender &&
 													(() => {
-														const r = getGenderRange(param)
+														const r = getGenderRange(param, patientGender)
 														if (!r) return null
 														return calculateFlag(
 															param.analysis_parameter_value.toString(),
@@ -758,7 +742,7 @@ const LabResults = () => {
 														</td>
 														<td className='px-2 py-2'>
 															{(() => {
-																const r = getGenderRange(param)
+																const r = getGenderRange(param, patientGender)
 																if (!r) return '-'
 
 																if (r.value) return r.value // STRING holati
@@ -785,8 +769,9 @@ const LabResults = () => {
 									{testParameters.map((param, i) => {
 										const flag =
 											param.analysis_parameter_value &&
+											patientGender &&
 											(() => {
-												const r = getGenderRange(param)
+												const r = getGenderRange(param, patientGender)
 												if (!r) return null
 												return calculateFlag(
 													param.analysis_parameter_value.toString(),
@@ -859,7 +844,7 @@ const LabResults = () => {
 													<span>
 														Меъёр:{' '}
 														{(() => {
-															const r = getGenderRange(param)
+															const r = getGenderRange(param, patientGender)
 															if (!r) return '-'
 
 															if (r.value) return r.value // STRING holati
@@ -898,17 +883,15 @@ const LabResults = () => {
 									>
 										Бекор қилиш
 									</Button>
-									{canUpdate && (
-										<Button
-											onClick={handleSubmitResults}
-											className='bg-green-600 text-white'
-											disabled={isUpdating}
-										>
-											{diagnosticData?.data?.status === ExamStatus.COMPLETED
-												? 'Таҳрирлаш'
-												: 'Сақлаш'}
-										</Button>
-									)}
+									<Button
+										onClick={handleSubmitResults}
+										className='bg-green-600 text-white'
+										disabled={isUpdating}
+									>
+										{diagnosticData?.data?.status === ExamStatus.COMPLETED
+											? 'Таҳрирлаш'
+											: 'Сақлаш'}
+									</Button>
 								</DialogFooter>
 							</>
 						)}

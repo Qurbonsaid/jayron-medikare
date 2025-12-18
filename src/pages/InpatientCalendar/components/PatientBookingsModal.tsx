@@ -95,49 +95,49 @@ export const PatientBookingsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden">
+      <DialogContent className="max-w-2xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16 px-6">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4 sm:px-6">
             <LoadingSpinner size="lg" />
-            <p className="text-sm text-muted-foreground mt-4">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-4">
               Маълумотлар юкланмоқда...
             </p>
           </div>
         ) : error ? (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-sm">
                 Маълумотларни юклашда хатолик юз берди. Илтимос, қайтадан уриниб кўринг.
               </AlertDescription>
             </Alert>
-            <DialogFooter className="mt-6">
-              <Button variant="outline" onClick={handleClose} className="w-full">
+            <DialogFooter className="mt-4 sm:mt-6">
+              <Button variant="outline" onClick={handleClose} className="w-full text-sm sm:text-base">
                 Ёпиш
               </Button>
             </DialogFooter>
           </div>
         ) : !latestBooking ? (
-          <div className="p-6">
-            <DialogHeader className="space-y-3">
-              <DialogTitle className="text-xl flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
+          <div className="p-4 sm:p-6">
+            <DialogHeader className="space-y-2 sm:space-y-3">
+              <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                 Бронлар
               </DialogTitle>
             </DialogHeader>
-            <Card className="p-8 text-center mt-6">
-              <div className="flex flex-col items-center gap-4 text-muted-foreground">
-                <Calendar className="w-16 h-16 opacity-40" />
-                <div className="space-y-2">
-                  <p className="text-lg font-semibold">Бронь топилмади</p>
-                  <p className="text-sm">
+            <Card className="p-6 sm:p-8 text-center mt-4 sm:mt-6">
+              <div className="flex flex-col items-center gap-3 sm:gap-4 text-muted-foreground">
+                <Calendar className="w-12 h-12 sm:w-16 sm:h-16 opacity-40" />
+                <div className="space-y-1 sm:space-y-2">
+                  <p className="text-base sm:text-lg font-semibold">Бронь топилмади</p>
+                  <p className="text-xs sm:text-sm">
                     Бу беморнинг ҳозирча бирорта ҳам брони йўқ
                   </p>
                 </div>
               </div>
             </Card>
-            <DialogFooter className="mt-6">
-              <Button variant="outline" onClick={handleClose} className="w-full">
+            <DialogFooter className="mt-4 sm:mt-6">
+              <Button variant="outline" onClick={handleClose} className="w-full text-sm sm:text-base">
                 Ёпиш
               </Button>
             </DialogFooter>
@@ -145,21 +145,21 @@ export const PatientBookingsModal = ({
         ) : (
           <div className="flex flex-col">
             {/* Header - Patient Info */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <User className="w-7 h-7" />
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 sm:p-6">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <User className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   {patientInfo && (
                     <>
-                      <h2 className="text-xl font-bold">{patientInfo.fullname}</h2>
-                      <p className="text-blue-100 text-sm mt-1">
+                      <h2 className="text-lg sm:text-xl font-bold break-words">{patientInfo.fullname}</h2>
+                      <p className="text-blue-100 text-xs sm:text-sm mt-1">
                         {formatPhoneNumber(patientInfo.phone)}
                       </p>
                     </>
                   )}
-                  <Badge className="mt-3 bg-white/20 hover:bg-white/30 text-white border-0">
+                  <Badge className="mt-2 sm:mt-3 bg-white/20 hover:bg-white/30 text-white border-0 text-xs sm:text-sm">
                     {latestBooking.status === "active" ? "Одам бор" : "Бронланган"}
                   </Badge>
                 </div>
@@ -167,19 +167,19 @@ export const PatientBookingsModal = ({
             </div>
 
             {/* Content - Booking Details */}
-            <div className="p-6 space-y-6">
-              <div className="space-y-4">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Date Range */}
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-5 h-5 text-blue-600" />
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Бронь муддати</p>
-                    <p className="font-semibold text-base mt-1">
-                      {format(parseISO(latestBooking.start_at), "d MMMM yyyy", { locale: uz })}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground">Бронь муддати</p>
+                    <p className="font-semibold text-sm sm:text-base mt-0.5 sm:mt-1 break-words">
+                      {format(parseISO(latestBooking.start_at), "d MMM yyyy", { locale: uz })}
                       {" — "}
-                      {format(parseISO(latestBooking.end_at), "d MMMM yyyy", { locale: uz })}
+                      {format(parseISO(latestBooking.end_at), "d MMM yyyy", { locale: uz })}
                     </p>
                   </div>
                 </div>
@@ -187,16 +187,16 @@ export const PatientBookingsModal = ({
                 <Separator />
 
                 {/* Location Info */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {/* Corpus */}
                   {typeof latestBooking.corpus_id === "object" && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-green-50 dark:bg-green-950/20 flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-5 h-5 text-green-600" />
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-green-50 dark:bg-green-950/20 flex items-center justify-center flex-shrink-0">
+                        <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground">Корпус</p>
-                        <p className="font-semibold text-base mt-1">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm text-muted-foreground">Корпус</p>
+                        <p className="font-semibold text-sm sm:text-base mt-0.5 sm:mt-1 break-words">
                           {latestBooking.corpus_id.corpus_number}-корпус
                         </p>
                       </div>
@@ -205,13 +205,13 @@ export const PatientBookingsModal = ({
 
                   {/* Room */}
                   {typeof latestBooking.room_id === "object" && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-950/20 flex items-center justify-center flex-shrink-0">
-                        <Home className="w-5 h-5 text-purple-600" />
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-purple-50 dark:bg-purple-950/20 flex items-center justify-center flex-shrink-0">
+                        <Home className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground">Хона</p>
-                        <p className="font-semibold text-base mt-1">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm text-muted-foreground">Хона</p>
+                        <p className="font-semibold text-sm sm:text-base mt-0.5 sm:mt-1 break-words">
                           {latestBooking.room_id.room_name}
                         </p>
                       </div>
@@ -221,29 +221,29 @@ export const PatientBookingsModal = ({
 
                 <Separator />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {/* Bed Number */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-950/20 flex items-center justify-center flex-shrink-0">
-                      <Bed className="w-5 h-5 text-amber-600" />
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-amber-50 dark:bg-amber-950/20 flex items-center justify-center flex-shrink-0">
+                      <Bed className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">Жой рақами</p>
-                      <p className="font-semibold text-base mt-1">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Жой рақами</p>
+                      <p className="font-semibold text-sm sm:text-base mt-0.5 sm:mt-1">
                         {latestBooking?.bed_number || 0}-жой
                       </p>
                     </div>
                   </div>
 
                   {/* Created Date */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-950/20 flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-5 h-5 text-gray-600" />
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-950/20 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">Яратилган вақт</p>
-                      <p className="text-sm mt-1 text-muted-foreground">
-                        {format(parseISO(latestBooking.created_at), "d MMMM yyyy, HH:mm", { locale: uz })}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Яратилган вақт</p>
+                      <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-muted-foreground break-words">
+                        {format(parseISO(latestBooking.created_at), "d MMM yyyy, HH:mm", { locale: uz })}
                       </p>
                     </div>
                   </div>
@@ -252,13 +252,13 @@ export const PatientBookingsModal = ({
                 <Separator />
 
                 {/* Note */}
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-950/20 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5 text-slate-600" />
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-50 dark:bg-slate-950/20 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Изоҳ</p>
-                    <p className="text-sm mt-1 text-muted-foreground leading-relaxed">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground">Изоҳ</p>
+                    <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-muted-foreground leading-relaxed break-words">
                       {latestBooking?.note || "berilmagan"}
                     </p>
                   </div>
@@ -268,19 +268,19 @@ export const PatientBookingsModal = ({
             </div>
 
             {/* Footer - Actions */}
-            <div className="border-t bg-muted/30 p-6">
-              <div className="flex flex-col sm:flex-row gap-3">
+            <div className="border-t bg-muted/30 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <Button
                   onClick={handleViewBooking}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-sm sm:text-base"
                 >
-                  <Eye className="w-4 h-4 mr-2" />
+                  <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
                   Календарда кўриш
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleClose}
-                  className="flex-1 sm:flex-none"
+                  className="flex-1 sm:flex-none text-sm sm:text-base"
                 >
                   Ёпиш
                 </Button>
