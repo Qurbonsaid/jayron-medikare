@@ -1,6 +1,6 @@
 import { useMeQuery } from '@/app/api/authApi/authApi';
-import { useGetPermissionByRoleQuery } from '@/app/api/permissionApi/permissionApi';
 import { RoleConstants } from '@/constants/Roles';
+import { hasRouteAccess } from '@/constants/route-permissions';
 
 interface PermissionsResult {
   permissions: Record<
@@ -17,15 +17,83 @@ interface PermissionsResult {
   isCEO: boolean;
 }
 
+// Collection name to route path mapping
+const collectionToRouteMap: Record<
+  string,
+  { read: string; create: string; update: string; delete: string }
+> = {
+  patients: {
+    read: '/patients',
+    create: '/patients',
+    update: '/patient/:id',
+    delete: '/patient/:id',
+  },
+  patient: {
+    read: '/patients',
+    create: '/patients',
+    update: '/patient/:id',
+    delete: '/patient/:id',
+  },
+  examination: {
+    read: '/examinations',
+    create: '/new-visit',
+    update: '/examination/:id',
+    delete: '/examination/:id',
+  },
+  medication: {
+    read: '/medication',
+    create: '/medication',
+    update: '/medication/:id',
+    delete: '/medication/:id',
+  },
+  disease: {
+    read: '/disease',
+    create: '/disease',
+    update: '/disease/:id',
+    delete: '/disease/:id',
+  },
+  service: {
+    read: '/service',
+    create: '/service',
+    update: '/service/:id',
+    delete: '/service/:id',
+  },
+  diagnostic: {
+    read: '/diagnostic',
+    create: '/diagnostic',
+    update: '/diagnostic/:id',
+    delete: '/diagnostic/:id',
+  },
+  billing: {
+    read: '/billing',
+    create: '/billing',
+    update: '/billing/:id',
+    delete: '/billing/:id',
+  },
+  inpatient: {
+    read: '/rooms',
+    create: '/rooms',
+    update: '/room/:id',
+    delete: '/room/:id',
+  },
+  appointments: {
+    read: '/appointments',
+    create: '/appointments',
+    update: '/appointments/:id',
+    delete: '/appointments/:id',
+  },
+  permissions: {
+    read: '/settings',
+    create: '/settings',
+    update: '/settings',
+    delete: '/settings',
+  },
+};
+
 export const usePermissions = (): PermissionsResult => {
   const { data: userData, isLoading: userLoading } = useMeQuery();
-  const userRole = userData?.data?.role;
+  const userRole = userData?.data?.role as RoleConstants | undefined;
   const isCEO = userRole === RoleConstants.CEO;
-
-  const { data: permissionData, isLoading: permissionLoading } =
-    useGetPermissionByRoleQuery(userRole!, { skip: !userRole || isCEO });
-
-  const isLoading = userLoading || (!isCEO && permissionLoading);
 
   // CEO has all permissions
   if (isCEO) {
@@ -37,19 +105,16 @@ export const usePermissions = (): PermissionsResult => {
     };
   }
 
-  if (isLoading || !permissionData?.data) {
+  if (!userRole) {
     return {
       permissions: {},
-      isLoading,
+      isLoading: userLoading,
       canRead: () => false,
       isCEO: false,
     };
   }
 
-  // API data ni to'g'ridan-to'g'ri object yoki array sifatida qaytarishi mumkin
-  const rolePermission = Array.isArray(permissionData.data)
-    ? permissionData.data[0]
-    : permissionData.data;
+  // Build permissions object from route-permissions.ts
   const permissions: Record<
     string,
     {
@@ -60,12 +125,16 @@ export const usePermissions = (): PermissionsResult => {
     }
   > = {};
 
-  rolePermission?.permissions?.forEach((p) => {
-    permissions[p.collection_name.toLowerCase()] = {
-      canRead: p.read ?? false,
-      canCreate: p.create ?? false,
-      canUpdate: p.update ?? false,
-      canDelete: p.delete ?? false,
+  // Generate permissions for all collections in the mapping
+  Object.keys(collectionToRouteMap).forEach((collectionName) => {
+    const routes = collectionToRouteMap[collectionName];
+    const normalizedName = collectionName.toLowerCase();
+
+    permissions[normalizedName] = {
+      canRead: hasRouteAccess(routes.read, userRole, 'GET'),
+      canCreate: hasRouteAccess(routes.create, userRole, 'POST'),
+      canUpdate: hasRouteAccess(routes.update, userRole, 'PUT'),
+      canDelete: hasRouteAccess(routes.delete, userRole, 'DELETE'),
     };
   });
 
@@ -77,7 +146,7 @@ export const usePermissions = (): PermissionsResult => {
 
   return {
     permissions,
-    isLoading,
+    isLoading: false,
     canRead,
     isCEO: false,
   };

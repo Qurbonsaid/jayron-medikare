@@ -24,7 +24,6 @@ import { RoomCalendar, RoomsList } from './pages/InpatientCalendar';
 import Medicine from './pages/Medicine/Medicine';
 import RoomDetail from './pages/RoomDetail/RoomDetail';
 import Rooms from './pages/Rooms/Rooms';
-import Permissions from './pages/Tizim/Permissions';
 import Profil from './pages/Tizim/Profil';
 import DailyCheckup from './pages/DailyCheckup/DailyCheckup'
 
@@ -102,7 +101,6 @@ export const routers: RouteConfig[] = [
   { path: '/reports', element: <Reports />, permission: 'reports' },
   { path: '/settings', element: <Settings />, permission: 'ceo_only' },
   { path: '/profile', element: <Profil />, permission: null },
-  { path: '/permissions', element: <Permissions />, permission: 'ceo_only' },
   { path: '/patient-portal', element: <PatientPortal />, permission: null },
 ];
 
