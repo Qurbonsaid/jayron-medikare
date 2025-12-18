@@ -195,11 +195,5 @@ export const systemMenu: MenuCategory = {
       permission: 'ceo_only',
     },
     { title: 'Профил', url: '/profile', icon: User, permission: null }, // har kim ko'ra oladi
-    {
-      title: 'Рухсатлар',
-      url: '/permissions',
-      icon: Shield,
-      permission: 'ceo_only',
-    },
   ],
 };
