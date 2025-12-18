@@ -20,13 +20,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatDate } from "date-fns";
-import { Image as ImageIcon, Maximize2, Minimize2 } from "lucide-react";
+import { Image as ImageIcon, Maximize2, Minimize2, Download } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { BodyPartConstants } from "@/constants/BodyPart";
 import { useGetOneMedicalImageQuery } from "@/app/api/radiologyApi";
 import { SERVER_URL } from "@/constants/ServerUrl";
 import { formatPhoneNumber } from "@/lib/utils";
-import { getFileTypeInfo, getFileIcon } from "@/lib/fileTypeUtils";
+import { getFileTypeInfo, getFileIcon, downloadFile } from "@/lib/fileTypeUtils";
 import { PDFViewer } from "./viewers/PDFViewer";
 import { WordViewer } from "./viewers/WordViewer";
 import { ExcelViewer } from "./viewers/ExcelViewer";
@@ -96,6 +96,15 @@ export const ViewMedicalImage = ({
   useEffect(() => {
     handleResetView();
   }, [selectedImageIndex]);
+
+  // Reset when modal opens/closes or medicalImage changes
+  useEffect(() => {
+    if (open) {
+      // Modal ochilganda 0-indeksdan boshlash
+      setSelectedImageIndex(0);
+      handleResetView();
+    }
+  }, [open, medicalImage?._id]);
 
   // Keyboard navigation handler
   useEffect(() => {
@@ -425,6 +434,18 @@ export const ViewMedicalImage = ({
                     title="Reset View"
                   >
                     Қайта
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 p-0"
+                    onClick={() => downloadFile(
+                      getImageUrl(medicalImage.image_paths[selectedImageIndex]),
+                      medicalImage.image_paths[selectedImageIndex].split('/').pop()
+                    )}
+                    title="Расмни юклаб олиш"
+                  >
+                    <Download className="h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"
