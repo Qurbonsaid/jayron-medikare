@@ -1,57 +1,67 @@
-import { Room } from '@/app/api/examinationApi/types';
-import { formatCurrency } from './BillingBadge';
+import { useGetOneRoomQuery } from '@/app/api/roomApi/roomApi';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface Props {
-  room: Room;
+  roomId: string;
+  checkInDate?: string;
+  checkOutDate?: string;
+  days?: number;
   isMobile?: boolean;
 }
 
-export const RoomItem = ({ isMobile, room }: Props) => {
-  console.log(room);
+export const RoomItem = ({
+  roomId,
+  checkInDate,
+  checkOutDate,
+  days,
+  isMobile = false,
+}: Props) => {
+  const { data, isLoading } = useGetOneRoomQuery({ id: roomId });
 
-  const days = Math.ceil(
-    (new Date(room?.end_date || room?.estimated_leave_time).getTime() -
-      new Date(room?.start_date).getTime()) /
-      (1000 * 60 * 60 * 24)
-  );
+  if (isLoading) {
+    return (
+      <div className='py-3 px-4 text-center'>
+        <LoadingSpinner className='w-4 h-4 mx-auto' />
+      </div>
+    );
+  }
 
-  const totalPrice = days ? room?.room_price * days : room?.room_price;
+  if (!data?.data) {
+    return null;
+  }
+
+  const room = data.data;
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
+  };
+
+  const totalPrice = days ? room.room_price * days : room.room_price;
 
   if (isMobile) {
     return (
       <div className='p-4 border-b last:border-0'>
         <div className='space-y-2'>
           <div className='flex justify-between'>
-            <span className='font-semibold text-sm'>
-              {room?.room_name || ''}
-            </span>
+            <span className='font-semibold text-sm'>{room.room_name}</span>
             <span className='text-xs px-2 py-1 rounded-md bg-muted'>
-              {room?.status || 'active'}
+              {room.status}
             </span>
           </div>
           <div className='grid grid-cols-2 gap-2 text-xs'>
-            {room?.start_date && (
+            {checkInDate && (
               <div>
                 <span className='text-muted-foreground'>Кириш:</span>
                 <div className='font-medium'>
-                  {new Date(room?.start_date).toLocaleDateString('uz-UZ')}
+                  {new Date(checkInDate).toLocaleDateString('uz-UZ')}
                 </div>
               </div>
             )}
-            {room?.end_date ? (
+            {checkOutDate && (
               <div>
                 <span className='text-muted-foreground'>Чиқиш:</span>
                 <div className='font-medium'>
-                  {new Date(room.end_date).toLocaleDateString('uz-UZ')}
-                </div>
-              </div>
-            ) : (
-              <div>
-                <span className='text-muted-foreground'>Чиқиш:</span>
-                <div className='font-medium'>
-                  {new Date(room?.estimated_leave_time).toLocaleDateString(
-                    'uz-UZ'
-                  )}
+                  {new Date(checkOutDate).toLocaleDateString('uz-UZ')}
                 </div>
               </div>
             )}
@@ -75,32 +85,21 @@ export const RoomItem = ({ isMobile, room }: Props) => {
 
   return (
     <tr className='border-b last:border-0'>
-      <td className='py-3 px-4 text-sm'>{room?.room_name}</td>
-      <td className='py-3 px-4 text-sm text-center'>
+      <td className='py-3 px-4 text-sm'>{room.room_name}</td>
+      <td className='py-3 px-4 text-sm'>
         <span className='inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-muted'>
-          {room?.status || 'active'}
+          {room.status}
         </span>
       </td>
-      <td className='py-3 px-4 text-sm text-muted-foreground text-center'>
-        {room?.start_date
-          ? new Date(room.start_date).toLocaleDateString('uz-UZ')
+      <td className='py-3 px-4 text-sm text-muted-foreground'>
+        {checkInDate ? new Date(checkInDate).toLocaleDateString('uz-UZ') : '-'}
+      </td>
+      <td className='py-3 px-4 text-sm text-muted-foreground'>
+        {checkOutDate
+          ? new Date(checkOutDate).toLocaleDateString('uz-UZ')
           : '-'}
       </td>
-      {room?.end_date ? (
-        <td className='py-3 px-4 text-sm text-muted-foreground text-center'>
-          {new Date(room?.end_date).toLocaleDateString('uz-UZ')}
-        </td>
-      ) : room?.estimated_leave_time ? (
-        <td className='py-3 px-4 text-sm text-muted-foreground text-center'>
-          <span className=' bg-orange-500 p-2 rounded-lg text-white'>{new Date(room?.estimated_leave_time).toLocaleDateString('uz-UZ')}</span>
-        </td>
-      ) : (
-        <td className='py-3 px-4 text-sm text-muted-foreground text-center'>
-          -
-        </td>
-      )}
-
-      <td className='py-3 px-4 text-sm text-center'>{days > 0 || '-'}</td>
+      <td className='py-3 px-4 text-sm text-center'>{days || '-'}</td>
       <td className='py-3 px-4 text-sm text-right font-semibold'>
         {formatCurrency(totalPrice)}
       </td>

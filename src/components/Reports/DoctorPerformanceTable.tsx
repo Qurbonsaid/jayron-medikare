@@ -1,10 +1,8 @@
 import { REPORT_DATE_FILTER } from '@/app/api/report/types'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { ChevronLeft, ChevronRight, Stethoscope } from 'lucide-react'
-import { useState } from 'react'
+import { Stethoscope } from 'lucide-react'
 import { DateRangeFilter } from './DateRangeFilter'
 
 interface DoctorPerformanceTableProps {
@@ -32,9 +30,6 @@ export const DoctorPerformanceTable = ({
 	interval,
 	onIntervalChange,
 }: DoctorPerformanceTableProps) => {
-	const [currentPage, setCurrentPage] = useState(1)
-	const itemsPerPage = 10
-
 	const formatDate = (year: number, month?: number, day?: number) => {
 		if (day) return `${day}.${month}.${year}`
 		if (month) return `${month}.${year}`
@@ -57,18 +52,6 @@ export const DoctorPerformanceTable = ({
 		return b.totalExaminations - a.totalExaminations
 	})
 
-	// Calculate pagination
-	const totalPages = Math.ceil(sortedData.length / itemsPerPage)
-	const startIndex = (currentPage - 1) * itemsPerPage
-	const endIndex = startIndex + itemsPerPage
-	const paginatedData = sortedData.slice(startIndex, endIndex)
-
-	// Reset to page 1 when data changes
-	const handleIntervalChange = (newInterval: REPORT_DATE_FILTER) => {
-		setCurrentPage(1)
-		onIntervalChange(newInterval)
-	}
-
 	if (isLoading) {
 		return (
 			<Card className='p-6 flex items-center justify-center h-[400px]'>
@@ -85,7 +68,7 @@ export const DoctorPerformanceTable = ({
 					Шифокорлар фаолияти
 				</h3>
 				<div className='w-full sm:w-48'>
-					<DateRangeFilter value={interval} onChange={handleIntervalChange} />
+					<DateRangeFilter value={interval} onChange={onIntervalChange} />
 				</div>
 			</div>
 			<div className='overflow-x-auto'>
@@ -107,7 +90,7 @@ export const DoctorPerformanceTable = ({
 						</tr>
 					</thead>
 					<tbody>
-						{paginatedData.map((item, index) => (
+						{sortedData.map((item, index) => (
 							<tr
 								key={index}
 								className='border-b hover:bg-muted/50 transition-colors'
@@ -143,39 +126,6 @@ export const DoctorPerformanceTable = ({
 					</div>
 				)}
 			</div>
-
-			{/* Pagination Controls */}
-			{sortedData.length > 0 && totalPages > 1 && (
-				<div className='flex items-center justify-between mt-4 pt-4 border-t'>
-					<p className='text-sm text-muted-foreground'>
-						Жами: {sortedData.length} та шифокор
-					</p>
-					<div className='flex items-center gap-2'>
-						<Button
-							variant='outline'
-							size='sm'
-							onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-							disabled={currentPage === 1}
-						>
-							<ChevronLeft className='w-4 h-4' />
-						</Button>
-						<span className='text-sm font-medium'>
-							{currentPage} / {totalPages}
-						</span>
-						<Button
-							variant='outline'
-							size='sm'
-							onClick={() =>
-								setCurrentPage(prev => Math.min(totalPages, prev + 1))
-							}
-							disabled={currentPage === totalPages}
-						>
-							<ChevronRight className='w-4 h-4' />
-						</Button>
-					</div>
-				</div>
-			)}
-			
 		</Card>
 	)
 }

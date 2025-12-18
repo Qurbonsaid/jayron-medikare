@@ -3,13 +3,13 @@ import {
   useGetAllExamsQuery,
   useGetOneExamQuery,
 } from '@/app/api/examinationApi/examinationApi';
-import type { Prescription } from '@/app/api/examinationApi/types';
-import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
-import { useGetPatientByIdQuery } from '@/app/api/patientApi/patientApi';
 import {
   useCreatePrescriptionMutation,
   useUpdatePrescriptionMutation,
 } from '@/app/api/prescription/prescriptionApi';
+import type { Prescription } from '@/app/api/examinationApi/types';
+import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
+import { useGetPatientByIdQuery } from '@/app/api/patientApi/patientApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -25,17 +25,16 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { format } from 'date-fns';
 import {
-  Activity,
   AlertCircle,
+  Calendar,
   Edit,
   Loader2,
   Plus,
   Trash2,
   X,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -57,8 +56,9 @@ interface ServiceDay {
 interface ServiceItem {
   id: string;
   service_id: string;
+  duration: number;
   notes: string;
-  markedDays: number[]; // Array of day numbers that are marked
+  days: ServiceDay[];
 }
 
 interface ValidationErrors {
@@ -93,16 +93,6 @@ const Prescription = () => {
     services: {},
   });
   const [serviceSearch, setServiceSearch] = useState('');
-  const [debouncedServiceSearch, setDebouncedServiceSearch] = useState('');
-  const [servicePage, setServicePage] = useState(1);
-  const [serviceOptions, setServiceOptions] = useState<any[]>([]);
-  const [hasMoreServices, setHasMoreServices] = useState(true);
-
-  // Common service settings
-  const [serviceDuration, setServiceDuration] = useState<number>(7);
-  const [serviceStartDate, setServiceStartDate] = useState<Date | null>(
-    new Date()
-  );
 
   // Prescription editing states
   const [editingPrescriptionId, setEditingPrescriptionId] = useState<
@@ -123,6 +113,8 @@ const Prescription = () => {
 
   // Medication search states
   const [medicationSearch, setMedicationSearch] = useState('');
+  const [selectedMedicationForNew, setSelectedMedicationForNew] =
+    useState<string>('');
 
   // Infinite scroll states
   const [page, setPage] = useState(1);
@@ -164,49 +156,12 @@ const Prescription = () => {
     search: medicationSearch || undefined,
   });
 
-  // Debounce service search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedServiceSearch(serviceSearch.trim());
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [serviceSearch]);
-
-  // Fetch services for search with paging
-  const { data: servicesData, isFetching: isFetchingServices } =
-    useGetAllServiceQuery({
-      page: servicePage,
-      limit: 20,
-      search: debouncedServiceSearch || undefined,
-    } as any);
-
-  // Reset paging when search changes
-  useEffect(() => {
-    setServicePage(1);
-    setServiceOptions([]);
-    setHasMoreServices(true);
-  }, [debouncedServiceSearch]);
-
-  // Append fetched services to options list
-  useEffect(() => {
-    if (servicesData?.data) {
-      setServiceOptions((prev) => {
-        const incoming = servicesData.data;
-        const merged = servicePage === 1 ? incoming : [...prev, ...incoming];
-        const seen = new Set<string>();
-        return merged.filter((s: any) => {
-          if (!s?._id) return false;
-          if (seen.has(s._id)) return false;
-          seen.add(s._id);
-          return true;
-        });
-      });
-
-      const pages = servicesData.pagination?.pages || 1;
-      const current = servicesData.pagination?.page || servicePage;
-      setHasMoreServices(current < pages);
-    }
-  }, [servicesData, servicePage]);
+  // Fetch services for search
+  const { data: servicesData } = useGetAllServiceQuery({
+    page: 1,
+    limit: 100,
+    search: serviceSearch,
+  } as any);
 
   const [createPrescription, { isLoading: isCreating }] =
     useCreatePrescriptionMutation();
@@ -215,8 +170,6 @@ const Prescription = () => {
   const [addServiceToExam, { isLoading: isAddingService }] =
     useAddServiceMutation();
   const handleRequest = useHandleRequest();
-
-  const availableServices = serviceOptions;
 
   // Update examinations list when new data arrives
   useEffect(() => {
@@ -371,44 +324,78 @@ const Prescription = () => {
 
   // Service handlers
   const addService = () => {
-    // Mark all days by default
-    const allDays = Array.from({ length: serviceDuration }, (_, i) => i + 1);
+    const defaultDuration = 7;
     const newService: ServiceItem = {
       id: Date.now().toString(),
       service_id: '',
+      duration: defaultDuration,
       notes: '',
-      markedDays: allDays,
+      days: Array.from({ length: defaultDuration }, (_, i) => ({
+        day: i + 1,
+        date: null,
+      })),
     };
     setServices([...services, newService]);
   };
 
-  // Generate days array based on duration and start date
-  const generateDays = (
-    duration: number,
-    startDate: Date | null
-  ): ServiceDay[] => {
-    return Array.from({ length: duration }, (_, i) => {
-      if (!startDate) {
-        return { day: i + 1, date: null };
-      }
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-      return { day: i + 1, date };
-    });
+  // Generate days array based on duration
+  const generateDays = (duration: number): ServiceDay[] => {
+    return Array.from({ length: duration }, (_, i) => ({
+      day: i + 1,
+      date: null,
+    }));
+  };
+
+  // Update service duration and regenerate days
+  const updateServiceDuration = (id: string, newDuration: number) => {
+    setServices(
+      services.map((srv) =>
+        srv.id === id
+          ? {
+              ...srv,
+              duration: newDuration,
+              days: generateDays(newDuration),
+            }
+          : srv
+      )
+    );
+  };
+
+  // Update a specific day's date
+  const updateServiceDayDate = (
+    serviceId: string,
+    dayIndex: number,
+    date: Date | null
+  ) => {
+    setServices(
+      services.map((srv) =>
+        srv.id === serviceId
+          ? {
+              ...srv,
+              days: srv.days.map((d, i) =>
+                i === dayIndex ? { ...d, date } : d
+              ),
+            }
+          : srv
+      )
+    );
   };
 
   const updateServiceField = (
     id: string,
     field: keyof ServiceItem,
-    value: string
+    value: string | number | ServiceDay[]
   ) => {
     setServices(
       services.map((srv) => (srv.id === id ? { ...srv, [field]: value } : srv))
     );
 
-    // Clear validation error
-    if (value.trim() !== '') {
-      if (field === 'service_id') {
+    // Clear validation error when user selects/types
+    if (
+      (typeof value === 'string' && value.trim() !== '') ||
+      (typeof value === 'number' && value > 0)
+    ) {
+      if (field === 'service_id' || field === 'duration') {
         setFormErrors((prev) => ({
           ...prev,
           services: {
@@ -427,155 +414,57 @@ const Prescription = () => {
     setServices(services.filter((srv) => srv.id !== id));
   };
 
-  const toggleDayMark = (serviceId: string, dayNumber: number) => {
-    setServices(
-      services.map((srv) => {
-        if (srv.id === serviceId) {
-          const markedDays = srv.markedDays || [];
-          if (markedDays.includes(dayNumber)) {
-            return {
-              ...srv,
-              markedDays: markedDays.filter((d) => d !== dayNumber),
-            };
-          } else {
-            return { ...srv, markedDays: [...markedDays, dayNumber] };
-          }
-        }
-        return srv;
-      })
-    );
-  };
-
-  const markEveryOtherDay = () => {
-    setServices(
-      services.map((srv) => {
-        const everyOtherDay = Array.from(
-          { length: serviceDuration },
-          (_, i) => i + 1
-        ).filter((day) => day % 2 === 1); // Mark odd days: 1, 3, 5, 7...
-        return { ...srv, markedDays: everyOtherDay };
-      })
-    );
-  };
-
-  const markEveryDay = () => {
-    setServices(
-      services.map((srv) => {
-        const allDays = Array.from(
-          { length: serviceDuration },
-          (_, i) => i + 1
-        ); // Mark all days: 1, 2, 3, 4...
-        return { ...srv, markedDays: allDays };
-      })
-    );
-  };
-
   const handlePrint = () => {
     window.print();
   };
 
-  // Dorilarni alohida saqlash
-  const handleSaveMedications = async () => {
+  const handleSavePrescription = async () => {
+    // Validate examination selection
     if (!selectedExaminationId) {
       toast.error('Илтимос, кўрикни танланг');
       return;
     }
 
-    if (medications.length === 0) {
-      toast.error('Илтимос, камида битта дори қўшинг');
+    // Validate that at least one medication or service is added
+    if (medications.length === 0 && services.length === 0) {
+      toast.error('Илтимос, камида битта дори ёки хизмат қўшинг');
       return;
     }
 
-    // Validate each medication
+    // Validate each medication and collect errors
     const medErrors: ValidationErrors = {};
+    const srvErrors: ServiceValidationErrors = {};
     let hasErrors = false;
 
     for (const med of medications) {
       medErrors[med.id] = {};
 
+      // Check if medication is selected
       if (!med.medication_id || med.medication_id.trim() === '') {
         medErrors[med.id].medication_id = true;
         hasErrors = true;
       }
 
+      // Check if frequency is selected
       if (!med.frequency || med.frequency.trim() === '') {
         medErrors[med.id].frequency = true;
         hasErrors = true;
       }
 
+      // Check if duration is filled
       if (!med.duration || med.duration.trim() === '') {
         medErrors[med.id].duration = true;
         hasErrors = true;
       }
 
+      // Check if instructions are filled
       if (!med.instructions || med.instructions.trim() === '') {
         medErrors[med.id].instructions = true;
         hasErrors = true;
       }
     }
 
-    if (hasErrors) {
-      setFormErrors((prev) => ({ ...prev, medications: medErrors }));
-      toast.error('Илтимос, барча майдонларни тўлдиринг');
-      return;
-    }
-
-    // Check for duplicates
-    const medicationIds = medications.map((med) =>
-      med.medication_id.toLowerCase().trim()
-    );
-    const duplicates = medicationIds.filter(
-      (id, index) => medicationIds.indexOf(id) !== index
-    );
-    if (duplicates.length > 0) {
-      toast.error(
-        'Такрорланган дори. Ҳар бир дори фақат бир марта қўшилиши керак.'
-      );
-      return;
-    }
-
-    const medicationItems = medications.map((med) => ({
-      medication_id: med.medication_id,
-      frequency: parseInt(med.frequency) || 0,
-      duration: parseInt(med.duration) || 0,
-      instructions: med.instructions,
-      addons: med.addons || '',
-    }));
-
-    await handleRequest({
-      request: async () => {
-        const res = await createPrescription({
-          examination_id: selectedExaminationId,
-          items: medicationItems,
-        }).unwrap();
-        return res;
-      },
-      onSuccess: () => {
-        toast.success(`${medications.length} та дори муваффақиятли сақланди`);
-        setMedications([]);
-      },
-      onError: (error) => {
-        toast.error(error?.data?.error?.msg || `Дориларни сақлашда хатолик`);
-      },
-    });
-  };
-
-  // Xizmatlarni alohida saqlash
-  const handleSaveServices = async () => {
-    if (!selectedExaminationId) {
-      toast.error('Илтимос, кўрикни танланг');
-      return;
-    }
-
-    if (services.length === 0) {
-      toast.error('Илтимос, камида битта хизмат қўшинг');
-      return;
-    }
-
     // Validate services
-    const srvErrors: ServiceValidationErrors = {};
-    let hasErrors = false;
-
     for (const srv of services) {
       srvErrors[srv.id] = {};
 
@@ -583,73 +472,125 @@ const Prescription = () => {
         srvErrors[srv.id].service_id = true;
         hasErrors = true;
       }
-    }
 
-    if (!serviceDuration || serviceDuration < 1) {
-      toast.error('Илтимос, хизмат муддатини киритинг');
-      return;
-    }
-    if (!serviceStartDate) {
-      toast.error('Илтимос, бошланиш санасини танланг');
-      return;
+      if (!srv.duration || srv.duration < 1) {
+        srvErrors[srv.id].duration = true;
+        hasErrors = true;
+      }
     }
 
     if (hasErrors) {
-      setFormErrors((prev) => ({ ...prev, services: srvErrors }));
+      setFormErrors({
+        medications: medErrors,
+        services: srvErrors,
+      });
       toast.error('Илтимос, барча майдонларни тўлдиринг');
       return;
     }
 
-    // Check for duplicates
-    const serviceIds = services.map((srv) =>
-      srv.service_id.toLowerCase().trim()
-    );
-    const duplicates = serviceIds.filter(
-      (id, index) => serviceIds.indexOf(id) !== index
-    );
-    if (duplicates.length > 0) {
-      toast.error(
-        'Такрорланган хизмат. Ҳар бир хизмат фақат бир марта қўшилиши керак.'
+    // Check for duplicate medications
+    if (medications.length > 0) {
+      const medicationIds = medications.map((med) =>
+        med.medication_id.toLowerCase().trim()
       );
-      return;
+      const duplicates = medicationIds.filter(
+        (id, index) => medicationIds.indexOf(id) !== index
+      );
+      if (duplicates.length > 0) {
+        toast.error(
+          'Такрорланган дори. Ҳар бир дори фақат бир марта қўшилиши керак.'
+        );
+        return;
+      }
     }
 
-    const serviceItems = services.map((srv) => {
-      const allDays = generateDays(serviceDuration, serviceStartDate);
-      const markedDays = srv.markedDays || [];
-      // Include all days, but set date to null for unmarked days
-      const daysToSave = allDays.map((day) => ({
-        day: day.day,
-        date: markedDays.includes(day.day) && day.date
-          ? format(day.date, 'yyyy-MM-dd')
-          : null,
+    // Check for duplicate services
+    if (services.length > 0) {
+      const serviceIds = services.map((srv) =>
+        srv.service_id.toLowerCase().trim()
+      );
+      const duplicates = serviceIds.filter(
+        (id, index) => serviceIds.indexOf(id) !== index
+      );
+      if (duplicates.length > 0) {
+        toast.error(
+          'Такрорланган хизмат. Ҳар бир хизмат фақат бир марта қўшилиши керак.'
+        );
+        return;
+      }
+    }
+
+    // Save all medications at once
+    let medSuccessCount = 0;
+    if (medications.length > 0) {
+      const medicationItems = medications.map((med) => ({
+        medication_id: med.medication_id,
+        frequency: parseInt(med.frequency) || 0,
+        duration: parseInt(med.duration) || 0,
+        instructions: med.instructions,
+        addons: med.addons || '',
       }));
 
-      return {
-        _id: srv.id,
-        service_type_id: srv.service_id,
-        days: daysToSave,
-        notes: srv.notes,
-      };
-    });
+      await handleRequest({
+        request: async () => {
+          const res = await createPrescription({
+            examination_id: selectedExaminationId,
+            items: medicationItems,
+          }).unwrap();
+          return res;
+        },
+        onSuccess: () => {
+          medSuccessCount = medications.length;
+        },
+        onError: (error) => {
+          toast.error(error?.data?.error?.msg || `Дориларни сақлашда хатолик`);
+        },
+      });
+    }
 
-    await handleRequest({
-      request: async () => {
-        const res = await addServiceToExam({
-          id: selectedExaminationId,
-          duration: serviceDuration,
-          items: serviceItems,
-        }).unwrap();
-        return res;
-      },
-      onSuccess: () => {
-        toast.success(`${services.length} та хизмат муваффақиятли сақланди`);
-        setServices([]);
-      },
-      onError: (error) => {
-        toast.error(error?.data?.error?.msg || `Хизматларни сақлашда хатолик`);
-      },
-    });
+    // Save all services at once
+    let srvSuccessCount = 0;
+    if (services.length > 0) {
+      const serviceItems = services.map((srv) => ({
+        service_type_id: srv.service_id,
+        days: srv.days.map((d) => ({
+          day: d.day,
+          date: d.date,
+        })),
+        notes: srv.notes,
+      }));
+
+      await handleRequest({
+        request: async () => {
+          const res = await addServiceToExam({
+            examination_id: selectedExaminationId,
+            duration: services[0].duration,
+            items: serviceItems,
+          }).unwrap();
+          return res;
+        },
+        onSuccess: () => {
+          srvSuccessCount = services.length;
+        },
+        onError: (error) => {
+          toast.error(
+            error?.data?.error?.msg || `Хизматларни сақлашда хатолик`
+          );
+        },
+      });
+    }
+
+    const totalItems = medications.length + services.length;
+    const totalSuccess = medSuccessCount + srvSuccessCount;
+
+    if (totalSuccess === totalItems) {
+      toast.success(
+        `${medSuccessCount} та дори ва ${srvSuccessCount} та хизмат муваффақиятли сақланди`
+      );
+      navigate(-1);
+    } else if (totalSuccess > 0) {
+      toast.warning(`${totalSuccess}/${totalItems} та элемент сақланди`);
+    }
   };
 
   const startEditPrescription = (prescription: any) => {
@@ -821,91 +762,109 @@ const Prescription = () => {
           </Card>
         ) : (
           <>
+            {/* Patient Info Banner */}
+
             {/* Examination Info */}
             {examinationData && (
               <>
-                <Card className='mb-3 bg-gradient-to-r from-primary/10 to-primary/10 border-primary/20'>
-                  <CardContent className='pt-4 sm:pt-6 relative'>
+                <Card className='mb-4 sm:mb-6 bg-gradient-to-r from-primary/10 to-primary/10 border-primary/20'>
+                  <CardContent className='pt-4 sm:pt-6'>
                     <div className='flex flex-col sm:flex-row items-start justify-between gap-3'>
-                      <div className='flex-1 space-y-1'>
-                        <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Бемор Исми
-                        </Label>
-                        <p className='font-semibold text-sm sm:text-base break-words'>
-                          {patient?.fullname || 'Маълумот йўқ'}
-                        </p>
-                      </div>
-                      <div className='flex-1 space-y-1'>
-                        <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Туғилган Сана
-                        </Label>
-                        <p className='font-semibold text-sm sm:text-base'>
-                          {patient?.date_of_birth ? (
-                            <>
-                              {new Date(
-                                patient.date_of_birth
-                              ).toLocaleDateString('uz-UZ')}{' '}
-                              <span className='text-muted-foreground'>
-                                ({calculateAge(patient.date_of_birth)} ёш)
-                              </span>
-                            </>
-                          ) : (
-                            'Маълумот йўқ'
-                          )}
-                        </p>
-                      </div>
-                      <div className='flex-1 space-y-1'>
-                        <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Телефон
-                        </Label>
-                        <p className='font-semibold text-sm sm:text-base'>
-                          {patient?.phone || 'Маълумот йўқ'}
-                        </p>
+                      <div className='flex-1 w-full'>
+                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'>
+                          <div className='space-y-1'>
+                            <Label className='text-xs sm:text-sm text-muted-foreground'>
+                              Бемор Исми
+                            </Label>
+                            <p className='font-semibold text-sm sm:text-base break-words'>
+                              {patient?.fullname || 'Маълумот йўқ'}
+                            </p>
+                          </div>
+                          <div className='space-y-1'>
+                            <Label className='text-xs sm:text-sm text-muted-foreground'>
+                              Туғилган Сана
+                            </Label>
+                            <p className='font-semibold text-sm sm:text-base'>
+                              {patient?.date_of_birth ? (
+                                <>
+                                  {new Date(
+                                    patient.date_of_birth
+                                  ).toLocaleDateString('uz-UZ')}{' '}
+                                  <span className='text-muted-foreground'>
+                                    ({calculateAge(patient.date_of_birth)} ёш)
+                                  </span>
+                                </>
+                              ) : (
+                                'Маълумот йўқ'
+                              )}
+                            </p>
+                          </div>
+                          <div className='space-y-1'>
+                            <Label className='text-xs sm:text-sm text-muted-foreground'>
+                              Телефон
+                            </Label>
+                            <p className='font-semibold text-sm sm:text-base'>
+                              {patient?.phone || 'Маълумот йўқ'}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                       <Button
                         variant='ghost'
                         size='icon'
                         onClick={clearSelection}
-                        className='absolute right-2 top-2 border border-red-500'
+                        className='self-start sm:self-center'
                       >
-                        <X className='h-2 w-2 scale-125 text-red-500' />
+                        <X className='h-4 w-4' />
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-                <Card className='mb-3'>
-                  <CardHeader className='p-5 max-sm:pb-2'>
-                    <CardTitle className='text-base sm:text-lg'>
+                <Card className='mb-4 sm:mb-6'>
+                  <CardHeader>
+                    <CardTitle className='text-base sm:text-lg md:text-xl'>
                       Кўрик маълумоти
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className='p-5 pt-0'>
-                    <div className='flex sm:justify-between items-center flex-col sm:flex-row max-sm:items-start'>
-                      <div className='space-y-1'>
-                        <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Шифокор
-                        </Label>
-                        <p className='font-semibold text-sm sm:text-base break-words'>
-                          {examinationData.data.doctor_id?.fullname ||
-                            'Номаълум'}
-                        </p>
+                  <CardContent>
+                    <div className='space-y-3 sm:space-y-4'>
+                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+                        {/* <div className='space-y-1'>
+                          <Label className='text-xs sm:text-sm text-muted-foreground'>
+                            Кўрик ID
+                          </Label>
+                          <p className='font-mono font-semibold text-xs sm:text-sm break-all'>
+                            {examinationData.data._id || 'N/A'}
+                          </p>
+                        </div> */}
+                        <div className='space-y-1'>
+                          <Label className='text-xs sm:text-sm text-muted-foreground'>
+                            Шифокор
+                          </Label>
+                          <p className='font-semibold text-sm sm:text-base break-words'>
+                            {examinationData.data.doctor_id?.fullname ||
+                              'Номаълум'}
+                          </p>
+                        </div>
+                        <div className='space-y-1'>
+                          <Label className='text-xs sm:text-sm text-muted-foreground'>
+                            Шикоят
+                          </Label>
+                          <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
+                            {examinationData.data.complaints || 'Маълумот йўқ'}
+                          </p>
+                        </div>
                       </div>
-                      <div className='space-y-1'>
-                        <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Шикоят
-                        </Label>
-                        <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
-                          {examinationData.data.complaints || 'Маълумот йўқ'}
-                        </p>
-                      </div>
-                      <div className='space-y-1'>
-                        <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Тавсия
-                        </Label>
-                        <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
-                          {examinationData.data?.description || 'Маълумот йўқ'}
-                        </p>
-                      </div>
+                      {examinationData.data.description && (
+                        <div className='space-y-1'>
+                          <Label className='text-xs sm:text-sm text-muted-foreground'>
+                            Тавсия
+                          </Label>
+                          <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
+                            {examinationData.data.description}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -920,7 +879,7 @@ const Prescription = () => {
           allergyWarning &&
           patient.allergies &&
           patient.allergies.length > 0 && (
-            <Alert className='mb-3 border-destructive bg-destructive/10'>
+            <Alert className='mb-4 sm:mb-6 border-destructive bg-destructive/10'>
               <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-destructive' />
               <AlertDescription className='text-destructive font-semibold text-xs sm:text-sm'>
                 ОГОҲЛАНТИРИШ: Беморда {patient.allergies.join(', ')}
@@ -933,6 +892,55 @@ const Prescription = () => {
         {!isLoading && selectedExaminationId && patient && (
           <>
             {/* Drug Search */}
+            {/* <Card className='mb-4 sm:mb-6'>
+              <CardHeader>
+                <CardTitle>Дори Қидириш</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className='relative'>
+                  <Search className='absolute left-3 top-3 h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground' />
+                  <Input
+                    placeholder='Дори номини киритинг...'
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => {
+                      // Delay to allow click event on dropdown items
+                      setTimeout(() => setShowSuggestions(false), 200);
+                    }}
+                    className='pl-9 sm:pl-10 text-sm sm:text-base'
+                  />
+                  {showSuggestions && searchTerm && (
+                    <div
+                      className='absolute z-10 w-full mt-1 bg-card border rounded-md shadow-lg max-h-48 overflow-auto'
+                      onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
+                    >
+                      {filteredDrugs.length > 0 ? (
+                        filteredDrugs.map((drug, index) => (
+                          <div
+                            key={index}
+                            className='px-3 sm:px-4 py-2 hover:bg-accent cursor-pointer text-sm transition-colors'
+                            onClick={() => addDrugFromSearch(drug)}
+                          >
+                            <div className='flex items-center justify-between'>
+                              <span>{drug}</span>
+                              <Plus className='h-4 w-4 text-primary' />
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className='px-3 sm:px-4 py-2 text-sm text-muted-foreground'>
+                          Дори топилмади
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card> */}
 
             {/* Medications List */}
             <Card className='mb-4 sm:mb-6'>
@@ -957,8 +965,8 @@ const Prescription = () => {
                   </div>
                 )}
                 {medications.length === 0 &&
-                (!examinationData?.data?.prescription?.items ||
-                  examinationData.data.prescription.items.length === 0) ? (
+                (!examinationData?.data?.prescriptions ||
+                  examinationData.data.prescriptions.length === 0) ? (
                   <div className='text-center py-8 sm:py-12'>
                     <p className='text-muted-foreground text-sm sm:text-base mb-2'>
                       Ҳали дорилар қўшилмаган
@@ -1172,14 +1180,14 @@ const Prescription = () => {
                 )}
 
                 {/* Existing Prescriptions */}
-                {examinationData?.data?.prescription?.items &&
-                  examinationData.data.prescription.items.length > 0 && (
+                {examinationData?.data?.prescriptions &&
+                  examinationData.data.prescriptions.length > 0 && (
                     <>
                       <div className='text-xs font-medium text-muted-foreground mb-2'>
                         Мавжуд рецептлар (
-                        {examinationData.data.prescription.items.length} та)
+                        {examinationData.data.prescriptions.length} та)
                       </div>
-                      {examinationData.data.prescription.items.map(
+                      {examinationData.data.prescriptions.map(
                         (prescription: any, index: number) => (
                           <Card
                             key={prescription._id}
@@ -1423,364 +1431,424 @@ const Prescription = () => {
                       )}
                     </>
                   )}
-
-                {/* Dorilarni saqlash tugmasi */}
-                {medications.length > 0 && (
-                  <div className='flex justify-end mt-4'>
-                    <Button
-                      onClick={handleSaveMedications}
-                      disabled={isCreating || !selectedExaminationId}
-                      className='text-sm'
-                    >
-                      {isCreating ? 'Сақланмоқда...' : 'Дориларни сақлаш'}
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
             {/* Services List */}
-            <div className='space-y-3 border rounded-lg p-4 bg-muted/30'>
-              <div className='flex items-center justify-between'>
-                <Label className='flex items-center gap-2'>
-                  <Activity className='w-4 h-4 text-primary' />
-                  Хизматлар
-                </Label>
+            <Card className='mb-4 sm:mb-6'>
+              <CardHeader className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 space-y-2 sm:space-y-0'>
+                <CardTitle className='text-base sm:text-lg md:text-xl'>
+                  Хизматлар Рўйхати
+                </CardTitle>
                 <Button
-                  type='button'
-                  variant='outline'
-                  size='sm'
                   onClick={addService}
-                  className='gap-1'
+                  size='sm'
+                  className='w-full sm:w-auto text-xs sm:text-sm'
                 >
-                  <Plus className='w-4 h-4' />
-                  Хизмат қўшиш
+                  <Plus className='mr-2 h-3 w-3 sm:h-4 sm:w-4' />
+                  Хизмат Қўшиш
                 </Button>
-              </div>
-
-              {services.length === 0 ? (
-                <p className='text-sm text-muted-foreground text-center py-4'>
-                  Хизматлар қўшилмаган
-                </p>
-              ) : (
-                <div className='space-y-3'>
-                  {/* Common Settings */}
-                  <div className='flex items-end gap-2 p-2 bg-muted/30 rounded-lg border'>
-                    <div className='w-28'>
-                      <Label className='text-xs font-medium'>
-                        Муддат (кун)
-                      </Label>
-                      <Input
-                        type='number'
-                        min={1}
-                        max={30}
-                        value={serviceDuration}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value) || 7;
-                          if (val >= 1 && val <= 30) {
-                            setServiceDuration(val);
-                            // Auto-adjust marked days when duration changes
-                            setServices(
-                              services.map((srv) => {
-                                const currentMarked = srv.markedDays || [];
-                                // Keep only marked days that are within new duration
-                                const adjustedMarked = currentMarked.filter(
-                                  (day) => day <= val
-                                );
-                                // If pattern is every other day, extend pattern to new duration
-                                if (adjustedMarked.length > 0) {
-                                  const isEveryOtherDay = adjustedMarked.every(
-                                    (day, idx) =>
-                                      idx === 0 ||
-                                      day === adjustedMarked[idx - 1] + 2
-                                  );
-                                  if (
-                                    isEveryOtherDay &&
-                                    adjustedMarked[0] === 1
-                                  ) {
-                                    // Extend pattern for new days
-                                    const newMarked = Array.from(
-                                      { length: val },
-                                      (_, i) => i + 1
-                                    ).filter((day) => day % 2 === 1);
-                                    return { ...srv, markedDays: newMarked };
-                                  }
-                                }
-                                return { ...srv, markedDays: adjustedMarked };
-                              })
-                            );
-                          }
-                        }}
-                        className='h-8 text-xs mt-1'
-                      />
-                    </div>
-                    <div className='flex-1'>
-                      <Label className='text-xs font-medium'>
-                        Бошланиш санаси
-                      </Label>
-                      <Input
-                        type='date'
-                        value={
-                          serviceStartDate
-                            ? serviceStartDate.toISOString().split('T')[0]
-                            : ''
-                        }
-                        onChange={(e) =>
-                          setServiceStartDate(
-                            e.target.value ? new Date(e.target.value) : null
-                          )
-                        }
-                        className='h-8 text-xs mt-1'
-                      />
-                    </div>
-
-                    {/* Quick Mark Buttons */}
-                    <div className='shrink-0 flex gap-2'>
-                      <div>
-                        <Label className='text-xs font-medium text-transparent'>
-                          &nbsp;
-                        </Label>
-                        <Button
-                          type='button'
-                          variant='outline'
-                          size='sm'
-                          onClick={markEveryDay}
-                          className='h-8 text-sm mt-1'
-                          disabled={services.length === 0}
-                        >
-                          Ҳар куни
-                        </Button>
-                      </div>
-                      <div>
-                        <Label className='text-xs font-medium text-transparent'>
-                          &nbsp;
-                        </Label>
-                        <Button
-                          type='button'
-                          variant='outline'
-                          size='sm'
-                          onClick={markEveryOtherDay}
-                          className='h-8 text-sm mt-1'
-                          disabled={services.length === 0}
-                        >
-                          2 кунда бир
-                        </Button>
-                      </div>
-                    </div>
+              </CardHeader>
+              <CardContent className='space-y-3 sm:space-y-4'>
+                {/* New Services */}
+                {services.length > 0 && (
+                  <div className='text-xs font-medium text-muted-foreground mb-2 mt-4'>
+                    Янги хизматлар
                   </div>
-
-                  {/* Services Table */}
-                  <div className='overflow-x-auto max-h-[400px] scroll-auto'>
-                    <table className='w-full border-collapse border text-xs'>
-                      <thead className='sticky top-0 bg-background z-10'>
-                        <tr className='bg-muted/50'>
-                          <th className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'>
-                            Хизмат
-                          </th>
-                          {Array.from({ length: 8 }, (_, i) => (
-                            <th
-                              key={i}
-                              className='border px-1 py-1.5 text-center min-w-[70px]'
-                            ></th>
-                          ))}
-                          <th className='border px-1 py-1.5 text-center font-semibold w-10 sticky right-0 bg-muted/50 z-20'></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {services.map((srv) => {
-                          const days = generateDays(
-                            serviceDuration,
-                            serviceStartDate
-                          );
-                          const markedDays = srv.markedDays || [];
-
-                          // Split days into chunks of 8
-                          const daysPerRow = 8;
-                          const dayChunks: ServiceDay[][] = [];
-                          for (let i = 0; i < days.length; i += daysPerRow) {
-                            dayChunks.push(days.slice(i, i + daysPerRow));
-                          }
-
-                          return (
-                            <React.Fragment key={srv.id}>
-                              {dayChunks.map((chunk, chunkIndex) => (
-                                <tr
-                                  key={`${srv.id}-${chunkIndex}`}
-                                  className='hover:bg-muted/30'
+                )}
+                {services.length === 0 &&
+                (!examinationData?.data?.services ||
+                  examinationData.data.services.length === 0) ? (
+                  <div className='text-center py-8 sm:py-12'>
+                    <p className='text-muted-foreground text-sm sm:text-base mb-2'>
+                      Ҳали хизматлар қўшилмаган
+                    </p>
+                    <p className='text-xs sm:text-sm text-muted-foreground'>
+                      "Хизмат Қўшиш" тугмасини босинг
+                    </p>
+                  </div>
+                ) : (
+                  services.map((srv, index) => (
+                    <Card
+                      key={srv.id}
+                      className='border border-border shadow-sm'
+                    >
+                      <CardContent className='pt-3 sm:pt-4'>
+                        <div className='flex items-center justify-between mb-3'>
+                          <span className='text-xs sm:text-sm font-medium text-muted-foreground'>
+                            Янги хизмат #{index + 1}
+                          </span>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => removeService(srv.id)}
+                            className='h-8 w-8 p-0 text-destructive hover:text-destructive'
+                          >
+                            <Trash2 className='h-4 w-4' />
+                          </Button>
+                        </div>
+                        <div className='space-y-4'>
+                          {/* Service Selection, Duration and Notes in one row */}
+                          <div className='grid grid-cols-7 items-center gap-3'>
+                            <div className='col-span-2 min-w-0'>
+                              <Label className='text-xs sm:text-sm'>
+                                Хизмат Тури{' '}
+                                <span className='text-red-500'>*</span>
+                              </Label>
+                              <Select
+                                value={srv.service_id}
+                                onValueChange={(value) =>
+                                  updateServiceField(
+                                    srv.id,
+                                    'service_id',
+                                    value
+                                  )
+                                }
+                              >
+                                <SelectTrigger
+                                  className={`text-sm mt-1 ${
+                                    formErrors.services[srv.id]?.service_id
+                                      ? 'border-red-500 focus:ring-red-500'
+                                      : ''
+                                  }`}
                                 >
-                                  {chunkIndex === 0 && (
-                                    <td
-                                      className='border px-1 py-1 sticky left-0 bg-background z-10'
-                                      rowSpan={dayChunks.length}
-                                    >
-                                      <Select
-                                        value={srv.service_id}
-                                        onValueChange={(value) =>
-                                          updateServiceField(
-                                            srv.id,
-                                            'service_id',
-                                            value
-                                          )
-                                        }
+                                  <SelectValue placeholder='Хизмат турини танланг' />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <div className='p-2'>
+                                    <Input
+                                      placeholder='Хизмат қидириш...'
+                                      value={serviceSearch}
+                                      onChange={(e) =>
+                                        setServiceSearch(e.target.value)
+                                      }
+                                      className='text-sm mb-2'
+                                    />
+                                  </div>
+                                  {servicesData?.data &&
+                                  servicesData.data.length > 0 ? (
+                                    servicesData.data.map((service: any) => (
+                                      <SelectItem
+                                        key={service._id}
+                                        value={service._id}
                                       >
-                                        <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
-                                          <SelectValue placeholder='Танланг...' />
-                                        </SelectTrigger>
-                                        <SelectContent
-                                          onScroll={(e) => {
-                                            const target =
-                                              e.target as HTMLDivElement;
-                                            const bottom =
-                                              target.scrollHeight -
-                                                target.scrollTop -
-                                                target.clientHeight <
-                                              10;
-                                            if (
-                                              bottom &&
-                                              hasMoreServices &&
-                                              !isFetchingServices
-                                            ) {
-                                              setServicePage(
-                                                (prev) => prev + 1
-                                              );
-                                            }
+                                        {service.name} -{' '}
+                                        {service.price?.toLocaleString()} сўм
+                                      </SelectItem>
+                                    ))
+                                  ) : (
+                                    <div className='p-4 text-center text-sm text-muted-foreground'>
+                                      Хизмат топилмади
+                                    </div>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className='w-28 shrink-0'>
+                              <Label className='text-xs sm:text-sm'>
+                                Муддат (кун){' '}
+                                <span className='text-red-500'>*</span>
+                              </Label>
+                              <Input
+                                type='number'
+                                min={1}
+                                max={30}
+                                placeholder='7'
+                                value={srv.duration}
+                                onKeyDown={(e) => {
+                                  if (
+                                    e.key === ',' ||
+                                    e.key === 'e' ||
+                                    e.key === 'E' ||
+                                    e.key === '+' ||
+                                    e.key === '-'
+                                  ) {
+                                    e.preventDefault();
+                                  }
+                                }}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value) || 0;
+                                  if (val >= 0 && val <= 30) {
+                                    updateServiceDuration(srv.id, val);
+                                  }
+                                }}
+                                className={`text-sm mt-1 ${
+                                  formErrors.services[srv.id]?.duration
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : ''
+                                }`}
+                              />
+                            </div>
+                            <div className='col-span-4 min-w-0'>
+                              <Label className='text-xs sm:text-sm'>Изоҳ</Label>
+                              <Textarea
+                                placeholder='Қўшимча изоҳ киритинг'
+                                value={srv.notes}
+                                onChange={(e) =>
+                                  updateServiceField(
+                                    srv.id,
+                                    'notes',
+                                    e.target.value
+                                  )
+                                }
+                                rows={1}
+                                className='text-sm mt-1 resize-none min-h-10'
+                              />
+                            </div>
+                          </div>
+
+                          {/* Days Table - Responsive Design */}
+                          {srv.duration > 0 && srv.days.length > 0 && (
+                            <div className='space-y-2'>
+                              <Label className='text-xs sm:text-sm flex items-center gap-2'>
+                                <Calendar className='h-4 w-4' />
+                                Кунлар жадвали
+                              </Label>
+
+                              {/* Mobile View - Cards */}
+                              <div className='block sm:hidden space-y-2'>
+                                {srv.days.map((day, dayIndex) => (
+                                  <div
+                                    key={dayIndex}
+                                    className='flex items-center justify-between p-3 bg-muted/50 rounded-lg border'
+                                  >
+                                    <span className='text-sm font-medium min-w-[60px]'>
+                                      {day.day}-кун
+                                    </span>
+                                    <Input
+                                      type='date'
+                                      value={
+                                        day.date
+                                          ? new Date(day.date)
+                                              .toISOString()
+                                              .split('T')[0]
+                                          : ''
+                                      }
+                                      onChange={(e) =>
+                                        updateServiceDayDate(
+                                          srv.id,
+                                          dayIndex,
+                                          e.target.value
+                                            ? new Date(e.target.value)
+                                            : null
+                                        )
+                                      }
+                                      className='text-sm flex-1 ml-2 max-w-[160px]'
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Tablet/Desktop View - Table */}
+                              <div className='hidden sm:block overflow-x-auto'>
+                                <div className='min-w-full border rounded-lg'>
+                                  {/* Dynamic Rows - 6 columns per row */}
+                                  {Array.from({
+                                    length: Math.ceil(srv.days.length / 6),
+                                  }).map((_, rowIndex) => {
+                                    const startIdx = rowIndex * 6;
+                                    const endIdx = Math.min(
+                                      startIdx + 6,
+                                      srv.days.length
+                                    );
+                                    const rowDays = srv.days.slice(
+                                      startIdx,
+                                      endIdx
+                                    );
+                                    const colCount = rowDays.length;
+
+                                    return (
+                                      <div key={rowIndex}>
+                                        {/* Row Header */}
+                                        <div
+                                          className={`grid bg-muted/50 ${
+                                            rowIndex > 0 ? 'border-t' : ''
+                                          } border-b`}
+                                          style={{
+                                            gridTemplateColumns: `repeat(${colCount}, minmax(120px, 1fr))`,
                                           }}
                                         >
-                                          <div className='p-2'>
-                                            <Input
-                                              placeholder='Қидириш...'
-                                              value={serviceSearch}
-                                              onChange={(e) =>
-                                                setServiceSearch(e.target.value)
-                                              }
-                                              className='text-sm mb-2'
-                                            />
-                                          </div>
-                                          {availableServices.map((s: any) => (
-                                            <SelectItem
-                                              key={s._id}
-                                              value={s._id}
+                                          {rowDays.map((day, dayIndex) => (
+                                            <div
+                                              key={dayIndex}
+                                              className='px-2 py-2 text-center text-xs font-semibold text-muted-foreground border-r last:border-r-0'
                                             >
-                                              {s.name} -{' '}
-                                              {new Intl.NumberFormat(
-                                                'uz-UZ'
-                                              ).format(s.price)}{' '}
-                                              сўм
-                                            </SelectItem>
+                                              {day.day}-кун
+                                            </div>
                                           ))}
-                                          {!isFetchingServices &&
-                                            availableServices.length === 0 && (
-                                              <div className='px-2 py-4 text-xs text-muted-foreground text-center'>
-                                                Хизмат топилмади
-                                              </div>
-                                            )}
-                                          {isFetchingServices && (
-                                            <div className='flex items-center justify-center py-2 text-xs text-muted-foreground'>
-                                              <Loader2 className='h-4 w-4 animate-spin mr-2' />
-                                              Юкланмоқда...
-                                            </div>
-                                          )}
-                                        </SelectContent>
-                                      </Select>
-                                    </td>
-                                  )}
-                                  {chunk.map((day, i) => {
-                                    const isMarked = markedDays.includes(
-                                      day.day
-                                    );
-                                    return (
-                                      <td
-                                        key={i}
-                                        className='border px-1 py-1 text-center group relative cursor-pointer hover:bg-blue-50 min-w-[70px]'
-                                        onClick={() =>
-                                          toggleDayMark(srv.id, day.day)
-                                        }
-                                      >
-                                        {day.date ? (
-                                          <div className='flex flex-col items-center justify-center'>
-                                            <span className='text-[10px] text-muted-foreground font-bold'>
-                                              {day.day}-кун
-                                            </span>
-                                            <span
-                                              className={`px-1.5 py-0.5 rounded ${
-                                                isMarked
-                                                  ? 'bg-blue-500 text-white font-semibold'
-                                                  : ''
-                                              }`}
+                                        </div>
+                                        {/* Row Body */}
+                                        <div
+                                          className='grid'
+                                          style={{
+                                            gridTemplateColumns: `repeat(${colCount}, minmax(120px, 1fr))`,
+                                          }}
+                                        >
+                                          {rowDays.map((day, dayIndex) => (
+                                            <div
+                                              key={dayIndex}
+                                              className='px-1 py-2 border-r last:border-r-0'
                                             >
-                                              {format(day.date, 'dd/MM')}
-                                            </span>
-                                            <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none text-xs'>
-                                              {day.day}-кун:{' '}
-                                              {new Date(
-                                                day.date
-                                              ).toLocaleDateString('uz-UZ')}
-                                              {isMarked && ' ✓'}
+                                              <Input
+                                                type='date'
+                                                value={
+                                                  day.date
+                                                    ? new Date(day.date)
+                                                        .toISOString()
+                                                        .split('T')[0]
+                                                    : ''
+                                                }
+                                                onChange={(e) =>
+                                                  updateServiceDayDate(
+                                                    srv.id,
+                                                    startIdx + dayIndex,
+                                                    e.target.value
+                                                      ? new Date(e.target.value)
+                                                      : null
+                                                  )
+                                                }
+                                                className='text-xs h-8 w-full'
+                                              />
                                             </div>
-                                          </div>
-                                        ) : (
-                                          <div className='flex flex-col items-center justify-center'>
-                                            <span className='text-[10px] text-muted-foreground font-medium'>
-                                              {day.day}-кун
-                                            </span>
-                                            <span className='text-muted-foreground'>
-                                              —
-                                            </span>
-                                          </div>
-                                        )}
-                                      </td>
+                                          ))}
+                                        </div>
+                                      </div>
                                     );
                                   })}
-                                  {/* Fill empty cells if chunk has less than 8 items */}
-                                  {chunk.length < daysPerRow &&
-                                    Array.from(
-                                      { length: daysPerRow - chunk.length },
-                                      (_, i) => (
-                                        <td
-                                          key={`empty-${i}`}
-                                          className='border px-1 py-1'
-                                        ></td>
-                                      )
-                                    )}
-                                  {chunkIndex === 0 && (
-                                    <td
-                                      className='border px-1 py-1 text-center sticky right-0 bg-background z-10'
-                                      rowSpan={dayChunks.length}
-                                    >
-                                      <Button
-                                        type='button'
-                                        variant='ghost'
-                                        size='sm'
-                                        onClick={() => removeService(srv.id)}
-                                        className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-                                      >
-                                        <Trash2 className='w-3 h-3' />
-                                      </Button>
-                                    </td>
-                                  )}
-                                </tr>
-                              ))}
-                            </React.Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
 
-              {/* Xizmatlarni saqlash tugmasi */}
-              {services.length > 0 && (
-                <div className='flex justify-end mt-4'>
-                  <Button
-                    onClick={handleSaveServices}
-                    disabled={isAddingService || !selectedExaminationId}
-                    className='text-sm'
-                  >
-                    {isAddingService ? 'Сақланмоқда...' : 'Хизматларни сақлаш'}
-                  </Button>
-                </div>
-              )}
+                {/* Existing Services */}
+                {examinationData?.data?.service &&
+                  examinationData.data.service.length > 0 && (
+                    <>
+                      <div className='text-xs font-medium text-muted-foreground mb-2'>
+                        Мавжуд хизматлар ({examinationData.data.service.length}{' '}
+                        та)
+                      </div>
+                      {examinationData.data.service.map(
+                        (service: any, index: number) => (
+                          <Card
+                            key={service._id}
+                            className='border border-border bg-primary/5'
+                          >
+                            <CardContent className='pt-3 sm:pt-4'>
+                              <div className='flex items-center justify-between mb-2'>
+                                <span className='text-xs sm:text-sm font-medium text-primary'>
+                                  Хизмат #{index + 1}
+                                </span>
+                                <span
+                                  className={`text-xs px-2 py-1 rounded-full ${
+                                    service.status === 'completed'
+                                      ? 'bg-green-100 text-green-700'
+                                      : service.status === 'active'
+                                      ? 'bg-blue-100 text-blue-700'
+                                      : 'bg-yellow-100 text-yellow-700'
+                                  }`}
+                                >
+                                  {service.status === 'completed'
+                                    ? 'Якунланган'
+                                    : service.status === 'active'
+                                    ? 'Актив'
+                                    : 'Кутилмоқда'}
+                                </span>
+                              </div>
+                              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
+                                <div>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Хизмат номи
+                                  </Label>
+                                  <p className='text-sm font-medium'>
+                                    {service.service_type_id?.name ||
+                                      'Номаълум'}
+                                  </p>
+                                </div>
+                                <div>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Нарх
+                                  </Label>
+                                  <p className='text-sm font-medium'>
+                                    {service.price?.toLocaleString()} сўм
+                                  </p>
+                                </div>
+                                <div>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Муддати(кун)
+                                  </Label>
+                                  <p className='text-sm font-medium'>
+                                    {service.duration}
+                                  </p>
+                                </div>
+                                <div>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Қабул Қилиш (кунига марта)
+                                  </Label>
+                                  <p className='text-sm font-medium'>
+                                    {service.frequency}
+                                  </p>
+                                </div>
+                                <div>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Жами
+                                  </Label>
+                                  <p className='text-sm font-medium text-primary'>
+                                    {(
+                                      service.price *
+                                      service.duration *
+                                      service.frequency
+                                    )?.toLocaleString()}{' '}
+                                    сўм
+                                  </p>
+                                </div>
+                              </div>
+                              {service.notes && (
+                                <div className='mt-2'>
+                                  <Label className='text-xs text-muted-foreground'>
+                                    Изоҳ
+                                  </Label>
+                                  <p className='text-sm'>{service.notes}</p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )
+                      )}
+                    </>
+                  )}
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className='flex flex-col sm:flex-row justify-end gap-2 sm:gap-3'>
+              <Button
+                variant='outline'
+                className='w-full sm:w-auto text-sm'
+                onClick={clearSelection}
+                disabled={isCreating || isAddingService}
+              >
+                Бекор Қилиш
+              </Button>
+              <Button
+                className='w-full sm:w-auto text-sm'
+                onClick={handleSavePrescription}
+                disabled={
+                  isCreating ||
+                  isAddingService ||
+                  (medications.length === 0 && services.length === 0) ||
+                  !selectedExaminationId
+                }
+              >
+                {isCreating || isAddingService
+                  ? 'Сақланмоқда...'
+                  : 'Тасдиқлаш ва Сақлаш'}
+              </Button>
             </div>
           </>
         )}

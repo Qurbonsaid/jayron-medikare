@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-	examinationApi,
+	useCreateServiceDaysMutation,
 	useGetAllExamsQuery,
 	useTakeServiceMutation,
 } from '@/app/api/examinationApi/examinationApi'
 import { useTakePrescriptionMutation } from '@/app/api/prescription/prescriptionApi'
-import type { AppDispatch } from '@/app/store'
-import CantRead from '@/components/common/CantRead'
 import {
 	Accordion,
 	AccordionContent,
@@ -31,20 +29,53 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from '@/components/ui/pagination'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
-import { useRouteActions } from '@/hooks/RBS'
+import PrescriptionCard from '@/pages/Medicine/components/PrescriptionCard'
 import { Check, Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useDispatch } from 'react-redux'
+import { useState } from 'react'
 import { toast } from 'sonner'
+
+interface Day {
+	_id: string
+	date: string | null
+	day: number
+	times: number | string
+}
+
+interface Prescription {
+	_id: string
+	medication_id:
+		| {
+				_id: string
+				name: string
+				dosage: number
+				dosage_unit: string
+		  }
+		| string
+	frequency: number
+	duration: number
+	instructions: string
+	days?: Day[]
+}
+
+interface Service {
+	service_type_id:
+		| {
+				_id: string
+				code: string
+				name: string
+				description: string
+		  }
+		| string
+	price: number
+	frequency: number
+	duration: number
+	status: string
+	notes?: string
+	days?: Day[]
+	_id: string
+}
 
 interface Room {
 	room_name: string
@@ -58,70 +89,11 @@ interface ExamRecord {
 	_id: string
 	patient_id: Patient
 	rooms: Room[]
-	prescription: string | object | null
-	service: string | object | null
-}
-
-interface Day {
-	_id: string
-	date: string | null
-	day: number
-	times: number | string
-}
-
-interface PrescriptionItem {
-	medication_id: {
-		_id: string
-		name: string
-		dosage: string
-		dosage_unit?: string
-	}
-	frequency: number
-	duration: number
-	instructions: string
-	addons?: string
-	days?: Day[]
-	_id: string
-}
-
-interface PrescriptionData {
-	_id: string
-	items: PrescriptionItem[]
-}
-
-interface ServiceItem {
-	service_type_id: {
-		_id: string
-		name: string
-		description: string
-		price: number
-	}
-	notes: string
-	days: Array<{
-		day: number
-		is_completed: boolean
-		date: Date | string
-		_id: string
-	}>
-	_id: string
-}
-
-interface ServiceData {
-	_id: string
-	items: ServiceItem[]
-}
-
-interface EnrichedExamRecord extends ExamRecord {
-	prescriptionData?: PrescriptionData | null
-	serviceData?: ServiceData | null
-	isLoadingPrescription?: boolean
-	isLoadingService?: boolean
+	prescription: string | null
+	service: string | null
 }
 
 const Medicine = () => {
-	const { canRead } = useRouteActions('/medicine')
-	const dispatch = useDispatch<AppDispatch>()
-
 	const [currentPage, setCurrentPage] = useState(1)
 	const [roomSearch, setRoomSearch] = useState('')
 	const [confirmModal, setConfirmModal] = useState<{
@@ -129,7 +101,6 @@ const Medicine = () => {
 		recordId: string | null
 		prescriptionId: string | null
 		serviceId: string | null
-		itemId: string | null
 		day: string | null
 		type: 'medicine' | 'service'
 	}>({
@@ -137,19 +108,12 @@ const Medicine = () => {
 		recordId: null,
 		prescriptionId: null,
 		serviceId: null,
-		itemId: null,
 		day: null,
 		type: 'medicine',
 	})
 	const [processedServices, setProcessedServices] = useState<Set<string>>(
 		new Set()
 	)
-	const [enrichedRecords, setEnrichedRecords] = useState<EnrichedExamRecord[]>(
-		[]
-	)
-	const [selectedServiceItems, setSelectedServiceItems] = useState<{
-		[recordId: string]: string
-	}>({})
 
 	const itemsPerPage = 10
 
@@ -164,110 +128,14 @@ const Medicine = () => {
 
 	const [takePrescription, { isLoading: takingMedicine }] =
 		useTakePrescriptionMutation()
+	const [createServiceDays] = useCreateServiceDaysMutation()
 	const [takeService, { isLoading: takingService }] = useTakeServiceMutation()
 	const handleRequest = useHandleRequest()
-
-	// Bemorlar yuklanganida har birining prescription va service ma'lumotlarini yuklash
-	useEffect(() => {
-		if (!data?.data) {
-			setEnrichedRecords([])
-			return
-		}
-
-		const fetchEnrichedData = async () => {
-			const records = data.data as unknown as ExamRecord[]
-
-			// Dastlab barcha recordlarni loading holati bilan qo'shamiz
-			const initialRecords: EnrichedExamRecord[] = records.map(record => ({
-				...record,
-				isLoadingPrescription: !!record.prescription,
-				isLoadingService: !!record.service,
-				prescriptionData: null,
-				serviceData: null,
-			}))
-
-			setEnrichedRecords(initialRecords)
-
-			// Har bir bemor uchun prescription va service ma'lumotlarini parallel yuklash
-			const enriched = await Promise.all(
-				records.map(async record => {
-					const enrichedRecord: EnrichedExamRecord = {
-						...record,
-						isLoadingPrescription: false,
-						isLoadingService: false,
-					}
-
-					// Prescription va Service ma'lumotlarini parallel yuklash
-					const promises: Promise<any>[] = []
-
-					if (record.prescription) {
-						// Check if prescription is already populated as an object
-						if (typeof record.prescription === 'object') {
-							enrichedRecord.prescriptionData = record.prescription as any
-						} else {
-							// Prescription is just an ID string, fetch it
-							promises.push(
-								dispatch(
-									examinationApi.endpoints.getOnePrescription.initiate(
-										record.prescription as string,
-										{ forceRefetch: false }
-									)
-								)
-									.unwrap()
-									.then((result: any) => {
-										enrichedRecord.prescriptionData = result
-									})
-									.catch(error => {
-										console.error('Prescription yuklashda xatolik:', error)
-										enrichedRecord.prescriptionData = null
-									})
-							)
-						}
-					}
-
-					if (record.service) {
-						// Check if service is already populated as an object
-						if (typeof record.service === 'object') {
-							enrichedRecord.serviceData = record.service as any
-						} else {
-							// Service is just an ID string, fetch it
-							promises.push(
-								dispatch(
-									examinationApi.endpoints.getOneService.initiate(
-										record.service as string,
-										{ forceRefetch: false }
-									)
-								)
-									.unwrap()
-									.then((result: any) => {
-										enrichedRecord.serviceData = result
-									})
-									.catch(error => {
-										console.error('Service yuklashda xatolik:', error)
-										enrichedRecord.serviceData = null
-									})
-							)
-						}
-					}
-
-					await Promise.all(promises)
-					return enrichedRecord
-				})
-			)
-
-			setEnrichedRecords(enriched)
-		}
-
-		fetchEnrichedData()
-	}, [data, dispatch])
 
 	// Format date helper
 	const formatDate = (dateString: string | null) => {
 		if (!dateString) return null
 		const date = new Date(dateString)
-		if (isToday(dateString)) {
-			return 'Бугун'
-		}
 		return date.toLocaleDateString('uz-UZ', {
 			day: '2-digit',
 			month: '2-digit',
@@ -322,7 +190,6 @@ const Medicine = () => {
 		recordId: string,
 		prescriptionId: string | null,
 		serviceId: string | null,
-		itemId: string | null,
 		day: string,
 		type: 'medicine' | 'service' = 'medicine'
 	) => {
@@ -331,29 +198,24 @@ const Medicine = () => {
 			recordId,
 			prescriptionId,
 			serviceId,
-			itemId,
 			day,
 			type,
 		})
 	}
 
 	const handleConfirm = async () => {
-		if (!confirmModal.day) {
+		if (!confirmModal.recordId || !confirmModal.day) {
 			return
 		}
 
-		if (
-			confirmModal.type === 'medicine' &&
-			confirmModal.prescriptionId &&
-			confirmModal.itemId
-		) {
+		if (confirmModal.type === 'medicine' && confirmModal.prescriptionId) {
 			await handleRequest({
 				request: () =>
 					takePrescription({
 						id: confirmModal.prescriptionId!,
 						body: {
-							item_id: confirmModal.itemId!,
-							day: Number(confirmModal.day!),
+							item_id: confirmModal.prescriptionId!,
+							day: confirmModal.day!,
 						},
 					}),
 				onSuccess: () => {
@@ -363,7 +225,6 @@ const Medicine = () => {
 						recordId: null,
 						prescriptionId: null,
 						serviceId: null,
-						itemId: null,
 						day: null,
 						type: 'medicine',
 					})
@@ -376,17 +237,13 @@ const Medicine = () => {
 					}
 				},
 			})
-		} else if (
-			confirmModal.type === 'service' &&
-			confirmModal.serviceId &&
-			confirmModal.itemId
-		) {
+		} else if (confirmModal.type === 'service' && confirmModal.serviceId) {
 			await handleRequest({
 				request: () =>
 					takeService({
-						id: confirmModal.serviceId!,
-						item_id: confirmModal.itemId!,
-						day: Number(confirmModal.day!),
+						id: confirmModal.recordId!,
+						serviceId: confirmModal.serviceId!,
+						day: confirmModal.day!,
 					}),
 				onSuccess: () => {
 					toast.success('Хизмат бажарилди ✓')
@@ -395,7 +252,6 @@ const Medicine = () => {
 						recordId: null,
 						prescriptionId: null,
 						serviceId: null,
-						itemId: null,
 						day: null,
 						type: 'medicine',
 					})
@@ -415,8 +271,6 @@ const Medicine = () => {
 	const handleSearch = () => {
 		setCurrentPage(1) // Reset to first page on search
 	}
-
-	if (!canRead) return <CantRead />
 
 	if (isLoading) {
 		return (
@@ -476,7 +330,7 @@ const Medicine = () => {
 							collapsible
 							className='w-full space-y-2 sm:space-y-3'
 						>
-							{enrichedRecords.map(record => (
+							{records.map(record => (
 								<AccordionItem
 									key={record._id}
 									value={`record-${record._id}`}
@@ -502,414 +356,277 @@ const Medicine = () => {
 											<TabsList className='grid w-full grid-cols-2 mb-4'>
 												<TabsTrigger value='medicines'>Дорилар</TabsTrigger>
 												<TabsTrigger value='services'>Хизматлар</TabsTrigger>
-											</TabsList>
+											</TabsList>{' '}
 											<TabsContent value='medicines'>
-												{record.isLoadingPrescription ? (
-													<div className='flex items-center justify-center py-8'>
-														<Loader2 className='w-6 h-6 animate-spin text-primary' />
-														<span className='ml-2 text-sm text-muted-foreground'>
-															Дорилар юкланмоқда...
-														</span>
-													</div>
-												) : !record.prescriptionData?.items ||
-												  record.prescriptionData.items.length === 0 ? (
+												{!record.prescription ? (
 													<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
 														Дорилар топилмади
 													</p>
 												) : (
 													<div className='space-y-2 sm:space-y-4 pt-2 sm:pt-3'>
-														{record.prescriptionData.items.map(item => (
-															<Card
-																key={item._id}
-																className='border shadow-sm bg-card'
-															>
-																<CardHeader className='pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6'>
-																	<div className='flex justify-between items-start gap-2'>
-																		<div className='flex-1 min-w-0'>
-																			<h4 className='font-semibold text-xs sm:text-sm md:text-base line-clamp-2'>
-																				{item.medication_id.name}
-																			</h4>
-																			<p className='text-xs font-medium text-muted-foreground mt-1'>
-																				КЎРСАТМАЛАР:{' '}
-																				{item.instructions || 'Йўқ'}
-																			</p>
-																			<p className='text-xs text-muted-foreground mt-0.5'>
-																				Дозировка: {item.medication_id.dosage}
-																				{item.medication_id.dosage_unit || ''}
-																			</p>
-																			{item.addons && (
-																				<p className='text-xs text-muted-foreground mt-0.5'>
-																					Қўшимча: {item.addons}
-																				</p>
-																			)}
-																		</div>
-																	</div>
-																</CardHeader>
-																<CardContent className='px-3 sm:px-6 pb-3 sm:pb-6'>
-																	{!item.days || item.days.length === 0 ? (
-																		<p className='text-xs text-muted-foreground text-center py-4'>
-																			Кунлар маълумоти йўқ
-																		</p>
-																	) : (
-																		<div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-1.5 sm:gap-2'>
-																			{item.days.map(day => {
-																				const dayDate = day.date
-																					? new Date(day.date)
-																					: null
-																				const isTodayDay =
-																					dayDate && isToday(day.date!)
-																				const isPast =
-																					dayDate &&
-																					dayDate < new Date() &&
-																					!isTodayDay
-																				const taken =
-																					day.times &&
-																					Number(day.times) >= item.frequency
-
-																				return (
-																					<div
-																						key={day._id}
-																						className={`flex flex-col items-center p-1.5 sm:p-2 rounded-lg border-2 transition-all cursor-pointer ${
-																							taken
-																								? 'bg-green-50 border-green-500'
-																								: isTodayDay
-																								? 'bg-blue-50 border-blue-500 ring-2 ring-blue-200'
-																								: isPast
-																								? 'bg-gray-50 border-gray-300'
-																								: 'bg-white border-gray-200 hover:border-primary hover:shadow-sm'
-																						}`}
-																						onClick={e => {
-																							e.stopPropagation()
-																							openConfirmModal(
-																								record._id,
-																								record.prescriptionData!._id,
-																								null,
-																								item._id,
-																								day.day,
-																								'medicine'
-																							)
-																						}}
-																					>
-																						<span className='text-[10px] sm:text-xs font-semibold text-muted-foreground'>
-																							{day.day}-кун
-																						</span>
-																						{dayDate && (
-																							<span className='text-[9px] sm:text-[10px] text-muted-foreground mt-0.5'>
-																								{formatDate(day.date!)}
-																							</span>
-																						)}
-																						<div className='text-[10px] sm:text-xs font-medium mt-1'>
-																							{day.times || 0}/{item.frequency}
-																						</div>
-																						{taken && (
-																							<Check className='w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1' />
-																						)}
-																					</div>
-																				)
-																			})}
-																		</div>
-																	)}
-																</CardContent>
-															</Card>
-														))}
+														<PrescriptionCard
+															key={record.prescription}
+															prescriptionId={record.prescription}
+															recordId={record._id}
+															onOpenModal={(recordId, prescId, day) =>
+																openConfirmModal(
+																	recordId,
+																	prescId,
+																	null,
+																	day,
+																	'medicine'
+																)
+															}
+															formatDate={formatDate}
+															isToday={isToday}
+														/>
 													</div>
 												)}
 											</TabsContent>
 											<TabsContent value='services'>
-												{record.isLoadingService ? (
-													<div className='flex items-center justify-center py-8'>
-														<Loader2 className='w-6 h-6 animate-spin text-primary' />
-														<span className='ml-2 text-sm text-muted-foreground'>
-															Хизматлар юкланмоқда...
-														</span>
-													</div>
-												) : !record.serviceData?.items ||
-												  record.serviceData.items.length === 0 ? (
+												{!record.service || record.service.length === 0 ? (
 													<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
 														Хизматлар топилмади
 													</p>
 												) : (
-													<>
-														{/* Mobile vertical layout */}
-														<div className='block sm:hidden space-y-3'>
-															<div className='px-2'>
-																<Select
-																	value={selectedServiceItems[record._id] || ''}
-																	onValueChange={value =>
-																		setSelectedServiceItems(prev => ({
-																			...prev,
-																			[record._id]: value,
-																		}))
-																	}
+													<div className='space-y-2 sm:space-y-4 pt-2 sm:pt-3'>
+														{(Array.isArray(record.service)
+															? record.service
+															: []
+														).map(service => {
+															const isProcessing = processedServices.has(
+																service._id
+															)
+															const hasDays =
+																service.days && service.days.length > 0
+
+															return (
+																<Card
+																	key={service._id}
+																	className='border shadow-sm bg-card'
 																>
-																	<SelectTrigger className='w-full'>
-																		<SelectValue placeholder='Хизматни танланг' />
-																	</SelectTrigger>
-																	<SelectContent>
-																		{record.serviceData?.items.map(service => (
-																			<SelectItem
-																				key={service._id}
-																				value={service._id}
-																			>
-																				<div className='flex flex-col gap-1'>
-																					<span className='font-medium'>
-																						{service.service_type_id.name}
-																					</span>
-																					{service.notes && (
-																						<span className='text-xs text-muted-foreground'>
-																							{service.notes}
-																						</span>
-																					)}
-																				</div>
-																			</SelectItem>
-																		))}
-																	</SelectContent>
-																</Select>
-															</div>
-
-															{(() => {
-																const selectedServiceItem =
-																	selectedServiceItems[record._id]
-																const selectedService =
-																	record.serviceData?.items.find(
-																		s => s._id === selectedServiceItem
-																	)
-
-																if (!selectedService) {
-																	return (
-																		<div className='px-2 py-8 text-center text-xs text-muted-foreground'>
-																			Хизматни танланг
+																	<CardHeader className='pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6'>
+																		<div className='flex justify-between items-start gap-2'>
+																			<div className='flex-1 min-w-0'>
+																				<h4 className='font-semibold text-xs sm:text-sm md:text-base line-clamp-2'>
+																					{
+																						(service.service_type_id as any)
+																							.name
+																					}
+																				</h4>
+																				{(service as any).notes && (
+																					<p className='text-xs font-medium text-muted-foreground mt-1'>
+																						ИЗОҲ: {(service as any).notes}
+																					</p>
+																				)}
+																				<p className='text-xs text-muted-foreground mt-0.5'>
+																					Нарх:{' '}
+																					{service.price?.toLocaleString()} сўм
+																				</p>
+																			</div>
 																		</div>
-																	)
-																}
+																	</CardHeader>
+																	<CardContent className='px-3 sm:px-6 pb-3 sm:pb-6'>
+																		{/* Loading holati */}
+																		{isProcessing && !hasDays && (
+																			<div className='flex items-center justify-center py-6 sm:py-8'>
+																				<Loader2 className='w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary' />
+																				<span className='ml-2 text-xs sm:text-sm text-muted-foreground'>
+																					Кунлар яратилмоқда...
+																				</span>
+																			</div>
+																		)}
 
-																const daysWithDate =
-																	selectedService.days?.filter(
-																		d => d.date !== null
-																	) || []
-
-																return (
-																	<div className='space-y-2 px-2'>
-																		{daysWithDate.map(day => {
-																			const dayDate = new Date(day.date!)
-																			const isTodayDay = isToday(
-																				String(day.date)
-																			)
-																			const taken = day.is_completed
-
-																			return (
-																				<Card
-																					key={day._id}
-																					className={`cursor-pointer transition-all ${
-																						taken
-																							? 'bg-green-50 border-green-500'
-																							: isTodayDay
-																							? 'bg-blue-50 border-blue-500 ring-2 ring-blue-200'
-																							: 'hover:border-primary hover:shadow-sm'
-																					}`}
-																					onClick={e => {
-																						e.stopPropagation()
-																						openConfirmModal(
-																							record._id,
-																							null,
-																							record.serviceData!._id,
-																							selectedService._id,
-																							day.day,
-																							'service'
+																		{/* Days mavjud bo'lsa */}
+																		{hasDays && (
+																			<>
+																				{/* Desktop - 5 columns */}
+																				<div className='hidden lg:grid lg:grid-cols-5 gap-2 xl:gap-3'>
+																					{service.days.map(day => {
+																						const taken = day.times || 0
+																						const total = service.frequency
+																						const isCompleted = taken >= total
+																						const lastDate = formatDate(
+																							day.date
 																						)
-																					}}
-																				>
-																					<CardContent className='p-3'>
-																						<div className='flex items-center justify-between'>
-																							<div className='flex-1'>
-																								<div className='font-semibold text-sm mb-1'>
-																									{day.day}-кун
-																								</div>
-																								<div className='text-xs text-muted-foreground'>
-																									{formatDate(String(day.date))}
-																								</div>
-																							</div>
-																							<div className='flex items-center gap-2'>
-																								{taken ? (
-																									<>
-																										<Check className='w-5 h-5 text-green-600' />
-																										<span className='text-sm font-medium text-green-700'>
-																											Бажарилди
-																										</span>
-																									</>
-																								) : (
-																									<span className='text-sm font-medium text-muted-foreground'>
-																										Кутилмоқда
-																									</span>
-																								)}
-																							</div>
-																						</div>
-																					</CardContent>
-																				</Card>
-																			)
-																		})}
-																	</div>
-																)
-															})()}
-														</div>
 
-														{/* Desktop table layout */}
-														<div className='hidden sm:block overflow-x-auto pb-2'>
-															<table className='w-full border-collapse min-w-[600px]'>
-																<thead>
-																	<tr className='border-b'>
-																		<th className='text-left p-3 text-sm font-semibold bg-muted/50'>
-																			Хизматлар
-																		</th>
-																		{(() => {
-																			const selectedServiceItem =
-																				selectedServiceItems[record._id]
-																			const selectedService =
-																				record.serviceData?.items.find(
-																					s => s._id === selectedServiceItem
-																				)
-																			const daysWithDate =
-																				selectedService?.days?.filter(
-																					d => d.date !== null
-																				) || []
-
-																			return daysWithDate.map(day => (
-																				<th
-																					key={day._id}
-																					className='text-center p-3 text-sm font-semibold bg-muted/50 min-w-[100px] whitespace-nowrap'
-																				>
-																					{day.day}-кун
-																				</th>
-																			))
-																		})()}
-																	</tr>
-																</thead>
-																<tbody>
-																	<tr className='border-b'>
-																		<td className='p-3 align-top'>
-																			<Select
-																				value={
-																					selectedServiceItems[record._id] || ''
-																				}
-																				onValueChange={value =>
-																					setSelectedServiceItems(prev => ({
-																						...prev,
-																						[record._id]: value,
-																					}))
-																				}
-																			>
-																				<SelectTrigger className='w-full min-w-[200px]'>
-																					<SelectValue placeholder='Хизматни танланг' />
-																				</SelectTrigger>
-																				<SelectContent>
-																					{record.serviceData?.items.map(
-																						service => (
-																							<SelectItem
-																								key={service._id}
-																								value={service._id}
+																						return (
+																							<div
+																								key={day._id}
+																								className='flex flex-col items-center p-2 xl:p-3 border rounded-lg hover:bg-accent/50 transition-colors'
+																								onClick={() =>
+																									!isCompleted &&
+																									openConfirmModal(
+																										record._id,
+																										null,
+																										service._id,
+																										String(day.day),
+																										'service'
+																									)
+																								}
 																							>
-																								<div className='flex flex-col gap-1'>
-																									<span className='font-medium'>
-																										{
-																											service.service_type_id
-																												.name
-																										}
-																									</span>
-																									{service.notes && (
-																										<span className='text-xs text-muted-foreground'>
-																											{service.notes}
+																								<p className='text-xs font-medium mb-1 text-center line-clamp-1'>
+																									Кун {day.day}
+																								</p>
+																								{lastDate && (
+																									<p className='text-[10px] text-black mb-1.5 text-center'>
+																										{isToday(day.date)
+																											? 'Bugun'
+																											: lastDate}
+																									</p>
+																								)}
+																								<button
+																									disabled={isCompleted}
+																									className={`text-base xl:text-lg font-bold transition-all ${
+																										isCompleted
+																											? 'text-green-600 cursor-default'
+																											: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
+																									}`}
+																								>
+																									{isCompleted ? (
+																										<div className='flex items-center justify-center w-7 h-7 xl:w-8 xl:h-8 bg-green-500 rounded-full'>
+																											<Check className='w-4 h-4 xl:w-5 xl:h-5 text-white' />
+																										</div>
+																									) : (
+																										<span>
+																											{taken}/{total}
 																										</span>
 																									)}
-																								</div>
-																							</SelectItem>
+																								</button>
+																							</div>
 																						)
-																					)}
-																				</SelectContent>
-																			</Select>
-																		</td>
-																		{(() => {
-																			const selectedServiceItem =
-																				selectedServiceItems[record._id]
-																			const selectedService =
-																				record.serviceData?.items.find(
-																					s => s._id === selectedServiceItem
-																				)
+																					})}
+																				</div>
 
-																			if (!selectedService) {
-																				return (
-																					<td
-																						colSpan={100}
-																						className='p-3 text-center text-xs text-muted-foreground'
-																					>
-																						Хизматни танланг
-																					</td>
-																				)
-																			}
+																				{/* Tablet - 3 columns */}
+																				<div className='hidden sm:grid lg:hidden sm:grid-cols-3 md:grid-cols-4 gap-2'>
+																					{service.days.map(day => {
+																						const taken = day.times || 0
+																						const total = service.frequency
+																						const isCompleted = taken >= total
+																						const lastDate = formatDate(
+																							day.date
+																						)
 
-																			const daysWithDate =
-																				selectedService.days?.filter(
-																					d => d.date !== null
-																				) || []
-
-																			return daysWithDate.map(day => {
-																				const dayDate = new Date(day.date!)
-																				const isTodayDay = isToday(
-																					String(day.date)
-																				)
-																				const taken = day.is_completed
-
-																				return (
-																					<td
-																						key={day._id}
-																						className='p-2 align-top'
-																					>
-																						<div
-																							className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px] ${
-																								taken
-																									? 'bg-green-50 border-green-500'
-																									: isTodayDay
-																									? 'bg-blue-50 border-blue-500 ring-2 ring-blue-200 hover:bg-blue-100'
-																									: 'bg-white border-gray-200 hover:border-primary hover:shadow-sm'
-																							}`}
-																							onClick={e => {
-																								e.stopPropagation()
-																								openConfirmModal(
-																									record._id,
-																									null,
-																									record.serviceData!._id,
-																									selectedService._id,
-																									day.day,
-																									'service'
-																								)
-																							}}
-																						>
-																							<span className='text-[10px] text-muted-foreground mb-1 text-center leading-tight'>
-																								{formatDate(String(day.date))}
-																							</span>
-																							<div className='text-xs font-medium text-center'>
-																								{taken ? (
-																									<>
-																										<Check className='w-5 h-5 text-green-600 mx-auto mb-1' />
-																										<span className='text-green-700'>
-																											Бажарилди
+																						return (
+																							<div
+																								key={day._id}
+																								className='flex flex-col items-center p-2 border rounded-lg hover:bg-accent/50 transition-colors'
+																								onClick={() =>
+																									!isCompleted &&
+																									openConfirmModal(
+																										record._id,
+																										null,
+																										service._id,
+																										String(day.day),
+																										'service'
+																									)
+																								}
+																							>
+																								<p className='text-xs font-medium mb-0.5 text-center line-clamp-1'>
+																									Кун {day.day}
+																								</p>
+																								{lastDate && (
+																									<p className='text-[10px] text-black mb-1 text-center'>
+																										{isToday(day.date)
+																											? 'Bugun'
+																											: lastDate}
+																									</p>
+																								)}
+																								<button
+																									disabled={isCompleted}
+																									className={`text-base font-bold transition-all ${
+																										isCompleted
+																											? 'text-green-600 cursor-default'
+																											: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
+																									}`}
+																								>
+																									{isCompleted ? (
+																										<div className='flex items-center justify-center w-7 h-7 bg-green-500 rounded-full'>
+																											<Check className='w-4 h-4 text-white' />
+																										</div>
+																									) : (
+																										<span>
+																											{taken}/{total}
 																										</span>
-																									</>
-																								) : (
-																									<span className='text-muted-foreground'>
-																										Кутилмоқда
+																									)}
+																								</button>
+																							</div>
+																						)
+																					})}
+																				</div>
+
+																				{/* Mobile - 2 columns */}
+																				<div className='grid grid-cols-2 gap-2 sm:hidden'>
+																					{service.days.map(day => {
+																						const taken = day.times || 0
+																						const total = service.frequency
+																						const isCompleted = taken >= total
+																						const lastDate = formatDate(
+																							day.date
+																						)
+
+																						return (
+																							<div
+																								key={day._id}
+																								className='flex flex-col p-2 border rounded-lg active:bg-accent/50 transition-colors'
+																								onClick={() =>
+																									!isCompleted &&
+																									openConfirmModal(
+																										record._id,
+																										null,
+																										service._id,
+																										String(day.day),
+																										'service'
+																									)
+																								}
+																							>
+																								<div className='flex items-center justify-between mb-1'>
+																									<span className='text-xs font-medium'>
+																										Кун {day.day}
 																									</span>
+																									<button
+																										disabled={isCompleted}
+																										className={`text-sm font-bold transition-all flex-shrink-0 ${
+																											isCompleted
+																												? 'text-green-600'
+																												: 'text-primary active:scale-95'
+																										}`}
+																									>
+																										{isCompleted ? (
+																											<Check className='w-5 h-5 text-green-600' />
+																										) : (
+																											<span>
+																												{taken}/{total}
+																											</span>
+																										)}
+																									</button>
+																								</div>
+																								{lastDate && (
+																									<p className='text-[9px] text-black text-left'>
+																										{isToday(day.date)
+																											? 'Bugun'
+																											: lastDate}
+																									</p>
 																								)}
 																							</div>
-																						</div>
-																					</td>
-																				)
-																			})
-																		})()}
-																	</tr>
-																</tbody>
-															</table>
-														</div>
-													</>
+																						)
+																					})}
+																				</div>
+																			</>
+																		)}
+
+																		{/* Days yo'q va processing ham yo'q */}
+																		{!hasDays && !isProcessing && (
+																			<p className='text-xs sm:text-sm text-black text-center py-4'>
+																				Кунлар юкланмоқда...
+																			</p>
+																		)}
+																	</CardContent>
+																</Card>
+															)
+														})}
+													</div>
 												)}
 											</TabsContent>
 										</Tabs>
@@ -994,7 +711,6 @@ const Medicine = () => {
 						recordId: null,
 						prescriptionId: null,
 						serviceId: null,
-						itemId: null,
 						day: null,
 						type: 'medicine',
 					})
@@ -1008,8 +724,8 @@ const Medicine = () => {
 					</DialogHeader>
 					<p className='text-sm sm:text-base text-muted-foreground py-3 sm:py-4'>
 						{confirmModal.type === 'medicine'
-							? `Ушбу дори ${confirmModal.day}-кунда ростдан ҳам қабул қилиндими?`
-							: `Ушбу хизмат ${confirmModal.day}-кунда ростдан ҳам бажарилдими?`}
+							? 'Бемор дорини ичдими?'
+							: 'Хизмат бажарилдими?'}
 					</p>
 					<DialogFooter className='flex gap-2 sm:gap-3'>
 						<Button
@@ -1020,7 +736,6 @@ const Medicine = () => {
 									recordId: null,
 									prescriptionId: null,
 									serviceId: null,
-									itemId: null,
 									day: null,
 									type: 'medicine',
 								})

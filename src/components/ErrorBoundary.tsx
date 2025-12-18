@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
-import { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -21,31 +21,31 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error("Error caught by boundary:", error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className='min-h-screen bg-gradient-to-br from-destructive/5 via-background to-destructive/10 flex items-center justify-center p-4'>
-          <div className='text-center space-y-6 max-w-md'>
-            <div className='w-32 h-32 mx-auto mb-8 rounded-full bg-destructive/10 flex items-center justify-center'>
-              <AlertTriangle className='w-16 h-16 text-destructive' />
+        <div className="min-h-screen bg-gradient-to-br from-destructive/5 via-background to-destructive/10 flex items-center justify-center p-4">
+          <div className="text-center space-y-6 max-w-md">
+            <div className="w-32 h-32 mx-auto mb-8 rounded-full bg-destructive/10 flex items-center justify-center">
+              <AlertTriangle className="w-16 h-16 text-destructive" />
             </div>
-
-            <div className='space-y-2'>
-              <h1 className='text-6xl font-bold text-destructive'>500</h1>
-              <h2 className='text-2xl font-semibold'>Хатолик юз берди</h2>
-              <p className='text-muted-foreground'>
+            
+            <div className="space-y-2">
+              <h1 className="text-6xl font-bold text-destructive">500</h1>
+              <h2 className="text-2xl font-semibold">Хатолик юз берди</h2>
+              <p className="text-muted-foreground">
                 Илтимос, кейинроқ қайта уриниб кўринг
               </p>
             </div>
 
-            <div className='flex gap-3 justify-center pt-4'>
+            <div className="flex gap-3 justify-center pt-4">
               <Button
-                onClick={() => (window.location.href = '/')}
-                variant='outline'
+                onClick={() => window.location.href = "/"}
+                variant="outline"
               >
                 Бош саҳифага
               </Button>
@@ -54,9 +54,9 @@ export class ErrorBoundary extends Component<Props, State> {
               </Button>
             </div>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className='mt-8 p-4 bg-muted rounded-lg text-left'>
-                <p className='text-xs font-mono text-destructive break-all'>
+            {process.env.NODE_ENV === "development" && this.state.error && (
+              <div className="mt-8 p-4 bg-muted rounded-lg text-left">
+                <p className="text-xs font-mono text-destructive break-all">
                   {this.state.error.toString()}
                 </p>
               </div>

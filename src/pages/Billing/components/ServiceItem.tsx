@@ -1,55 +1,42 @@
-interface ServiceData {
-  service_type_id:
-    | {
-        _id: string;
-        name: string;
-        description?: string;
-        price?: number;
-        code?: string;
-      }
-    | string;
-  days?: Array<{
-    day: number;
-    is_completed: boolean;
-    date: string | null;
-    _id: string;
-  }>;
-  quantity?: number;
-  price?: number;
-  total_price?: number;
-  notes?: string;
-  _id?: string;
-}
+import { useGetOneServiceQuery } from '@/app/api/serviceApi/serviceApi';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface Props {
-  service: ServiceData;
+  serviceId: string;
+  quantity?: number;
+  price?: number;
   isMobile?: boolean;
 }
 
-export const ServiceItem = ({ service, isMobile = false }: Props) => {
+export const ServiceItem = ({
+  serviceId,
+  quantity = 1,
+  price,
+  isMobile = false,
+}: Props) => {
+  const { data, isLoading } = useGetOneServiceQuery(serviceId);
+
+  if (isLoading) {
+    return (
+      <div className='py-3 px-4 text-center'>
+        <LoadingSpinner className='w-4 h-4 mx-auto' />
+      </div>
+    );
+  }
+
+  if (!data?.data) {
+    return null;
+  }
+
+  const service = data.data;
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
   };
 
-  // Get service type data
-  const serviceType =
-    typeof service.service_type_id === 'object'
-      ? service.service_type_id
-      : null;
-
-  if (!serviceType) {
-    return null;
-  }
-
-  // Quantity can come from either `quantity` or `days.length`
-  const quantity = service.quantity ?? service.days?.length ?? 1;
-
-  // Unit price can come from `service_type_id.price` or the service's own `price`
-  const unitPrice = serviceType.price ?? service.price ?? 0;
-
-  // Total can come from `total_price` or be derived
-  const totalPrice = service.total_price ?? unitPrice * quantity;
-  const code = serviceType.code || serviceType.description || '-';
+  // Use examination price if provided, otherwise use service default price
+  const unitPrice = price !== undefined ? price : service.price;
+  const totalPrice = unitPrice * quantity;
 
   if (isMobile) {
     return (
@@ -57,9 +44,9 @@ export const ServiceItem = ({ service, isMobile = false }: Props) => {
         <div className='space-y-2'>
           <div className='flex justify-between items-start'>
             <div>
-              <div className='font-semibold text-sm'>{serviceType.name}</div>
+              <div className='font-semibold text-sm'>{service.name}</div>
               <div className='text-xs text-primary font-medium mt-1'>
-                {code}
+                {service.code}
               </div>
             </div>
             <span className='text-xs px-2 py-1 rounded-md bg-muted'>
@@ -79,9 +66,9 @@ export const ServiceItem = ({ service, isMobile = false }: Props) => {
 
   return (
     <tr className='border-b last:border-0'>
-      <td className='py-3 px-4 text-sm'>{serviceType.name}</td>
+      <td className='py-3 px-4 text-sm'>{service.name}</td>
       <td className='py-3 px-4 text-sm'>
-        <span className='text-primary font-medium'>{code}</span>
+        <span className='text-primary font-medium'>{service.code}</span>
       </td>
       <td className='py-3 px-4 text-sm text-center'>{quantity}</td>
       <td className='py-3 px-4 text-sm text-right'>

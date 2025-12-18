@@ -3,7 +3,7 @@ export type UserCreateResponse = {
 	username: string
 	password: string
 	fullname: string
-	// email: string
+	email: string
 	phone: string
 	role: string
 	section: string
@@ -14,7 +14,7 @@ export type User = {
 	_id: string
 	fullname: string
 	username: string
-	// email: string
+	email: string
 	phone: string
 	role: string
 	section: string
@@ -26,7 +26,7 @@ export type UserId = {
 	_id: string,
 	username: string,
 	fullname: string,
-	// email: string,
+	email: string,
 	phone: string,
 	role: string,
 	section: string,

@@ -100,7 +100,7 @@ const EditPatientModal = ({
   const [newAllergy, setNewAllergy] = useState('');
   const [medicineInput, setMedicineInput] = useState('');
   const [scheduleInput, setScheduleInput] = useState('');
-  const [dateInput, setDateInput] = useState<string | null>(null);
+  const [dateInput, setDateInput] = useState('');
 
   useEffect(() => {
     if (open && patient) {
@@ -122,7 +122,7 @@ const EditPatientModal = ({
           number: patient.passport.number,
         },
       });
-      setDateInput(null);
+      setDateInput('');
     }
   }, [patient, open]);
 
@@ -260,18 +260,15 @@ const EditPatientModal = ({
                           className='border-slate-400 border-2 flex-1'
                           placeholder='КК.ОО.ЙЙЙЙ (01.01.1990)'
                           value={
-                            dateInput !== null && dateInput !== undefined
-                              ? dateInput
-                              : formData.date_of_birth
+                            dateInput ||
+                            (formData.date_of_birth
                               ? format(formData.date_of_birth, 'dd.MM.yyyy')
-                              : ''
+                              : '')
                           }
                           onChange={(e) => {
                             let value = e.target.value.replace(/[^\d.]/g, '');
-                            // If empty, clear the input field completely
                             if (value === '') {
                               setDateInput('');
-                              // Don't update date_of_birth, let validation handle it
                               return;
                             }
                             const parts = value.split('.');
@@ -290,7 +287,6 @@ const EditPatientModal = ({
                               }
                             }
                             setDateInput(formatted);
-                            // Parse complete date only if it's exactly 10 characters
                             if (formatted.length === 10) {
                               const [day, month, year] = formatted.split('.');
                               const dayNum = parseInt(day);
@@ -311,24 +307,7 @@ const EditPatientModal = ({
                                 );
                                 if (date.getDate() === dayNum) {
                                   handleChange('date_of_birth', date);
-                                } else {
-                                  // Invalid date, don't update
                                 }
-                              } else {
-                                // Invalid date values, don't update
-                              }
-                            } else {
-                              // Not complete date, don't update the date field
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            // Allow Backspace and Delete to work properly
-                            if (e.key === 'Backspace' || e.key === 'Delete') {
-                              // If the field is empty or user is trying to delete, allow it
-                              const currentValue = e.currentTarget.value;
-                              if (currentValue === '' || currentValue.length <= 1) {
-                                setDateInput('');
-                                // Don't update date_of_birth, let validation handle it
                               }
                             }
                           }}
