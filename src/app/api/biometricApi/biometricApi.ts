@@ -40,6 +40,12 @@ export const biometricApi = baseApi.injectEndpoints({
 				formData.append('patient_id', patientId)
 				formData.append('image', image)
 
+				console.log('📤 FormData created:', {
+					patient_id: patientId,
+					image: image.name,
+					imageSize: image.size,
+				})
+
 				return {
 					url: `${PATHS.BIOMETRIC}confirm`,
 					method: 'POST',

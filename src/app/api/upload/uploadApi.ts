@@ -1,6 +1,6 @@
 import { baseApi } from '../baseApi'
 import { PATHS } from './path'
-import { UploadResponse } from './types'
+import { FilesUploadResponse, UploadResponse } from './types'
 
 export const uploadApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
@@ -11,7 +11,14 @@ export const uploadApi = baseApi.injectEndpoints({
 				body: formData,
 			}),
 		}),
+		uploadFiles: builder.mutation<FilesUploadResponse, FormData>({
+			query: formData => ({
+				url: PATHS.UPLOAD_FILES,
+				method: 'POST',
+				body: formData,
+			}),
+		}),
 	}),
 })
 
-export const { useUploadCreateMutation } = uploadApi
+export const { useUploadCreateMutation, useUploadFilesMutation } = uploadApi

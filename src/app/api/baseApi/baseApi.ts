@@ -66,13 +66,29 @@ const customBaseQuery: BaseQueryFn<
   unknown
 > = async (args, api, extraOptions) => {
   const url = typeof args === 'string' ? args : args.url ?? '';
+  
+  // Check if this is a biometric endpoint (should skip auth)
+  const isBiometricEndpoint = url.includes('/biometric/');
+  
+  console.log('🔍 BaseAPI - URL:', url);
+  console.log('🔍 BaseAPI - Is biometric endpoint:', isBiometricEndpoint);
 
   const baseQuery = fetchBaseQuery({
     baseUrl: SERVER_URL,
     prepareHeaders: (headers) => {
       headers.set('Accept', 'application/json');
-      const token = getTokenFromCache();
-      if (token) headers.set('Authorization', `Bearer ${token}`);
+      
+      // Don't add Authorization header for biometric endpoints
+      if (!isBiometricEndpoint) {
+        const token = getTokenFromCache();
+        if (token) {
+          headers.set('Authorization', `Bearer ${token}`);
+          console.log('🔑 BaseAPI - Auth token added');
+        }
+      } else {
+        console.log('🚫 BaseAPI - Skipping auth token for biometric endpoint');
+      }
+      
       return headers;
     },
   });
@@ -85,9 +101,11 @@ const customBaseQuery: BaseQueryFn<
     const statusCode = error?.status;
 
     // Check if token is expired or invalid
+    // BUT don't redirect for biometric endpoints (they may intentionally return 401)
     if (
-      statusCode === 401
+      statusCode === 401 && !isBiometricEndpoint
     ) {
+      console.log('🚨 BaseAPI - 401 Unauthorized, redirecting to login');
       // Clear authentication tokens
       clearAuthTokens();
       localStorage.removeItem(CACHE_KEY);
@@ -96,6 +114,8 @@ const customBaseQuery: BaseQueryFn<
       window.location.href = '/login';
       
       return result;
+    } else if (statusCode === 401 && isBiometricEndpoint) {
+      console.log('⚠️ BaseAPI - 401 from biometric endpoint (not redirecting)');
     }
   }
 

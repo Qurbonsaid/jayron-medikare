@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
 	},
 	section: {
 		marginBottom: 12,
+		break: 'avoid',
 	},
 	sectionTitle: {
 		fontSize: 10,
@@ -106,6 +107,7 @@ const styles = StyleSheet.create({
 		marginBottom: 8,
 		borderWidth: 1,
 		borderColor: '#dee2e6',
+		break: 'avoid',
 	},
 	tableRow: {
 		flexDirection: 'row',
@@ -242,6 +244,80 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 		0
 	)
 
+	// Calculate service type totals
+	const serviceTypeTotals = {
+		XIZMAT: {
+			total: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.XIZMAT?.total || 0),
+				0
+			),
+			paid: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.XIZMAT?.paid || 0),
+				0
+			),
+			debt: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.XIZMAT?.debt || 0),
+				0
+			),
+		},
+		TASVIR: {
+			total: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.TASVIR?.total || 0),
+				0
+			),
+			paid: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.TASVIR?.paid || 0),
+				0
+			),
+			debt: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.TASVIR?.debt || 0),
+				0
+			),
+		},
+		KORIK: {
+			total: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.KORIK?.total || 0),
+				0
+			),
+			paid: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.KORIK?.paid || 0),
+				0
+			),
+			debt: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.KORIK?.debt || 0),
+				0
+			),
+		},
+		TAHLIL: {
+			total: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.TAHLIL?.total || 0),
+				0
+			),
+			paid: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.TAHLIL?.paid || 0),
+				0
+			),
+			debt: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.TAHLIL?.debt || 0),
+				0
+			),
+		},
+		XONA: {
+			total: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.XONA?.total || 0),
+				0
+			),
+			paid: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.XONA?.paid || 0),
+				0
+			),
+			debt: billingsData.reduce(
+				(sum, item) => sum + (item.byType?.XONA?.debt || 0),
+				0
+			),
+		},
+	}
+
 	const currentDate = new Date().toLocaleDateString('uz-UZ', {
 		day: '2-digit',
 		month: '2-digit',
@@ -265,68 +341,188 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 						<Text style={styles.date}>{formatDate(new Date())}</Text>
 					</View>
 				</View>
-
 				{/* KPI Section */}
 				<View style={styles.section}>
 					<Text style={styles.sectionTitle}>Асосий кўрсаткичлар</Text>
-					<View style={styles.summaryRow}>
-						<Text style={styles.summaryLabel}>Жами беморлар</Text>
-						<Text style={styles.summaryValue}>
-							{formatNumber(totalPatients)}
-						</Text>
-					</View>
-					<View style={styles.summaryRow}>
-						<Text style={styles.summaryLabel}>Жами даромад</Text>
-						<Text style={styles.summaryValue}>
-							{formatCurrency(totalBilling)}
-						</Text>
-					</View>
-					<View style={styles.summaryRow}>
-						<Text style={styles.summaryLabel}>Палата бандлиги</Text>
-						<Text style={styles.summaryValue}>
-							{roomsData?.occupancyRate?.toFixed(1) || 0}% (
-							{roomsData?.occupiedBeds || 0}/{roomsData?.totalBeds || 0})
-						</Text>
-					</View>
-					<View style={styles.summaryRow}>
-						<Text style={styles.summaryLabel}>Ташхислар</Text>
-						<Text style={styles.summaryValue}>
-							{diagnosisData?.length || 0}
-						</Text>
+					<View style={styles.tableContainer}>
+						<View style={[styles.tableRow, styles.tableHeader]}>
+							<Text style={[styles.tableCol, styles.tableCell, { flex: 2 }]}>
+								Кўрсаткич
+							</Text>
+							<Text style={[styles.tableCol, styles.tableCell]}>Қиймат</Text>
+						</View>
+						<View style={styles.tableRow}>
+							<Text style={[styles.tableCol, styles.tableCell, { flex: 2 }]}>
+								Жами беморлар
+							</Text>
+							<Text style={[styles.tableCol, styles.tableCell]}>
+								{formatNumber(totalPatients)}
+							</Text>
+						</View>
+						<View style={styles.tableRow}>
+							<Text style={[styles.tableCol, styles.tableCell, { flex: 2 }]}>
+								Жами даромад
+							</Text>
+							<Text style={[styles.tableCol, styles.tableCell]}>
+								{formatCurrency(totalBilling)}
+							</Text>
+						</View>
+						<View style={styles.tableRow}>
+							<Text style={[styles.tableCol, styles.tableCell, { flex: 2 }]}>
+								Палата бандлиги
+							</Text>
+							<Text style={[styles.tableCol, styles.tableCell]}>
+								{roomsData?.occupancyRate?.toFixed(1) || 0}% (
+								{roomsData?.occupiedBeds || 0}/{roomsData?.totalBeds || 0})
+							</Text>
+						</View>
+						<View style={styles.tableRow}>
+							<Text style={[styles.tableCol, styles.tableCell, { flex: 2 }]}>
+								Жами ташхислар
+							</Text>
+							<Text style={[styles.tableCol, styles.tableCell]}>
+								{diagnosisData?.length || 0}
+							</Text>
+						</View>
 					</View>
 				</View>
-
 				{/* User Statistics */}
 				{usersData && (
 					<View style={styles.section}>
 						<Text style={styles.sectionTitle}>Ходимлар статистикаси</Text>
-						<View style={styles.summaryRow}>
-							<Text style={styles.summaryLabel}>Шифокорлар</Text>
-							<Text style={styles.summaryValue}>
-								{usersData.doctor?.total ?? 0} (Актив:{' '}
-								{usersData.doctor?.active ?? 0}, Ноактив:{' '}
-								{usersData.doctor?.inactive ?? 0})
-							</Text>
+						<View style={styles.tableContainer}>
+							<View style={[styles.tableRow, styles.tableHeader]}>
+								<Text style={[styles.tableCol, styles.tableCell]}>Лавозим</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>Жами</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>Актив</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>Ноактив</Text>
+							</View>
+							<View style={styles.tableRow}>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									Шифокорлар
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{usersData.doctor?.total ?? 0}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{usersData.doctor?.active ?? 0}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{usersData.doctor?.inactive ?? 0}
+								</Text>
+							</View>
+							<View style={styles.tableRow}>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									Ҳамширалар
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{usersData.nurse?.total ?? 0}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{usersData.nurse?.active ?? 0}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{usersData.nurse?.inactive ?? 0}
+								</Text>
+							</View>
+							<View style={styles.tableRow}>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									Регистраторлар
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{usersData.receptionist?.total ?? 0}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{usersData.receptionist?.active ?? 0}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{usersData.receptionist?.inactive ?? 0}
+								</Text>
+							</View>
 						</View>
-						<View style={styles.summaryRow}>
-							<Text style={styles.summaryLabel}>Ҳамширалар</Text>
-							<Text style={styles.summaryValue}>
-								{usersData.nurse?.total ?? 0} (Актив:{' '}
-								{usersData.nurse?.active ?? 0}, Ноактив:{' '}
-								{usersData.nurse?.inactive ?? 0})
-							</Text>
-						</View>
-						<View style={styles.summaryRow}>
-							<Text style={styles.summaryLabel}>Регистраторлар</Text>
-							<Text style={styles.summaryValue}>
-								{usersData.receptionist?.total ?? 0} (Актив:{' '}
-								{usersData.receptionist?.active ?? 0}, Ноактив:{' '}
-								{usersData.receptionist?.inactive ?? 0})
-							</Text>
+					</View>
+				)}{' '}
+				{/* Service Type Statistics */}
+				{billingsData.length > 0 && (
+					<View style={styles.section}>
+						<Text style={styles.sectionTitle}>
+							Хизмат турлари бўйича статистика (
+							{getIntervalLabel(billingInterval)})
+						</Text>
+						<View style={styles.tableContainer}>
+							<View style={[styles.tableRow, styles.tableHeader]}>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									Хизмат тури
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>Жами</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									Тўланған
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>Қарз</Text>
+							</View>
+							<View style={styles.tableRow}>
+								<Text style={[styles.tableCol, styles.tableCell]}>ХИЗМАТ</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.XIZMAT.total)}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.XIZMAT.paid)}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.XIZMAT.debt)}
+								</Text>
+							</View>
+							<View style={styles.tableRow}>
+								<Text style={[styles.tableCol, styles.tableCell]}>ТАСВИР</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.TASVIR.total)}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.TASVIR.paid)}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.TASVIR.debt)}
+								</Text>
+							</View>
+							<View style={styles.tableRow}>
+								<Text style={[styles.tableCol, styles.tableCell]}>КЎРИК</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.KORIK.total)}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.KORIK.paid)}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.KORIK.debt)}
+								</Text>
+							</View>
+							<View style={styles.tableRow}>
+								<Text style={[styles.tableCol, styles.tableCell]}>ТАҲЛИЛ</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.TAHLIL.total)}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.TAHLIL.paid)}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.TAHLIL.debt)}
+								</Text>
+							</View>
+							<View style={styles.tableRow}>
+								<Text style={[styles.tableCol, styles.tableCell]}>ХОНА</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.XONA.total)}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.XONA.paid)}
+								</Text>
+								<Text style={[styles.tableCol, styles.tableCell]}>
+									{formatCurrency(serviceTypeTotals.XONA.debt)}
+								</Text>
+							</View>
 						</View>
 					</View>
 				)}
-
 				{/* Billing Data */}
 				{billingsData.length > 0 && (
 					<View style={styles.section}>
@@ -338,7 +534,7 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 								<Text style={[styles.tableCol, styles.tableCell]}>Сана</Text>
 								<Text style={[styles.tableCol, styles.tableCell]}>Жами</Text>
 								<Text style={[styles.tableCol, styles.tableCell]}>
-									Тўланган
+									Тўланған
 								</Text>
 								<Text style={[styles.tableCol, styles.tableCell]}>Қарз</Text>
 							</View>
@@ -361,7 +557,6 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 						</View>
 					</View>
 				)}
-
 				{/* Patient Data */}
 				{patientsData.length > 0 && (
 					<View style={styles.section}>
@@ -395,7 +590,6 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 					</View>
 				)}
 				{/* </Page> */}
-
 				{/* Page 2 */}
 				{/* <Page size='A4' style={styles.page}> */}
 				{/* Examination Data */}
@@ -410,6 +604,7 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 								<Text style={[styles.tableCol, styles.tableCell]}>
 									Жами кўриклар
 								</Text>
+								{/* <Text style={[styles.tableCol, styles.tableCell]}>Актив</Text> */}
 								<Text style={[styles.tableCol, styles.tableCell]}>Сумма</Text>
 							</View>
 							{examinationsData.map((item, index) => (
@@ -420,9 +615,9 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 									<Text style={[styles.tableCol, styles.tableCell]}>
 										{item.totalExaminations}
 									</Text>
-									<Text style={[styles.tableCol, styles.tableCell]}>
+									{/* <Text style={[styles.tableCol, styles.tableCell]}>
 										{item.activeExaminations}
-									</Text>
+									</Text> */}
 									<Text style={[styles.tableCol, styles.tableCell]}>
 										{formatCurrency(item.totalAmount)}
 									</Text>
@@ -430,8 +625,7 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 							))}
 						</View>
 					</View>
-				)}
-
+				)}{' '}
 				{/* Analysis Data */}
 				{analysisData.length > 0 && (
 					<View style={styles.section}>
@@ -470,7 +664,6 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 						</View>
 					</View>
 				)}
-
 				{/* Doctor Performance */}
 				{doctorsData?.length > 0 && (
 					<View style={styles.section}>
@@ -521,7 +714,6 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 						</View>
 					</View>
 				)}
-
 				{/* Diagnosis Stats */}
 				{diagnosisData.length > 0 && (
 					<View style={styles.section}>
@@ -533,7 +725,7 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 								</Text>
 								<Text style={[styles.tableCol, styles.tableCell]}>Сони</Text>
 							</View>
-							{diagnosisData.slice(0, 10).map((item, index) => (
+							{diagnosisData.map((item, index) => (
 								<View key={index} style={styles.tableRow}>
 									<Text
 										style={[styles.tableCol, styles.tableCell, { flex: 2 }]}
@@ -547,8 +739,7 @@ const ReportsPDFDocument: React.FC<ReportsPDFProps> = ({
 							))}
 						</View>
 					</View>
-				)}
-
+				)}{' '}
 				{/* Footer */}
 				<View style={styles.footer}>
 					<Text>

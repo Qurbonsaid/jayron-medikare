@@ -159,7 +159,7 @@ const LabOrder = () => {
 				return await createPatientAnalysis(reqBody).unwrap()
 			},
 			onSuccess: () => {
-				toast.success('Кўрик муваффақиятли яратилди')
+				toast.success('Tаҳлил муваффақиятли яратилди')
 				setTests(prev => prev.map(t => ({ ...t, selected: false })))
 				setClinicalIndications('')
 				setPriority(ExamLevel.ODDIY)

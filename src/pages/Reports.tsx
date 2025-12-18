@@ -224,16 +224,16 @@ const Reports = () => {
 					</div>
 				)}
 
+				{/* Billing Chart - Full Width with Service Type Cards */}
+				<BillingChart
+					data={billingsData?.data || []}
+					isLoading={billingsLoading}
+					interval={billingInterval}
+					onIntervalChange={setBillingInterval}
+				/>
+
 				{/* Charts Section */}
 				<div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-					{/* Billing Chart */}
-					<BillingChart
-						data={billingsData?.data || []}
-						isLoading={billingsLoading}
-						interval={billingInterval}
-						onIntervalChange={setBillingInterval}
-					/>
-
 					{/* Patient Chart */}
 					<PatientChart
 						data={patientsData?.data || []}

@@ -18,16 +18,45 @@ export interface Pagination {
 
 export interface BillingResponse {
 	success: boolean
-	data: {
-		_id: {
-			year: number
-			month?: number
-			day?: number
+	data: [
+		{
+			_id: {
+				year:number
+				month: number
+				day: number
+			}
+			paidAmount:number
+			byType: {
+				XIZMAT: {
+					total: number
+					paid: number
+					debt: number
+				}
+				KORIK: {
+					total: number
+					paid: number
+					debt: number
+				}
+				XONA: {
+					total: number
+					paid: number
+					debt: number
+				}
+				TASVIR: {
+					total: number
+					paid: number
+					debt: number
+				}
+				TAHLIL: {
+					total: number
+					paid: number
+					debt: number
+				}
+			}
+			totalAmount: number
+			debtAmount: number
 		}
-		totalAmount: number
-		paidAmount: number
-		debtAmount: number
-	}[]
+	]
 	pagination: Pagination
 }
 

@@ -1,0 +1,1 @@
+export { uploadApi, useUploadCreateMutation, useUploadFilesMutation } from './uploadApi'
