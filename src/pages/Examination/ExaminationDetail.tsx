@@ -2206,9 +2206,7 @@ const ExaminationDetail = () => {
                                         );
                                       }
                                     }
-                                    if (services.length === 0) {
-                                      addService();
-                                    }
+                                    addService();
                                   }}
                                   className='h-8'
                                 >
@@ -3118,9 +3116,8 @@ const ExaminationDetail = () => {
                               }
                               // Add default one row
                               if (services.length === 0) {
-                                addService();
-                              }
-                            }}
+                              addService();
+                            }}}
                           >
                             <Plus className='w-4 h-4 mr-2' />
                             Хизмат Қўшиш

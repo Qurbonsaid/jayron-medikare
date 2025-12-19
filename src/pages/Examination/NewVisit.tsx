@@ -636,7 +636,9 @@ const NewVisit = () => {
     markedDays: number[]; // Array of day numbers that are marked
   }
   const [services, setServices] = useState<ServiceItem[]>([]);
-  const [serviceSearch, setServiceSearch] = useState('');
+  const [serviceSearch, setServiceSearch] = useState<Record<string, string>>(
+    {}
+  );
   const [serviceDuration, setServiceDuration] = useState<number>(7);
   const [serviceStartDate, setServiceStartDate] = useState<Date | null>(
     new Date()
@@ -648,7 +650,7 @@ const NewVisit = () => {
   // Refs for autofocus
   const doctorSearchRef = useRef<HTMLInputElement>(null);
   const medicationSearchRef = useRef<HTMLInputElement>(null);
-  const serviceSearchRef = useRef<HTMLInputElement>(null);
+  const serviceSearchRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Infinite scroll states for patients
   const [patientPage, setPatientPage] = useState(1);
@@ -695,15 +697,14 @@ const NewVisit = () => {
     search: medicationSearch || undefined,
   });
 
-  // Fetch services
+  // Fetch services - use empty string to get all services, filtering will be done client-side
   const { data: servicesData } = useGetAllServiceQuery({
     page: 1,
     limit: 100,
-    search: serviceSearch || undefined,
   } as any);
 
   const availableMedications = medicationsData?.data || [];
-  const availableServices = servicesData?.data || [];
+  const allAvailableServices = servicesData?.data || [];
 
   const patients = allPatients;
   const doctors = allDoctors;
@@ -1744,52 +1745,123 @@ const NewVisit = () => {
                                           }
                                           onOpenChange={(open) => {
                                             if (open) {
-                                              setTimeout(
-                                                () =>
-                                                  serviceSearchRef.current?.focus(),
-                                                0
-                                              );
+                                              // Clear search when opening this specific select
+                                              setServiceSearch((prev) => ({
+                                                ...prev,
+                                                [srv.id]: '',
+                                              }));
+                                              setTimeout(() => {
+                                                const inputRef =
+                                                  serviceSearchRefs.current[
+                                                    srv.id
+                                                  ];
+                                                if (inputRef) {
+                                                  inputRef.focus();
+                                                }
+                                              }, 0);
+                                            } else {
+                                              // Clear search when closing
+                                              setServiceSearch((prev) => {
+                                                const newState = { ...prev };
+                                                delete newState[srv.id];
+                                                return newState;
+                                              });
                                             }
                                           }}
                                         >
                                           <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
                                             <SelectValue placeholder='Танланг...' />
                                           </SelectTrigger>
-                                          <SelectContent>
+                                          <SelectContent
+                                            onCloseAutoFocus={(e) => {
+                                              e.preventDefault();
+                                            }}
+                                            onEscapeKeyDown={(e) => {
+                                              // Allow escape to close, but prevent default focus behavior
+                                            }}
+                                          >
                                             <div className='p-2'>
                                               <Input
-                                                ref={serviceSearchRef}
-                                                placeholder='Қидириш...'
-                                                value={serviceSearch}
-                                                onChange={(e) =>
-                                                  setServiceSearch(
-                                                    e.target.value
-                                                  )
-                                                }
-                                                onKeyDown={(e) =>
-                                                  e.stopPropagation()
-                                                }
-                                                onFocus={(e) => {
-                                                  setTimeout(
-                                                    () => e.target.focus(),
-                                                    0
-                                                  );
+                                                ref={(el) => {
+                                                  if (el) {
+                                                    serviceSearchRefs.current[
+                                                      srv.id
+                                                    ] = el;
+                                                  } else {
+                                                    delete serviceSearchRefs
+                                                      .current[srv.id];
+                                                  }
                                                 }}
+                                                placeholder='Қидириш...'
+                                                value={
+                                                  serviceSearch[srv.id] || ''
+                                                }
+                                                onChange={(e) => {
+                                                  const newValue =
+                                                    e.target.value;
+                                                  setServiceSearch((prev) => ({
+                                                    ...prev,
+                                                    [srv.id]: newValue,
+                                                  }));
+                                                  // Maintain focus after state update
+                                                  requestAnimationFrame(() => {
+                                                    e.target.focus();
+                                                  });
+                                                }}
+                                                onKeyDown={(e) => {
+                                                  e.stopPropagation();
+                                                  // Prevent Enter from closing select
+                                                  if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                  }
+                                                }}
+                                                autoFocus
                                                 className='text-sm mb-2'
                                               />
                                             </div>
-                                            {availableServices.map((s: any) => (
-                                              <SelectItem
-                                                key={s._id}
-                                                value={s._id}
-                                              >
-                                                {s.name} -{' '}
-                                                {new Intl.NumberFormat(
-                                                  'uz-UZ'
-                                                ).format(s.price)}{' '}
-                                                сўм
-                                              </SelectItem>
-                                            ))}
+                                            {(() => {
+                                              const searchQuery = (
+                                                serviceSearch[srv.id] || ''
+                                              )
+                                                .toLowerCase()
+                                                .trim();
+                                              const filteredServices =
+                                                searchQuery
+                                                  ? allAvailableServices.filter(
+                                                      (s: any) =>
+                                                        s.name
+                                                          ?.toLowerCase()
+                                                          .includes(
+                                                            searchQuery
+                                                          ) ||
+                                                        s.code
+                                                          ?.toLowerCase()
+                                                          .includes(searchQuery)
+                                                    )
+                                                  : allAvailableServices;
+
+                                              return filteredServices.length >
+                                                0 ? (
+                                                filteredServices.map(
+                                                  (s: any) => (
+                                                    <SelectItem
+                                                      key={s._id}
+                                                      value={s._id}
+                                                    >
+                                                      {s.name} -{' '}
+                                                      {new Intl.NumberFormat(
+                                                        'uz-UZ'
+                                                      ).format(s.price)}{' '}
+                                                      сўм
+                                                    </SelectItem>
+                                                  )
+                                                )
+                                              ) : (
+                                                <div className='p-4 text-center text-sm text-muted-foreground'>
+                                                  Хизмат топилмади
+                                                </div>
+                                              );
+                                            })()}
                                           </SelectContent>
                                         </Select>
                                       </td>
