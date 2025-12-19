@@ -120,6 +120,7 @@ export type AllPatientReq = {
   gender?: string;
   doctor_id?: string;
   is_diagnosis?: boolean;
+  has_examination?:boolean;
 };
 
 export type UpdateReq = {

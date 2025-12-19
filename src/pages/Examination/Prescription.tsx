@@ -164,7 +164,8 @@ const Prescription = () => {
       page: page,
       limit: 20,
       status: 'pending',
-      _key: queryKey, // This forces new query when key changes
+      _key: queryKey,
+      has_prescription:false
     } as any);
 
   // Fetch selected examination details
