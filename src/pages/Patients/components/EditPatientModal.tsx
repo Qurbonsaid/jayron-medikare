@@ -182,16 +182,34 @@ const EditPatientModal = ({
 
     await handleRequest({
       request: async () => {
+        const passportSeries = formData.passport?.series?.trim() || '';
+        const passportNumber = formData.passport?.number?.trim() || '';
+
+        const body: any = {
+          fullname: formData.fullname,
+          phone: formData.phone,
+          gender: formData.gender,
+          date_of_birth: format(formData.date_of_birth, 'yyyy-MM-dd'),
+          address: formData.address,
+          email: formData.email,
+          allergies: formData.allergies,
+          regular_medications: formData.regular_medications?.map((med) => ({
+            medicine: med.medicine,
+            schedule: med.schedule,
+          })),
+        };
+
+        // Only include passport if both series and number are provided and not empty
+        if (passportSeries && passportNumber) {
+          body.passport = {
+            series: passportSeries,
+            number: passportNumber,
+          };
+        }
+
         const result = await updatePatient({
           id: patient._id,
-          body: {
-            ...formData,
-            date_of_birth: format(formData.date_of_birth, 'yyyy-MM-dd'),
-            regular_medications: formData.regular_medications?.map((med) => ({
-              medicine: med.medicine,
-              schedule: med.schedule,
-            })),
-          },
+          body,
         }).unwrap();
         return result;
       },
