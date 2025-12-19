@@ -2206,9 +2206,7 @@ const ExaminationDetail = () => {
                                         );
                                       }
                                     }
-                                    if (services.length === 0) {
-                                      addService();
-                                    }
+                                    addService();
                                   }}
                                   className='h-8'
                                 >

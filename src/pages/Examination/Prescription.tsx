@@ -105,11 +105,15 @@ const Prescription = () => {
     medications: {},
     services: {},
   });
-  const [serviceSearch, setServiceSearch] = useState('');
-  const [debouncedServiceSearch, setDebouncedServiceSearch] = useState('');
+  const [serviceSearch, setServiceSearch] = useState<Record<string, string>>(
+    {}
+  );
   const [servicePage, setServicePage] = useState(1);
   const [serviceOptions, setServiceOptions] = useState<any[]>([]);
   const [hasMoreServices, setHasMoreServices] = useState(true);
+  const serviceSearchRefs = React.useRef<
+    Record<string, HTMLInputElement | null>
+  >({});
 
   // Common service settings
   const [serviceDuration, setServiceDuration] = useState<number>(7);
@@ -184,49 +188,19 @@ const Prescription = () => {
     search: medicationSearch || undefined,
   });
 
-  // Debounce service search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedServiceSearch(serviceSearch.trim());
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [serviceSearch]);
-
-  // Fetch services for search with paging
+  // Fetch all services - filtering will be done client-side
   const { data: servicesData, isFetching: isFetchingServices } =
     useGetAllServiceQuery({
-      page: servicePage,
-      limit: 20,
-      search: debouncedServiceSearch || undefined,
+      page: 1,
+      limit: 100,
     } as any);
 
-  // Reset paging when search changes
-  useEffect(() => {
-    setServicePage(1);
-    setServiceOptions([]);
-    setHasMoreServices(true);
-  }, [debouncedServiceSearch]);
-
-  // Append fetched services to options list
+  // Store all available services
   useEffect(() => {
     if (servicesData?.data) {
-      setServiceOptions((prev) => {
-        const incoming = servicesData.data;
-        const merged = servicePage === 1 ? incoming : [...prev, ...incoming];
-        const seen = new Set<string>();
-        return merged.filter((s: any) => {
-          if (!s?._id) return false;
-          if (seen.has(s._id)) return false;
-          seen.add(s._id);
-          return true;
-        });
-      });
-
-      const pages = servicesData.pagination?.pages || 1;
-      const current = servicesData.pagination?.page || servicePage;
-      setHasMoreServices(current < pages);
+      setServiceOptions(servicesData.data);
     }
-  }, [servicesData, servicePage]);
+  }, [servicesData]);
 
   const [createPrescription, { isLoading: isCreating }] =
     useCreatePrescriptionMutation();
@@ -2246,58 +2220,119 @@ const Prescription = () => {
                                             value
                                           )
                                         }
+                                        onOpenChange={(open) => {
+                                          if (open) {
+                                            // Clear search when opening this specific select
+                                            setServiceSearch((prev) => ({
+                                              ...prev,
+                                              [srv.id]: '',
+                                            }));
+                                            setTimeout(() => {
+                                              const inputRef =
+                                                serviceSearchRefs.current[
+                                                  srv.id
+                                                ];
+                                              if (inputRef) {
+                                                inputRef.focus();
+                                              }
+                                            }, 0);
+                                          } else {
+                                            // Clear search when closing
+                                            setServiceSearch((prev) => {
+                                              const newState = { ...prev };
+                                              delete newState[srv.id];
+                                              return newState;
+                                            });
+                                          }
+                                        }}
                                       >
                                         <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
                                           <SelectValue placeholder='Танланг...' />
                                         </SelectTrigger>
                                         <SelectContent
-                                          onScroll={(e) => {
-                                            const target =
-                                              e.target as HTMLDivElement;
-                                            const bottom =
-                                              target.scrollHeight -
-                                                target.scrollTop -
-                                                target.clientHeight <
-                                              10;
-                                            if (
-                                              bottom &&
-                                              hasMoreServices &&
-                                              !isFetchingServices
-                                            ) {
-                                              setServicePage(
-                                                (prev) => prev + 1
-                                              );
-                                            }
+                                          onCloseAutoFocus={(e) => {
+                                            e.preventDefault();
+                                          }}
+                                          onEscapeKeyDown={(e) => {
+                                            // Allow escape to close, but prevent default focus behavior
                                           }}
                                         >
                                           <div className='p-2'>
                                             <Input
+                                              ref={(el) => {
+                                                if (el) {
+                                                  serviceSearchRefs.current[
+                                                    srv.id
+                                                  ] = el;
+                                                } else {
+                                                  delete serviceSearchRefs
+                                                    .current[srv.id];
+                                                }
+                                              }}
                                               placeholder='Қидириш...'
-                                              value={serviceSearch}
-                                              onChange={(e) =>
-                                                setServiceSearch(e.target.value)
+                                              value={
+                                                serviceSearch[srv.id] || ''
                                               }
+                                              onChange={(e) => {
+                                                const newValue = e.target.value;
+                                                setServiceSearch((prev) => ({
+                                                  ...prev,
+                                                  [srv.id]: newValue,
+                                                }));
+                                                // Maintain focus after state update
+                                                requestAnimationFrame(() => {
+                                                  e.target.focus();
+                                                });
+                                              }}
+                                              onKeyDown={(e) => {
+                                                e.stopPropagation();
+                                                // Prevent Enter from closing select
+                                                if (e.key === 'Enter') {
+                                                  e.preventDefault();
+                                                }
+                                              }}
+                                              autoFocus
                                               className='text-sm mb-2'
                                             />
                                           </div>
-                                          {availableServices.map((s: any) => (
-                                            <SelectItem
-                                              key={s._id}
-                                              value={s._id}
-                                            >
-                                              {s.name} -{' '}
-                                              {new Intl.NumberFormat(
-                                                'uz-UZ'
-                                              ).format(s.price)}{' '}
-                                              сўм
-                                            </SelectItem>
-                                          ))}
-                                          {!isFetchingServices &&
-                                            availableServices.length === 0 && (
+                                          {(() => {
+                                            const searchQuery = (
+                                              serviceSearch[srv.id] || ''
+                                            )
+                                              .toLowerCase()
+                                              .trim();
+                                            const filteredServices = searchQuery
+                                              ? serviceOptions.filter(
+                                                  (s: any) =>
+                                                    s.name
+                                                      ?.toLowerCase()
+                                                      .includes(searchQuery) ||
+                                                    s.code
+                                                      ?.toLowerCase()
+                                                      .includes(searchQuery)
+                                                )
+                                              : serviceOptions;
+
+                                            return filteredServices.length >
+                                              0 ? (
+                                              filteredServices.map((s: any) => (
+                                                <SelectItem
+                                                  key={s._id}
+                                                  value={s._id}
+                                                >
+                                                  {s.name} -{' '}
+                                                  {new Intl.NumberFormat(
+                                                    'uz-UZ'
+                                                  ).format(s.price)}{' '}
+                                                  сўм
+                                                </SelectItem>
+                                              ))
+                                            ) : (
                                               <div className='px-2 py-4 text-xs text-muted-foreground text-center'>
                                                 Хизмат топилмади
                                               </div>
-                                            )}
+                                            );
+                                          })()}
                                           {isFetchingServices && (
                                             <div className='flex items-center justify-center py-2 text-xs text-muted-foreground'>
                                               <Loader2 className='h-4 w-4 animate-spin mr-2' />

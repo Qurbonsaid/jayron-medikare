@@ -122,7 +122,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
   const handleRequest = useHandleRequest();
 
   const onSubmit = async (data: PatientFormData) => {
-    const submitData = {
+    const submitData: any = {
       fullname: `${data.lastName} ${data.firstName} ${
         data.middleName || ''
       }`.trim(),
@@ -132,11 +132,18 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
       address: data.address,
       allergies: data.allergies,
       regular_medications: data.regular_medications,
-      passport: {
-        series: data.passportSeries,
-        number: data.passportNumber,
-      },
     };
+
+    // Only include passport if both series and number are provided and not empty
+    const passportSeries = data.passportSeries?.trim() || '';
+    const passportNumber = data.passportNumber?.trim() || '';
+
+    if (passportSeries && passportNumber) {
+      submitData.passport = {
+        series: passportSeries,
+        number: passportNumber,
+      };
+    }
 
     await handleRequest({
       request: async () => await createPatient(submitData),
@@ -264,7 +271,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                         </FormLabel>
                         <div className='flex gap-2'>
                           <FormControl>
-                          <Input
+                            <Input
                               className='border-slate-400 border-2 flex-1'
                               placeholder='КК.ОО.ЙЙЙЙ (01.01.1990)'
                               value={
