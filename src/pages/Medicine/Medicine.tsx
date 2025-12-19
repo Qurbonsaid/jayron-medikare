@@ -771,9 +771,11 @@ const Medicine = () => {
 																				{/* Desktop - 5 columns */}
 																				<div className='hidden lg:grid lg:grid-cols-5 gap-2 xl:gap-3'>
 																					{service.days.map(day => {
-																						const taken = day.times || 0
-																						const total = service.frequency
-																						const isCompleted = taken >= total
+																						const taken = Number(day.times) || 0
+																						const total =
+																							Number(service.frequency) || 0
+																						const isCompleted =
+																							taken === total && taken > 0
 																						const lastDate = formatDate(
 																							day.date
 																						)
@@ -832,7 +834,11 @@ const Medicine = () => {
 																					{service.days.map(day => {
 																						const taken = day.times || 0
 																						const total = service.frequency
-																						const isCompleted = taken >= total
+																						const isCompleted =
+																							taken === total && taken > 0
+																						const displayTaken =
+																							taken > 0 ? 1 : 0
+																						const displayTotal = 1
 																						const lastDate = formatDate(
 																							day.date
 																						)
@@ -877,10 +883,17 @@ const Medicine = () => {
 																										</div>
 																									) : (
 																										<span>
-																											{taken}/{total}
+																											{displayTaken}/
+																											{displayTotal}
 																										</span>
 																									)}
 																								</button>
+																								{!isCompleted && (
+																									<p className='text-[9px] text-muted-foreground mt-0.5 text-center'>
+																										{displayTaken}/
+																										{displayTotal}
+																									</p>
+																								)}
 																							</div>
 																						)
 																					})}
@@ -891,7 +904,11 @@ const Medicine = () => {
 																					{service.days.map(day => {
 																						const taken = day.times || 0
 																						const total = service.frequency
-																						const isCompleted = taken >= total
+																						const isCompleted =
+																							taken === total && taken > 0
+																						const displayTaken =
+																							taken > 0 ? 1 : 0
+																						const displayTotal = 1
 																						const lastDate = formatDate(
 																							day.date
 																						)
@@ -928,7 +945,8 @@ const Medicine = () => {
 																											<Check className='w-5 h-5 text-green-600' />
 																										) : (
 																											<span>
-																												{taken}/{total}
+																												{displayTaken}/
+																												{displayTotal}
 																											</span>
 																										)}
 																									</button>
@@ -938,6 +956,12 @@ const Medicine = () => {
 																										{isToday(day.date)
 																											? 'Bugun'
 																											: lastDate}
+																									</p>
+																								)}
+																								{!isCompleted && (
+																									<p className='text-[9px] text-muted-foreground mt-0.5 text-left'>
+																										{displayTaken}/
+																										{displayTotal}
 																									</p>
 																								)}
 																							</div>
