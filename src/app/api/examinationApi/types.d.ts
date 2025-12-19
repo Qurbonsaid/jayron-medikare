@@ -184,8 +184,14 @@ export interface getAllPrescriptionReq {
 	limit?: number
 	patient_id?: string
 	doctor_id?: string
-	examination_status?: 'pending' | 'in-progress' | 'completed' | 'cancelled'
-	is_roomed?: boolean
+	status?: 'pending' | 'in-progress' | 'completed' | 'cancelled'
+	is_roomed?: boolean;
+	room_name?:string;
+	has_service?:boolean;
+	has_prescription?:boolean;
+	has_neurological_status?:boolean;
+	has_daily_checkup?:boolean;
+	has_billing?:boolean;
 }
 
 export interface getOnePrescriptionRes {
