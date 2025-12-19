@@ -123,7 +123,7 @@ const NewVisit = () => {
     useGetAllPatientQuery({
       page: patientPage,
       limit: 20,
-      has_examination:false
+      has_examination: false,
     });
 
   // Fetch selected patient details only when we have a selectedPatientId
@@ -1277,20 +1277,40 @@ const NewVisit = () => {
                                               )
                                                 .toLowerCase()
                                                 .trim();
+                                              // Get list of already selected service IDs (excluding current service)
+                                              const selectedServiceIds =
+                                                services
+                                                  .filter(
+                                                    (s) =>
+                                                      s.service_id &&
+                                                      s.id !== srv.id
+                                                  )
+                                                  .map((s) => s.service_id);
+
                                               const filteredServices =
                                                 searchQuery
                                                   ? allAvailableServices.filter(
                                                       (s: any) =>
-                                                        s.name
+                                                        !selectedServiceIds.includes(
+                                                          s._id
+                                                        ) &&
+                                                        (s.name
                                                           ?.toLowerCase()
                                                           .includes(
                                                             searchQuery
                                                           ) ||
-                                                        s.code
-                                                          ?.toLowerCase()
-                                                          .includes(searchQuery)
+                                                          s.code
+                                                            ?.toLowerCase()
+                                                            .includes(
+                                                              searchQuery
+                                                            ))
                                                     )
-                                                  : allAvailableServices;
+                                                  : allAvailableServices.filter(
+                                                      (s: any) =>
+                                                        !selectedServiceIds.includes(
+                                                          s._id
+                                                        )
+                                                    );
 
                                               return filteredServices.length >
                                                 0 ? (

@@ -2208,7 +2208,7 @@ const ExaminationDetail = () => {
                                     }
                                     addService();
                                   }}
-                                  className='h-8'
+                                  className='h-8 bg-blue-500 hover:bg-blue-600 text-white'
                                 >
                                   <Plus className='w-3 h-3 mr-1' />
                                   Қўшиш
@@ -2517,57 +2517,120 @@ const ExaminationDetail = () => {
                                                           </CommandEmpty>
                                                         ) : (
                                                           <CommandGroup>
-                                                            {serviceTypes.map(
-                                                              (
-                                                                serviceType: any
-                                                              ) => (
-                                                                <CommandItem
-                                                                  key={
-                                                                    serviceType._id
-                                                                  }
-                                                                  value={
-                                                                    serviceType._id
-                                                                  }
-                                                                  keywords={[
-                                                                    serviceType.name,
-                                                                    serviceType._id,
-                                                                  ]}
-                                                                  onSelect={() => {
-                                                                    if (
-                                                                      editingService
-                                                                    ) {
-                                                                      updateServiceField(
-                                                                        editingService.id,
-                                                                        'service_type_id',
+                                                            {(() => {
+                                                              // Get list of already selected service IDs (excluding current editing service)
+                                                              const selectedServiceIds =
+                                                                services
+                                                                  .filter(
+                                                                    (s) =>
+                                                                      s.service_type_id &&
+                                                                      s.id !==
+                                                                        editingService?.id
+                                                                  )
+                                                                  .map(
+                                                                    (s) =>
+                                                                      s.service_type_id
+                                                                  );
+
+                                                              // Also include services from patientServices that are not being edited
+                                                              const existingServiceIds =
+                                                                patientServices
+                                                                  .flatMap(
+                                                                    (
+                                                                      doc: any
+                                                                    ) =>
+                                                                      doc.items ||
+                                                                      []
+                                                                  )
+                                                                  .filter(
+                                                                    (
+                                                                      item: any
+                                                                    ) =>
+                                                                      item._id !==
+                                                                      editingServiceId
+                                                                  )
+                                                                  .map(
+                                                                    (
+                                                                      item: any
+                                                                    ) =>
+                                                                      item
+                                                                        .service_type_id
+                                                                        ?._id ||
+                                                                      item.service_type_id
+                                                                  )
+                                                                  .filter(
+                                                                    Boolean
+                                                                  );
+
+                                                              const allSelectedIds =
+                                                                [
+                                                                  ...new Set([
+                                                                    ...selectedServiceIds,
+                                                                    ...existingServiceIds,
+                                                                  ]),
+                                                                ];
+
+                                                              return serviceTypes
+                                                                .filter(
+                                                                  (
+                                                                    serviceType: any
+                                                                  ) =>
+                                                                    !allSelectedIds.includes(
+                                                                      serviceType._id
+                                                                    )
+                                                                )
+                                                                .map(
+                                                                  (
+                                                                    serviceType: any
+                                                                  ) => (
+                                                                    <CommandItem
+                                                                      key={
                                                                         serviceType._id
-                                                                      );
-                                                                    }
-                                                                    setOpenServiceCombobox(
-                                                                      ''
-                                                                    );
-                                                                    setServiceSearch(
-                                                                      ''
-                                                                    );
-                                                                    setServicePage(
-                                                                      1
-                                                                    );
-                                                                  }}
-                                                                >
-                                                                  <Check
-                                                                    className={cn(
-                                                                      'mr-2 h-4 w-4',
-                                                                      editingService?.service_type_id ===
+                                                                      }
+                                                                      value={
                                                                         serviceType._id
-                                                                        ? 'opacity-100'
-                                                                        : 'opacity-0'
-                                                                    )}
-                                                                  />
-                                                                  {
-                                                                    serviceType.name
-                                                                  }
-                                                                </CommandItem>
-                                                              )
-                                                            )}
+                                                                      }
+                                                                      keywords={[
+                                                                        serviceType.name,
+                                                                        serviceType._id,
+                                                                      ]}
+                                                                      onSelect={() => {
+                                                                        if (
+                                                                          editingService
+                                                                        ) {
+                                                                          updateServiceField(
+                                                                            editingService.id,
+                                                                            'service_type_id',
+                                                                            serviceType._id
+                                                                          );
+                                                                        }
+                                                                        setOpenServiceCombobox(
+                                                                          ''
+                                                                        );
+                                                                        setServiceSearch(
+                                                                          ''
+                                                                        );
+                                                                        setServicePage(
+                                                                          1
+                                                                        );
+                                                                      }}
+                                                                    >
+                                                                      <Check
+                                                                        className={cn(
+                                                                          'mr-2 h-4 w-4',
+                                                                          editingService?.service_type_id ===
+                                                                            serviceType._id
+                                                                            ? 'opacity-100'
+                                                                            : 'opacity-0'
+                                                                        )}
+                                                                      />
+                                                                      {
+                                                                        serviceType.name
+                                                                      }
+                                                                    </CommandItem>
+                                                                  )
+                                                                );
+                                                            })()}
                                                             {isFetchingServices && (
                                                               <div className='flex items-center justify-center py-2'>
                                                                 <Loader2 className='h-4 w-4 animate-spin' />
@@ -2856,53 +2919,116 @@ const ExaminationDetail = () => {
                                                           </CommandEmpty>
                                                         ) : (
                                                           <CommandGroup>
-                                                            {serviceTypes.map(
-                                                              (
-                                                                serviceType: any
-                                                              ) => (
-                                                                <CommandItem
-                                                                  key={
-                                                                    serviceType._id
-                                                                  }
-                                                                  value={
-                                                                    serviceType._id
-                                                                  }
-                                                                  keywords={[
-                                                                    serviceType.name,
-                                                                    serviceType._id,
-                                                                  ]}
-                                                                  onSelect={() => {
-                                                                    updateServiceField(
-                                                                      service.id,
-                                                                      'service_type_id',
+                                                            {(() => {
+                                                              // Get list of already selected service IDs (excluding current service)
+                                                              const selectedServiceIds =
+                                                                services
+                                                                  .filter(
+                                                                    (s) =>
+                                                                      s.service_type_id &&
+                                                                      s.id !==
+                                                                        service.id
+                                                                  )
+                                                                  .map(
+                                                                    (s) =>
+                                                                      s.service_type_id
+                                                                  );
+
+                                                              // Also include services from patientServices that are not being edited
+                                                              const existingServiceIds =
+                                                                patientServices
+                                                                  .flatMap(
+                                                                    (
+                                                                      doc: any
+                                                                    ) =>
+                                                                      doc.items ||
+                                                                      []
+                                                                  )
+                                                                  .filter(
+                                                                    (
+                                                                      item: any
+                                                                    ) =>
+                                                                      item._id !==
+                                                                      service.id
+                                                                  )
+                                                                  .map(
+                                                                    (
+                                                                      item: any
+                                                                    ) =>
+                                                                      item
+                                                                        .service_type_id
+                                                                        ?._id ||
+                                                                      item.service_type_id
+                                                                  )
+                                                                  .filter(
+                                                                    Boolean
+                                                                  );
+
+                                                              const allSelectedIds =
+                                                                [
+                                                                  ...new Set([
+                                                                    ...selectedServiceIds,
+                                                                    ...existingServiceIds,
+                                                                  ]),
+                                                                ];
+
+                                                              return serviceTypes
+                                                                .filter(
+                                                                  (
+                                                                    serviceType: any
+                                                                  ) =>
+                                                                    !allSelectedIds.includes(
                                                                       serviceType._id
-                                                                    );
-                                                                    setOpenServiceCombobox(
-                                                                      ''
-                                                                    );
-                                                                    setServiceSearch(
-                                                                      ''
-                                                                    );
-                                                                    setServicePage(
-                                                                      1
-                                                                    );
-                                                                  }}
-                                                                >
-                                                                  <Check
-                                                                    className={cn(
-                                                                      'mr-2 h-4 w-4',
-                                                                      service.service_type_id ===
+                                                                    )
+                                                                )
+                                                                .map(
+                                                                  (
+                                                                    serviceType: any
+                                                                  ) => (
+                                                                    <CommandItem
+                                                                      key={
                                                                         serviceType._id
-                                                                        ? 'opacity-100'
-                                                                        : 'opacity-0'
-                                                                    )}
-                                                                  />
-                                                                  {
-                                                                    serviceType.name
-                                                                  }
-                                                                </CommandItem>
-                                                              )
-                                                            )}
+                                                                      }
+                                                                      value={
+                                                                        serviceType._id
+                                                                      }
+                                                                      keywords={[
+                                                                        serviceType.name,
+                                                                        serviceType._id,
+                                                                      ]}
+                                                                      onSelect={() => {
+                                                                        updateServiceField(
+                                                                          service.id,
+                                                                          'service_type_id',
+                                                                          serviceType._id
+                                                                        );
+                                                                        setOpenServiceCombobox(
+                                                                          ''
+                                                                        );
+                                                                        setServiceSearch(
+                                                                          ''
+                                                                        );
+                                                                        setServicePage(
+                                                                          1
+                                                                        );
+                                                                      }}
+                                                                    >
+                                                                      <Check
+                                                                        className={cn(
+                                                                          'mr-2 h-4 w-4',
+                                                                          service.service_type_id ===
+                                                                            serviceType._id
+                                                                            ? 'opacity-100'
+                                                                            : 'opacity-0'
+                                                                        )}
+                                                                      />
+                                                                      {
+                                                                        serviceType.name
+                                                                      }
+                                                                    </CommandItem>
+                                                                  )
+                                                                );
+                                                            })()}
                                                             {isFetchingServices && (
                                                               <div className='flex items-center justify-center py-2'>
                                                                 <Loader2 className='h-4 w-4 animate-spin' />

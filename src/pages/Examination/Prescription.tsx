@@ -165,7 +165,7 @@ const Prescription = () => {
       limit: 20,
       status: 'pending',
       _key: queryKey,
-      has_prescription:false
+      has_prescription: false,
     } as any);
 
   // Fetch selected examination details
@@ -2302,17 +2302,34 @@ const Prescription = () => {
                                             )
                                               .toLowerCase()
                                               .trim();
+                                            // Get list of already selected service IDs (excluding current service)
+                                            const selectedServiceIds = services
+                                              .filter(
+                                                (s) =>
+                                                  s.service_id &&
+                                                  s.id !== srv.id
+                                              )
+                                              .map((s) => s.service_id);
+
                                             const filteredServices = searchQuery
                                               ? serviceOptions.filter(
                                                   (s: any) =>
-                                                    s.name
+                                                    !selectedServiceIds.includes(
+                                                      s._id
+                                                    ) &&
+                                                    (s.name
                                                       ?.toLowerCase()
                                                       .includes(searchQuery) ||
-                                                    s.code
-                                                      ?.toLowerCase()
-                                                      .includes(searchQuery)
+                                                      s.code
+                                                        ?.toLowerCase()
+                                                        .includes(searchQuery))
                                                 )
-                                              : serviceOptions;
+                                              : serviceOptions.filter(
+                                                  (s: any) =>
+                                                    !selectedServiceIds.includes(
+                                                      s._id
+                                                    )
+                                                );
 
                                             return filteredServices.length >
                                               0 ? (
