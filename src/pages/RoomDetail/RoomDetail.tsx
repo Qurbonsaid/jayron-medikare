@@ -52,10 +52,12 @@ const RoomDetail = () => {
 
   const { id: roomId } = useParams();
 
-  // Permission checks - only CEO and ADMIN can see action buttons
+  // Permission checks - CEO, ADMIN, and RECEPTIONIST can see action buttons
   const { userRole } = useRouteActions('/room/:id');
   const showActionButtons =
-    userRole === RoleConstants.CEO || userRole === RoleConstants.ADMIN;
+    userRole === RoleConstants.CEO ||
+    userRole === RoleConstants.ADMIN ||
+    userRole === RoleConstants.RECEPTIONIST;
   const {
     data: room,
     isLoading,

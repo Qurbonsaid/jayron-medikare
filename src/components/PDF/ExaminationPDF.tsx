@@ -739,7 +739,7 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                       <Text
                         style={[
                           styles.tableCell,
-                          { textAlign: 'left', fontSize: 12 },
+                          { textAlign: 'left', fontSize:8 },
                         ]}
                       >
                         {instructions}
