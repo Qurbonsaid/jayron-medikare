@@ -185,13 +185,13 @@ export interface getAllPrescriptionReq {
 	patient_id?: string
 	doctor_id?: string
 	status?: 'pending' | 'in-progress' | 'completed' | 'cancelled'
-	is_roomed?: boolean;
-	room_name?:string;
-	has_service?:boolean;
-	has_prescription?:boolean;
-	has_neurological_status?:boolean;
-	has_daily_checkup?:boolean;
-	has_billing?:boolean;
+	is_roomed?: boolean
+	room_name?: string
+	has_service?: boolean
+	has_prescription?: boolean
+	has_neurological_status?: boolean
+	has_daily_checkup?: boolean
+	has_billing?: boolean
 }
 
 export interface getOnePrescriptionRes {
@@ -348,8 +348,10 @@ export interface createServiceDays {
 
 export interface takeService {
 	id: string
-	item_id: string
-	day: string
+	body: {
+		item_id: string
+		day: number
+	}
 }
 
 export type Service = {

@@ -200,19 +200,11 @@ export const examinationApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: [API_TAGS.EXAMS],
 		}),
-		takeService: builder.mutation<void, takeService & { token?: string }>({
-			query: ({ id, item_id, day, token }) => ({
+		takeService: builder.mutation<void, takeService>({
+			query: ({ id, body }) => ({
 				url: `service/take-item/${id}`,
 				method: 'PATCH',
-				headers: token
-					? {
-							'biometric-token': token,
-					  }
-					: {},
-				body: {
-					item_id,
-					day,
-				},
+				body,
 			}),
 			invalidatesTags: [API_TAGS.EXAMS, API_TAGS.SERVICE],
 		}), // daily-checkup

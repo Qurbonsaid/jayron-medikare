@@ -54,15 +54,10 @@ export const prescriptionApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: [API_TAGS.PRESCRIPTION],
 		}),
-		takePrescription: builder.mutation<void, takePresc & { token?: string }>({
-			query: ({ id, body, token }) => ({
+		takePrescription: builder.mutation<void, takePresc>({
+			query: ({ id, body }) => ({
 				url: `${PATHS.TAKE_UPDATE}${id}`,
 				method: 'PATCH',
-				headers: token
-					? {
-							'biometric-token': token,
-					  }
-					: {},
 				body,
 			}),
 			invalidatesTags: [API_TAGS.PRESCRIPTION],

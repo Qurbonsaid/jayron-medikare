@@ -570,14 +570,14 @@ const Settings = () => {
 			{/* Main Content */}
 			<main className='container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6'>
 				<Tabs defaultValue='users' className='space-y-4 sm:space-y-6'>
-					<TabsList className='grid w-full grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 h-auto p-1'>
+					<TabsList className='grid w-full grid-cols-2 sm:grid-cols-2 gap-1 sm:gap-2 h-auto p-1'>
 						<TabsTrigger value='users' className='text-xs sm:text-sm py-2'>
 							Фойдаланувчилар
 						</TabsTrigger>
 						<TabsTrigger value='clinic' className='text-xs sm:text-sm py-2'>
 							Клиника
 						</TabsTrigger>
-						<TabsTrigger
+						{/* <TabsTrigger
 							value='notifications'
 							className='text-xs sm:text-sm py-2'
 						>
@@ -585,7 +585,7 @@ const Settings = () => {
 						</TabsTrigger>
 						<TabsTrigger value='audit' className='text-xs sm:text-sm py-2'>
 							Тарих
-						</TabsTrigger>
+						</TabsTrigger> */}
 					</TabsList>
 
 					{/* Users Tab */}
@@ -1105,7 +1105,7 @@ const Settings = () => {
 					</TabsContent>
 
 					{/* Notifications Tab */}
-					<TabsContent value='notifications' className='space-y-3 sm:space-y-4'>
+					{/* <TabsContent value='notifications' className='space-y-3 sm:space-y-4'>
 						<Card className='p-4 sm:p-5 lg:p-6'>
 							<h2 className='text-lg sm:text-xl font-semibold mb-4 sm:mb-6'>
 								SMS созламалари
@@ -1164,10 +1164,10 @@ const Settings = () => {
 								</div>
 							</div>
 						</Card>
-					</TabsContent>
+					</TabsContent> */}
 
 					{/* Audit Log Tab */}
-					<TabsContent value='audit' className='space-y-3 sm:space-y-4'>
+					{/* <TabsContent value='audit' className='space-y-3 sm:space-y-4'>
 						<Card className='p-4 sm:p-5 lg:p-6'>
 							<div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3'>
 								<h2 className='text-lg sm:text-xl font-semibold'>
@@ -1245,7 +1245,7 @@ const Settings = () => {
 								</div>
 							</div>
 						</Card>
-					</TabsContent>
+					</TabsContent> */}
 				</Tabs>
 			</main>
 

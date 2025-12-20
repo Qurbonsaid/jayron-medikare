@@ -81,11 +81,7 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/new-visit',
     name: 'View New Examination',
     method: 'GET',
-    roles: [
-      RoleConstants.CEO,
-      RoleConstants.ADMIN,
-      RoleConstants.DOCTOR,
-    ],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
     description: 'View new examination form',
   },
   {
@@ -154,11 +150,7 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/prescription',
     name: 'Prescription',
     method: 'GET',
-    roles: [
-      RoleConstants.CEO,
-      RoleConstants.ADMIN,
-      RoleConstants.DOCTOR,
-    ],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
     description: 'View prescriptions',
   },
   {
@@ -174,10 +166,7 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/disease',
     name: 'Diseases',
     method: 'GET',
-    roles: [
-      RoleConstants.CEO,
-      RoleConstants.ADMIN,
-    ],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
     description: 'View diseases/diagnosis',
   },
   {
@@ -473,15 +462,44 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/room/:id',
     name: 'Update Room',
     method: 'PUT',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.RECEPTIONIST,
+    ],
     description: 'Update room',
   },
   {
     path: '/room/:id',
     name: 'Delete Room',
     method: 'DELETE',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.RECEPTIONIST],
     description: 'Delete room',
+  },
+  {
+    path: '/room/add-patient/:id',
+    name: 'Add Patient to Room',
+    method: 'POST',
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.RECEPTIONIST,
+    ],
+    description: 'Add patient to room',
+  },
+  {
+    path: '/room/remove-patient/:id',
+    name: 'Remove Patient from Room',
+    method: 'POST',
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+      RoleConstants.RECEPTIONIST,
+    ],
+    description: 'Remove patient from room',
   },
 
   // Medicine Routes
@@ -564,14 +582,14 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/billing',
     name: 'Billing',
     method: 'GET',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN , RoleConstants.RECEPTIONIST],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.RECEPTIONIST],
     description: 'View billing information',
   },
   {
     path: '/billing',
     name: 'Create Billing',
     method: 'POST',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN , RoleConstants.RECEPTIONIST],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.RECEPTIONIST],
     description: 'Create billing record',
   },
   {
