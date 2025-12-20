@@ -74,7 +74,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			await new Promise(resolve => setTimeout(resolve, 100))
 
 			const stream = await navigator.mediaDevices.getUserMedia({
-				video: { facingMode: 'user', width: 640, height: 480 },
+				video: { facingMode: 'user', width: 300, height: 400 },
 			})
 
 			streamRef.current = stream
@@ -200,12 +200,50 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			return
 		}
 
-		// Set canvas size to match video
-		canvasRef.current.width = videoRef.current.videoWidth
-		canvasRef.current.height = videoRef.current.videoHeight
+		// Set canvas size to 3:4 aspect ratio (450x600) - width smaller than height
+		const targetWidth = 450
+		const targetHeight = 600
+		canvasRef.current.width = targetWidth
+		canvasRef.current.height = targetHeight
 
-		// Draw current video frame to canvas
-		context.drawImage(videoRef.current, 0, 0)
+		// Calculate crop dimensions to maintain 3:4 aspect ratio from center of video
+		const videoWidth = videoRef.current.videoWidth
+		const videoHeight = videoRef.current.videoHeight
+		const videoAspect = videoWidth / videoHeight
+		const targetAspect = targetWidth / targetHeight
+
+		// Zoom factor for closer face view
+		const zoomFactor = 1.5
+
+		let sourceWidth = videoWidth / zoomFactor
+		let sourceHeight = videoHeight / zoomFactor
+		let sourceX = 0
+		let sourceY = 0
+
+		if (videoAspect > targetAspect) {
+			// Video is wider, crop sides
+			sourceWidth = (videoHeight / zoomFactor) * targetAspect
+			sourceX = (videoWidth - sourceWidth) / 2
+			sourceY = (videoHeight - videoHeight / zoomFactor) / 2
+		} else {
+			// Video is taller, crop top/bottom
+			sourceHeight = videoWidth / zoomFactor / targetAspect
+			sourceX = (videoWidth - videoWidth / zoomFactor) / 2
+			sourceY = (videoHeight - sourceHeight) / 2
+		}
+
+		// Draw cropped and resized video frame to canvas
+		context.drawImage(
+			videoRef.current,
+			sourceX,
+			sourceY,
+			sourceWidth,
+			sourceHeight,
+			0,
+			0,
+			targetWidth,
+			targetHeight
+		)
 
 		// Convert canvas to blob then to File
 		canvasRef.current.toBlob(
@@ -287,10 +325,41 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			return
 		}
 
+		// Validate each image file
+		for (let i = 0; i < biometricImages.length; i++) {
+			const image = biometricImages[i]
+			if (!image || !(image instanceof File)) {
+				setImageError(`Rasm ${i + 1} xato formatda`)
+				toast.error(`Rasm ${i + 1} xato formatda`)
+				return
+			}
+			if (!image.type.startsWith('image/')) {
+				setImageError(`Rasm ${i + 1} rasm fayli emas`)
+				toast.error(`Rasm ${i + 1} rasm fayli emas`)
+				return
+			}
+			if (image.size === 0) {
+				setImageError(`Rasm ${i + 1} bo'sh`)
+				toast.error(`Rasm ${i + 1} bo'sh`)
+				return
+			}
+			if (image.size > 10 * 1024 * 1024) {
+				// Max 10MB
+				setImageError(`Rasm ${i + 1} juda katta (max 10MB)`)
+				toast.error(`Rasm ${i + 1} juda katta (max 10MB)`)
+				return
+			}
+		}
+
 		await handleRequest({
 			request: async () => {
-				console.log('📤 Sending biometric images first:', biometricImages)
-				console.log('📤 Images count:', biometricImages.length)
+				console.log('📤 Sending biometric images first:', {
+					count: biometricImages.length,
+					sizes: biometricImages.map(img => img.size),
+					types: biometricImages.map(img => img.type),
+					names: biometricImages.map(img => img.name),
+				})
+				console.log('📤 Patient ID:', selectedPatient._id)
 
 				// First: Send biometric data (multipart/form-data)
 				await biometricPatient({
@@ -482,6 +551,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 									autoPlay
 									playsInline
 									className='w-full rounded-md border'
+									style={{ aspectRatio: '3/4', objectFit: 'cover' }}
 								/>
 								{!isVideoReady && (
 									<div className='absolute inset-0 flex items-center justify-center bg-black/50 rounded-md'>
@@ -536,13 +606,14 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 							<p className='text-sm text-red-500 font-medium'>{imageError}</p>
 						)}{' '}
 						{imagePreviewUrls.length > 0 && (
-							<div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
+							<div className='grid grid-cols-2 sm:grid-cols-5 gap-3'>
 								{imagePreviewUrls.map((previewUrl, index) => (
 									<div key={index} className='relative group'>
 										<img
 											src={previewUrl}
 											alt={`Bemor surati ${index + 1}`}
-											className='w-full h-24 sm:h-32 object-cover rounded-md border-2 border-gray-200'
+											className='w-full object-cover rounded-md border-2 border-gray-200'
+											style={{ aspectRatio: '3/4' }}
 										/>
 										<button
 											type='button'

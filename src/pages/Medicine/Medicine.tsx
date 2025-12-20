@@ -234,7 +234,7 @@ const Medicine = () => {
 
 			console.log('📹 Requesting camera access...')
 			const stream = await navigator.mediaDevices.getUserMedia({
-				video: { facingMode: 'user', width: 640, height: 480 },
+				video: { facingMode: 'user', width: 300, height: 400 },
 			})
 			console.log('✅ Camera access granted')
 
@@ -385,12 +385,50 @@ const Medicine = () => {
 			return
 		}
 
-		// Set canvas size to match video
-		canvasRef.current.width = videoRef.current.videoWidth
-		canvasRef.current.height = videoRef.current.videoHeight
+		// Set canvas size to 3:4 aspect ratio (450x600) - width smaller than height
+		const targetWidth = 450
+		const targetHeight = 600
+		canvasRef.current.width = targetWidth
+		canvasRef.current.height = targetHeight
 
-		// Draw current video frame to canvas
-		context.drawImage(videoRef.current, 0, 0)
+		// Calculate crop dimensions to maintain 3:4 aspect ratio from center of video
+		const videoWidth = videoRef.current.videoWidth
+		const videoHeight = videoRef.current.videoHeight
+		const videoAspect = videoWidth / videoHeight
+		const targetAspect = targetWidth / targetHeight
+
+		// Zoom factor for closer face view
+		const zoomFactor = 1.5
+
+		let sourceWidth = videoWidth / zoomFactor
+		let sourceHeight = videoHeight / zoomFactor
+		let sourceX = 0
+		let sourceY = 0
+
+		if (videoAspect > targetAspect) {
+			// Video is wider, crop sides
+			sourceWidth = (videoHeight / zoomFactor) * targetAspect
+			sourceX = (videoWidth - sourceWidth) / 2
+			sourceY = (videoHeight - videoHeight / zoomFactor) / 2
+		} else {
+			// Video is taller, crop top/bottom
+			sourceHeight = videoWidth / zoomFactor / targetAspect
+			sourceX = (videoWidth - videoWidth / zoomFactor) / 2
+			sourceY = (videoHeight - sourceHeight) / 2
+		}
+
+		// Draw cropped and resized video frame to canvas
+		context.drawImage(
+			videoRef.current,
+			sourceX,
+			sourceY,
+			sourceWidth,
+			sourceHeight,
+			0,
+			0,
+			targetWidth,
+			targetHeight
+		)
 
 		// Convert canvas to blob then to File
 		canvasRef.current.toBlob(
@@ -447,27 +485,58 @@ const Medicine = () => {
 			biometricImages.length
 		)
 
+		// Validate image exists
 		if (biometricImages.length === 0) {
 			setImageError('Rasm yuklang')
 			toast.error('Rasm yuklang')
 			return
 		}
 
+		// Validate patient ID
 		if (!biometricModal.patientId) {
 			toast.error('Bemor topilmadi')
+			return
+		}
+
+		const image = biometricImages[0]
+
+		// Validate image file
+		if (!image || !(image instanceof File)) {
+			setImageError('Rasm xato formatda')
+			toast.error('Rasm xato formatda')
+			return
+		}
+
+		if (!image.type.startsWith('image/')) {
+			setImageError('Faqat rasm fayllarini yuklang')
+			toast.error('Faqat rasm fayllarini yuklang')
+			return
+		}
+
+		if (image.size === 0) {
+			setImageError("Rasm bo'sh")
+			toast.error("Rasm bo'sh")
+			return
+		}
+
+		if (image.size > 10 * 1024 * 1024) {
+			// Max 10MB
+			setImageError('Rasm juda katta (max 10MB)')
+			toast.error('Rasm juda katta (max 10MB)')
 			return
 		}
 
 		try {
 			console.log('📤 Sending biometric confirm request...', {
 				patientId: biometricModal.patientId,
-				imageSize: biometricImages[0]?.size,
-				imageType: biometricImages[0]?.type,
+				imageSize: image.size,
+				imageType: image.type,
+				imageName: image.name,
 			})
 
 			const response = await biometricConfirm({
 				patientId: biometricModal.patientId,
-				image: biometricImages[0],
+				image: image,
 			}).unwrap()
 
 			console.log('✅ Biometric confirm SUCCESS:', response)
@@ -1173,6 +1242,7 @@ const Medicine = () => {
 										autoPlay
 										playsInline
 										className='w-full max-w-sm rounded-md border'
+										style={{ aspectRatio: '3/4', objectFit: 'cover' }}
 									/>
 									<Button
 										onClick={capturePhoto}
@@ -1240,7 +1310,8 @@ const Medicine = () => {
 									<img
 										src={imagePreviewUrls[0]}
 										alt='Biometric Preview'
-										className='w-64 h-64 object-cover rounded-md border'
+										className='w-64 object-cover rounded-md border'
+										style={{ aspectRatio: '3/4' }}
 									/>
 									<button
 										onClick={removeImage}
