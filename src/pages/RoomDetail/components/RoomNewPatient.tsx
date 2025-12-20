@@ -60,9 +60,6 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 	const [addPatientRoom, { isLoading: isAddPatientLoading }] =
 		useAddPatientRoomMutation()
 
-	const [biometricPatient, { isLoading: isBiometricLoading }] =
-		useBiometricPatientMutation()
-
 	const [uploadFiles, { isLoading: isUploadLoading }] = useUploadFilesMutation()
 
 	const startCamera = async () => {
@@ -74,7 +71,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			await new Promise(resolve => setTimeout(resolve, 100))
 
 			const stream = await navigator.mediaDevices.getUserMedia({
-				video: { facingMode: 'user', width: 300, height: 400 },
+				video: { facingMode: 'user', width: 640, height: 480 },
 			})
 
 			streamRef.current = stream
@@ -200,50 +197,12 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			return
 		}
 
-		// Set canvas size to 3:4 aspect ratio (450x600) - width smaller than height
-		const targetWidth = 450
-		const targetHeight = 600
-		canvasRef.current.width = targetWidth
-		canvasRef.current.height = targetHeight
+		// Set canvas size to match video
+		canvasRef.current.width = videoRef.current.videoWidth
+		canvasRef.current.height = videoRef.current.videoHeight
 
-		// Calculate crop dimensions to maintain 3:4 aspect ratio from center of video
-		const videoWidth = videoRef.current.videoWidth
-		const videoHeight = videoRef.current.videoHeight
-		const videoAspect = videoWidth / videoHeight
-		const targetAspect = targetWidth / targetHeight
-
-		// Zoom factor for closer face view
-		const zoomFactor = 1.5
-
-		let sourceWidth = videoWidth / zoomFactor
-		let sourceHeight = videoHeight / zoomFactor
-		let sourceX = 0
-		let sourceY = 0
-
-		if (videoAspect > targetAspect) {
-			// Video is wider, crop sides
-			sourceWidth = (videoHeight / zoomFactor) * targetAspect
-			sourceX = (videoWidth - sourceWidth) / 2
-			sourceY = (videoHeight - videoHeight / zoomFactor) / 2
-		} else {
-			// Video is taller, crop top/bottom
-			sourceHeight = videoWidth / zoomFactor / targetAspect
-			sourceX = (videoWidth - videoWidth / zoomFactor) / 2
-			sourceY = (videoHeight - sourceHeight) / 2
-		}
-
-		// Draw cropped and resized video frame to canvas
-		context.drawImage(
-			videoRef.current,
-			sourceX,
-			sourceY,
-			sourceWidth,
-			sourceHeight,
-			0,
-			0,
-			targetWidth,
-			targetHeight
-		)
+		// Draw current video frame to canvas
+		context.drawImage(videoRef.current, 0, 0)
 
 		// Convert canvas to blob then to File
 		canvasRef.current.toBlob(
@@ -280,25 +239,6 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 		)
 	}
 
-	const removeImage = (index: number) => {
-		// Revoke old preview URL
-		if (imagePreviewUrls[index]) {
-			URL.revokeObjectURL(imagePreviewUrls[index])
-		}
-
-		const newImages = biometricImages.filter((_, i) => i !== index)
-		const newPreviews = imagePreviewUrls.filter((_, i) => i !== index)
-		setBiometricImages(newImages)
-		setImagePreviewUrls(newPreviews)
-		setCaptureCount(newImages.length)
-
-		if (newImages.length < 2 && newImages.length > 0) {
-			setImageError('Kamida 2 ta rasm yuklang')
-		} else {
-			setImageError('')
-		}
-	}
-
 	const onSubmit = async () => {
 		// Validate patient selection
 		if (!selectedPatient) {
@@ -312,64 +252,8 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			return
 		}
 
-		// Validate biometric images
-		if (biometricImages.length < 1) {
-			setImageError('Kamida 2 ta bemor suratini yuklang')
-			toast.error('Kamida 2 ta bemor suratini yuklang')
-			return
-		}
-
-		if (biometricImages.length > 5) {
-			setImageError("Ko'pi bilan 5 ta rasm yuklash mumkin")
-			toast.error("Ko'pi bilan 5 ta rasm yuklash mumkin")
-			return
-		}
-
-		// Validate each image file
-		for (let i = 0; i < biometricImages.length; i++) {
-			const image = biometricImages[i]
-			if (!image || !(image instanceof File)) {
-				setImageError(`Rasm ${i + 1} xato formatda`)
-				toast.error(`Rasm ${i + 1} xato formatda`)
-				return
-			}
-			if (!image.type.startsWith('image/')) {
-				setImageError(`Rasm ${i + 1} rasm fayli emas`)
-				toast.error(`Rasm ${i + 1} rasm fayli emas`)
-				return
-			}
-			if (image.size === 0) {
-				setImageError(`Rasm ${i + 1} bo'sh`)
-				toast.error(`Rasm ${i + 1} bo'sh`)
-				return
-			}
-			if (image.size > 10 * 1024 * 1024) {
-				// Max 10MB
-				setImageError(`Rasm ${i + 1} juda katta (max 10MB)`)
-				toast.error(`Rasm ${i + 1} juda katta (max 10MB)`)
-				return
-			}
-		}
-
 		await handleRequest({
 			request: async () => {
-				console.log('📤 Sending biometric images first:', {
-					count: biometricImages.length,
-					sizes: biometricImages.map(img => img.size),
-					types: biometricImages.map(img => img.type),
-					names: biometricImages.map(img => img.name),
-				})
-				console.log('📤 Patient ID:', selectedPatient._id)
-
-				// First: Send biometric data (multipart/form-data)
-				await biometricPatient({
-					patientId: selectedPatient._id,
-					images: biometricImages,
-				}).unwrap()
-
-				console.log('✅ Biometric registration SUCCESS')
-				console.log('📝 Now adding patient to room...')
-
 				// Second: Add patient to room ONLY if biometric succeeded
 				await addPatientRoom({
 					id: roomId,
@@ -535,101 +419,6 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 						value={estimatedLeaveTime}
 						onChange={e => setEstimatedLeaveTime(e.target.value)}
 					/>
-
-					{/* Biometric Image Upload Section */}
-					<div className='flex items-center gap-3 my-4'>
-						<Camera className='w-3 h-3 sm:w-4 sm:h-4 text-primary' />
-						<h3 className='text-base font-bold'>Bemor suratlarini yuklash</h3>
-					</div>
-
-					<div className='space-y-3'>
-						{/* Camera Preview or Start Button */}
-						{isCameraActive && biometricImages.length < 5 ? (
-							<div className='relative'>
-								<video
-									ref={videoRef}
-									autoPlay
-									playsInline
-									className='w-full rounded-md border'
-									style={{ aspectRatio: '3/4', objectFit: 'cover' }}
-								/>
-								{!isVideoReady && (
-									<div className='absolute inset-0 flex items-center justify-center bg-black/50 rounded-md'>
-										<div className='text-center text-white'>
-											<div className='mb-2'>Kamera yuklanmoqda...</div>
-											<div className='text-sm'>Biroz kuting</div>
-										</div>
-									</div>
-								)}
-								<div className='absolute bottom-4 left-0 right-0 flex justify-center gap-3'>
-									<Button
-										onClick={capturePhoto}
-										disabled={!isVideoReady}
-										className='bg-green-600 hover:bg-green-700 disabled:opacity-50'
-									>
-										<Camera className='w-4 h-4 mr-2' />
-										{isVideoReady
-											? `Rasmga olish (${biometricImages.length}/5)`
-											: 'Kuting...'}
-									</Button>
-									<Button onClick={stopCamera} variant='destructive'>
-										To'xtatish
-									</Button>
-								</div>
-							</div>
-						) : biometricImages.length === 0 ? (
-							<Button onClick={startCamera} className='w-full'>
-								<Camera className='w-4 h-4 mr-2' />
-								Kamerani yoqish
-							</Button>
-						) : biometricImages.length < 5 ? (
-							<Button
-								onClick={startCamera}
-								className='w-full'
-								variant='outline'
-							>
-								<Camera className='w-4 h-4 mr-2' />
-								Yana rasm olish ({biometricImages.length}/5)
-							</Button>
-						) : null}
-						<canvas ref={canvasRef} className='hidden' />
-						<p className='text-xs text-muted-foreground text-center'>
-							{isCameraActive
-								? `Turli burchaklardan rasmga oling (${biometricImages.length}/5)`
-								: biometricImages.length === 0
-								? '2-5 ta rasm oling (turli burchaklardan)'
-								: `${biometricImages.length} ta rasm olindi${
-										biometricImages.length < 2 ? ' (kamida 2 ta kerak)' : ' ✓'
-								  }`}
-						</p>
-						{imageError && (
-							<p className='text-sm text-red-500 font-medium'>{imageError}</p>
-						)}{' '}
-						{imagePreviewUrls.length > 0 && (
-							<div className='grid grid-cols-2 sm:grid-cols-5 gap-3'>
-								{imagePreviewUrls.map((previewUrl, index) => (
-									<div key={index} className='relative group'>
-										<img
-											src={previewUrl}
-											alt={`Bemor surati ${index + 1}`}
-											className='w-full object-cover rounded-md border-2 border-gray-200'
-											style={{ aspectRatio: '3/4' }}
-										/>
-										<button
-											type='button'
-											onClick={() => removeImage(index)}
-											className='absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity'
-										>
-											<X className='w-3 h-3' />
-										</button>
-										<span className='absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded'>
-											{index + 1}
-										</span>
-									</div>
-								))}
-							</div>
-						)}
-					</div>
 				</div>
 
 				<DialogFooter className='p-4 sm:p-6 pt-3 flex flex-col sm:flex-row gap-2 sm:gap-0 flex-shrink-0 border-t'>
@@ -643,14 +432,12 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 					</Button>
 					<Button
 						type='submit'
-						disabled={
-							isAddPatientLoading || isBiometricLoading || isUploadLoading
-						}
+						disabled={isAddPatientLoading || isUploadLoading}
 						onClick={onSubmit}
 						className='gradient-primary w-full sm:w-auto order-1 sm:order-2'
 					>
 						<Save className='w-4 h-4 mr-2' />
-						{isAddPatientLoading || isBiometricLoading || isUploadLoading
+						{isAddPatientLoading || isUploadLoading
 							? 'Юкланмоқда...'
 							: 'Сақлаш'}
 					</Button>
