@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { downloadFile } from '@/lib/fileTypeUtils';
 import { Download, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 
 interface ExcelViewerProps {
@@ -21,7 +21,7 @@ interface ExcelViewerProps {
 type CellValue = string | number | boolean | null | undefined;
 type SheetRow = CellValue[];
 
-export const ExcelViewer: React.FC<ExcelViewerProps> = ({ url, filename }) => {
+export const ExcelViewer: React.FC<ExcelViewerProps> = memo(({ url, filename }) => {
   const [sheets, setSheets] = useState<{ name: string; data: SheetRow[] }[]>(
     []
   );
@@ -62,9 +62,9 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ url, filename }) => {
     loadExcelFile();
   }, [url]);
 
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     downloadFile(url, filename);
-  };
+  }, [url, filename]);
 
   if (loading) {
     return (
@@ -156,4 +156,6 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = ({ url, filename }) => {
       </Card>
     </div>
   );
-};
+});
+
+ExcelViewer.displayName = 'ExcelViewer';

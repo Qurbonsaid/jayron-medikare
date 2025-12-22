@@ -1,0 +1,19 @@
+{
+  "title": "Tizimga kirish",
+  "subtitle": "Elektron tibbiy kartalar tizimi",
+  "username": "Foydalanuvchi nomi",
+  "usernamePlaceholder": "Foydalanuvchi nomini kiriting",
+  "password": "Parol",
+  "passwordPlaceholder": "Parolni kiriting",
+  "rememberMe": "Eslab qolish",
+  "submit": "Kirish",
+  "forgotPassword": "Parolni unutdingizmi?",
+  "copyright": "© 2025 JAYRON MEDSERVIS. Barcha huquqlar himoyalangan.",
+  "invalidCredentials": "Noto'g'ri foydalanuvchi nomi yoki parol",
+  "loginSuccess": "Muvaffaqiyatli kirdingiz",
+  "loginFailed": "Kirish amaliyoti bajarilmadi",
+  "sessionExpired": "Sessiya muddati tugadi. Iltimos, qayta kiring",
+  "logout": "Chiqish",
+  "logoutConfirm": "Haqiqatan ham tizimdan chiqmoqchimisiz?",
+  "logoutSuccess": "Muvaffaqiyatli chiqdingiz"
+}

@@ -1,0 +1,19 @@
+{
+  "title": "Тизимга кириш",
+  "subtitle": "Электрон тиббий карталар тизими",
+  "username": "Фойдаланувчи номи",
+  "usernamePlaceholder": "Фойдаланувчи номини киритинг",
+  "password": "Парол",
+  "passwordPlaceholder": "Паролни киритинг",
+  "rememberMe": "Эслаб қолиш",
+  "submit": "Кириш",
+  "forgotPassword": "Паролни унутдингизми?",
+  "copyright": "© 2025 JAYRON MEDSERVIS. Барча ҳуқуқлар ҳимояланган.",
+  "invalidCredentials": "Нотўғри фойдаланувчи номи ёки парол",
+  "loginSuccess": "Муваффақиятли кирдингиз",
+  "loginFailed": "Кириш амалиёти бажарилмади",
+  "sessionExpired": "Сессия муддати тугади. Илтимос, қайта киринг",
+  "logout": "Чиқиш",
+  "logoutConfirm": "Ҳақиқатан ҳам тизимдан чиқмоқчимисиз?",
+  "logoutSuccess": "Муваффақиятли чиқдингиз"
+}

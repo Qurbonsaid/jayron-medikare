@@ -10,8 +10,11 @@ import { Eye, EyeOff, Lock, User } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import { languages } from '@/i18n';
 
 const Login = () => {
+  const { t, i18n } = useTranslation('login');
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
@@ -62,7 +65,7 @@ const Login = () => {
           </div>
           <h1 className='text-2xl font-bold mb-2'>JAYRON MEDSERVIS</h1>
           <p className='text-muted-foreground'>
-            Электрон тиббий карталар тизими
+            {t('subtitle')}
           </p>
         </div>
 
@@ -71,13 +74,13 @@ const Login = () => {
           <form onSubmit={handleLogin} className='space-y-6'>
             {/* Username */}
             <div className='space-y-2'>
-              <Label htmlFor='username'>Фойдаланувчи номи</Label>
+              <Label htmlFor='username'>{t('username')}</Label>
               <div className='relative'>
                 <User className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground' />
                 <Input
                   id='username'
                   type='text'
-                  placeholder='Фойдаланувчи номини киритинг'
+                  placeholder={t('usernamePlaceholder')}
                   className='pl-10'
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -88,13 +91,13 @@ const Login = () => {
 
             {/* Password */}
             <div className='space-y-2'>
-              <Label htmlFor='password'>Парол</Label>
+              <Label htmlFor='password'>{t('password')}</Label>
               <div className='relative'>
                 <Lock className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground' />
                 <Input
                   id='password'
                   type={showPassword ? 'text' : 'password'}
-                  placeholder='Паролни киритинг'
+                  placeholder={t('passwordPlaceholder')}
                   className='pl-10 pr-10'
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -122,12 +125,9 @@ const Login = () => {
                   htmlFor='remember'
                   className='text-sm font-normal cursor-pointer'
                 >
-                  Эслаб қолиш
+                  {t('rememberMe')}
                 </Label>
               </div>
-              {/* <a href='#' className='text-sm text-primary hover:underline'>
-                Паролни унутдингизми?
-              </a> */}
             </div>
 
             {/* Login Button */}
@@ -135,25 +135,35 @@ const Login = () => {
               type='submit'
               className='w-full h-12 text-base gradient-primary hover:opacity-90 transition-opacity'
             >
-              Кириш
+              {t('loginButton')}
             </Button>
           </form>
 
           {/* Language Selector */}
-          <div className='mt-6 pt-6 border-t flex justify-center gap-4'>
-            <button className='text-sm font-medium text-primary'>
-              Ўзбекча
-            </button>
-            <span className='text-muted-foreground'>|</span>
-            <button className='text-sm text-muted-foreground hover:text-foreground'>
-              Русский
-            </button>
+          <div className='mt-6 pt-6 border-t flex justify-center gap-2 flex-wrap'>
+            {languages.map((lang, index) => (
+              <span key={lang.code} className='flex items-center gap-2'>
+                <button
+                  onClick={() => i18n.changeLanguage(lang.code)}
+                  className={`text-sm ${
+                    i18n.language === lang.code
+                      ? 'font-medium text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {lang.flag} {lang.name}
+                </button>
+                {index < languages.length - 1 && (
+                  <span className='text-muted-foreground'>|</span>
+                )}
+              </span>
+            ))}
           </div>
         </div>
 
         {/* Footer */}
         <p className='text-center text-sm text-muted-foreground mt-6'>
-          © 2025 JAYRON MEDSERVIS. Барча ҳуқуқлар ҳимояланган.
+          {t('copyright')}
         </p>
       </div>
     </div>

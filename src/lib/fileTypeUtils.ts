@@ -30,29 +30,29 @@ export const getFileTypeInfo = (url: string): FileTypeInfo => {
     return { type: 'image', extension, canPreview: true };
   }
 
-  // PDF
+  // PDF - react-pdf bilan ko'rsa bo'ladi
   if (extension === 'pdf') {
     return { type: 'pdf', extension, canPreview: true };
   }
 
-  // Word documents
+  // Word documents - mammoth.js bilan ko'rsa bo'ladi
   const wordExtensions = ['doc', 'docx'];
   if (wordExtensions.includes(extension)) {
     return { type: 'word', extension, canPreview: true };
   }
 
-  // Excel documents
+  // Excel documents - xlsx.js bilan ko'rsa bo'ladi
   const excelExtensions = ['xls', 'xlsx', 'csv'];
   if (excelExtensions.includes(extension)) {
     return { type: 'excel', extension, canPreview: true };
   }
 
-  // RTF
+  // RTF - oddiy text parser bilan ko'rish mumkin
   if (extension === 'rtf') {
     return { type: 'rtf', extension, canPreview: true };
   }
 
-  // MDFX (EEG medical format)
+  // MDFX (EEG medical format) - XML asosida, qisman ko'rish mumkin
   if (extension === 'mdfx') {
     return { type: 'mdfx', extension, canPreview: true };
   }
@@ -64,8 +64,8 @@ export const getFileTypeInfo = (url: string): FileTypeInfo => {
 /**
  * Get file icon component based on type
  */
-export const getFileIcon = (fileType: FileType) => {
-  const icons = {
+export const getFileIcon = (fileType: FileType | string): LucideIcon => {
+  const icons: Record<string, LucideIcon> = {
     image: FileImage,
     pdf: FileText,
     word: FileText,
@@ -73,8 +73,8 @@ export const getFileIcon = (fileType: FileType) => {
     rtf: FileCode,
     mdfx: Activity,
     other: File,
-  } as const;
-  return icons[fileType];
+  };
+  return icons[fileType] || File;
 };
 
 /**
@@ -82,22 +82,24 @@ export const getFileIcon = (fileType: FileType) => {
  */
 export const getFileTypeName = (fileType: FileType): string => {
   const names: Record<FileType, string> = {
-    image: 'Image',
-    pdf: 'PDF Document',
-    word: 'Word Document',
-    excel: 'Excel Spreadsheet',
-    rtf: 'RTF Document',
-    mdfx: 'EEG Medical Data',
-    other: 'File',
+    image: 'Расм',
+    pdf: 'PDF ҳужжат',
+    word: 'Word ҳужжат',
+    excel: 'Excel жадвал',
+    rtf: 'RTF ҳужжат',
+    mdfx: 'EEG маълумотлари',
+    other: 'Файл',
   };
   return names[fileType];
 };
 
 /**
- * Download file from URL (CORS muammosi bo'lsa ham ishlaydi)
+ * Download file from URL
+ * MUHIM: Bu funksiya faqat "Юклаб олиш" tugmasi bosilganda ishlashi kerak!
+ * Avtomatik chaqirmaslik kerak!
  */
-export const downloadFile = (url: string, filename?: string) => {
-  // CORS muammosini chetlab o'tish uchun to'g'ridan-to'g'ri <a> tag ishlatamiz
+export const downloadFile = (url: string, filename?: string): void => {
+  // Yangi tab'da ochish - bu CORS muammolarini ham hal qiladi
   const link = document.createElement('a');
   link.href = url;
   link.download = filename || url.split('/').pop() || 'download';

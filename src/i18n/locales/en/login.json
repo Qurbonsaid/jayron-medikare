@@ -1,0 +1,19 @@
+{
+  "title": "Sign In",
+  "subtitle": "Electronic Medical Records System",
+  "username": "Username",
+  "usernamePlaceholder": "Enter username",
+  "password": "Password",
+  "passwordPlaceholder": "Enter password",
+  "rememberMe": "Remember me",
+  "submit": "Sign In",
+  "forgotPassword": "Forgot password?",
+  "copyright": "© 2025 JAYRON MEDSERVIS. All rights reserved.",
+  "invalidCredentials": "Invalid username or password",
+  "loginSuccess": "Successfully signed in",
+  "loginFailed": "Sign in failed",
+  "sessionExpired": "Session expired. Please sign in again",
+  "logout": "Sign Out",
+  "logoutConfirm": "Are you sure you want to sign out?",
+  "logoutSuccess": "Successfully signed out"
+}

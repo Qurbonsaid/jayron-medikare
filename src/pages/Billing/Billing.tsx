@@ -18,6 +18,7 @@ import { FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import NewBilling from './components/NewBilling';
 import ViewBillingDialog from './components/ViewBillingDialog';
+import { useTranslation } from 'react-i18next';
 
 export interface Service {
   id: string;
@@ -79,6 +80,8 @@ export const formatCurrency = (amount: number) => {
 };
 
 const Billing = () => {
+  const { t } = useTranslation('billing');
+  const { t: tCommon } = useTranslation('common');
   const { canCreate } = usePermission('billing');
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -135,7 +138,7 @@ const Billing = () => {
               className='w-full sm:w-auto text-sm'
             >
               <Plus className='w-4 h-4 mr-2' />
-              Янги ҳисоб-фактура
+              {t('newInvoice')}
             </Button>
           </div>
         )}
@@ -143,11 +146,11 @@ const Billing = () => {
         <Card className='p-3 sm:p-4 mb-4 sm:mb-6'>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4'>
             <div className='md:col-span-2'>
-              <Label className='text-xs sm:text-sm'>Қидириш</Label>
+              <Label className='text-xs sm:text-sm'>{tCommon('search')}</Label>
               <div className='relative'>
                 <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground' />
                 <Input
-                  placeholder='Бемор номи ёки ҳисоб-фактура рақами...'
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className='pl-9 sm:pl-10 text-sm'
@@ -155,16 +158,16 @@ const Billing = () => {
               </div>
             </div>
             <div>
-              <Label>Ҳолат</Label>
+              <Label>{t('status')}</Label>
               <Select value={statusFilter} onValueChange={handleFilterChange}>
                 <SelectTrigger>
-                  <SelectValue placeholder='Барчаси' />
+                  <SelectValue placeholder={tCommon('all')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='all'>Барчаси</SelectItem>
-                  <SelectItem value='incompleted'>Тўланмаган</SelectItem>
-                  <SelectItem value='pending'>Қисман тўланган</SelectItem>
-                  <SelectItem value='completed'>Тўланган</SelectItem>
+                  <SelectItem value='all'>{tCommon('all')}</SelectItem>
+                  <SelectItem value='incompleted'>{t('unpaid')}</SelectItem>
+                  <SelectItem value='pending'>{t('partiallyPaid')}</SelectItem>
+                  <SelectItem value='completed'>{t('paid')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -175,7 +178,7 @@ const Billing = () => {
         <Card className='hidden lg:block'>
           <div className='p-4 lg:p-6'>
             <h2 className='text-lg lg:text-xl font-semibold mb-4'>
-              Ҳисоб-фактуралар рўйхати
+              {t('invoicesList')}
             </h2>
             {isLoading ? (
               <div className='flex justify-center py-8'>
@@ -184,11 +187,11 @@ const Billing = () => {
             ) : filteredInvoices.length === 0 ? (
               <EmptyState
                 icon={FileText}
-                title='Ҳисоб-фактуралар топилмади'
+                title={t('noInvoicesFound')}
                 description={
                   searchQuery || statusFilter !== 'all'
-                    ? 'Филтр шартларига мос маълумот топилмади'
-                    : 'Ҳали ҳисоб-фактуралар яратилмаган'
+                    ? t('noMatchingInvoices')
+                    : t('noInvoicesYet')
                 }
               />
             ) : (
@@ -200,25 +203,25 @@ const Billing = () => {
                         Ҳисоб №
                       </th> */}
                       <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
-                        Бемор
+                        {t('patient')}
                       </th>
                       <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
-                        Сана
+                        {t('date')}
                       </th>
                       <th className='text-right py-3 px-4 font-medium text-muted-foreground text-sm'>
-                        Жами
+                        {t('total')}
                       </th>
                       <th className='text-right py-3 px-4 font-medium text-muted-foreground text-sm'>
-                        Тўланган
+                        {t('paidAmount')}
                       </th>
                       <th className='text-right py-3 px-4 font-medium text-muted-foreground text-sm'>
-                        Қолдиқ
+                        {t('debt')}
                       </th>
                       <th className='text-center py-3 px-4 font-medium text-muted-foreground text-sm'>
-                        Ҳолат
+                        {t('status')}
                       </th>
                       <th className='text-left py-3 px-4 font-medium text-muted-foreground text-sm'>
-                        Ҳаракатлар
+                        {tCommon('actions')}
                       </th>
                     </tr>
                   </thead>
@@ -259,7 +262,7 @@ const Billing = () => {
                                 setIsViewDialogOpen(true);
                               }}
                             >
-                              Кўриш
+                              {tCommon('view')}
                             </Button>
                           </div>
                         </td>

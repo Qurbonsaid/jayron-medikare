@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card } from '@/components/ui/card'
 import { Bed, DollarSign, Users } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export enum REPORT_DATE_FILTER {
 	DAILY = 'daily',
@@ -30,6 +31,7 @@ export enum REPORT_DATE_FILTER {
 }
 
 const Reports = () => {
+	const { t } = useTranslation('reports')
 	const [billingInterval, setBillingInterval] = useState<REPORT_DATE_FILTER>(
 		REPORT_DATE_FILTER.DAILY
 	)
@@ -107,9 +109,9 @@ const Reports = () => {
 				<div className='container mx-auto px-3 sm:px-4 lg:px-6 py-4'>
 					<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
 						<div>
-							<h1 className='text-2xl font-bold tracking-tight'>Ҳисоботлар</h1>
+							<h1 className='text-2xl font-bold tracking-tight'>{t('title')}</h1>
 							<p className='text-sm text-muted-foreground mt-1'>
-								Тизим фаолияти статистикаси
+								{t('subtitle')}
 							</p>
 						</div>
 						<div className='flex gap-2'>
@@ -140,13 +142,13 @@ const Reports = () => {
 				{/* KPI Cards */}
 				<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
 					<StatisticsCard
-						title='Жами беморлар'
+						title={t('totalPatients')}
 						value={totalPatients.toLocaleString()}
 						icon={Users}
 						variant='default'
 					/>
 					<StatisticsCard
-						title='Жами даромад'
+						title={t('totalIncome')}
 						value={formatCurrency(totalBilling) + ' сўм'}
 						icon={DollarSign}
 						variant='success'
@@ -160,12 +162,10 @@ const Reports = () => {
 						variant='warning'
 					/> */}
 					<StatisticsCard
-						title='Палата бандлиги'
+						title={t('roomOccupancy')}
 						value={`${roomsData?.data?.occupancyRate.toFixed(1) || 0}%`}
 						icon={Bed}
-						description={`${roomsData?.data?.occupiedBeds || 0}/${
-							roomsData?.data?.totalBeds || 0
-						} бандлаштирилган`}
+						description={t('bedsOccupied', { occupied: roomsData?.data?.occupiedBeds || 0, total: roomsData?.data?.totalBeds || 0 })}
 						variant='default'
 					/>
 				</div>
@@ -175,49 +175,49 @@ const Reports = () => {
 					<div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
 						<Card className='p-4'>
 							<h3 className='text-sm font-medium text-muted-foreground mb-2'>
-								Шифокорлар
+								{t('doctors')}
 							</h3>
 							<p className='text-2xl font-bold'>
 								{usersData.data.doctor?.total ?? 0}
 							</p>
 							<div className='flex gap-4 mt-2 text-xs text-muted-foreground'>
 								<span className='text-green-600'>
-									Актив: {usersData.data.doctor?.active ?? 0}
+									{t('active')}: {usersData.data.doctor?.active ?? 0}
 								</span>
 								<span className='text-red-600'>
-									Ноактив: {usersData.data.doctor?.inactive ?? 0}
+									{t('inactive')}: {usersData.data.doctor?.inactive ?? 0}
 								</span>
 							</div>
 						</Card>
 						<Card className='p-4'>
 							<h3 className='text-sm font-medium text-muted-foreground mb-2'>
-								Ҳамширалар
+								{t('nurses')}
 							</h3>
 							<p className='text-2xl font-bold'>
 								{usersData.data.nurse?.total ?? 0}
 							</p>
 							<div className='flex gap-4 mt-2 text-xs text-muted-foreground'>
 								<span className='text-green-600'>
-									Актив: {usersData.data.nurse?.active ?? 0}
+									{t('active')}: {usersData.data.nurse?.active ?? 0}
 								</span>
 								<span className='text-red-600'>
-									Ноактив: {usersData.data.nurse?.inactive ?? 0}
+									{t('inactive')}: {usersData.data.nurse?.inactive ?? 0}
 								</span>
 							</div>
 						</Card>
 						<Card className='p-4'>
 							<h3 className='text-sm font-medium text-muted-foreground mb-2'>
-								Регистраторлар
+								{t('receptionists')}
 							</h3>
 							<p className='text-2xl font-bold'>
 								{usersData.data.receptionist?.total ?? 0}
 							</p>
 							<div className='flex gap-4 mt-2 text-xs text-muted-foreground'>
 								<span className='text-green-600'>
-									Актив: {usersData.data.receptionist?.active ?? 0}
+									{t('active')}: {usersData.data.receptionist?.active ?? 0}
 								</span>
 								<span className='text-red-600'>
-									Ноактив: {usersData.data.receptionist?.inactive ?? 0}
+									{t('inactive')}: {usersData.data.receptionist?.inactive ?? 0}
 								</span>
 							</div>
 						</Card>
@@ -277,8 +277,7 @@ const Reports = () => {
 				{/* Info Alert */}
 				<Alert>
 					<AlertDescription>
-						Барча маълумотлар танланган давр бўйича кўрсатилган. Батафсил
-						маълумот олиш учун давр танланг.
+						{t('infoAlert')}
 					</AlertDescription>
 				</Alert>
 			</main>
