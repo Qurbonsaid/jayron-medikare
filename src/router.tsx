@@ -109,167 +109,168 @@ export const navigator = [
     path: '/patients',
     to: null,
     title: 'Беморлар',
+    titleKey: 'nav.patients',
   },
   {
     path: '/patient/:id',
     to: '/patients',
     title: 'Бемор профили',
+    titleKey: 'nav.patientProfile',
   },
   {
     path: '/new-visit',
     to: null,
     title: 'Янги Кўрик',
+    titleKey: 'nav.newVisit',
   },
   {
     path: '/appointments',
     to: null,
     title: 'Учрашувлар',
+    titleKey: 'nav.appointments',
   },
   {
     path: '/prescription',
     to: null,
-    title: (
-      <>
-        <div className='flex items-center gap-4'>
-          <div>
-            <h1 className='text-xl font-bold'>Рецепт Ёзиш</h1>
-            <p className='text-sm text-muted-foreground'>Янги рецепт яратиш</p>
-          </div>
-        </div>
-      </>
-    ),
+    title: 'Рецепт Ёзиш',
+    titleKey: 'nav.prescription',
   },
   {
     path: '/examinations',
     to: null,
     title: 'Кўриклар',
+    titleKey: 'nav.examinations',
   },
   {
     path: '/disease',
     to: null,
     title: 'Касалликлар',
+    titleKey: 'nav.diseases',
   },
   {
     path: '/medication',
     to: null,
     title: 'Дори-дармонлар',
+    titleKey: 'nav.medications',
   },
   {
     path: '/service',
     to: null,
     title: 'Хизматлар',
+    titleKey: 'nav.services',
   },
   {
     path: '/examination/:id',
     to: '/examinations',
     title: 'Кўрик Тафсилотлари',
+    titleKey: 'nav.examinationDetails',
   },
   {
     path: '/add-diagnostika',
     to: null,
     title: 'Диагностика қўшиш',
+    titleKey: 'nav.addDiagnostics',
   },
   {
     path: '/analysisById/:id',
     to: null,
     title: 'Tahlil parametrlari',
+    titleKey: 'nav.labResults',
   },
   {
     path: '/lab-order',
     to: null,
     title: 'Лаборатория буюртмаси',
+    titleKey: 'nav.labOrder',
   },
   {
     path: '/inpatient',
     to: null,
     title: 'Стационар',
+    titleKey: 'nav.inpatient',
   },
   {
     path: '/inpatient/:id',
     to: '/inpatient',
     title: 'Стационар',
+    titleKey: 'nav.inpatient',
   },
   {
     path: '/inpatient-calendar/:corpusId/:roomId',
     to: '/inpatient-calendar',
     title: 'Хона Календари',
+    titleKey: 'nav.room',
   },
   {
     path: '/inpatient/:id',
     to: '/inpatient',
     title: 'Стационар',
+    titleKey: 'nav.inpatient',
   },
   {
     path: '/room/:id',
     to: -1,
     title: 'Стационар',
+    titleKey: 'nav.room',
   },
   {
     path: '/medicine',
     to: null,
     title: 'Дори-дармонлар',
+    titleKey: 'nav.medicine',
   },
   {
     path: '/daily-checkup',
     to: null,
     title: 'Кунлик кўрик',
+    titleKey: 'nav.dailyCheckup',
   },
   {
     path: '/lab-results',
     to: null,
     title: 'Таҳлил натижалари',
+    titleKey: 'nav.labResults',
   },
   {
     path: '/billing',
     to: null,
     title: 'Ҳисоб-китоб',
+    titleKey: 'nav.billing',
   },
   {
     path: '/reports',
     to: null,
-    // title: "Ҳисоботлар",
+    title: 'Ҳисоботлар',
+    titleKey: 'menu.reports',
   },
   {
     path: '/radiology',
     to: null,
     title: 'Рентген',
+    titleKey: 'nav.radiology',
   },
   {
     path: '/settings',
     to: null,
-    title: (
-      <div className='flex items-center gap-4'>
-        <div>
-          <h1 className='text-xl font-bold'>Созламалар</h1>
-          <p className='text-sm text-muted-foreground'>
-            Тизим ва фойдаланувчи созламалари
-          </p>
-        </div>
-      </div>
-    ),
+    title: 'Созламалар',
+    titleKey: 'nav.settings',
   },
   {
     path: '/profile',
     to: null,
     title: 'Профил',
+    titleKey: 'nav.profile',
   },
   {
     path: '/permissions',
     to: null,
-    title: (
-      <div className='flex items-center gap-4'>
-        <div>
-          <h1 className='text-xl font-bold'>Рухсатлар</h1>
-          <p className='text-sm text-muted-foreground'>
-            Тизим рухсатларини бошқариш
-          </p>
-        </div>
-      </div>
-    ),
+    title: 'Рухсатлар',
+    titleKey: 'settings.permissions',
   },
   {
     path: '/patient-portal',
     to: null,
     title: 'Бемор портали',
+    titleKey: 'nav.patientPortal',
   },
 ];

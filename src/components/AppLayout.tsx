@@ -6,24 +6,19 @@ import {
 } from '@/components/ui/sidebar';
 import getUser from '@/hooks/getUser/getUser';
 import { navigator } from '@/router';
-import { ArrowLeft, Globe } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from './ui/dropdown-menu';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from './LanguageSelector';
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const { t } = useTranslation('sidebar');
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const saved = localStorage.getItem('sidebar-state');
     return saved !== 'false';
@@ -43,6 +38,12 @@ export function AppLayout({ children }: AppLayoutProps) {
     const regex = new RegExp(`^${pattern}$`);
     return regex.test(location.pathname);
   });
+
+  // Get translated title
+  const getTranslatedTitle = () => {
+    if (!currentLocation?.titleKey) return currentLocation?.title;
+    return t(currentLocation.titleKey);
+  };
 
   const me = getUser();
 
@@ -65,35 +66,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <ArrowLeft className='w-5 h-5' />
                   </Link>
                 )}
-                <h1 className='text-xl font-bold'>{currentLocation?.title}</h1>
+                <h1 className='text-xl font-bold'>{getTranslatedTitle()}</h1>
               </div>
               <div className='flex items-center gap-4 px-4'>
                 <div className='flex items-center gap-3'>
                   {/* Language Selector */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      className='focus-visible:ring-0 focus-visible:ring-offset-0'
-                      asChild
-                    >
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='hover:bg-accent border-2 border-slate-400'
-                      >
-                        <Globe className='w-5 h-5' />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
-                      <DropdownMenuLabel>Тилни танланг</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <span>Ўзбек тили</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <span>Русский язык</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <LanguageSelector />
 
                   {/* Profile Button */}
                   <Link to='/profile' className='border-2 rounded-lg py-0.5 border-slate-400'>

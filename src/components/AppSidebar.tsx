@@ -22,8 +22,10 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export function AppSidebar() {
+  const { t } = useTranslation('sidebar');
   const {
     open,
     setOpen,
@@ -179,7 +181,7 @@ export function AppSidebar() {
                         <div className='flex items-center gap-3'>
                           <CategoryIcon className='w-[18px] h-[18px] text-muted-foreground' />
                           <span className='text-[12px] font-semibold text-muted-foreground uppercase tracking-wide'>
-                            {category.title}
+                            {t(category.titleKey)}
                           </span>
                         </div>
                         <ChevronDown
@@ -198,14 +200,14 @@ export function AppSidebar() {
                         {category.items.map((item) => {
                           const ItemIcon = item.icon;
                           return (
-                            <SidebarMenuItem key={item.title}>
+                            <SidebarMenuItem key={item.url}>
                               <SidebarMenuButton
                                 asChild
                                 isActive={isActive(item.url)}
                               >
                                 <NavLink to={item.url} className='group'>
                                   <ItemIcon className='w-5 h-5' />
-                                  <span>{item.title}</span>
+                                  <span>{t(item.titleKey)}</span>
                                 </NavLink>
                               </SidebarMenuButton>
                             </SidebarMenuItem>
@@ -220,18 +222,18 @@ export function AppSidebar() {
                   {category.items.map((item) => {
                     const ItemIcon = item.icon;
                     return (
-                      <SidebarMenuItem key={item.title}>
+                      <SidebarMenuItem key={item.url}>
                         <SidebarMenuButton
                           asChild
                           isActive={isActive(item.url)}
-                          tooltip={item.title}
+                          tooltip={t(item.titleKey)}
                         >
                           <NavLink
                             to={item.url}
                             className='group flex items-center justify-center h-8'
                           >
                             <ItemIcon className='w-5 h-5' />
-                            <span>{item.title}</span>
+                            <span>{t(item.titleKey)}</span>
                           </NavLink>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -250,18 +252,18 @@ export function AppSidebar() {
               {filteredSystemMenu.items.map((item) => {
                 const ItemIcon = item.icon;
                 return (
-                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
                       asChild
                       isActive={isActive(item.url)}
-                      tooltip={item.title}
+                      tooltip={t(item.titleKey)}
                     >
                       <NavLink
                         to={item.url}
                         className='group flex items-center justify-center h-8'
                       >
                         <ItemIcon className='w-5 h-5' />
-                        <span>{item.title}</span>
+                        <span>{t(item.titleKey)}</span>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -290,7 +292,7 @@ export function AppSidebar() {
                         <div className='flex items-center gap-3'>
                           <SystemIcon className='w-[18px] h-[18px] text-muted-foreground' />
                           <span className='text-[12px] font-semibold text-muted-foreground uppercase tracking-wide'>
-                            {filteredSystemMenu.title}
+                            {t(filteredSystemMenu.titleKey)}
                           </span>
                         </div>
                         <ChevronDown
@@ -309,14 +311,14 @@ export function AppSidebar() {
                         {filteredSystemMenu.items.map((item) => {
                           const ItemIcon = item.icon;
                           return (
-                            <SidebarMenuItem key={item.title}>
+                            <SidebarMenuItem key={item.url}>
                               <SidebarMenuButton
                                 asChild
                                 isActive={isActive(item.url)}
                               >
                                 <NavLink to={item.url} className='group'>
                                   <ItemIcon className='w-5 h-5' />
-                                  <span>{item.title}</span>
+                                  <span>{t(item.titleKey)}</span>
                                 </NavLink>
                               </SidebarMenuButton>
                             </SidebarMenuItem>

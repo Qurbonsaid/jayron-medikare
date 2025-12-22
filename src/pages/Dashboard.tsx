@@ -3,47 +3,49 @@ import { StatCard } from '@/components/ui/stat-card';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
+  const { t } = useTranslation('dashboard');
   const navigate = useNavigate();
 
   const appointments = [
     {
       time: '09:00',
       patient: 'Алиев Жасур',
-      type: 'Дастлабки қабул',
+      type: t('initialVisit'),
       status: 'new',
     },
     {
       time: '09:30',
       patient: 'Каримова Нодира',
-      type: 'Такрорий қабул',
+      type: t('followUp'),
       status: 'confirmed',
     },
     {
       time: '10:00',
       patient: 'Усмонов Азиз',
-      type: 'Кўрикдан кейин',
+      type: t('postExamination'),
       status: 'confirmed',
     },
     {
       time: '10:30',
       patient: 'Рахимова Малика',
-      type: 'Дастлабки қабул',
+      type: t('initialVisit'),
       status: 'new',
     },
   ];
 
   const recentActivity = [
-    { time: '10 дақиқа олдин', action: 'Алиев Жасур учун SOAP ёзув қўшилди' },
-    { time: '25 дақиқа олдин', action: 'Каримова Нодира учун рецепт ёзилди' },
+    { time: t('minutesAgo', { count: 10 }), action: t('soapNoteAdded', { patient: 'Алиев Жасур' }) },
+    { time: t('minutesAgo', { count: 25 }), action: t('prescriptionWritten', { patient: 'Каримова Нодира' }) },
     {
-      time: '1 соат олдин',
-      action: 'Усмонов Азиз учун қон таҳлили буюртма қилинди',
+      time: t('hoursAgo', { count: 1 }),
+      action: t('bloodTestOrdered', { patient: 'Усмонов Азиз' }),
     },
     {
-      time: '2 соат олдин',
-      action: 'Янги бемор рўйхатдан ўтди: Рахимова Малика',
+      time: t('hoursAgo', { count: 2 }),
+      action: t('newPatientRegistered', { patient: 'Рахимова Малика' }),
     },
   ];
 
@@ -52,9 +54,9 @@ const Dashboard = () => {
       <div className='container mx-auto px-6 py-8'>
         {/* Welcome Section */}
         <div className='mb-8'>
-          <h1 className='text-3xl font-bold mb-2'>Хуш келибсиз, Др. Алимов!</h1>
+          <h1 className='text-3xl font-bold mb-2'>{t('welcome', { name: 'Др. Алимов' })}</h1>
           <p className='text-muted-foreground'>
-            Бугун,{' '}
+            {t('today')},{' '}
             {new Date().toLocaleDateString('uz-UZ', {
               weekday: 'long',
               year: 'numeric',
@@ -67,25 +69,25 @@ const Dashboard = () => {
         {/* Statistics Cards */}
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
           <StatCard
-            title='Бугунги Беморлар'
+            title={t('todaysPatients')}
             value='12'
             icon={Calendar}
             variant='default'
           />
           <StatCard
-            title='Навбатдаги Беморлар'
+            title={t('waitingPatients')}
             value='4'
             icon={Clock}
             variant='warning'
           />
           <StatCard
-            title='Бажарилган Кўриклар'
+            title={t('completedExaminations')}
             value='8'
             icon={CheckCircle}
             variant='success'
           />
           <StatCard
-            title='Янги Хабарлар'
+            title={t('newMessages')}
             value='3'
             icon={MessageSquare}
             variant='danger'
@@ -98,12 +100,12 @@ const Dashboard = () => {
             <Card className='card-shadow'>
               <div className='p-6'>
                 <div className='flex items-center justify-between mb-6'>
-                  <h2 className='text-xl font-bold'>Бугунги Навбат</h2>
+                  <h2 className='text-xl font-bold'>{t('todaysQueue')}</h2>
                   <Button
                     onClick={() => navigate('/appointments')}
                     className='gradient-primary'
                   >
-                    + Қўшиш
+                    + {t('add')}
                   </Button>
                 </div>
 
@@ -128,7 +130,7 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <Button size='sm' className='gradient-success'>
-                          Бошлаш
+                          {t('start')}
                         </Button>
                       </div>
                     </div>
@@ -142,7 +144,7 @@ const Dashboard = () => {
           <div>
             <Card className='card-shadow'>
               <div className='p-6'>
-                <h2 className='text-xl font-bold mb-4'>Охирги Фаолият</h2>
+                <h2 className='text-xl font-bold mb-4'>{t('recentActivity')}</h2>
                 <div className='space-y-4'>
                   {recentActivity.map((activity, idx) => (
                     <div key={idx} className='flex gap-3'>

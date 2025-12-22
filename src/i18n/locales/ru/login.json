@@ -1,0 +1,19 @@
+{
+  "title": "Вход в систему",
+  "subtitle": "Электронная система медицинских карт",
+  "username": "Имя пользователя",
+  "usernamePlaceholder": "Введите имя пользователя",
+  "password": "Пароль",
+  "passwordPlaceholder": "Введите пароль",
+  "rememberMe": "Запомнить меня",
+  "submit": "Войти",
+  "forgotPassword": "Забыли пароль?",
+  "copyright": "© 2025 JAYRON MEDSERVIS. Все права защищены.",
+  "invalidCredentials": "Неверное имя пользователя или пароль",
+  "loginSuccess": "Успешный вход",
+  "loginFailed": "Ошибка входа",
+  "sessionExpired": "Сессия истекла. Пожалуйста, войдите снова",
+  "logout": "Выход",
+  "logoutConfirm": "Вы уверены, что хотите выйти?",
+  "logoutSuccess": "Успешный выход"
+}

@@ -26,8 +26,11 @@ import { Eye, Filter, Phone, Search, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewPatient from './components/NewPatient';
+import { useTranslation } from 'react-i18next';
 
 const Patients = () => {
+  const { t } = useTranslation('patients');
+  const { t: tCommon } = useTranslation('common');
   const navigate = useNavigate();
   const { canCreate } = usePermission('patients');
   const [searchQuery, setSearchQuery] = useState('');
@@ -127,10 +130,10 @@ const Patients = () => {
         <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8'>
           <div>
             <h1 className='text-2xl sm:text-3xl font-bold mb-1 sm:mb-2'>
-              Беморлар Рўйхати
+              {t('title')}
             </h1>
             <p className='text-sm sm:text-base text-muted-foreground'>
-              Барча беморларни кўриш ва бошқариш
+              {t('subtitle')}
             </p>
           </div>
           {canCreate && (
@@ -138,7 +141,7 @@ const Patients = () => {
               className='gradient-primary h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto'
               onClick={() => setShowNewPatient(true)}
             >
-              + Янги Бемор
+              + {t('newPatient')}
             </Button>
           )}
         </div>
@@ -151,7 +154,7 @@ const Patients = () => {
                 <div className='relative'>
                   <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground' />
                   <Input
-                    placeholder='ФИО, телефон ёки ID бўйича қидириш...'
+                    placeholder={t('searchPlaceholder')}
                     className='pl-9 sm:pl-10 h-10 sm:h-12 text-sm sm:text-base'
                     value={searchQuery}
                     onChange={(e) => {
@@ -171,12 +174,12 @@ const Patients = () => {
                   }}
                 >
                   <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
-                    <SelectValue placeholder='Жинси' />
+                    <SelectValue placeholder={t('gender')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='all'>Барчаси</SelectItem>
-                    <SelectItem value='male'>Эркак</SelectItem>
-                    <SelectItem value='female'>Аёл</SelectItem>
+                    <SelectItem value='all'>{tCommon('all')}</SelectItem>
+                    <SelectItem value='male'>{t('male')}</SelectItem>
+                    <SelectItem value='female'>{t('female')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -190,13 +193,13 @@ const Patients = () => {
                   }}
                 >
                   <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
-                    <SelectValue placeholder='Шифокор' />
+                    <SelectValue placeholder={t('doctor')} />
                   </SelectTrigger>
                   <SelectContent
                     className='max-h-[300px]'
                     onScroll={handleDoctorScroll}
                   >
-                    <SelectItem value='all'>Барчаси</SelectItem>
+                    <SelectItem value='all'>{tCommon('all')}</SelectItem>
                     {doctors.map((doctor: any) => (
                       <SelectItem key={doctor._id} value={doctor._id}>
                         {doctor.fullname}
@@ -206,14 +209,14 @@ const Patients = () => {
                       <div className='px-2 py-4 text-center'>
                         <LoadingSpinner
                           size='sm'
-                          text='Юкланмоқда...'
+                          text={tCommon('loading')}
                           className='justify-center'
                         />
                       </div>
                     )}
                     {!hasMoreDoctors && doctors.length > 1 && (
                       <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
-                        Барча шифокорлар юкланди
+                        {t('allDoctorsLoaded')}
                       </div>
                     )}
                   </SelectContent>
@@ -235,7 +238,7 @@ const Patients = () => {
                   }}
                 >
                   <Filter className='w-4 h-4 sm:w-5 sm:h-5' />
-                  <span className='ml-2'>Тозалаш</span>
+                  <span className='ml-2'>{tCommon('clear')}</span>
                 </Button>
               </div>
             </div>
@@ -246,14 +249,14 @@ const Patients = () => {
         {!isLoading && patients.length > 0 && (
           <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4'>
             <p className='text-sm sm:text-base text-muted-foreground'>
-              Жами:{' '}
+              {tCommon('total')}:{' '}
               <span className='font-semibold text-foreground'>
                 {patients.length}
               </span>{' '}
-              бемор
+              {t('patient')}
               {patientdata?.pagination && (
                 <span className='text-xs ml-2'>
-                  ({patientdata.pagination.total_items} дан)
+                  ({t('outOf', { total: patientdata.pagination.total_items })})
                 </span>
               )}
             </p>
@@ -265,7 +268,7 @@ const Patients = () => {
           <Card className='card-shadow p-8 sm:p-12'>
             <LoadingSpinner
               size='lg'
-              text='Юкланмоқда...'
+              text={tCommon('loading')}
               className='justify-center'
             />
           </Card>
@@ -273,14 +276,14 @@ const Patients = () => {
           <Card className='card-shadow p-4 sm:p-0'>
             <EmptyState
               icon={Users}
-              title={searchQuery ? 'Ҳеч нарса топилмади' : 'Ҳали беморлар йўқ'}
+              title={searchQuery ? t('nothingFound') : t('noPatientsYet')}
               description={
                 searchQuery
-                  ? 'Қидирув сўзини текширинг ёки филтрни ўзгартиринг'
-                  : 'Биринчи беморни қўшиш учун қуйидаги тугмани босинг'
+                  ? t('checkSearchOrFilter')
+                  : t('addFirstPatient')
               }
               actionLabel={
-                searchQuery ? 'Филтрни тозалаш' : '+ Янги Бемор Қўшиш'
+                searchQuery ? t('clearFilter') : '+ ' + t('addNewPatient')
               }
               onAction={() =>
                 searchQuery ? setSearchQuery('') : setShowNewPatient(true)
@@ -305,7 +308,7 @@ const Patients = () => {
                           {patient.fullname}
                         </h3>
                         <p className='text-xs sm:text-sm text-muted-foreground'>
-                          {patient.gender === 'male' ? 'Эркак' : 'Аёл'}
+                          {patient.gender === 'male' ? t('male') : t('female')}
                         </p>
                       </div>
                     </div>
@@ -327,7 +330,7 @@ const Patients = () => {
                       onClick={() => navigate(`/patient/${patient._id}`)}
                     >
                       <Eye className='w-4 h-4 mr-2' />
-                      Кўриш
+                      {tCommon('view')}
                     </Button>
                   </div>
                 </Card>
@@ -342,12 +345,12 @@ const Patients = () => {
                     <tr>
                       {[
                         'ID',
-                        'ФИО',
-                        'Жинс',
-                        'Телефон',
-                        'Шифокор',
-                        'Диагноз',
-                        'Ҳаракатлар',
+                        t('fullName'),
+                        t('gender'),
+                        t('phone'),
+                        t('doctor'),
+                        t('diagnosis'),
+                        tCommon('actions'),
                       ].map((i) => (
                         <th
                           key={i}
@@ -373,7 +376,7 @@ const Patients = () => {
                           </div>
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-                          {patient.gender === 'male' ? 'Эркак' : 'Аёл'}
+                          {patient.gender === 'male' ? t('male') : t('female')}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
                           {patient.phone}
@@ -384,7 +387,7 @@ const Patients = () => {
                             : '-'}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm '>
-                          {patient?.diagnosis?.diagnosis_id?.name || 'Йўқ'}
+                          {patient?.diagnosis?.diagnosis_id?.name || t('none')}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4'>
                           <div className='flex justify-center'>
@@ -397,7 +400,7 @@ const Patients = () => {
                               className='hover:bg-primary hover:text-white transition-smooth text-xs xl:text-sm'
                             >
                               <Eye className='w-3 h-3 xl:w-4 xl:h-4 mr-1 xl:mr-2' />
-                              Кўриш
+                              {tCommon('view')}
                             </Button>
                           </div>
                         </td>
@@ -414,7 +417,7 @@ const Patients = () => {
                 <div className='mt-6 flex flex-col lg:flex-row items-center justify-between gap-4'>
                   <div className='flex items-center gap-2'>
                     <span className='text-sm text-muted-foreground'>
-                      Саҳифада:
+                      {t('perPage')}:
                     </span>
                     <Select
                       value={itemsPerPage.toString()}

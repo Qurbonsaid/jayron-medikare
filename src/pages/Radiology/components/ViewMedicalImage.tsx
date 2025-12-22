@@ -1,8 +1,5 @@
 import {
   MedicalImage,
-  PatientInfo,
-  ImagingTypeInfo,
-  ExaminationInfo,
 } from "@/app/api/radiologyApi/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,7 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { formatDate } from "date-fns";
 import { Image as ImageIcon, Maximize2, Minimize2, Download } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react";
 import { BodyPartConstants } from "@/constants/BodyPart";
 import { useGetOneMedicalImageQuery } from "@/app/api/radiologyApi";
 import { SERVER_URL } from "@/constants/ServerUrl";
@@ -56,7 +53,7 @@ interface ViewMedicalImageProps {
   medicalImage: MedicalImage | null;
 }
 
-export const ViewMedicalImage = ({
+export const ViewMedicalImage = memo(({
   open,
   onOpenChange,
   medicalImage,
@@ -77,25 +74,33 @@ export const ViewMedicalImage = ({
     { skip: !medicalImage?._id }
   );
 
-  // Get current file info
-  const currentFilePath = medicalImage?.image_paths?.[selectedImageIndex] || "";
-  const currentFileInfo = getFileTypeInfo(currentFilePath);
+  // Get current file info - useMemo bilan optimallashtirish
+  const currentFilePath = useMemo(() => 
+    medicalImage?.image_paths?.[selectedImageIndex] || "", 
+    [medicalImage?.image_paths, selectedImageIndex]
+  );
+  
+  const currentFileInfo = useMemo(() => 
+    getFileTypeInfo(currentFilePath), 
+    [currentFilePath]
+  );
+  
   const currentFileType = currentFileInfo.type;
   const isImage = currentFileType === "image";
 
-  // Helper functions (defined before useEffect)
-  const handleResetView = () => {
+  // Helper functions - useCallback bilan
+  const handleResetView = useCallback(() => {
     setZoom(100);
     setRotation(0);
     setBrightness(100);
     setContrast(100);
     setPan({ x: 0, y: 0 });
-  };
+  }, []);
 
   // Reset when image changes
   useEffect(() => {
     handleResetView();
-  }, [selectedImageIndex]);
+  }, [selectedImageIndex, handleResetView]);
 
   // Reset when modal opens/closes or medicalImage changes
   useEffect(() => {
@@ -104,7 +109,7 @@ export const ViewMedicalImage = ({
       setSelectedImageIndex(0);
       handleResetView();
     }
-  }, [open, medicalImage?._id]);
+  }, [open, medicalImage?._id, handleResetView]);
 
   // Keyboard navigation handler
   useEffect(() => {
@@ -150,9 +155,27 @@ export const ViewMedicalImage = ({
     return () => container.removeEventListener("wheel", handleWheel);
   }, []);
 
-  if (!medicalImage) return null;
+  // getImageUrl - useCallback bilan
+  const getImageUrl = useCallback((path: string) => {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      return path;
+    }
+    return `${SERVER_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+  }, []);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Current file URL
+  const currentFileUrl = useMemo(() => 
+    getImageUrl(currentFilePath), 
+    [getImageUrl, currentFilePath]
+  );
+
+  // Current filename
+  const currentFilename = useMemo(() => 
+    currentFilePath.split('/').pop() || 'file', 
+    [currentFilePath]
+  );
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (zoom > 100) {
       setIsDragging(true);
       setDragStart({
@@ -160,27 +183,22 @@ export const ViewMedicalImage = ({
         y: e.clientY - pan.y,
       });
     }
-  };
+  }, [zoom, pan.x, pan.y]);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isDragging && zoom > 100) {
       setPan({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y,
       });
     }
-  };
+  }, [isDragging, zoom, dragStart.x, dragStart.y]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
-  const getImageUrl = (path: string) => {
-    if (path.startsWith("http://") || path.startsWith("https://")) {
-      return path;
-    }
-    return `${SERVER_URL}${path.startsWith("/") ? "" : "/"}${path}`;
-  };
+  if (!medicalImage) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -247,11 +265,10 @@ export const ViewMedicalImage = ({
                   )}
                   
                   {currentFileType === "pdf" && (
-                    <div className="w-full h-full p-4 flex items-center justify-center">
-                      <DownloadOnlyCard
-                        url={getImageUrl(currentFilePath)}
-                        filename={currentFilePath.split('/').pop()}
-                        fileType="pdf"
+                    <div className="w-full h-full p-4">
+                      <PDFViewer
+                        url={currentFileUrl}
+                        filename={currentFilename}
                       />
                     </div>
                   )}
@@ -259,8 +276,8 @@ export const ViewMedicalImage = ({
                   {currentFileType === "word" && (
                     <div className="w-full h-full p-4">
                       <WordViewer
-                        url={getImageUrl(currentFilePath)}
-                        filename={currentFilePath.split('/').pop()}
+                        url={currentFileUrl}
+                        filename={currentFilename}
                       />
                     </div>
                   )}
@@ -268,28 +285,26 @@ export const ViewMedicalImage = ({
                   {currentFileType === "excel" && (
                     <div className="w-full h-full p-4">
                       <ExcelViewer
-                        url={getImageUrl(currentFilePath)}
-                        filename={currentFilePath.split('/').pop()}
+                        url={currentFileUrl}
+                        filename={currentFilename}
                       />
                     </div>
                   )}
                   
                   {currentFileType === "rtf" && (
                     <div className="w-full h-full p-4 flex items-center justify-center">
-                      <DownloadOnlyCard
-                        url={getImageUrl(currentFilePath)}
-                        filename={currentFilePath.split('/').pop()}
-                        fileType="rtf"
+                      <RTFViewer
+                        url={currentFileUrl}
+                        filename={currentFilename}
                       />
                     </div>
                   )}
                   
                   {currentFileType === "mdfx" && (
                     <div className="w-full h-full p-4 flex items-center justify-center">
-                      <DownloadOnlyCard
-                        url={getImageUrl(currentFilePath)}
-                        filename={currentFilePath.split('/').pop()}
-                        fileType="mdfx"
+                      <MDFXViewer
+                        url={currentFileUrl}
+                        filename={currentFilename}
                       />
                     </div>
                   )}
@@ -297,9 +312,9 @@ export const ViewMedicalImage = ({
                   {currentFileType === "other" && (
                     <div className="w-full h-full p-4 flex items-center justify-center">
                       <DownloadOnlyCard
-                        url={getImageUrl(currentFilePath)}
-                        filename={currentFilePath.split('/').pop()}
-                        fileType={currentFilePath.split('.').pop()}
+                        url={currentFileUrl}
+                        filename={currentFilename}
+                        fileType={currentFileInfo.extension || 'other'}
                       />
                     </div>
                   )}
@@ -737,4 +752,6 @@ export const ViewMedicalImage = ({
       </DialogContent>
     </Dialog>
   );
-};
+});
+
+ViewMedicalImage.displayName = 'ViewMedicalImage';
