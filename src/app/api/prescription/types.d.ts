@@ -111,7 +111,7 @@ export interface takePresc {
 	id: string
 	body: {
 		item_id: string
-		day: string
+		day: number
 	}
 }
 

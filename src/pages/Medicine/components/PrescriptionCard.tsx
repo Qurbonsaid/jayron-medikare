@@ -12,7 +12,7 @@ interface Day {
 interface PrescriptionCardProps {
 	prescriptionId: string
 	recordId: string
-	onOpenModal: (recordId: string, prescriptionId: string, day: string) => void
+	onOpenModal: (prescriptionId: string, itemId: string, day: number) => void
 	formatDate: (dateString: string | null) => string | null
 	isToday: (dateStr: string) => boolean
 }
@@ -95,11 +95,7 @@ const PrescriptionCard = ({
 										className='flex flex-col items-center p-2 xl:p-3 border rounded-lg hover:bg-accent/50 transition-colors'
 										onClick={() =>
 											!isCompleted &&
-											onOpenModal(
-												recordId,
-												prescriptionItem._id,
-												String(day.day)
-											)
+											onOpenModal(prescriptionId, prescriptionItem._id, day.day)
 										}
 									>
 										<p className='text-xs font-medium mb-1 text-center line-clamp-1'>
@@ -147,11 +143,7 @@ const PrescriptionCard = ({
 										className='flex flex-col items-center p-2 border rounded-lg hover:bg-accent/50 transition-colors'
 										onClick={() =>
 											!isCompleted &&
-											onOpenModal(
-												recordId,
-												prescriptionItem._id,
-												String(day.day)
-											)
+											onOpenModal(prescriptionId, prescriptionItem._id, day.day)
 										}
 									>
 										<p className='text-xs font-medium mb-0.5 text-center line-clamp-1'>
@@ -199,11 +191,7 @@ const PrescriptionCard = ({
 										className='flex flex-col p-2 border rounded-lg active:bg-accent/50 transition-colors'
 										onClick={() =>
 											!isCompleted &&
-											onOpenModal(
-												recordId,
-												prescriptionItem._id,
-												String(day.day)
-											)
+											onOpenModal(prescriptionId, prescriptionItem._id, day.day)
 										}
 									>
 										<div className='flex items-center justify-between mb-1'>

@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useBiometricConfirmMutation } from '@/app/api/biometricApi'
 import {
 	useGetAllExamsQuery,
 	useTakeServiceMutation,
-	type getOnePrescriptionRes,
-	type getOneServiceRes,
 } from '@/app/api/examinationApi'
+import type {
+	getOnePrescriptionRes,
+	getOneServiceRes,
+} from '@/app/api/examinationApi/types'
 import { useTakePrescriptionMutation } from '@/app/api/prescription/prescriptionApi'
 import {
 	Accordion,
@@ -42,8 +43,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
 import PrescriptionCard from '@/pages/Medicine/components/PrescriptionCard'
-import { Camera, Check, Loader2, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Check, Loader2 } from 'lucide-react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
 interface Day {
@@ -112,13 +113,15 @@ const Medicine = () => {
 		open: boolean
 		recordId: string | null
 		prescriptionId: string | null
+		itemId: string | null
 		serviceId: string | null
-		day: string | null
+		day: number | null
 		type: 'medicine' | 'service'
 	}>({
 		open: false,
 		recordId: null,
 		prescriptionId: null,
+		itemId: null,
 		serviceId: null,
 		day: null,
 		type: 'medicine',
@@ -126,19 +129,6 @@ const Medicine = () => {
 	const [processedServices, setProcessedServices] = useState<Set<string>>(
 		new Set()
 	)
-	const [biometricModal, setBiometricModal] = useState<{
-		open: boolean
-		patientId: string | null
-	}>({ open: false, patientId: null })
-	const [biometricImages, setBiometricImages] = useState<File[]>([])
-	const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([])
-	const [imageError, setImageError] = useState<string>('')
-	const [biometricToken, setBiometricToken] = useState<string | null>(null)
-	const [isCameraActive, setIsCameraActive] = useState(false)
-	const [isVideoReady, setIsVideoReady] = useState(false)
-	const videoRef = useRef<HTMLVideoElement | null>(null)
-	const canvasRef = useRef<HTMLCanvasElement | null>(null)
-	const streamRef = useRef<MediaStream | null>(null)
 
 	// RTK Query with room search
 	const { data, isLoading, isError } = useGetAllExamsQuery({
@@ -152,8 +142,6 @@ const Medicine = () => {
 	const [takePrescription, { isLoading: takingMedicine }] =
 		useTakePrescriptionMutation()
 	const [takeService, { isLoading: takingService }] = useTakeServiceMutation()
-	const [biometricConfirm, { isLoading: isConfirmingBiometric }] =
-		useBiometricConfirmMutation()
 	const handleRequest = useHandleRequest()
 
 	// Format date helper
@@ -184,13 +172,13 @@ const Medicine = () => {
 	// 		request: () =>
 	// 			createServiceDays({
 	// 				id: recordId,
-	// 				serviceId: service._id,
+	// 				serviceId: typeof service.service_type_id === 'string' ? service.service_type_id : service.service_type_id._id,
 	// 				data: {
 	// 					service_type_id:
 	// 						typeof service.service_type_id === 'string'
 	// 							? service.service_type_id
 	// 							: service.service_type_id._id,
-	// 					price: service.price,
+	// 					price: service.service_type_id.price,
 	// 					frequency: service.frequency,
 	// 					duration: service.duration,
 	// 					status: service.status as any,
@@ -210,317 +198,20 @@ const Medicine = () => {
 	// 	})
 	// }
 
-	// Auto-start camera when biometric modal opens
-	useEffect(() => {
-		if (biometricModal.open && !isCameraActive) {
-			console.log('🔄 Modal opened, auto-starting camera...')
-			// Small delay to ensure video element is in DOM
-			const timer = setTimeout(() => {
-				startCamera()
-			}, 150)
-			return () => clearTimeout(timer)
-		}
-	}, [biometricModal.open])
-
-	const startCamera = async () => {
-		console.log('🎬 startCamera called')
-		try {
-			// Set camera active FIRST so video element renders in DOM
-			setIsCameraActive(true)
-			console.log('✅ isCameraActive set to true')
-
-			// Wait a bit for React to render the video element
-			await new Promise(resolve => setTimeout(resolve, 100))
-
-			console.log('📹 Requesting camera access...')
-			const stream = await navigator.mediaDevices.getUserMedia({
-				video: { facingMode: 'user', width: 640, height: 480 },
-			})
-			console.log('✅ Camera access granted')
-
-			streamRef.current = stream
-
-			// Wait for video element to be available in DOM
-			let attempts = 0
-			while (!videoRef.current && attempts < 20) {
-				console.log(`🔍 Attempt ${attempts + 1}: Waiting for video element...`)
-				await new Promise(resolve => setTimeout(resolve, 100))
-				attempts++
-			}
-
-			if (!videoRef.current) {
-				console.error('❌ Video element not found after 2 seconds!')
-				toast.error('Video element not ready')
-				setIsCameraActive(false)
-				return
-			}
-
-			console.log('✅ Video element found!')
-
-			if (videoRef.current) {
-				console.log('📺 Setting video source...')
-				videoRef.current.srcObject = stream
-				videoRef.current.muted = true
-
-				// Play immediately
-				try {
-					console.log('▶️ Playing video...')
-					await videoRef.current.play()
-					console.log('▶️ Video playing started')
-				} catch (playError) {
-					console.error('❌ Play error:', playError)
-				}
-
-				// Wait for video metadata with shorter interval and timeout
-				await new Promise<void>((resolve, reject) => {
-					let checkCount = 0
-					const timeout = setTimeout(() => {
-						console.error(
-							'⏱️ Video metadata timeout after',
-							checkCount,
-							'checks'
-						)
-						setIsVideoReady(false)
-						reject(new Error('Video metadata timeout'))
-					}, 10000) // Increased to 10 seconds
-
-					const checkVideo = () => {
-						checkCount++
-						if (
-							videoRef.current &&
-							videoRef.current.videoWidth > 0 &&
-							videoRef.current.videoHeight > 0
-						) {
-							clearTimeout(timeout)
-							console.log('✅ Video ready after', checkCount, 'checks:', {
-								width: videoRef.current.videoWidth,
-								height: videoRef.current.videoHeight,
-								readyState: videoRef.current.readyState,
-							})
-							setIsVideoReady(true)
-							resolve()
-						} else if (videoRef.current) {
-							if (checkCount % 20 === 0) {
-								console.log(`⏳ Still waiting... (check ${checkCount})`)
-							}
-							setTimeout(checkVideo, 50)
-						} else {
-							clearTimeout(timeout)
-							console.error('❌ Video ref lost')
-							setIsVideoReady(false)
-							reject(new Error('Video ref lost'))
-						}
-					}
-					checkVideo()
-				})
-			}
-
-			setImageError('')
-			toast.success('Kamera tayyor ✓')
-		} catch (error: any) {
-			console.error('Camera error:', error)
-			setIsVideoReady(false)
-			setIsCameraActive(false)
-
-			if (error.message === 'Video metadata timeout') {
-				toast.error("Kamera juda uzoq yuklanyapti, qayta urinib ko'ring")
-				setImageError('Timeout: Kamera juda sekin')
-			} else {
-				toast.error('Kamerani ochishda xatolik')
-				setImageError('Kamera ruxsati berilmadi')
-			}
-
-			// Cleanup on error
-			if (streamRef.current) {
-				streamRef.current.getTracks().forEach(track => track.stop())
-				streamRef.current = null
-			}
-		}
-	}
-
-	const stopCamera = () => {
-		console.log('📹 stopCamera called')
-		if (streamRef.current) {
-			console.log('🛑 Stopping camera stream...')
-			streamRef.current.getTracks().forEach(track => track.stop())
-			streamRef.current = null
-		}
-		if (videoRef.current) {
-			console.log('🗑️ Clearing video source...')
-			videoRef.current.srcObject = null
-		}
-		setIsCameraActive(false)
-		setIsVideoReady(false)
-		console.log('✅ Camera stopped and cleaned up')
-	}
-
-	const capturePhoto = () => {
-		if (!videoRef.current || !canvasRef.current) {
-			toast.error('Kamera tayyor emas')
-			return
-		}
-
-		// Debug: Check video state
-		console.log('🔍 Video state:', {
-			videoWidth: videoRef.current.videoWidth,
-			videoHeight: videoRef.current.videoHeight,
-			readyState: videoRef.current.readyState,
-			paused: videoRef.current.paused,
-			ended: videoRef.current.ended,
-		})
-
-		// Check if video is ready and has valid dimensions
-		if (
-			videoRef.current.videoWidth === 0 ||
-			videoRef.current.videoHeight === 0
-		) {
-			console.error('❌ Video not ready yet')
-			toast.error('Kamera hali tayyor emas, biroz kuting')
-			return
-		}
-
-		const context = canvasRef.current.getContext('2d')
-		if (!context) {
-			toast.error('Canvas xatosi')
-			return
-		}
-
-		// Set canvas size to match video
-		canvasRef.current.width = videoRef.current.videoWidth
-		canvasRef.current.height = videoRef.current.videoHeight
-
-		// Draw current video frame to canvas
-		context.drawImage(videoRef.current, 0, 0)
-
-		// Convert canvas to blob then to File
-		canvasRef.current.toBlob(
-			blob => {
-				if (!blob) {
-					toast.error('Rasmni saqlashda xatolik')
-					return
-				}
-
-				const file = new File([blob], `biometric-${Date.now()}.jpg`, {
-					type: 'image/jpeg',
-				})
-
-				setBiometricImages([file])
-
-				// Create preview
-				const previewUrl = URL.createObjectURL(file)
-				setImagePreviewUrls([previewUrl])
-
-				// Stop camera after capture
-				stopCamera()
-
-				console.log('📸 Photo captured:', file)
-				toast.success('Rasm olindi')
-			},
-			'image/jpeg',
-			0.95
-		)
-	}
-
-	const removeImage = () => {
-		if (imagePreviewUrls[0]) {
-			URL.revokeObjectURL(imagePreviewUrls[0])
-		}
-
-		setBiometricImages([])
-		setImagePreviewUrls([])
-		setImageError('')
-
-		// Restart camera if needed
-		if (biometricModal.open && !isCameraActive) {
-			startCamera()
-		}
-	}
-
-	const handleBiometricConfirm = async () => {
-		console.log('🔍 handleBiometricConfirm - biometricImages:', biometricImages)
-		console.log(
-			'🔍 handleBiometricConfirm - biometricImages[0]:',
-			biometricImages[0]
-		)
-		console.log(
-			'🔍 handleBiometricConfirm - biometricImages.length:',
-			biometricImages.length
-		)
-
-		if (biometricImages.length === 0) {
-			setImageError('Rasm yuklang')
-			toast.error('Rasm yuklang')
-			return
-		}
-
-		if (!biometricModal.patientId) {
-			toast.error('Bemor topilmadi')
-			return
-		}
-
-		try {
-			console.log('📤 Sending biometric confirm request...', {
-				patientId: biometricModal.patientId,
-				imageSize: biometricImages[0]?.size,
-				imageType: biometricImages[0]?.type,
-			})
-
-			const response = await biometricConfirm({
-				patientId: biometricModal.patientId,
-				image: biometricImages[0],
-			}).unwrap()
-
-			console.log('✅ Biometric confirm SUCCESS:', response)
-			console.log('🔑 Token received:', response.token)
-
-			setBiometricToken(response.token)
-			console.log('💾 Token saved to state')
-
-			toast.success('Biometrik tasdiqlandi ✓')
-
-			// Clean up biometric modal
-			console.log('🧹 Cleaning up biometric modal...')
-			imagePreviewUrls.forEach(url => URL.revokeObjectURL(url))
-			setBiometricImages([])
-			setImagePreviewUrls([])
-
-			console.log('🚪 Closing biometric modal...')
-			setBiometricModal({ open: false, patientId: null })
-
-			console.log('⏱️ Waiting 100ms before reopening confirm modal...')
-			// Small delay to ensure modal closes properly
-			setTimeout(() => {
-				console.log('🔄 Reopening confirmation modal with token...')
-				setConfirmModal(prev => ({ ...prev, open: true }))
-				console.log('✅ Confirmation modal should be open now')
-			}, 100)
-		} catch (error: any) {
-			console.error('❌ Biometric confirm FAILED:', error)
-			console.error('❌ Error details:', {
-				status: error?.status,
-				data: error?.data,
-				message: error?.message,
-			})
-			toast.error(error?.data?.error?.msg || 'Biometrik xatolik')
-		}
-	}
-
 	const openConfirmModal = (
 		recordId: string,
 		prescriptionId: string | null,
+		itemId: string | null,
 		serviceId: string | null,
-		day: string,
-		type: 'medicine' | 'service' = 'medicine',
-		patientId: string
+		day: number,
+		type: 'medicine' | 'service'
 	) => {
-		// Show biometric modal
-		setBiometricModal({ open: true, patientId })
-
-		// Store confirm modal data
+		// Directly open confirmation modal without biometric
 		setConfirmModal({
-			open: false,
+			open: true,
 			recordId,
 			prescriptionId,
+			itemId,
 			serviceId,
 			day,
 			type,
@@ -538,18 +229,17 @@ const Medicine = () => {
 					takePrescription({
 						id: confirmModal.prescriptionId!,
 						body: {
-							item_id: confirmModal.prescriptionId!,
+							item_id: confirmModal.itemId!,
 							day: confirmModal.day!,
 						},
-						token: biometricToken || undefined,
 					}),
 				onSuccess: () => {
 					toast.success('Дори қабул қилинди ✓')
-					setBiometricToken(null)
 					setConfirmModal({
 						open: false,
 						recordId: null,
 						prescriptionId: null,
+						itemId: null,
 						serviceId: null,
 						day: null,
 						type: 'medicine',
@@ -563,22 +253,23 @@ const Medicine = () => {
 					}
 				},
 			})
-		} else if (confirmModal.type === 'service' && confirmModal.serviceId) {
+		} else if (confirmModal.type === 'service' && confirmModal.itemId) {
 			await handleRequest({
 				request: () =>
 					takeService({
 						id: confirmModal.recordId!,
-						item_id: confirmModal.serviceId!,
-						day: confirmModal.day!,
-						token: biometricToken || undefined,
+						body: {
+							item_id: confirmModal.itemId!,
+							day: confirmModal.day!,
+						},
 					}),
 				onSuccess: () => {
 					toast.success('Хизмат бажарилди ✓')
-					setBiometricToken(null)
 					setConfirmModal({
 						open: false,
 						recordId: null,
 						prescriptionId: null,
+						itemId: null,
 						serviceId: null,
 						day: null,
 						type: 'medicine',
@@ -696,14 +387,14 @@ const Medicine = () => {
 															key={record.prescription?._id}
 															prescriptionId={record.prescription?._id || ''}
 															recordId={record._id}
-															onOpenModal={(recordId, prescId, day) =>
+															onOpenModal={(prescriptionId, itemId, day) =>
 																openConfirmModal(
-																	recordId,
-																	prescId,
+																	record._id,
+																	prescriptionId,
+																	itemId,
 																	null,
 																	day,
-																	'medicine',
-																	record.patient_id._id
+																	'medicine'
 																)
 															}
 															formatDate={formatDate}
@@ -749,7 +440,8 @@ const Medicine = () => {
 																				)}
 																				<p className='text-xs text-muted-foreground mt-0.5'>
 																					Нарх:{' '}
-																					{service.price?.toLocaleString()} сўм
+																					{service.service_type_id.price?.toLocaleString()}{' '}
+																					сўм
 																				</p>
 																			</div>
 																		</div>
@@ -771,28 +463,24 @@ const Medicine = () => {
 																				{/* Desktop - 5 columns */}
 																				<div className='hidden lg:grid lg:grid-cols-5 gap-2 xl:gap-3'>
 																					{service.days.map(day => {
-																						const taken = Number(day.times) || 0
-																						const total =
-																							Number(service.frequency) || 0
-																						const isCompleted =
-																							taken === total && taken > 0
+																						const isCompleted = day.is_completed
 																						const lastDate = formatDate(
-																							day.date
+																							String(day.date)
 																						)
 
 																						return (
 																							<div
 																								key={day._id}
-																								className='flex flex-col items-center p-2 xl:p-3 border rounded-lg hover:bg-accent/50 transition-colors'
+																								className='flex flex-col p-2 border rounded-lg active:bg-accent/50 transition-colors'
 																								onClick={() =>
 																									!isCompleted &&
 																									openConfirmModal(
-																										record._id,
+																										record.service._id,
 																										null,
 																										service._id,
-																										String(day.day),
-																										'service',
-																										record.patient_id._id
+																										null,
+																										day.day,
+																										'service'
 																									)
 																								}
 																							>
@@ -801,7 +489,7 @@ const Medicine = () => {
 																								</p>
 																								{lastDate && (
 																									<p className='text-[10px] text-black mb-1.5 text-center'>
-																										{isToday(day.date)
+																										{isToday(String(day.date))
 																											? 'Bugun'
 																											: lastDate}
 																									</p>
@@ -819,8 +507,8 @@ const Medicine = () => {
 																											<Check className='w-4 h-4 xl:w-5 xl:h-5 text-white' />
 																										</div>
 																									) : (
-																										<span>
-																											{taken}/{total}
+																										<span className='text-xs'>
+																											Бажарилмаган
 																										</span>
 																									)}
 																								</button>
@@ -832,15 +520,9 @@ const Medicine = () => {
 																				{/* Tablet - 3 columns */}
 																				<div className='hidden sm:grid lg:hidden sm:grid-cols-3 md:grid-cols-4 gap-2'>
 																					{service.days.map(day => {
-																						const taken = day.times || 0
-																						const total = service.frequency
-																						const isCompleted =
-																							taken === total && taken > 0
-																						const displayTaken =
-																							taken > 0 ? 1 : 0
-																						const displayTotal = 1
+																						const isCompleted = day.is_completed
 																						const lastDate = formatDate(
-																							day.date
+																							String(day.date)
 																						)
 
 																						return (
@@ -850,12 +532,12 @@ const Medicine = () => {
 																								onClick={() =>
 																									!isCompleted &&
 																									openConfirmModal(
-																										record._id,
+																										record.service._id,
 																										null,
 																										service._id,
-																										String(day.day),
-																										'service',
-																										record.patient_id._id
+																										null,
+																										day.day,
+																										'service'
 																									)
 																								}
 																							>
@@ -864,14 +546,14 @@ const Medicine = () => {
 																								</p>
 																								{lastDate && (
 																									<p className='text-[10px] text-black mb-1 text-center'>
-																										{isToday(day.date)
+																										{isToday(String(day.date))
 																											? 'Bugun'
 																											: lastDate}
 																									</p>
 																								)}
 																								<button
 																									disabled={isCompleted}
-																									className={`text-base font-bold transition-all ${
+																									className={`text-sm font-bold transition-all ${
 																										isCompleted
 																											? 'text-green-600 cursor-default'
 																											: 'text-primary hover:scale-110 cursor-pointer active:scale-95'
@@ -882,18 +564,11 @@ const Medicine = () => {
 																											<Check className='w-4 h-4 text-white' />
 																										</div>
 																									) : (
-																										<span>
-																											{displayTaken}/
-																											{displayTotal}
+																										<span className='text-xs'>
+																											Бажарилмаган
 																										</span>
 																									)}
 																								</button>
-																								{!isCompleted && (
-																									<p className='text-[9px] text-muted-foreground mt-0.5 text-center'>
-																										{displayTaken}/
-																										{displayTotal}
-																									</p>
-																								)}
 																							</div>
 																						)
 																					})}
@@ -902,15 +577,9 @@ const Medicine = () => {
 																				{/* Mobile - 2 columns */}
 																				<div className='grid grid-cols-2 gap-2 sm:hidden'>
 																					{service.days.map(day => {
-																						const taken = day.times || 0
-																						const total = service.frequency
-																						const isCompleted =
-																							taken === total && taken > 0
-																						const displayTaken =
-																							taken > 0 ? 1 : 0
-																						const displayTotal = 1
+																						const isCompleted = day.is_completed
 																						const lastDate = formatDate(
-																							day.date
+																							String(day.date)
 																						)
 
 																						return (
@@ -920,12 +589,12 @@ const Medicine = () => {
 																								onClick={() =>
 																									!isCompleted &&
 																									openConfirmModal(
-																										record._id,
+																										record.service._id,
 																										null,
 																										service._id,
-																										String(day.day),
-																										'service',
-																										record.patient_id._id
+																										null,
+																										day.day,
+																										'service'
 																									)
 																								}
 																							>
@@ -944,24 +613,17 @@ const Medicine = () => {
 																										{isCompleted ? (
 																											<Check className='w-5 h-5 text-green-600' />
 																										) : (
-																											<span>
-																												{displayTaken}/
-																												{displayTotal}
+																											<span className='text-xs'>
+																												0/1
 																											</span>
 																										)}
 																									</button>
 																								</div>
 																								{lastDate && (
 																									<p className='text-[9px] text-black text-left'>
-																										{isToday(day.date)
+																										{isToday(String(day.date))
 																											? 'Bugun'
 																											: lastDate}
-																									</p>
-																								)}
-																								{!isCompleted && (
-																									<p className='text-[9px] text-muted-foreground mt-0.5 text-left'>
-																										{displayTaken}/
-																										{displayTotal}
 																									</p>
 																								)}
 																							</div>
@@ -1139,153 +801,7 @@ const Medicine = () => {
 						)}
 					</CardContent>
 				</Card>
-			</div>{' '}
-			{/* Biometric Modal */}
-			<Dialog
-				open={biometricModal.open}
-				onOpenChange={open => {
-					console.log('🔄 Biometric modal open changed to:', open)
-					if (!open) {
-						console.log('🛑 Closing biometric modal, cleaning up...')
-						stopCamera()
-						imagePreviewUrls.forEach(url => URL.revokeObjectURL(url))
-						setBiometricImages([])
-						setImagePreviewUrls([])
-						setImageError('')
-						setBiometricModal({ open: false, patientId: null })
-					}
-				}}
-			>
-				<DialogContent className='max-w-[90vw] sm:max-w-md'>
-					<DialogHeader>
-						<DialogTitle className='text-base sm:text-lg'>
-							Biometrik Tasdiqlash
-						</DialogTitle>
-					</DialogHeader>
-
-					<div className='space-y-4'>
-						{/* Camera Preview or Captured Image */}
-						<div className='flex flex-col items-center gap-3'>
-							{isCameraActive && imagePreviewUrls.length === 0 ? (
-								<div className='relative'>
-									<video
-										ref={videoRef}
-										autoPlay
-										playsInline
-										className='w-full max-w-sm rounded-md border'
-									/>
-									<Button
-										onClick={capturePhoto}
-										disabled={!isVideoReady}
-										className='absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 hover:bg-green-700 disabled:opacity-50'
-									>
-										{isVideoReady ? (
-											<>
-												<Camera className='w-4 h-4 mr-2' />
-												Rasmga olish
-											</>
-										) : (
-											<>
-												<Loader2 className='w-4 h-4 mr-2 animate-spin' />
-												Kuting...
-											</>
-										)}
-									</Button>
-								</div>
-							) : imagePreviewUrls.length === 0 ? (
-								<div className='text-center'>
-									{isCameraActive ? (
-										<Button
-											disabled
-											className='flex items-center gap-2 px-4 py-2'
-										>
-											<Loader2 className='w-4 h-4 mr-2 animate-spin' />
-											Kamera yuklanmoqda...
-										</Button>
-									) : (
-										<Button
-											onClick={() => {
-												console.log('🔘 Manual camera start clicked')
-												startCamera()
-											}}
-											className='flex items-center gap-2 px-4 py-2'
-										>
-											<Camera className='w-4 h-4' />
-											<span className='text-sm'>Kamerani yoqish</span>
-										</Button>
-									)}
-								</div>
-							) : null}{' '}
-							<p className='text-xs text-muted-foreground text-center'>
-								{isCameraActive && !isVideoReady
-									? 'Kamera yuklanmoqda, biroz kuting...'
-									: isCameraActive && isVideoReady
-									? 'Yuzingizni kameraga qarating va rasmga oling ✓'
-									: imagePreviewUrls.length === 0
-									? 'Biometrik tasdiqlash uchun kamerani yoqing'
-									: 'Rasm olindi, tasdiqlash uchun "Tasdiqlash" tugmasini bosing'}
-							</p>
-						</div>
-
-						{/* Hidden canvas for photo capture */}
-						<canvas ref={canvasRef} className='hidden' />
-
-						{imageError && (
-							<p className='text-sm text-red-500 text-center'>{imageError}</p>
-						)}
-
-						{imagePreviewUrls.length > 0 && (
-							<div className='flex justify-center'>
-								<div className='relative group'>
-									<img
-										src={imagePreviewUrls[0]}
-										alt='Biometric Preview'
-										className='w-64 h-64 object-cover rounded-md border'
-									/>
-									<button
-										onClick={removeImage}
-										className='absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity'
-									>
-										<X className='w-4 h-4' />
-									</button>
-								</div>
-							</div>
-						)}
-					</div>
-
-					<DialogFooter className='flex gap-2 sm:gap-3'>
-						<Button
-							variant='outline'
-							onClick={() => {
-								stopCamera()
-								imagePreviewUrls.forEach(url => URL.revokeObjectURL(url))
-								setBiometricImages([])
-								setImagePreviewUrls([])
-								setImageError('')
-								setBiometricModal({ open: false, patientId: null })
-							}}
-							disabled={isConfirmingBiometric}
-							className='flex-1 sm:flex-none text-sm'
-						>
-							Bekor qilish
-						</Button>
-						<Button
-							onClick={handleBiometricConfirm}
-							disabled={isConfirmingBiometric || biometricImages.length === 0}
-							className='flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-sm'
-						>
-							{isConfirmingBiometric ? (
-								<Loader2 className='w-4 h-4 animate-spin' />
-							) : (
-								<>
-									<Check className='w-4 h-4 mr-1' />
-									Tasdiqlash
-								</>
-							)}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			</div>
 			{/* Confirm Modal */}
 			<Dialog
 				open={confirmModal.open}
@@ -1295,6 +811,7 @@ const Medicine = () => {
 						open: false,
 						recordId: null,
 						prescriptionId: null,
+						itemId: null,
 						serviceId: null,
 						day: null,
 						type: 'medicine',
@@ -1320,6 +837,7 @@ const Medicine = () => {
 									open: false,
 									recordId: null,
 									prescriptionId: null,
+									itemId: null,
 									serviceId: null,
 									day: null,
 									type: 'medicine',
@@ -1330,32 +848,7 @@ const Medicine = () => {
 							Йўқ
 						</Button>
 						<Button
-							onClick={() => {
-								console.log('🔘 "Ҳа" button clicked')
-								console.log('📦 confirmModal:', confirmModal)
-								console.log('📦 data:', data)
-
-								// Close confirm modal and open biometric modal
-								setConfirmModal({ ...confirmModal, open: false })
-								// Get patient ID from stored data
-								const patientRecord = data?.data?.find(
-									r => r._id === confirmModal.recordId
-								)
-								console.log('👤 Found patient record:', patientRecord)
-
-								if (patientRecord) {
-									console.log(
-										'✅ Opening biometric modal for patient:',
-										patientRecord.patient_id._id
-									)
-									setBiometricModal({
-										open: true,
-										patientId: patientRecord.patient_id._id,
-									})
-								} else {
-									console.error('❌ Patient record not found!')
-								}
-							}}
+							onClick={handleConfirm}
 							className='flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-sm'
 						>
 							Ҳа
