@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ export const PatientSearchModal = ({
   onOpenChange,
   onPatientSelect,
 }: PatientSearchModalProps) => {
+  const { t } = useTranslation("inpatient");
   const [searchPatient, setSearchPatient] = useState<string>("");
 
   // Fetch patients (faqat bronlangan bemorlar)
@@ -50,17 +52,17 @@ export const PatientSearchModal = ({
         <DialogHeader className="space-y-2 sm:space-y-3 flex-shrink-0">
           <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
             <Search className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-            Бемор Қидириш
+            {t("patientSearch.title")}
           </DialogTitle>
           <DialogDescription className="text-sm sm:text-base">
-            Беморни исми ёки телефон рақами орқали қидиринг
+            {t("patientSearch.description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden min-h-0">
           <Command shouldFilter={false} className="h-full w-full">
             <CommandInput
-              placeholder="Исм, телефон орқали қидириш..."
+              placeholder={t("patientSearch.searchPlaceholder")}
               value={searchPatient}
               onValueChange={setSearchPatient}
               className="text-sm sm:text-base"
@@ -70,14 +72,14 @@ export const PatientSearchModal = ({
                 {patientsLoading ? (
                   <div className="flex flex-col items-center gap-3">
                     <LoadingSpinner size="lg" />
-                    <span className="text-muted-foreground">Беморлар юкланмоқда...</span>
+                    <span className="text-muted-foreground">{t("patientSearch.loading")}</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3 text-muted-foreground">
                     <User className="w-12 h-12 opacity-40" />
                     <div className="text-center">
-                      <p className="font-semibold">Бемор топилмади</p>
-                      <p className="text-xs mt-1">Бошқа исм ёки рақам билан қидириб кўринг</p>
+                      <p className="font-semibold">{t("patientSearch.notFound")}</p>
+                      <p className="text-xs mt-1">{t("patientSearch.tryAnother")}</p>
                     </div>
                   </div>
                 )}

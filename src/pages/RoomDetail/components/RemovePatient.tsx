@@ -3,6 +3,7 @@ import {
   useRemovePatientRoomMutation,
 } from "@/app/api/roomApi";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ export const RemovePatient = ({
   onOpenChange,
   patient_id,
 }: RemovePatientProps) => {
+  const { t } = useTranslation("inpatient");
   const [removePatient, { isLoading }] = useRemovePatientRoomMutation();
   const handleRequest = useHandleRequest();
   const { id: roomId } = useParams();
@@ -34,11 +36,11 @@ export const RemovePatient = ({
       request: async () =>
         await removePatient({ id: roomId, patient_id }).unwrap(),
       onSuccess: () => {
-        toast.success("Бемор муваффақиятли ўчирилди");
+        toast.success(t("patientRemovedSuccess"));
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Очиришда хатолик");
+        toast.error(data?.error?.msg || t("deleteError"));
       },
     });
   };
@@ -46,20 +48,20 @@ export const RemovePatient = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogTitle>Беморни ўчириш</DialogTitle>
+        <DialogTitle>{t("removePatientTitle")}</DialogTitle>
         <DialogDescription>
-          Ростан ҳам Бу Беморни ўчирмоқчимисиз?
+          {t("removePatientConfirmation")}
         </DialogDescription>
         <DialogFooter className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button
             variant="destructive"
             disabled={isLoading}
             onClick={handleDeleteRoom}
           >
-            {isLoading ? "O'chirilmoqda..." : "Ha, oʻchirilsin"}
+            {isLoading ? t("deleting") : t("yesDelete")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,7 @@
 import { useGetOnePrescriptionQuery } from '@/app/api/prescription/prescriptionApi'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Check, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface Day {
 	_id: string
@@ -24,6 +25,7 @@ const PrescriptionCard = ({
 	formatDate,
 	isToday,
 }: PrescriptionCardProps) => {
+	const { t } = useTranslation('medication')
 	// Fetch prescription data from PrescriptionApi
 	const { data: prescriptionData, isLoading } =
 		useGetOnePrescriptionQuery(prescriptionId)
@@ -38,7 +40,7 @@ const PrescriptionCard = ({
 					<div className='flex items-center justify-center py-6 sm:py-8'>
 						<Loader2 className='w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary' />
 						<span className='ml-2 text-xs sm:text-sm text-muted-foreground'>
-							Юкланмоқда...
+							{t('loading')}
 						</span>
 					</div>
 				</CardContent>
@@ -51,7 +53,7 @@ const PrescriptionCard = ({
 			<Card className='border shadow-sm bg-card'>
 				<CardContent className='pt-6 pb-6'>
 					<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
-						Маълумот топилмади
+						{t('dataNotFound')}
 					</p>
 				</CardContent>
 			</Card>
@@ -69,10 +71,10 @@ const PrescriptionCard = ({
 							{prescriptionItem.medication_id?.name || 'N/A'}
 						</h4>
 						<p className='text-xs font-medium text-muted-foreground mt-1'>
-							КЎРСАТМАЛАР: {prescriptionItem.instructions || '-'}
+							{t('instructions')}: {prescriptionItem.instructions || '-'}
 						</p>
 						<p className='text-xs text-muted-foreground mt-0.5'>
-							Доза: {prescriptionItem.medication_id?.dosage || 'N/A'}
+							{t('dosage')}: {prescriptionItem.medication_id?.dosage || 'N/A'}
 						</p>
 					</div>
 				</div>
@@ -99,11 +101,11 @@ const PrescriptionCard = ({
 										}
 									>
 										<p className='text-xs font-medium mb-1 text-center line-clamp-1'>
-											Кун {day.day}
+											{t('day')} {day.day}
 										</p>
 										{lastDate && (
 											<p className='text-[10px] text-black mb-1.5 text-center'>
-												{isToday(day.date!) ? 'Bugun' : lastDate}
+												{isToday(day.date!) ? t('today') : lastDate}
 											</p>
 										)}
 										<button
@@ -147,11 +149,11 @@ const PrescriptionCard = ({
 										}
 									>
 										<p className='text-xs font-medium mb-0.5 text-center line-clamp-1'>
-											Кун {day.day}
+											{t('day')} {day.day}
 										</p>
 										{lastDate && (
 											<p className='text-[10px] text-black mb-1 text-center'>
-												{isToday(day.date!) ? 'Bugun' : lastDate}
+												{isToday(day.date!) ? t('today') : lastDate}
 											</p>
 										)}
 										<button
@@ -195,7 +197,7 @@ const PrescriptionCard = ({
 										}
 									>
 										<div className='flex items-center justify-between mb-1'>
-											<span className='text-xs font-medium'>Кун {day.day}</span>
+											<span className='text-xs font-medium'>{t('day')} {day.day}</span>
 											<button
 												disabled={isCompleted}
 												className={`text-sm font-bold transition-all flex-shrink-0 ${
@@ -215,7 +217,7 @@ const PrescriptionCard = ({
 										</div>
 										{lastDate && (
 											<p className='text-[9px] text-black text-left'>
-												{isToday(day.date!) ? 'Bugun' : lastDate}
+												{isToday(day.date!) ? t('today') : lastDate}
 											</p>
 										)}
 									</div>
@@ -225,7 +227,7 @@ const PrescriptionCard = ({
 					</>
 				) : (
 					<p className='text-xs sm:text-sm text-black text-center py-4'>
-						Кунлар юкланмоқда...
+						{t('daysLoading')}
 					</p>
 				)}
 			</CardContent>

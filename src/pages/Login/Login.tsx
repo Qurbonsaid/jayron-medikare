@@ -38,7 +38,7 @@ const Login = () => {
       },
       onError: (err) => {
         const msg = err?.data?.error?.msg;
-        toast.error(msg || "Login error");
+        toast.error(msg || t('loginFailed'));
       }
     });
   };
@@ -135,7 +135,7 @@ const Login = () => {
               type='submit'
               className='w-full h-12 text-base gradient-primary hover:opacity-90 transition-opacity'
             >
-              {t('loginButton')}
+              {t('submit')}
             </Button>
           </form>
 

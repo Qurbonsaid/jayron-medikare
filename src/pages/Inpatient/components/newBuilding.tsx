@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 import {
   Form,
   FormControl,
@@ -43,6 +44,7 @@ interface NewBuildingProps {
 }
 
 export const NewBuilding = ({ open, onOpenChange }: NewBuildingProps) => {
+  const { t } = useTranslation("inpatient");
   const [createdCorpuses, { isLoading: isCreatedLoading }] =
     useCreateCorpusMutation();
   const handleRequest = useHandleRequest();
@@ -66,12 +68,12 @@ export const NewBuilding = ({ open, onOpenChange }: NewBuildingProps) => {
       request: async () =>
         await createdCorpuses(submitData as CreatedCorpusRequest).unwrap(),
       onSuccess: () => {
-        toast.success("Korpus муваффақиятли қўшилди");
+        toast.success(t("buildingAddedSuccess"));
         form.reset();
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Қўшишда хатолик");
+        toast.error(data?.error?.msg || t("addError"));
       },
     });
   };
@@ -81,7 +83,7 @@ export const NewBuilding = ({ open, onOpenChange }: NewBuildingProps) => {
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
-            Янги Korpus Қўшиш
+            {t("addNewBuilding")}
           </DialogTitle>
         </DialogHeader>
 
@@ -98,7 +100,7 @@ export const NewBuilding = ({ open, onOpenChange }: NewBuildingProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Korpus raqami <span className="text-red-500">*</span>
+                        {t("buildingNumber")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -123,7 +125,7 @@ export const NewBuilding = ({ open, onOpenChange }: NewBuildingProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Xonalar soni <span className="text-red-500">*</span>
+                        {t("roomsCount")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -148,11 +150,11 @@ export const NewBuilding = ({ open, onOpenChange }: NewBuildingProps) => {
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2 lg:col-span-1">
                       <FormLabel>
-                        Izoh
+                        {t("description")}
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Асосий корпус"
+                          placeholder={t("mainBuilding")}
                           className="border-slate-400 border-2 w-full"
                           {...field}
                         />
@@ -173,7 +175,7 @@ export const NewBuilding = ({ open, onOpenChange }: NewBuildingProps) => {
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto order-2 sm:order-1"
           >
-            Бекор қилиш
+            {t("cancel")}
           </Button>
           <Button
             type="submit"
@@ -182,7 +184,7 @@ export const NewBuilding = ({ open, onOpenChange }: NewBuildingProps) => {
             className="gradient-primary w-full sm:w-auto order-1 sm:order-2"
           >
             <Save className="w-4 h-4 mr-2" />
-            {isCreatedLoading ? "Loading..." : "Сақлаш"}
+            {isCreatedLoading ? t("loading") : t("save")}
           </Button>
         </DialogFooter>
       </DialogContent>

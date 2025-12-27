@@ -75,5 +75,63 @@
   "filterByModality": "Усул бўйича филтрлаш",
   "filterByDate": "Сана бўйича филтрлаш",
   "history": "Тарих",
-  "previousStudies": "Олдинги текширувлар"
+  "previousStudies": "Олдинги текширувлар",
+  "cancel": "Бекор қилиш",
+  "submit": "Юбориш",
+  "unknown": "Номаълум",
+  "deleteMedicalImage": "Тиббий тасвирни ўчириш",
+  "deleteMedicalImageConfirm": "Ростан ҳам {{patientName}} беморнинг тиббий тасвирларини ўчирмоқчимисиз? Бу амални бекор қилиб бўлмайди.",
+  "deleteImagingType": "Текшириш турини ўчириш",
+  "deleteImagingTypeConfirm": "Ростан ҳам {{name}} текшириш турини ўчирмоқчимисиз? Бу амални бекор қилиб бўлмайди.",
+  "deleting": "Ўчирилмоқда...",
+  "yesDelete": "Ҳа, ўчирилсин",
+  "imageDeletedSuccess": "Тиббий тасвир муваффақиятли ўчирилди",
+  "imagingTypeDeletedSuccess": "Текшириш тури муваффақиятли ўчирилди",
+  "deleteError": "Ўчиришда хатолик",
+  "modalities": {
+    "mri": "МРТ",
+    "ct": "КТ",
+    "xray": "Рентген"
+  },
+  "bodyParts": {
+    "brain": "Бош мия",
+    "chest": "Ўпка",
+    "abdomen": "Қорин бўшлиғи"
+  },
+  "statuses": {
+    "scheduled": "Режаланган",
+    "completed": "Тугалланган",
+    "pending": "Кутилмоқда"
+  },
+  "priorities": {
+    "normal": "Оддий",
+    "urgent": "Шошилинч"
+  },
+  "templates": {
+    "normal": "Норма",
+    "stroke": "Инсульт",
+    "tumor": "Ўсма"
+  },
+  "newOrderModal": {
+    "title": "Янги рентген буюртмаси",
+    "selectPatient": "Бемор танлаш",
+    "selectPatientPlaceholder": "Беморни танланг...",
+    "selectPlaceholder": "Танланг...",
+    "clinicalIndication": "Клиник кўрсатма",
+    "indicationPlaceholder": "Текшириш сабаби...",
+    "priority": "Устунлик"
+  },
+  "viewer": {
+    "slice": "Кесим",
+    "reset": "Қайта",
+    "examInfo": "Текшириш маълумотлари",
+    "date": "Сана",
+    "protocol": "Протокол",
+    "radiologistConclusion": "Радиолог хулосаси",
+    "template": "Шаблон",
+    "conclusionPlaceholder": "Хулоса ёзинг...",
+    "submitConclusion": "Хулосани юбориш",
+    "brightness": "Ёруғлик",
+    "contrast": "Контраст"
+  }
 }

@@ -4,6 +4,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { DollarSign } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { DateRange } from 'react-day-picker'
+import { useTranslation } from 'react-i18next'
 import {
 	Bar,
 	BarChart,
@@ -66,10 +67,11 @@ export const BillingChart = ({
 	interval,
 	onIntervalChange,
 }: BillingChartProps) => {
+	const { t } = useTranslation('reports')
 	const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
 	const formatCurrency = (value: number) => {
-		return new Intl.NumberFormat('uz-UZ').format(value) + ' сўм'
+		return new Intl.NumberFormat('uz-UZ').format(value) + ' ' + t('currency')
 	}
 
 	const formatCompactCurrency = (value: number) => {
@@ -190,9 +192,9 @@ export const BillingChart = ({
 
 	const chartData = sortedData.map(item => ({
 		name: formatDate(item),
-		Жами: item.totalAmount,
-		Тўланған: item.paidAmount,
-		Қарз: item.debtAmount,
+		[t('total')]: item.totalAmount,
+		[t('paid')]: item.paidAmount,
+		[t('debt')]: item.debtAmount,
 	}))
 
 	if (isLoading) {
@@ -209,7 +211,7 @@ export const BillingChart = ({
 			<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
 				<h3 className='text-lg font-semibold flex items-center gap-2'>
 					<DollarSign className='w-5 h-5 text-green-600' />
-					Молиявий ҳисобот (Хизмат турлари бўйича)
+					{t('financialReport')}
 				</h3>
 				<div className='w-full sm:w-[320px]'>
 					<DateRangePicker
@@ -223,10 +225,10 @@ export const BillingChart = ({
 			{dateRange?.from && (
 				<p className='text-sm text-muted-foreground'>
 					{dateRange.to
-						? `Танланган давр: ${new Date(dateRange.from).toLocaleDateString(
+						? `${t('selectedPeriod')}: ${new Date(dateRange.from).toLocaleDateString(
 								'uz-UZ'
 						  )} - ${new Date(dateRange.to).toLocaleDateString('uz-UZ')}`
-						: `Танланган сана: ${new Date(dateRange.from).toLocaleDateString(
+						: `${t('selectedDate')}: ${new Date(dateRange.from).toLocaleDateString(
 								'uz-UZ'
 						  )}`}
 				</p>
@@ -237,7 +239,7 @@ export const BillingChart = ({
 				{/* XIZMAT Card */}
 				<Card className='p-4 flex flex-col items-center text-center'>
 					<h3 className='text-xs font-medium text-muted-foreground mb-3'>
-						ХИЗМАТ
+						{t('service')}
 					</h3>
 					<div className='mb-3'>
 						{/* <p className='text-sm text-muted-foreground mb-1'>Жами миқдор</p> */}
@@ -247,13 +249,13 @@ export const BillingChart = ({
 					</div>
 					<div className='w-full space-y-2 border-t pt-3'>
 						<div className='flex justify-between text-xs'>
-							<span className='text-muted-foreground'>Тўланған:</span>
+							<span className='text-muted-foreground'>{t('paid')}:</span>
 							<span className='font-semibold text-green-600'>
 								{formatCompactCurrency(serviceTypeTotals.XIZMAT.paid)}
 							</span>
 						</div>
 						<div className='flex justify-between text-xs'>
-							<span className='text-muted-foreground'>Қарз:</span>
+							<span className='text-muted-foreground'>{t('debt')}:</span>
 							<span className='font-semibold text-red-600'>
 								{formatCompactCurrency(serviceTypeTotals.XIZMAT.debt)}
 							</span>
@@ -264,7 +266,7 @@ export const BillingChart = ({
 				{/* TASVIR Card */}
 				<Card className='p-4 flex flex-col items-center text-center'>
 					<h3 className='text-xs font-medium text-muted-foreground mb-3'>
-						ТАСВИР
+						{t('imaging')}
 					</h3>
 					<div className='mb-3'>
 						{/* <p className='text-sm text-muted-foreground mb-1'>Жами миқдор</p> */}
@@ -274,13 +276,13 @@ export const BillingChart = ({
 					</div>
 					<div className='w-full space-y-2 border-t pt-3'>
 						<div className='flex justify-between text-xs'>
-							<span className='text-muted-foreground'>Тўланған:</span>
+							<span className='text-muted-foreground'>{t('paid')}:</span>
 							<span className='font-semibold text-green-600'>
 								{formatCompactCurrency(serviceTypeTotals.TASVIR.paid)}
 							</span>
 						</div>
 						<div className='flex justify-between text-xs'>
-							<span className='text-muted-foreground'>Қарз:</span>
+							<span className='text-muted-foreground'>{t('debt')}:</span>
 							<span className='font-semibold text-red-600'>
 								{formatCompactCurrency(serviceTypeTotals.TASVIR.debt)}
 							</span>
@@ -291,7 +293,7 @@ export const BillingChart = ({
 				{/* KORIK Card */}
 				<Card className='p-4 flex flex-col items-center text-center'>
 					<h3 className='text-xs font-medium text-muted-foreground mb-3'>
-						КЎРИК
+						{t('examination')}
 					</h3>
 					<div className='mb-3'>
 						{/* <p className='text-sm text-muted-foreground mb-1'>Жами миқдор</p> */}
@@ -301,13 +303,13 @@ export const BillingChart = ({
 					</div>
 					<div className='w-full space-y-2 border-t pt-3'>
 						<div className='flex justify-between text-xs'>
-							<span className='text-muted-foreground'>Тўланған:</span>
+							<span className='text-muted-foreground'>{t('paid')}:</span>
 							<span className='font-semibold text-green-600'>
 								{formatCompactCurrency(serviceTypeTotals.KORIK.paid)}
 							</span>
 						</div>
 						<div className='flex justify-between text-xs'>
-							<span className='text-muted-foreground'>Қарз:</span>
+							<span className='text-muted-foreground'>{t('debt')}:</span>
 							<span className='font-semibold text-red-600'>
 								{formatCompactCurrency(serviceTypeTotals.KORIK.debt)}
 							</span>
@@ -318,7 +320,7 @@ export const BillingChart = ({
 				{/* TAHLIL Card */}
 				<Card className='p-4 flex flex-col items-center text-center'>
 					<h3 className='text-xs font-medium text-muted-foreground mb-3'>
-						ТАҲЛИЛ
+						{t('analysis')}
 					</h3>
 					<div className='mb-3'>
 						{/* <p className='text-sm text-muted-foreground mb-1'>Жами миқдор</p> */}
@@ -328,13 +330,13 @@ export const BillingChart = ({
 					</div>
 					<div className='w-full space-y-2 border-t pt-3'>
 						<div className='flex justify-between text-xs'>
-							<span className='text-muted-foreground'>Тўланған:</span>
+							<span className='text-muted-foreground'>{t('paid')}:</span>
 							<span className='font-semibold text-green-600'>
 								{formatCompactCurrency(serviceTypeTotals.TAHLIL.paid)}
 							</span>
 						</div>
 						<div className='flex justify-between text-xs'>
-							<span className='text-muted-foreground'>Қарз:</span>
+							<span className='text-muted-foreground'>{t('debt')}:</span>
 							<span className='font-semibold text-red-600'>
 								{formatCompactCurrency(serviceTypeTotals.TAHLIL.debt)}
 							</span>
@@ -345,7 +347,7 @@ export const BillingChart = ({
 				{/* XONA Card */}
 				<Card className='p-4 flex flex-col items-center text-center'>
 					<h3 className='text-xs font-medium text-muted-foreground mb-3'>
-						ХОНА
+						{t('room')}
 					</h3>
 					<div className='mb-3'>
 						{/* <p className='text-sm text-muted-foreground mb-1'>Жами миқдор</p> */}
@@ -355,13 +357,13 @@ export const BillingChart = ({
 					</div>
 					<div className='w-full space-y-2 border-t pt-3'>
 						<div className='flex justify-between text-xs'>
-							<span className='text-muted-foreground'>Тўланған:</span>
+							<span className='text-muted-foreground'>{t('paid')}:</span>
 							<span className='font-semibold text-green-600'>
 								{formatCompactCurrency(serviceTypeTotals.XONA.paid)}
 							</span>
 						</div>
 						<div className='flex justify-between text-xs'>
-							<span className='text-muted-foreground'>Қарз:</span>
+							<span className='text-muted-foreground'>{t('debt')}:</span>
 							<span className='font-semibold text-red-600'>
 								{formatCompactCurrency(serviceTypeTotals.XONA.debt)}
 							</span>
@@ -375,7 +377,7 @@ export const BillingChart = ({
 				<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4'>
 					<h3 className='text-base sm:text-lg font-semibold flex items-center gap-2'>
 						<DollarSign className='w-5 h-5 text-green-600' />
-						Умумий график
+						{t('generalChart')}
 					</h3>
 					<div className='w-full sm:w-48'>
 						<DateRangeFilter value={interval} onChange={onIntervalChange} />
@@ -388,9 +390,9 @@ export const BillingChart = ({
 						<YAxis />
 						<Tooltip formatter={value => formatCurrency(value as number)} />
 						<Legend wrapperStyle={{ fontSize: '12px' }} />
-						<Bar dataKey='Жами' fill='#3b82f6' />
-						<Bar dataKey='Тўланған' fill='#10b981' />
-						<Bar dataKey='Қарз' fill='#ef4444' />
+						<Bar dataKey={t('total')} fill='#3b82f6' />
+						<Bar dataKey={t('paid')} fill='#10b981' />
+						<Bar dataKey={t('debt')} fill='#ef4444' />
 					</BarChart>
 				</ResponsiveContainer>
 			</Card>

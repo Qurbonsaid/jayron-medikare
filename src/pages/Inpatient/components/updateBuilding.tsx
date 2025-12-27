@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 import {
   Form,
   FormControl,
@@ -45,6 +46,7 @@ export const UpdatedBuilding = ({
   onOpenChange,
   oneCorpus,
 }: UpdatedBuildingProps) => {
+  const { t } = useTranslation("inpatient");
   const [updatedCorpuses, { isLoading: isUpdatedLoading }] =
     useUpdateCorpusMutation();
   const handleRequest = useHandleRequest();
@@ -75,12 +77,12 @@ export const UpdatedBuilding = ({
       request: async () =>
         await updatedCorpuses(submitData as UpdatedCorpusRequest).unwrap(),
       onSuccess: () => {
-        toast.success("Korpus муваффақиятли Ozgartirildi");
+        toast.success(t("buildingUpdatedSuccess"));
         form.reset();
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Ozgartirishda хатолик");
+        toast.error(data?.error?.msg || t("updateError"));
       },
     });
   };
@@ -90,7 +92,7 @@ export const UpdatedBuilding = ({
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
-            Korpusni Tahrirlash
+            {t("editBuilding")}
           </DialogTitle>
         </DialogHeader>
 
@@ -108,7 +110,7 @@ export const UpdatedBuilding = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Korpus raqami <span className="text-red-500">*</span>
+                        {t("buildingNumber")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -134,7 +136,7 @@ export const UpdatedBuilding = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Xonalar soni <span className="text-red-500">*</span>
+                        {t("roomsCount")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -160,11 +162,11 @@ export const UpdatedBuilding = ({
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2 lg:col-span-1">
                       <FormLabel>
-                        Izoh 
+                        {t("description")}
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Асосий корпус"
+                          placeholder={t("mainBuilding")}
                           className="border-slate-400 border-2 w-full"
                           {...field}
                         />
@@ -185,7 +187,7 @@ export const UpdatedBuilding = ({
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto order-2 sm:order-1"
           >
-            Бекор қилиш
+            {t("cancel")}
           </Button>
           <Button
             type="submit"
@@ -194,7 +196,7 @@ export const UpdatedBuilding = ({
             className="gradient-primary w-full sm:w-auto order-1 sm:order-2"
           >
             <Save className="w-4 h-4 mr-2" />
-            {isUpdatedLoading ? "Loading..." : "Сақлаш"}
+            {isUpdatedLoading ? t("loading") : t("save")}
           </Button>
         </DialogFooter>
       </DialogContent>

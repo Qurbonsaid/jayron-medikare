@@ -11,6 +11,7 @@ import { uz } from 'date-fns/locale'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { useState } from 'react'
 import { DateRange } from 'react-day-picker'
+import { useTranslation } from 'react-i18next'
 
 interface DateRangePickerProps {
 	dateRange: DateRange | undefined
@@ -21,6 +22,7 @@ export const DateRangePicker = ({
 	dateRange,
 	onDateRangeChange,
 }: DateRangePickerProps) => {
+	const { t } = useTranslation('reports')
 	const [isOpen, setIsOpen] = useState(false)
 
 	return (
@@ -45,7 +47,7 @@ export const DateRangePicker = ({
 								format(dateRange.from, 'dd MMM yyyy', { locale: uz })
 							)
 						) : (
-							<span>Сана оралиғини танланг</span>
+							<span>{t('selectDateRange')}</span>
 						)}
 					</Button>
 				</PopoverTrigger>
@@ -69,14 +71,14 @@ export const DateRangePicker = ({
 								setIsOpen(false)
 							}}
 						>
-							Тозалаш
+							{t('clear')}
 						</Button>
 						<Button
 							size='sm'
 							className='flex-1'
 							onClick={() => setIsOpen(false)}
 						>
-							Қўллаш
+							{t('apply')}
 						</Button>
 					</div>
 				</PopoverContent>

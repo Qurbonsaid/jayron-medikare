@@ -16,6 +16,8 @@ import uzCyrlRadiology from './locales/uz-Cyrl/radiology.json';
 import uzCyrlInpatient from './locales/uz-Cyrl/inpatient.json';
 import uzCyrlMedication from './locales/uz-Cyrl/medication.json';
 import uzCyrlDiagnostics from './locales/uz-Cyrl/diagnostics.json';
+import uzCyrlPatientPortal from './locales/uz-Cyrl/patientPortal.json';
+import uzCyrlAppointments from './locales/uz-Cyrl/appointments.json';
 
 import uzLatnCommon from './locales/uz-Latn/common.json';
 import uzLatnSidebar from './locales/uz-Latn/sidebar.json';
@@ -30,6 +32,8 @@ import uzLatnRadiology from './locales/uz-Latn/radiology.json';
 import uzLatnInpatient from './locales/uz-Latn/inpatient.json';
 import uzLatnMedication from './locales/uz-Latn/medication.json';
 import uzLatnDiagnostics from './locales/uz-Latn/diagnostics.json';
+import uzLatnPatientPortal from './locales/uz-Latn/patientPortal.json';
+import uzLatnAppointments from './locales/uz-Latn/appointments.json';
 
 import enCommon from './locales/en/common.json';
 import enSidebar from './locales/en/sidebar.json';
@@ -44,6 +48,8 @@ import enRadiology from './locales/en/radiology.json';
 import enInpatient from './locales/en/inpatient.json';
 import enMedication from './locales/en/medication.json';
 import enDiagnostics from './locales/en/diagnostics.json';
+import enPatientPortal from './locales/en/patientPortal.json';
+import enAppointments from './locales/en/appointments.json';
 
 import ruCommon from './locales/ru/common.json';
 import ruSidebar from './locales/ru/sidebar.json';
@@ -58,6 +64,8 @@ import ruRadiology from './locales/ru/radiology.json';
 import ruInpatient from './locales/ru/inpatient.json';
 import ruMedication from './locales/ru/medication.json';
 import ruDiagnostics from './locales/ru/diagnostics.json';
+import ruPatientPortal from './locales/ru/patientPortal.json';
+import ruAppointments from './locales/ru/appointments.json';
 
 export const resources = {
   'uz-Cyrl': {
@@ -74,6 +82,8 @@ export const resources = {
     inpatient: uzCyrlInpatient,
     medication: uzCyrlMedication,
     diagnostics: uzCyrlDiagnostics,
+    patientPortal: uzCyrlPatientPortal,
+    appointments: uzCyrlAppointments,
   },
   'uz-Latn': {
     common: uzLatnCommon,
@@ -89,6 +99,8 @@ export const resources = {
     inpatient: uzLatnInpatient,
     medication: uzLatnMedication,
     diagnostics: uzLatnDiagnostics,
+    patientPortal: uzLatnPatientPortal,
+    appointments: uzLatnAppointments,
   },
   en: {
     common: enCommon,
@@ -104,6 +116,8 @@ export const resources = {
     inpatient: enInpatient,
     medication: enMedication,
     diagnostics: enDiagnostics,
+    patientPortal: enPatientPortal,
+    appointments: enAppointments,
   },
   ru: {
     common: ruCommon,
@@ -119,6 +133,8 @@ export const resources = {
     inpatient: ruInpatient,
     medication: ruMedication,
     diagnostics: ruDiagnostics,
+    patientPortal: ruPatientPortal,
+    appointments: ruAppointments,
   },
 };
 
@@ -150,6 +166,8 @@ i18n
       'inpatient',
       'medication',
       'diagnostics',
+      'patientPortal',
+      'appointments',
     ],
     interpolation: {
       escapeValue: false,

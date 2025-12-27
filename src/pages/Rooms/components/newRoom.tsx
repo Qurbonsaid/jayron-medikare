@@ -21,26 +21,29 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Save } from "lucide-react";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import z from "zod";
 
-const RoomSchema = z.object({
+const createRoomSchema = (t: TFunction) => z.object({
   room_name: z
     .string()
-    .min(3, "Хона номи камида 3 та белгидан иборат бўлиши керак"),
-  room_price: z.number().min(1, "Хона нархи киритилиши керак"),
-  corpus_id: z.string().min(1, "Корпус ID киритилиши керак"),
-  patient_capacity: z.number().min(1, "Бемор сиғими камида 1 бўлиши керак"),
-  floor_number: z.number().min(0, "Қават рақами киритилиши керак").optional(),
+    .min(3, t('validation.roomNameMin')),
+  room_price: z.number().min(1, t('validation.roomPriceRequired')),
+  corpus_id: z.string().min(1, t('validation.corpusIdRequired')),
+  patient_capacity: z.number().min(1, t('validation.patientCapacityMin')),
+  floor_number: z.number().min(0, t('validation.floorNumberRequired')).optional(),
   description: z
     .string()
-    .min(5, "Изоҳ камида 5 та белгидан иборат бўлиши керак")
+    .min(5, t('validation.descriptionMin'))
     .optional(),
 });
 
-type RoomFormData = z.infer<typeof RoomSchema>;
+type RoomFormData = z.infer<ReturnType<typeof createRoomSchema>>;
 
 interface NewRoomProps {
   open: boolean;
@@ -48,6 +51,8 @@ interface NewRoomProps {
 }
 
 export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
+  const { t } = useTranslation('inpatient');
+  const RoomSchema = useMemo(() => createRoomSchema(t), [t]);
   const [createdRooms, { isLoading: isCreatedLoading }] =
     useCreateRoomMutation();
   const handleRequest = useHandleRequest();
@@ -75,12 +80,12 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
       request: async () =>
         await createdRooms(submitData as CreatedRoomRequest).unwrap(),
       onSuccess: () => {
-        toast.success("Хона муваффақиятли қўшилди");
+        toast.success(t('createSuccess'));
         form.reset();
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Қўшишда хатолик");
+        toast.error(data?.error?.msg || t('errorOccurred'));
       },
     });
   };
@@ -90,7 +95,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
-            Янги Хона Қўшиш
+            {t('createRoom')}
           </DialogTitle>
         </DialogHeader>
 
@@ -107,7 +112,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Хона номи <span className="text-red-500">*</span>
+                        {t('roomNumber')} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -126,7 +131,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Хона нархи <span className="text-red-500">*</span>
+                        {t('pricePerDay')} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -151,7 +156,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Хона сиғими <span className="text-red-500">*</span>
+                        {t('capacity')} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -176,7 +181,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Хона қавати <span className="text-red-500">*</span>
+                        {t('floor')} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -200,10 +205,10 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
                   name="description"
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>Изоҳ</FormLabel>
+                      <FormLabel>{t('notes')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Асосий корпус"
+                          placeholder={t('notesPlaceholder')}
                           className="border-slate-400 border-2 w-full"
                           {...field}
                         />
@@ -224,7 +229,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto order-2 sm:order-1"
           >
-            Бекор қилиш
+            {t('cancel')}
           </Button>
           <Button
             type="submit"
@@ -233,7 +238,7 @@ export const NewRoom = ({ open, onOpenChange }: NewRoomProps) => {
             className="gradient-primary w-full sm:w-auto order-1 sm:order-2"
           >
             <Save className="w-4 h-4 mr-2" />
-            {isCreatedLoading ? "Loading..." : "Сақлаш"}
+            {isCreatedLoading ? t('saving') : t('save')}
           </Button>
         </DialogFooter>
       </DialogContent>

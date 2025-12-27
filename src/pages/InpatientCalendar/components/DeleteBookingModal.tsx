@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useDeleteBookingMutation } from "@/app/api/bookingApi";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
@@ -29,6 +30,7 @@ export const DeleteBookingModal = ({
   onOpenChange,
   booking,
 }: DeleteBookingModalProps) => {
+  const { t } = useTranslation("inpatient");
   const handleRequest = useHandleRequest();
   const [deleteBooking, { isLoading }] = useDeleteBookingMutation();
 
@@ -41,11 +43,11 @@ export const DeleteBookingModal = ({
           id: booking._id,
         }).unwrap(),
       onSuccess: () => {
-        toast.success("Бронь муваффақиятли ўчирилди");
+        toast.success(t("deleteBooking.deleteSuccess"));
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Бронь ўчиришда хатолик юз берди");
+        toast.error(data?.error?.msg || t("deleteBooking.deleteError"));
       },
     });
   };
@@ -62,17 +64,17 @@ export const DeleteBookingModal = ({
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2 text-red-600">
             <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" />
-            Броньни Ўчириш
+            {t("deleteBooking.title")}
           </DialogTitle>
           <DialogDescription className="text-sm sm:text-base">
-            Ушбу амални бекор қилиб бўлмайди
+            {t("deleteBooking.description")}
           </DialogDescription>
         </DialogHeader>
 
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            Сиз ҳақиқатан ҳам ушбу броньни ўчирмоқчимисиз?
+            {t("deleteBooking.confirmMessage")}
           </AlertDescription>
         </Alert>
 
@@ -80,25 +82,25 @@ export const DeleteBookingModal = ({
         <div className="p-3 sm:p-4 bg-gray-50 rounded-lg space-y-2">
           <div className="space-y-1.5 text-xs sm:text-sm">
             <div className="break-words">
-              <span className="text-gray-600">Бемор:</span>{" "}
+              <span className="text-gray-600">{t("deleteBooking.patient")}:</span>{" "}
               <strong className="text-gray-900">
-                {patient?.fullname || "Номаълум"}
+                {patient?.fullname || t("common.unknown")}
               </strong>
             </div>
             <div className="break-words">
-              <span className="text-gray-600">Телефон:</span>{" "}
+              <span className="text-gray-600">{t("deleteBooking.phone")}:</span>{" "}
               <strong className="text-gray-900">
                 {formatPhoneNumber(patient?.phone)}
               </strong>
             </div>
             <div className="break-words">
-              <span className="text-gray-600">Хона:</span>{" "}
+              <span className="text-gray-600">{t("deleteBooking.room")}:</span>{" "}
               <strong className="text-gray-900">
-                {room?.room_name || "Номаълум"}
+                {room?.room_name || t("common.unknown")}
               </strong>
             </div>
             <div className="break-words">
-              <span className="text-gray-600">Даври:</span>{" "}
+              <span className="text-gray-600">{t("deleteBooking.period")}:</span>{" "}
               <strong className="text-gray-900">
                 {format(new Date(booking.start_at), "dd MMM yyyy", {
                   locale: uz,
@@ -111,7 +113,7 @@ export const DeleteBookingModal = ({
             </div>
             {booking.note && (
               <div className="break-words">
-                <span className="text-gray-600">Изоҳ:</span>{" "}
+                <span className="text-gray-600">{t("deleteBooking.note")}:</span>{" "}
                 <span className="text-gray-900 italic">{booking.note}</span>
               </div>
             )}
@@ -126,7 +128,7 @@ export const DeleteBookingModal = ({
             disabled={isLoading}
             className="w-full sm:w-auto text-sm sm:text-base"
           >
-            Бекор қилиш
+            {t("common.cancel")}
           </Button>
           <Button
             type="button"
@@ -140,7 +142,7 @@ export const DeleteBookingModal = ({
             ) : (
               <>
                 <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                Ўчириш
+                {t("common.delete")}
               </>
             )}
           </Button>

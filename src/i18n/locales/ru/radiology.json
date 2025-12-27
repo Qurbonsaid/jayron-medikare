@@ -75,5 +75,63 @@
   "filterByModality": "Фильтр по методу",
   "filterByDate": "Фильтр по дате",
   "history": "История",
-  "previousStudies": "Предыдущие исследования"
+  "previousStudies": "Предыдущие исследования",
+  "cancel": "Отмена",
+  "submit": "Отправить",
+  "unknown": "Неизвестно",
+  "deleteMedicalImage": "Удалить медицинское изображение",
+  "deleteMedicalImageConfirm": "Вы уверены, что хотите удалить медицинские изображения пациента {{patientName}}? Это действие нельзя отменить.",
+  "deleteImagingType": "Удалить тип исследования",
+  "deleteImagingTypeConfirm": "Вы уверены, что хотите удалить тип исследования {{name}}? Это действие нельзя отменить.",
+  "deleting": "Удаление...",
+  "yesDelete": "Да, удалить",
+  "imageDeletedSuccess": "Медицинское изображение успешно удалено",
+  "imagingTypeDeletedSuccess": "Тип исследования успешно удалён",
+  "deleteError": "Ошибка удаления",
+  "modalities": {
+    "mri": "МРТ",
+    "ct": "КТ",
+    "xray": "Рентген"
+  },
+  "bodyParts": {
+    "brain": "Головной мозг",
+    "chest": "Лёгкие",
+    "abdomen": "Брюшная полость"
+  },
+  "statuses": {
+    "scheduled": "Запланировано",
+    "completed": "Завершено",
+    "pending": "Ожидание"
+  },
+  "priorities": {
+    "normal": "Обычный",
+    "urgent": "Срочный"
+  },
+  "templates": {
+    "normal": "Норма",
+    "stroke": "Инсульт",
+    "tumor": "Опухоль"
+  },
+  "newOrderModal": {
+    "title": "Новый рентген заказ",
+    "selectPatient": "Выбор пациента",
+    "selectPatientPlaceholder": "Выберите пациента...",
+    "selectPlaceholder": "Выберите...",
+    "clinicalIndication": "Клинические показания",
+    "indicationPlaceholder": "Причина обследования...",
+    "priority": "Приоритет"
+  },
+  "viewer": {
+    "slice": "Срез",
+    "reset": "Сброс",
+    "examInfo": "Информация об обследовании",
+    "date": "Дата",
+    "protocol": "Протокол",
+    "radiologistConclusion": "Заключение радиолога",
+    "template": "Шаблон",
+    "conclusionPlaceholder": "Напишите заключение...",
+    "submitConclusion": "Отправить заключение",
+    "brightness": "Яркость",
+    "contrast": "Контраст"
+  }
 }

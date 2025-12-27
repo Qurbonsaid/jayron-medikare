@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
 	useGetAllPatientAnalysisQuery,
 	useGetPatientAnalysisByIdQuery,
@@ -150,6 +151,7 @@ interface GetByIdResults {
 }
 
 const LabResults = () => {
+	const { t } = useTranslation('diagnostics')
 	const [filters, setFilters] = useState<Filters>({ page: 1, limit: 10 })
 	const [isModalOpen, setIsModalOpen] = useState(false)
 	const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
@@ -202,7 +204,7 @@ const LabResults = () => {
 	const openResultModal = (orderId: string) => {
 		const order = data?.data.find(item => item._id === orderId)
 		if (!order) {
-			toast.error('Таҳлил топилмади') // yoki boshqa xabar
+			toast.error(t('analysisNotFound')) // yoki boshqa xabar
 			return
 		}
 		setSelectedOrderId(orderId)
@@ -225,17 +227,17 @@ const LabResults = () => {
 		})
 
 		if (hasErrors) {
-			toast.error('Бўш қийматлар бор. Илтимос, барчасини тўлдиринг.')
+			toast.error(t('emptyValuesError'))
 			return
 		}
 		// ❗ BIRINCHI: tasdiqlash
 		if (!isVerified) {
-			toast.error('Илтимос, натижаларни тасдиқланг')
+			toast.error(t('pleaseVerifyResults'))
 			return
 		}
 
 		if (!selectedOrderId) {
-			toast.error('Таҳлил танланмади')
+			toast.error(t('analysisNotSelected'))
 			return
 		}
 
@@ -281,12 +283,12 @@ const LabResults = () => {
 			setShowErrors(false)
 
 			if (res?.success) {
-				toast.success('Натижалар муваффақиятли сақланди')
+				toast.success(t('resultsSavedSuccess'))
 				// yangilashlar: qayta olish (refetch) va modalni yopish
 				setIsModalOpen(false)
 				setComments(body.comment)
 			} else {
-				toast.error(res?.message || 'Серверда хатолик')
+				toast.error(res?.message || t('serverError'))
 			}
 		} catch (error: any) {
 			console.error('Update error', error)
@@ -294,7 +296,7 @@ const LabResults = () => {
 				error?.data?.message ||
 				error?.data?.msg ||
 				error?.message ||
-				'Хатолик юз берди'
+				t('errorOccurred')
 			toast.error(msg)
 		}
 	}
@@ -302,28 +304,28 @@ const LabResults = () => {
 	const getStatusBadge = (status: ExamStatus) => {
 		const variants: Record<
 			ExamStatus,
-			{ class: string; icon: React.ElementType; text: string }
+			{ class: string; icon: React.ElementType; textKey: string }
 		> = {
 			PENDING: {
 				class: 'bg-yellow-100 text-yellow-700',
 				icon: Clock,
-				text: 'Kutilmoqda',
+				textKey: 'statuses.pending',
 			},
 			COMPLETED: {
 				class: 'bg-green-100 text-green-700',
 				icon: CheckCircle,
-				text: 'Bajarilgan',
+				textKey: 'statuses.completed',
 			},
 			CANCELLED: {
 				class: 'bg-blue-100 text-blue-700',
 				icon: FileText,
-				text: 'Bekor qilingan',
+				textKey: 'statuses.cancelled',
 			},
 		}
 		const Icon = variants[status].icon
 		return (
 			<Badge className={`${variants[status].class} border px-2 py-1 text-xs`}>
-				<Icon className='w-3 h-3 mr-1' /> {variants[status].text}
+				<Icon className='w-3 h-3 mr-1' /> {t(variants[status].textKey)}
 			</Badge>
 		)
 	}
@@ -334,14 +336,14 @@ const LabResults = () => {
 			SHOSHILINCH: 'bg-yellow-100 text-yellow-700',
 			JUDA_SHOSHILINCH: 'bg-red-100 text-red-700',
 		}
-		const text: Record<ExamLevel, string> = {
-			ODDIY: 'Oddiy',
-			SHOSHILINCH: 'Shoshilinch',
-			JUDA_SHOSHILINCH: 'Juda_shoshilinch',
+		const textKeys: Record<ExamLevel, string> = {
+			ODDIY: 'levels.normal',
+			SHOSHILINCH: 'levels.urgent',
+			JUDA_SHOSHILINCH: 'levels.emergency',
 		}
 		return (
 			<Badge className={`${colors[level]} border px-2 py-1 text-xs`}>
-				{text[level]}
+				{t(textKeys[level])}
 			</Badge>
 		)
 	}
@@ -432,16 +434,16 @@ const LabResults = () => {
 			<div className='p-4'>
 				<Card className='p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
 					<div>
-						<Label>Бемор</Label>
+						<Label>{t('patient')}</Label>
 						<Select
 							value={filters.patient || 'all'}
 							onValueChange={v => handleChange('patient', v)}
 						>
 							<SelectTrigger>
-								<SelectValue placeholder='Барча беморлар' />
+								<SelectValue placeholder={t('allPatients')} />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value='all'>Барча</SelectItem>
+								<SelectItem value='all'>{t('all')}</SelectItem>
 								{patientsData?.data?.map(p => (
 									<SelectItem key={p._id} value={p._id}>
 										{p.fullname}
@@ -452,58 +454,58 @@ const LabResults = () => {
 					</div>
 
 					<div>
-						<Label>Ҳолат</Label>
+						<Label>{t('status')}</Label>
 						<Select
 							value={filters.status || 'all'}
 							onValueChange={v => handleChange('status', v)}
 						>
 							<SelectTrigger>
-								<SelectValue placeholder='Барча ҳолатлар' />
+								<SelectValue placeholder={t('allStatuses')} />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value='all'>Барча</SelectItem>
-								<SelectItem value={ExamStatus.PENDING}>Kutilmoqda</SelectItem>
-								<SelectItem value={ExamStatus.COMPLETED}>Bajarilgan</SelectItem>
+								<SelectItem value='all'>{t('all')}</SelectItem>
+								<SelectItem value={ExamStatus.PENDING}>{t('statuses.pending')}</SelectItem>
+								<SelectItem value={ExamStatus.COMPLETED}>{t('statuses.completed')}</SelectItem>
 								<SelectItem value={ExamStatus.CANCELLED}>
-									Bekor qilingan
+									{t('statuses.cancelled')}
 								</SelectItem>
 							</SelectContent>
 						</Select>
 					</div>
 
 					<div>
-						<Label>Даража</Label>
+						<Label>{t('level')}</Label>
 						<Select
 							value={filters.level || 'all'}
 							onValueChange={v => handleChange('level', v)}
 						>
 							<SelectTrigger>
-								<SelectValue placeholder='Барча даражалар' />
+								<SelectValue placeholder={t('allLevels')} />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value='all'>Барча</SelectItem>
-								<SelectItem value={ExamLevel.ODDIY}>Oddiy</SelectItem>
+								<SelectItem value='all'>{t('all')}</SelectItem>
+								<SelectItem value={ExamLevel.ODDIY}>{t('levels.normal')}</SelectItem>
 								<SelectItem value={ExamLevel.SHOSHILINCH}>
-									Shoshilinch
+									{t('levels.urgent')}
 								</SelectItem>
 								<SelectItem value={ExamLevel.JUDA_SHOSHILINCH}>
-									Juda shoshilinch
+									{t('levels.emergency')}
 								</SelectItem>
 							</SelectContent>
 						</Select>
 					</div>
 
 					<div>
-						<Label>Таҳлил</Label>
+						<Label>{t('analysisType')}</Label>
 						<Select
 							value={filters.analysis_type || 'all'}
 							onValueChange={v => handleChange('analysis_type', v)}
 						>
 							<SelectTrigger>
-								<SelectValue placeholder='Барча таҳлиллар' />
+								<SelectValue placeholder={t('allAnalyses')} />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value='all'>Барча</SelectItem>
+								<SelectItem value='all'>{t('all')}</SelectItem>
 								{diagnosticsData?.data?.map(d => (
 									<SelectItem key={d._id} value={d._id}>
 										{d.name}
@@ -524,12 +526,12 @@ const LabResults = () => {
 								<tr>
 									{[
 										'ID',
-										'Бемор',
-										'Таҳлил тури',
-										'Сана',
-										'Даража',
-										'Ҳолат',
-										'Ҳаракат',
+										t('patient'),
+										t('analysisType'),
+										t('date'),
+										t('level'),
+										t('status'),
+										t('action'),
 									].map(h => (
 										<th
 											key={h}
@@ -569,7 +571,7 @@ const LabResults = () => {
 													disabled={p.status === 'CANCELLED'}
 													className='text-xs h-8'
 												>
-													{p.status === 'PENDING' ? 'Киритиш' : 'Кўриш'}
+														{p.status === 'PENDING' ? t('enter') : t('view')}
 												</Button>
 											</td>
 										</tr>
@@ -577,7 +579,7 @@ const LabResults = () => {
 								) : (
 									<tr>
 										<td colSpan={7} className='text-center py-4 text-sm'>
-											Маълумот топилмади
+											{t('noDataFound')}
 										</td>
 									</tr>
 								)}
@@ -602,11 +604,11 @@ const LabResults = () => {
 											{p.analysis_type.name}
 										</h3>
 										<p className='text-xs text-muted-foreground'>
-											Бемор:{' '}
+											{t('patient')}:{' '}
 											<span className='font-medium'>{p.patient.fullname}</span>
 										</p>
 										<p className='text-xs text-muted-foreground'>
-											Сана:{' '}
+											{t('date')}:{' '}
 											<span className='font-medium'>
 												{new Date(p.created_at).toLocaleDateString()}
 											</span>
@@ -619,11 +621,11 @@ const LabResults = () => {
 								<div className='flex items-center justify-between space-y-1 text-sm'>
 									<div className='space-y-1'>
 										<div className='flex gap-4'>
-											<span className='text-muted-foreground'>Даража:</span>
+											<span className='text-muted-foreground'>{t('level')}:</span>
 											{getLevelBadge(p.level)}
 										</div>
 										<div className='flex gap-4'>
-											<span className='text-muted-foreground'>Ҳолат:</span>
+											<span className='text-muted-foreground'>{t('status')}:</span>
 											{getStatusBadge(p.status)}
 										</div>
 									</div>
@@ -634,7 +636,7 @@ const LabResults = () => {
 											onClick={() => openResultModal(p._id)}
 											disabled={p.status === 'CANCELLED'}
 										>
-											{p.status === 'PENDING' ? 'Киритиш' : 'Кўриш'}
+											{p.status === 'PENDING' ? t('enter') : t('view')}
 										</Button>
 									</div>
 								</div>
@@ -642,7 +644,7 @@ const LabResults = () => {
 						</Card>
 					))
 				) : (
-					<div className='text-center py-4 text-sm'>Маълумот топилмади</div>
+						<div className='text-center py-4 text-sm'>{t('noDataFound')}</div>
 				)}
 			</div>
 
@@ -670,11 +672,11 @@ const LabResults = () => {
 									<table className='w-full text-sm border'>
 										<thead className='bg-muted'>
 											<tr>
-												<th className='px-2 py-2 text-left'>Тест</th>
-												<th className='px-2 py-2 text-left'>Натижа</th>
-												<th className='px-2 py-2 text-left'>Меъёр</th>
-												<th className='px-2 py-2 text-left'>Бирлик</th>
-												<th className='px-2 py-2 text-left'>Байроқ</th>
+												<th className='px-2 py-2 text-left'>{t('test')}</th>
+												<th className='px-2 py-2 text-left'>{t('result')}</th>
+												<th className='px-2 py-2 text-left'>{t('normalRange')}</th>
+												<th className='px-2 py-2 text-left'>{t('unit')}</th>
+												<th className='px-2 py-2 text-left'>{t('flag')}</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -839,10 +841,10 @@ const LabResults = () => {
 
 												<div className='flex justify-between text-sm text-muted-foreground'>
 													<span>
-														Бирлик: {param.analysis_parameter_type.unit}
+														{t('unit')}: {param.analysis_parameter_type.unit}
 													</span>
 													<span>
-														Меъёр:{' '}
+														{t('normalRange')}:{' '}
 														{(() => {
 															const r = getGenderRange(param, patientGender)
 															if (!r) return '-'
@@ -859,7 +861,7 @@ const LabResults = () => {
 
 								{/* Comments & verify */}
 								<div className='mt-4'>
-									<Label>Изоҳ</Label>
+									<Label>{t('comment')}</Label>
 									<Textarea
 										value={comments}
 										onChange={e => setComments(e.target.value)}
@@ -873,7 +875,7 @@ const LabResults = () => {
 										checked={isVerified}
 										onCheckedChange={c => setIsVerified(!!c)}
 									/>
-									<Label htmlFor='verify'>Тасдиқлаш</Label>
+									<Label htmlFor='verify'>{t('verify')}</Label>
 								</div>
 
 								<DialogFooter className='mt-4'>
@@ -881,7 +883,7 @@ const LabResults = () => {
 										variant='outline'
 										onClick={() => setIsModalOpen(false)}
 									>
-										Бекор қилиш
+										{t('cancel')}
 									</Button>
 									<Button
 										onClick={handleSubmitResults}
@@ -889,8 +891,8 @@ const LabResults = () => {
 										disabled={isUpdating}
 									>
 										{diagnosticData?.data?.status === ExamStatus.COMPLETED
-											? 'Таҳрирлаш'
-											: 'Сақлаш'}
+											? t('edit')
+											: t('save')}
 									</Button>
 								</DialogFooter>
 							</>

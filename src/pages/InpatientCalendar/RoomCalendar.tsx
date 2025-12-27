@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ import {
 import type { Booking } from "@/app/api/bookingApi";
 
 const RoomCalendar = () => {
+  const { t } = useTranslation("inpatient");
   const { roomId, corpusId } = useParams<{
     roomId: string;
     corpusId: string;
@@ -159,7 +161,7 @@ const RoomCalendar = () => {
 
   // Booking label (Одам бор / Бронь)
   const getBookingLabel = (isRealPatient: boolean) => {
-    return isRealPatient ? "Одам бор" : "Бронь";
+    return isRealPatient ? t("calendar.patientPresent") : t("calendar.booked");
   };
 
   // Bronni qaysi kunlarda ko'rsatish kerakligini aniqlash
@@ -245,7 +247,7 @@ const RoomCalendar = () => {
 
     // Agar o'tgan kun bo'lsa - xabar berish
     if (selectedDay < today) {
-      toast.error("Ўтган санага бронь қилиб бўлмайди");
+      toast.error(t("calendar.cannotBookPastDate"));
       return;
     }
 
@@ -275,12 +277,12 @@ const RoomCalendar = () => {
     return (
       <div className="container mx-auto p-3 sm:p-4 md:p-5 lg:p-6">
         <Card className="p-6 sm:p-8 md:p-12 text-center">
-          <p className="text-base sm:text-lg text-muted-foreground">Хона топилмади</p>
+          <p className="text-base sm:text-lg text-muted-foreground">{t("calendar.roomNotFound")}</p>
           <Button
             onClick={() => navigate("/inpatient-calendar")}
             className="mt-3 sm:mt-4 text-sm sm:text-base"
           >
-            Орқага қайтиш
+            {t("calendar.goBack")}
           </Button>
         </Card>
       </div>
@@ -340,7 +342,7 @@ const RoomCalendar = () => {
           }}
           className="w-full sm:w-auto text-sm sm:text-base h-9 sm:h-10"
         >
-          Yangi bron
+          {t("calendar.newBooking")}
         </Button>
       </div>
 
@@ -364,10 +366,10 @@ const RoomCalendar = () => {
                     </p>
                     <div className="text-xs sm:text-sm font-semibold space-y-1">
                       <div className="flex items-center">
-                        <span>Сиғим: {totalBeds}</span>
+                        <span>{t("calendar.capacity")}: {totalBeds}</span>
                       </div>
                       <div className="flex items-center">
-                        <span>Банд: {occupiedBeds}</span>
+                        <span>{t("calendar.occupied")}: {occupiedBeds}</span>
                       </div>
                       <div className="flex items-center">
                         <span
@@ -377,7 +379,7 @@ const RoomCalendar = () => {
                               : "text-green-300"
                           }
                         >
-                          Бўш: {availableBeds}
+                          {t("calendar.available")}: {availableBeds}
                         </span>
                       </div>
                     </div>
@@ -457,7 +459,7 @@ const RoomCalendar = () => {
                   let availabilityInfo = null;
                   if (bedAvailability) {
                     if (bedAvailability.status === "available") {
-                      availabilityInfo = { text: "Бўш", color: "text-green-600" };
+                      availabilityInfo = { text: t("calendar.free"), color: "text-green-600" };
                     } else if (bedAvailability.available_from) {
                       // Format: "14 Dek" (no year, short month)
                       const date = new Date(bedAvailability.available_from);
@@ -482,7 +484,7 @@ const RoomCalendar = () => {
                         color: "text-gray-700",
                       };
                     } else {
-                      availabilityInfo = { text: "Бўш", color: "text-green-600" };
+                      availabilityInfo = { text: t("calendar.free"), color: "text-green-600" };
                     }
                   }
 
@@ -492,7 +494,7 @@ const RoomCalendar = () => {
                       <div className="col-span-1 bg-gray-50 p-2 sm:p-2.5 border-b border-r-2 border-gray-200">
                         <div className="space-y-1.5">
                           <p className="text-sm sm:text-base md:text-lg font-extrabold text-gray-800">
-                            {bedIndex + 1}-жой
+                            {bedIndex + 1}-{t("calendar.bed")}
                           </p>
                           {availabilityInfo && (
                             <Badge
@@ -577,7 +579,7 @@ const RoomCalendar = () => {
                                             .split(" ")
                                             .slice(0, 2)
                                             .join(" ")
-                                          : "Номаълум"}
+                                          : t("calendar.unknown")}
                                       </p>
                                       <p className="text-xs sm:text-sm font-semibold text-gray-800 mt-0.5 sm:mt-1">
                                         {
@@ -606,7 +608,7 @@ const RoomCalendar = () => {
                                         {typeof activeBooking.patient_id ===
                                           "object"
                                           ? activeBooking.patient_id.fullname
-                                          : "Номаълум"}
+                                          : t("calendar.unknown")}
                                       </p>
                                       {typeof activeBooking.patient_id ===
                                         "object" &&
@@ -645,7 +647,7 @@ const RoomCalendar = () => {
                                 className="h-full min-h-[48px] sm:min-h-[52px] rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer"
                                 onClick={() => handleEmptyCellClick(day)}
                               >
-                                <span className="text-[10px] sm:text-xs font-medium">Бўш</span>
+                                <span className="text-[10px] sm:text-xs font-medium">{t("calendar.free")}</span>
                               </div>
                             )}
                           </div>

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 interface DeleteWarnRoomProps {
@@ -24,6 +25,7 @@ export const DeleteWarnRoom = ({
   onOpenChange,
   room,
 }: DeleteWarnRoomProps) => {
+  const { t } = useTranslation('inpatient');
   const [deleteRoom, { isLoading: isDeletedLoading }] = useDeleteRoomMutation();
   const handleRequest = useHandleRequest();
 
@@ -31,11 +33,11 @@ export const DeleteWarnRoom = ({
     await handleRequest({
       request: async () => await deleteRoom({ id: room._id }).unwrap(),
       onSuccess: () => {
-        toast.success("Xona муваффақиятли Ochirildi");
+        toast.success(t('deleteSuccess'));
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Ochirishda хатолик");
+        toast.error(data?.error?.msg || t('errorOccurred'));
       },
     });
   };
@@ -43,21 +45,20 @@ export const DeleteWarnRoom = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogTitle>Xonani o'chirish</DialogTitle>
+        <DialogTitle>{t('deleteRoom')}</DialogTitle>
         <DialogDescription>
-          Rostan ham <span className="font-semibold">{room.room_name}</span> -
-          Xonani o'chirmoqchimisiz?
+          {t('deleteConfirm')} <span className="font-semibold">{room.room_name}</span>
         </DialogDescription>
         <DialogFooter className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor qilish
+            {t('cancel')}
           </Button>
           <Button
             variant="destructive"
             disabled={isDeletedLoading}
             onClick={handleDeleteRoom}
           >
-            {isDeletedLoading ? "O'chirilmoqda..." : "Ha, oʻchirilsin"}
+            {isDeletedLoading ? t('deleting') : t('delete')}
           </Button>
         </DialogFooter>
       </DialogContent>

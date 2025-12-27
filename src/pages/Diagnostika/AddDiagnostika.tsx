@@ -21,12 +21,14 @@ import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 import { CreateAnalysisRequest } from '@/app/api/diagnostic/types';
 import { usePermission } from '@/hooks/usePermission';
 import { addDiagnosticSchema } from '@/validation/validationAddDiagnostic/validationAddDiagnostic';
 
 export default function DiagnosticsPage() {
+  const { t } = useTranslation('diagnostics');
   const { canCreate, canUpdate, canDelete } = usePermission('diagnostic');
   const navigate = useNavigate();
   const [searchCode, setSearchCode] = useState('');
@@ -135,7 +137,7 @@ export default function DiagnosticsPage() {
     await handleRequest({
       request: async () => deleteDiagnostic(deleteId).unwrap(),
       onSuccess: (res) => {
-        toast.success('Tahlil muvaffaqiyatli o‘chirildi');
+        toast.success(t('analysisDeletedSuccess'));
         setIsDeleteDialogOpen(false);
         setDeleteId(null);
       },
@@ -145,8 +147,8 @@ export default function DiagnosticsPage() {
     });
   };
 
-  if (isLoading) return <p>Yuklanmoqda...</p>;
-  if (isError) return <p>Xatolik yuz berdi!</p>;
+  if (isLoading) return <p>{t('loading')}</p>;
+  if (isError) return <p>{t('errorOccurred')}</p>;
 
   return (
     <div className='p-4 sm:p-6 space-y-6'>
@@ -154,14 +156,14 @@ export default function DiagnosticsPage() {
       <div className='flex flex-col sm:flex-row gap-3 sm:items-center justify-between'>
         <div className='flex flex-col sm:flex-row gap-3 w-full sm:w-auto'>
           <Input
-            placeholder='Tahlil kodi bo‘yicha qidirish...'
+            placeholder={t('searchByCode')}
             value={searchCode}
             onChange={(e) => setSearchCode(e.target.value)}
             className='w-full sm:w-64'
           />
 
           <Input
-            placeholder='Tahlil nomi bo‘yicha qidirish...'
+            placeholder={t('searchByName')}
             value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
             className='w-full sm:w-64'
@@ -175,7 +177,7 @@ export default function DiagnosticsPage() {
               clearForm();
             }}
           >
-            <Plus size={18} /> Qo'shish
+            <Plus size={18} /> {t('add')}
           </Button>
         )}
       </div>
@@ -193,13 +195,13 @@ export default function DiagnosticsPage() {
         <DialogContent className='w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'>
           <DialogHeader>
             <DialogTitle>
-              {editingId ? 'Tahlilni tahrirlash' : 'Yangi tahlil qo‘shish'}
+              {editingId ? t('editAnalysis') : t('addNewAnalysis')}
             </DialogTitle>
           </DialogHeader>
           <div className='flex flex-col gap-3 mt-2'>
-            <Label>Таҳлил коди</Label>
+            <Label>{t('analysisCode')}</Label>
             <Input
-              placeholder='Кодни киритинг'
+              placeholder={t('enterCode')}
               value={newCode}
               onChange={(e) => setNewCode(e.target.value)}
             />
@@ -207,9 +209,9 @@ export default function DiagnosticsPage() {
               <p className='text-red-500 text-sm'>{errors.code}</p>
             )}
 
-            <Label>Таҳлил номи</Label>
+            <Label>{t('analysisName')}</Label>
             <Input
-              placeholder='Номини киритинг'
+              placeholder={t('enterName')}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
             />
@@ -217,9 +219,9 @@ export default function DiagnosticsPage() {
               <p className='text-red-500 text-sm'>{errors.name}</p>
             )}
 
-            <Label>Таҳлил тавсифи</Label>
+            <Label>{t('analysisDescription')}</Label>
             <Input
-              placeholder='Тавсиф киритинг (ихтиёрий)'
+              placeholder={t('enterDescriptionOptional')}
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
             />
@@ -235,14 +237,14 @@ export default function DiagnosticsPage() {
                 setErrors({});
               }}
             >
-              Bekor qilish
+              {t('cancel')}
             </Button>
             <Button
               className='bg-blue-600 hover:bg-blue-700 text-white '
               onClick={handleSave}
               disabled={isCreating || isUpdating}
             >
-              Saqlash
+              {t('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -251,9 +253,9 @@ export default function DiagnosticsPage() {
       {/* DELETE DIALOG */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className='w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'>
-          <DialogTitle>Tahlilni o‘chirish</DialogTitle>
+          <DialogTitle>{t('deleteAnalysis')}</DialogTitle>
           <DialogDescription>
-            Rostan ham ushbu tahlil o‘chirilsinmi?
+            {t('deleteAnalysisConfirm')}
           </DialogDescription>
           <DialogFooter className='flex justify-end gap-2'>
             <Button
@@ -262,14 +264,14 @@ export default function DiagnosticsPage() {
                 setIsDeleteDialogOpen(false);
               }}
             >
-              Yo‘q
+              {t('no')}
             </Button>
             <Button
               variant='destructive'
               onClick={handleDelete}
               disabled={isDeleting}
             >
-              Ha, o‘chirish
+              {t('yesDelete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -291,7 +293,7 @@ export default function DiagnosticsPage() {
                 </h3>
                 <p className='text-xs text-gray-500 mt-1'>{item.description}</p>
                 <p className='text-xs text-gray-400 mt-1'>
-                  Parametrlar soni: {item.analysis_parameters?.length || 0}
+                  {t('parametersCount')}: {item.analysis_parameters?.length || 0}
                 </p>
               </div>
               <div className='flex items-center gap-2'>
@@ -330,7 +332,7 @@ export default function DiagnosticsPage() {
       {/* NO DATA */}
       {filtered?.length === 0 && (
         <p className='text-center text-gray-500 py-8'>
-          Hech qanday tahlil topilmadi 😔
+          {t('noAnalysisFound')}
         </p>
       )}
     </div>

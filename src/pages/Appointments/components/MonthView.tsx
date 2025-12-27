@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Appointment {
   day: number;
@@ -25,21 +26,30 @@ const MonthView = ({
   onDateChange,
   getStatusColor,
 }: MonthViewProps) => {
-  const weekDays = ['Ду', 'Се', 'Чо', 'Па', 'Жу', 'Ша', 'Як'];
+  const { t } = useTranslation('appointments');
+  const weekDays = [
+    t('weekDayMon'),
+    t('weekDayTue'),
+    t('weekDayWed'),
+    t('weekDayThu'),
+    t('weekDayFri'),
+    t('weekDaySat'),
+    t('weekDaySun'),
+  ];
 
   const monthNames = [
-    'Январ',
-    'Феврал',
-    'Март',
-    'Апрел',
-    'Май',
-    'Июн',
-    'Июл',
-    'Август',
-    'Сентябр',
-    'Октябр',
-    'Ноябр',
-    'Декабр',
+    t('monthJanuary'),
+    t('monthFebruary'),
+    t('monthMarch'),
+    t('monthApril'),
+    t('monthMay'),
+    t('monthJune'),
+    t('monthJuly'),
+    t('monthAugust'),
+    t('monthSeptember'),
+    t('monthOctober'),
+    t('monthNovember'),
+    t('monthDecember'),
   ];
 
   const getDaysInMonth = (date: Date) => {
@@ -156,7 +166,7 @@ const MonthView = ({
               onClick={handleToday}
               className='h-8 sm:h-9 text-xs sm:text-sm'
             >
-              Бу ой
+              {t('thisMonth')}
             </Button>
           </div>
         </div>
@@ -223,7 +233,7 @@ const MonthView = ({
 
                           {dayAppointments.length > 3 && (
                             <div className='text-[8px] sm:text-[9px] lg:text-[10px] text-muted-foreground text-center'>
-                              +{dayAppointments.length - 3} кўпроқ
+                              +{dayAppointments.length - 3} {t('more')}
                             </div>
                           )}
                         </div>
@@ -235,25 +245,25 @@ const MonthView = ({
                           {statusCounts.new > 0 && (
                             <div
                               className='w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary'
-                              title={`${statusCounts.new} янги`}
+                              title={`${statusCounts.new} ${t('statusNew').toLowerCase()}`}
                             />
                           )}
                           {statusCounts.confirmed > 0 && (
                             <div
                               className='w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-success'
-                              title={`${statusCounts.confirmed} тасдиқланган`}
+                              title={`${statusCounts.confirmed} ${t('statusConfirmed').toLowerCase()}`}
                             />
                           )}
                           {statusCounts.completed > 0 && (
                             <div
                               className='w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-muted-foreground'
-                              title={`${statusCounts.completed} бажарилган`}
+                              title={`${statusCounts.completed} ${t('statusCompleted').toLowerCase()}`}
                             />
                           )}
                           {statusCounts.cancelled > 0 && (
                             <div
                               className='w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-danger'
-                              title={`${statusCounts.cancelled} бекор`}
+                              title={`${statusCounts.cancelled} ${t('statusCancelled').toLowerCase()}`}
                             />
                           )}
                         </div>
@@ -271,7 +281,7 @@ const MonthView = ({
       <Card className='card-shadow border-0 sm:border'>
         <div className='p-3 sm:p-4 lg:p-5'>
           <h3 className='text-sm sm:text-base lg:text-lg font-semibold mb-3'>
-            Ой бўйича статистика
+            {t('monthlyStatistics')}
           </h3>
           <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4'>
             <div className='text-center p-3 bg-primary/5 rounded-lg'>
@@ -279,7 +289,7 @@ const MonthView = ({
                 {appointments.length * 4}
               </div>
               <div className='text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1'>
-                Жами навбатлар
+                {t('totalAppointments')}
               </div>
             </div>
             <div className='text-center p-3 bg-success/5 rounded-lg'>
@@ -288,7 +298,7 @@ const MonthView = ({
                   .length * 4}
               </div>
               <div className='text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1'>
-                Тасдиқланган
+                {t('statusConfirmed')}
               </div>
             </div>
             <div className='text-center p-3 bg-blue-50 rounded-lg'>
@@ -296,7 +306,7 @@ const MonthView = ({
                 {appointments.filter((apt) => apt.status === 'new').length * 4}
               </div>
               <div className='text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1'>
-                Янги
+                {t('statusNew')}
               </div>
             </div>
             <div className='text-center p-3 bg-muted/20 rounded-lg'>
@@ -305,7 +315,7 @@ const MonthView = ({
                   .length * 4}
               </div>
               <div className='text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1'>
-                Бажарилган
+                {t('statusCompleted')}
               </div>
             </div>
           </div>

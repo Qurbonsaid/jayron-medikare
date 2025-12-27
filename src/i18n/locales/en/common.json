@@ -85,5 +85,27 @@
   "thisMonth": "This month",
   "thisYear": "This year",
   "from": "from",
-  "to": "to"
+  "to": "to",
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has been moved"
+  },
+  "errorBoundary": {
+    "title": "An error occurred",
+    "description": "Please try again later",
+    "reload": "Reload"
+  },
+  "statuses": {
+    "active": "Active",
+    "completed": "Completed",
+    "pending": "Pending",
+    "inactive": "Inactive",
+    "deleted": "Deleted",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "partiallyPaid": "Partially paid",
+    "cancelled": "Cancelled",
+    "confirmed": "Confirmed",
+    "waiting": "Waiting"
+  }
 }

@@ -43,6 +43,7 @@ import { settingsSchema } from '@/validation/validationSettings'
 import { userSchema } from '@/validation/validationUser'
 import { Edit, Plus, Search, Trash2, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -74,6 +75,7 @@ const Settings = () => {
 		},
 	]
 	const navigate = useNavigate()
+	const { t } = useTranslation('settings')
 	const handleRequest = useHandleRequest()
 	const [isUserModalOpen, setIsUserModalOpen] = useState(false)
 	const [search, setSearch] = useState('')
@@ -135,7 +137,7 @@ const Settings = () => {
 		await handleRequest({
 			request: async () => await createUser(form).unwrap(),
 			onSuccess: () => {
-				toast.success('Фойдаланувчи муваффақиятли қўшилди')
+				toast.success(t('userCreated'))
 				setIsUserModalOpen(false)
 				setForm({
 					fullname: '',
@@ -252,7 +254,7 @@ const Settings = () => {
 				request: async () =>
 					await updateUser({ id: editingUserId, data: payload }).unwrap(),
 				onSuccess: () => {
-					toast.success('Фойдаланувчи маълумотлари янгиланди')
+					toast.success(t('userUpdated'))
 					setIsUserModalOpen(false)
 					setEditingUserId(null)
 					resetForm()
@@ -382,7 +384,7 @@ const Settings = () => {
 		await handleRequest({
 			request: async () => await deleteUser(selectedUserId).unwrap(),
 			onSuccess: () => {
-				toast.success(`Фойдаланувчи ${selectedUserName} ўчирилди`)
+				toast.success(t('userDeletedWithName', { name: selectedUserName }))
 				setIsDeleteDialogOpen(false)
 				setSelectedUserId(null)
 				setSelectedUserName('')
@@ -402,15 +404,15 @@ const Settings = () => {
 
 	const handleSaveSettings = async () => {
 		if (isUploading) {
-			toast.warning('Илтимос, логотип юкланиб бўлишини кутинг ⏳')
+			toast.warning(t('waitForLogoUpload'))
 			return
 		}
 		if (!getAllSettings) return
 		try {
 			await updateSettings(getAllSettings).unwrap()
-			toast.success('Маълумотлар муваффақиятли сақланди ✅')
+			toast.success(t('settingsSaved'))
 		} catch (err) {
-			toast.error('Сақлашда хатолик ❌')
+			toast.error(t('saveError'))
 			console.error(err)
 		}
 	}
@@ -428,13 +430,13 @@ const Settings = () => {
 			console.log(res)
 			if (res?.file_path) {
 				handleChangee('logo_path', res.file_path)
-				toast.success('Логотип юкланди ✅')
+				toast.success(t('logoUploaded'))
 			} else {
-				toast.error('Файл йўли қайтмади ❌')
+				toast.error(t('filePathNotReturned'))
 			}
 		} catch (err) {
 			console.error('Upload error:', err)
-			toast.error('Логотип юклашда хатолик ❌')
+			toast.error(t('logoUploadError'))
 		} finally {
 			setIsUploading(false)
 		}
@@ -536,7 +538,7 @@ const Settings = () => {
 			setTotalPages(usersData.pagination.total_pages)
 		}
 		if (usersError) {
-			toast.error('Фойдаланувчиларни олиб бўлмади')
+			toast.error(t('usersFetchError'))
 			console.error(usersError)
 		}
 	}, [usersData, usersError])
@@ -572,10 +574,10 @@ const Settings = () => {
 				<Tabs defaultValue='users' className='space-y-4 sm:space-y-6'>
 					<TabsList className='grid w-full grid-cols-2 sm:grid-cols-2 gap-1 sm:gap-2 h-auto p-1'>
 						<TabsTrigger value='users' className='text-xs sm:text-sm py-2'>
-							Фойдаланувчилар
+							{t('users')}
 						</TabsTrigger>
 						<TabsTrigger value='clinic' className='text-xs sm:text-sm py-2'>
-							Клиника
+							{t('clinic')}
 						</TabsTrigger>
 						{/* <TabsTrigger
 							value='notifications'
@@ -593,7 +595,7 @@ const Settings = () => {
 						<Card className='p-3 sm:p-4 lg:p-6'>
 							<div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-3'>
 								<h2 className='text-lg sm:text-xl font-semibold'>
-									Фойдаланувчилар рўйхати
+									{t('usersList')}
 								</h2>
 								<Button
 									onClick={() => {
@@ -605,14 +607,14 @@ const Settings = () => {
 									size='sm'
 								>
 									<Plus className='w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2' />
-									Янги фойдаланувчи
+									{t('newUser')}
 								</Button>
 							</div>
 
 							{/* Search & Role filter */}
 							<div className='mb-3 sm:mb-4 flex flex-col sm:flex-row gap-2 flex-wrap'>
 								<Input
-									placeholder='Қидириш...'
+									placeholder={t('search')}
 									value={search}
 									onChange={handleSearchChange}
 									className='flex-1 text-xs sm:text-sm h-9 sm:h-10'
@@ -626,11 +628,11 @@ const Settings = () => {
 										setPage(1)
 									}}
 								>
-									<option value=''>Барчаси</option>
-									<option value={RoleConstants.ADMIN}>Admin</option>
-									<option value={RoleConstants.DOCTOR}>Shifokor</option>
-									<option value={RoleConstants.RECEPTIONIST}>Qabulxona</option>
-									<option value={RoleConstants.NURSE}>Hamshira</option>
+									<option value=''>{t('all')}</option>
+									<option value={RoleConstants.ADMIN}>{t('roles.admin')}</option>
+									<option value={RoleConstants.DOCTOR}>{t('roles.doctor')}</option>
+									<option value={RoleConstants.RECEPTIONIST}>{t('roles.receptionist')}</option>
+									<option value={RoleConstants.NURSE}>{t('roles.nurse')}</option>
 								</select>
 							</div>
 
@@ -655,11 +657,11 @@ const Settings = () => {
 															</span>
 														</p>
 														<p className='text-[10px] sm:text-xs text-muted-foreground'>
-															Рол:{' '}
+															{t('role')}:{' '}
 															<span className='font-medium'>{user.role}</span>
 														</p>
 														<p className='text-[10px] sm:text-xs text-muted-foreground'>
-															Бўлим:{' '}
+															{t('department')}:{' '}
 															<span className='font-medium'>
 																{user.section}
 															</span>
@@ -669,7 +671,7 @@ const Settings = () => {
 															<span className='font-medium'>{user.email}</span>
 														</p> */}
 														<p className='text-[10px] sm:text-xs text-muted-foreground'>
-															Ҳолат:{' '}
+															{t('status')}:{' '}
 															<Badge
 																className={
 																	user.status === 'active'
@@ -677,7 +679,7 @@ const Settings = () => {
 																		: 'bg-destructive/10 text-destructive border-destructive/20 border text-[9px] sm:text-[10px] px-1.5 py-0.5'
 																}
 															>
-																{user.status === 'active' ? 'Фаол' : 'Нофаол'}
+																{user.status === 'active' ? t('active') : t('inactive')}
 															</Badge>
 														</p>
 													</div>
@@ -694,8 +696,8 @@ const Settings = () => {
 														onClick={() => handleEditUser(user as UserId)}
 													>
 														<Edit size={12} className='sm:w-3 sm:h-3' />
-														<span className='hidden xs:inline'>Tahrirlash</span>
-														<span className='xs:hidden'>Edit</span>
+														<span className='hidden xs:inline'>{t('edit')}</span>
+														<span className='xs:hidden'>{t('edit')}</span>
 													</Button>
 
 													<Dialog
@@ -718,9 +720,9 @@ const Settings = () => {
 															>
 																<Trash2 size={12} className='sm:w-3 sm:h-3' />
 																<span className='hidden xs:inline'>
-																	O'chirish
+																	{t('delete')}
 																</span>
-																<span className='xs:hidden'>Del</span>
+																<span className='xs:hidden'>{t('delete')}</span>
 															</Button>
 														</DialogTrigger>
 
@@ -769,12 +771,12 @@ const Settings = () => {
 												<tr>
 													{[
 														'ID',
-														'ФИО',
-														'Рол',
-														'Бўлим',
+														t('fullName'),
+														t('role'),
+														t('department'),
 														// 'Email',
-														'Ҳолат',
-														'Ҳаракатлар',
+														t('status'),
+														t('actions'),
 													].map(i => (
 														<th
 															key={i}
@@ -900,7 +902,7 @@ const Settings = () => {
 											disabled={page === 1}
 											className='flex-1 sm:flex-none text-xs h-8'
 										>
-											&larr; Назад
+											&larr; {t('prev')}
 										</Button>
 										<Button
 											size='sm'
@@ -908,7 +910,7 @@ const Settings = () => {
 											disabled={page === totalPages}
 											className='flex-1 sm:flex-none text-xs h-8'
 										>
-											След &rarr;
+											{t('next')} &rarr;
 										</Button>
 									</div>
 									<div className='text-xs sm:text-sm text-muted-foreground order-first sm:order-none'>
@@ -936,11 +938,11 @@ const Settings = () => {
 					<TabsContent value='clinic' className='space-y-3 sm:space-y-4'>
 						<Card className='p-4 sm:p-5 lg:p-6'>
 							<h2 className='text-lg sm:text-xl font-semibold mb-4 sm:mb-6'>
-								Клиника маълумотлари
+								{t('clinicInfo')}
 							</h2>
 							<div className='space-y-3 sm:space-y-4 max-w-2xl'>
 								<div>
-									<Label className='text-xs sm:text-sm'>Клиника номи</Label>
+									<Label className='text-xs sm:text-sm'>{t('clinicName')}</Label>
 									<Input
 										value={getAllSettings?.clinic_name || ''}
 										onChange={e => handleChangee('clinic_name', e.target.value)}
@@ -954,7 +956,7 @@ const Settings = () => {
 								</div>
 
 								<div>
-									<Label className='text-xs sm:text-sm'>Манзил</Label>
+									<Label className='text-xs sm:text-sm'>{t('address')}</Label>
 									<Input
 										value={getAllSettings?.address || ''}
 										onChange={e => handleChangee('address', e.target.value)}
@@ -969,7 +971,7 @@ const Settings = () => {
 
 								<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 									<div>
-										<Label className='text-xs sm:text-sm'>Телефон</Label>
+										<Label className='text-xs sm:text-sm'>{t('phone')}</Label>
 										<Input
 											value={getAllSettings?.phone || '+998'}
 											onChange={e => handleSettingsPhoneChange(e.target.value)}
@@ -1001,7 +1003,7 @@ const Settings = () => {
 								<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 									<div>
 										<Label className='text-xs sm:text-sm'>
-											Иш бошланиш вақти
+											{t('workStartTime')}
 										</Label>
 										<Input
 											type='time'
@@ -1018,7 +1020,7 @@ const Settings = () => {
 										)}
 									</div>
 									<div>
-										<Label className='text-xs sm:text-sm'>Иш тугаш вақти</Label>
+										<Label className='text-xs sm:text-sm'>{t('workEndTime')}</Label>
 										<Input
 											type='time'
 											value={getAllSettings?.work_end_time || ''}
@@ -1036,21 +1038,21 @@ const Settings = () => {
 								</div>
 
 								<div>
-									<Label className='text-xs sm:text-sm'>Логотип</Label>
+									<Label className='text-xs sm:text-sm'>{t('logo')}</Label>
 									<div className='flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-2'>
 										{/* <div className='w-24 h-24 sm:w-32 sm:h-32 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden bg-muted/20'>
-																			{getAllSettings?.logo_path ? (
-																					<img
-																							src={getAllSettings.logo_path}
-																							alt='Logo'
-																							className='w-full h-full object-cover'
-																					/>
-																			) : (
-																					<span className='text-xs sm:text-sm text-muted-foreground'>
-																							Логотип
-																					</span>
-																			)}
-																	</div> */}
+														{getAllSettings?.logo_path ? (
+																<img
+																		src={getAllSettings.logo_path}
+																		alt='Logo'
+																		className='w-full h-full object-cover'
+																/>
+														) : (
+																<span className='text-xs sm:text-sm text-muted-foreground'>
+																		Логотип
+																</span>
+														)}
+												</div> */}
 										<div className='w-24 h-24 sm:w-32 sm:h-32 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden bg-muted/20'>
 											{getAllSettings?.logo_path ? (
 												<img
@@ -1060,7 +1062,7 @@ const Settings = () => {
 												/>
 											) : (
 												<span className='text-xs sm:text-sm text-muted-foreground'>
-													Логотип
+													{t('logo')}
 												</span>
 											)}
 										</div>
@@ -1082,7 +1084,7 @@ const Settings = () => {
 												className='text-xs sm:text-sm'
 											>
 												<Upload className='w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2' />
-												Юклаш
+												{t('upload')}
 											</Button>
 										</div>
 									</div>
@@ -1098,7 +1100,7 @@ const Settings = () => {
 									disabled={isUploading}
 									className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
 								>
-									{isUploading ? 'Логотип юкланмоқда...' : 'Сақлаш'}
+									{isUploading ? t('logoUploading') : t('save')}
 								</Button>
 							</div>
 						</Card>
@@ -1275,18 +1277,18 @@ const Settings = () => {
 					<DialogHeader>
 						<DialogTitle className='text-lg sm:text-xl lg:text-2xl'>
 							{editingUserId
-								? 'Фойдаланувчи таҳрири'
-								: 'Янги фойдаланувчи қўшиш'}
+								? t('editUser')
+								: t('addUser')}
 						</DialogTitle>
 					</DialogHeader>
 					<div className='space-y-3 sm:space-y-4'>
 						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 							<div>
-								<Label className='text-xs sm:text-sm'>Тўлиқ исми</Label>
+								<Label className='text-xs sm:text-sm'>{t('fullName')}</Label>
 								<Input
 									value={form.fullname}
 									onChange={e => handleChange('fullname', e.target.value)}
-									placeholder='Исмингизни киритинг'
+									placeholder={t('enterFullName')}
 									className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
 								/>
 								{errorsUser.fullname && (
@@ -1296,11 +1298,11 @@ const Settings = () => {
 								)}
 							</div>
 							<div>
-								<Label className='text-xs sm:text-sm'>Фойдаланувчи номи</Label>
+								<Label className='text-xs sm:text-sm'>{t('userName')}</Label>
 								<Input
 									value={form.username}
 									onChange={e => handleChange('username', e.target.value)}
-									placeholder='Фойдаланувчи номини киритинг'
+									placeholder={t('enterUsername')}
 									className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
 								/>
 								{errorsUser.username && (
@@ -1326,7 +1328,7 @@ const Settings = () => {
 								)}
 							</div> */}
 							<div>
-								<Label className='text-xs sm:text-sm'>Телефон</Label>
+								<Label className='text-xs sm:text-sm'>{t('phone')}</Label>
 								<Input
 									value={form.phone || '+998'}
 									onChange={e => handlePhoneChange(e.target.value)}
@@ -1343,38 +1345,38 @@ const Settings = () => {
 						</div> 
 						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 							<div>
-								<Label className='text-xs sm:text-sm'>Рол</Label>
+								<Label className='text-xs sm:text-sm'>{t('role')}</Label>
 								<Select
 									value={form.role}
 									onValueChange={val => handleChange('role', val)}
 								>
 									<SelectTrigger className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'>
-										<SelectValue placeholder='Танланг...' />
+										<SelectValue placeholder={t('selectRole')} />
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem
 											value={RoleConstants.DOCTOR}
 											className='text-xs sm:text-sm'
 										>
-											Shifokor
+											{t('roles.doctor')}
 										</SelectItem>
 										<SelectItem
 											value={RoleConstants.NURSE}
 											className='text-xs sm:text-sm'
 										>
-											Hamshira
+											{t('roles.nurse')}
 										</SelectItem>
 										<SelectItem
 											value={RoleConstants.RECEPTIONIST}
 											className='text-xs sm:text-sm'
 										>
-											Qabulxona
+											{t('roles.receptionist')}
 										</SelectItem>
 										<SelectItem
 											value={RoleConstants.ADMIN}
 											className='text-xs sm:text-sm'
 										>
-											Admin
+											{t('roles.admin')}
 										</SelectItem>
 									</SelectContent>
 								</Select>
@@ -1386,13 +1388,13 @@ const Settings = () => {
 							</div>
 
 							<div>
-								<Label className='text-xs sm:text-sm'>Бўлим</Label>
+								<Label className='text-xs sm:text-sm'>{t('department')}</Label>
 								<Select
 									value={form.section}
 									onValueChange={val => handleChange('section', val)}
 								>
 									<SelectTrigger className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'>
-										<SelectValue placeholder='Бўлимни танланг...' />
+										<SelectValue placeholder={t('selectDepartment')} />
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem
@@ -1424,13 +1426,13 @@ const Settings = () => {
 						</div>
 						<div>
 							<Label className='text-xs sm:text-sm'>
-								Лицензия рақами (шифокорлар учун)
+								{t('licenseNumber')}
 							</Label>
 							<Input
 								value={form.license_number}
 								onChange={e => handleChange('license_number', e.target.value)}
 								autoComplete='off'
-								placeholder='Лицензия рақамини киритинг'
+								placeholder={t('enterLicenseNumber')}
 								className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
 							/>
 							{errorsUser.license_number && (
@@ -1441,13 +1443,13 @@ const Settings = () => {
 						</div>
 
 						<div>
-							<Label className='text-xs sm:text-sm'>Парол</Label>
+							<Label className='text-xs sm:text-sm'>{t('password')}</Label>
 							<Input
 								type='password'
 								value={form.password}
 								onChange={e => handleChange('password', e.target.value)}
 								autoComplete='new-password'
-								placeholder='Парол киритинг'
+								placeholder={t('enterPassword')}
 								className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
 							/>
 							{!editingUserId
@@ -1469,13 +1471,13 @@ const Settings = () => {
 							}}
 							className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
 						>
-							Бекор қилиш
+							{t('cancel')}
 						</Button>
 						<Button
 							onClick={onSaveUser}
 							className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
 						>
-							{editingUserId ? 'Сақлаш' : 'Қўшиш'}
+							{editingUserId ? t('save') : t('add')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

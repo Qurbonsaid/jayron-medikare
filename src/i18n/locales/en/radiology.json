@@ -75,5 +75,63 @@
   "filterByModality": "Filter by modality",
   "filterByDate": "Filter by date",
   "history": "History",
-  "previousStudies": "Previous Studies"
+  "previousStudies": "Previous Studies",
+  "cancel": "Cancel",
+  "submit": "Submit",
+  "unknown": "Unknown",
+  "deleteMedicalImage": "Delete Medical Image",
+  "deleteMedicalImageConfirm": "Are you sure you want to delete medical images of {{patientName}}? This action cannot be undone.",
+  "deleteImagingType": "Delete Imaging Type",
+  "deleteImagingTypeConfirm": "Are you sure you want to delete {{name}} imaging type? This action cannot be undone.",
+  "deleting": "Deleting...",
+  "yesDelete": "Yes, delete",
+  "imageDeletedSuccess": "Medical image deleted successfully",
+  "imagingTypeDeletedSuccess": "Imaging type deleted successfully",
+  "deleteError": "Error deleting",
+  "modalities": {
+    "mri": "MRI",
+    "ct": "CT",
+    "xray": "X-Ray"
+  },
+  "bodyParts": {
+    "brain": "Brain",
+    "chest": "Chest",
+    "abdomen": "Abdominal Cavity"
+  },
+  "statuses": {
+    "scheduled": "Scheduled",
+    "completed": "Completed",
+    "pending": "Pending"
+  },
+  "priorities": {
+    "normal": "Normal",
+    "urgent": "Urgent"
+  },
+  "templates": {
+    "normal": "Normal",
+    "stroke": "Stroke",
+    "tumor": "Tumor"
+  },
+  "newOrderModal": {
+    "title": "New Radiology Order",
+    "selectPatient": "Select Patient",
+    "selectPatientPlaceholder": "Select a patient...",
+    "selectPlaceholder": "Select...",
+    "clinicalIndication": "Clinical Indication",
+    "indicationPlaceholder": "Reason for examination...",
+    "priority": "Priority"
+  },
+  "viewer": {
+    "slice": "Slice",
+    "reset": "Reset",
+    "examInfo": "Examination Information",
+    "date": "Date",
+    "protocol": "Protocol",
+    "radiologistConclusion": "Radiologist Conclusion",
+    "template": "Template",
+    "conclusionPlaceholder": "Write conclusion...",
+    "submitConclusion": "Submit Conclusion",
+    "brightness": "Brightness",
+    "contrast": "Contrast"
+  }
 }

@@ -5,6 +5,7 @@ import {
 } from '@/app/api/billingApi/billingApi';
 import type { service_type as ServiceType } from '@/app/api/billingApi/types';
 import { getStatusBadge } from '@/components/common/StatusBadge';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -47,6 +48,7 @@ interface EditableService {
 }
 
 const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
+  const { t } = useTranslation('billing');
   const [isEditMode, setIsEditMode] = useState(false);
   const [services, setServices] = useState<EditableService[]>([]);
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -82,7 +84,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
   }, [billingData]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
+    return new Intl.NumberFormat('uz-UZ').format(amount) + ' ' + t('currency');
   };
 
   const formatNumberWithSpaces = (num: number) => {
@@ -96,15 +98,15 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
     if (purpose === 'purpose') {
       switch (method) {
         case 'KORIK':
-          return '💵 Кўрик';
+          return '💵 ' + t('serviceTypes.examination');
         case 'XIZMAT':
-          return '🏥 Хизмат';
+          return '🏥 ' + t('service');
         case 'XONA':
-          return '🛏️ Хона';
+          return '🛏️ ' + t('serviceTypes.room');
         case 'TASVIR':
-          return '🖼️ Тасвир';
+          return '🖼️ ' + t('serviceTypes.image');
         case 'TAHLIL':
-          return '🧪 Таҳлил';
+          return '🧪 ' + t('serviceTypes.analysis');
         default:
           return method;
       }
@@ -112,9 +114,9 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
       const lowerMethod = method?.toLowerCase() || '';
       switch (lowerMethod) {
         case 'cash':
-          return '💵 Нақд';
+          return '💵 ' + t('cash');
         case 'card':
-          return '💳 Карта';
+          return '💳 ' + t('card');
         case 'click':
           return '📱 Click';
         case 'online':
@@ -160,7 +162,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
     if (services.length > 1) {
       setServices(services.filter((s) => s.id !== id));
     } else {
-      toast.error('Камида битта хизмат бўлиши керак');
+      toast.error(t('validation.atLeastOneService'));
     }
   };
 
@@ -181,12 +183,12 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
       }).unwrap();
 
       if (result.success) {
-        toast.success('Хизматлар муваффақиятли янгиланди');
+        toast.success(t('servicesUpdatedSuccess'));
         setIsEditMode(false);
       }
     } catch (error: unknown) {
       const apiError = error as { data?: { error?: { msg?: string } } };
-      toast.error(apiError?.data?.error?.msg || 'Хатолик юз берди');
+      toast.error(apiError?.data?.error?.msg || t('errorOccurred'));
     }
   };
 
@@ -194,13 +196,13 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
     if (!billingId) return;
 
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast.error('Илтимос, тўлов миқдорини киритинг');
+      toast.error(t('validation.enterPaymentAmount'));
       return;
     }
 
     const debtAmount = billingData?.data?.debt_amount || 0;
     if (parseFloat(paymentAmount) > debtAmount) {
-      toast.error('Тўлов миқдори қарз суммасидан ошиб кетмаслиги керак');
+      toast.error(t('validation.paymentExceedsDebt'));
       return;
     }
 
@@ -217,12 +219,12 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
       }).unwrap();
 
       if (result.success) {
-        toast.success('Тўлов муваффақиятли қўшилди');
+        toast.success(t('paymentAddedSuccess'));
         setPaymentAmount('');
       }
     } catch (error: unknown) {
       const apiError = error as { data?: { error?: { msg?: string } } };
-      toast.error(apiError?.data?.error?.msg || 'Хатолик юз берди');
+      toast.error(apiError?.data?.error?.msg || t('errorOccurred'));
     }
   };
 
@@ -258,7 +260,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
       <DialogContent className='max-w-[95vw] sm:max-w-[90vw] lg:max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6'>
         <DialogHeader>
           <DialogTitle className='text-xl sm:text-2xl flex items-center justify-between'>
-            <span>Ҳисоб-фактура маълумотлари</span>
+            <span>{t('invoiceDetails')}</span>
             {!isEditMode ? (
               <Button
                 size='sm'
@@ -266,7 +268,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                 onClick={() => setIsEditMode(true)}
               >
                 <Edit className='w-4 h-4 mr-2' />
-                Таҳрирлаш
+                {t('edit')}
               </Button>
             ) : (
               <div className='flex gap-2'>
@@ -291,7 +293,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                     }
                   }}
                 >
-                  Бекор қилиш
+                  {t('cancel')}
                 </Button>
                 <Button
                   size='sm'
@@ -299,7 +301,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                   disabled={isUpdating}
                 >
                   <Save className='w-4 h-4 mr-2' />
-                  {isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
+                  {isUpdating ? t('saving') : t('save')}
                 </Button>
               </div>
             )}
@@ -316,27 +318,27 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
             <Card className='p-3 sm:p-4 bg-muted/50'>
               <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
                 <div>
-                  <Label className='text-xs text-muted-foreground'>Бемор</Label>
+                  <Label className='text-xs text-muted-foreground'>{t('patient')}</Label>
                   <div className='font-semibold text-sm sm:text-base'>
                     {billingData.data.patient_id.fullname}
                   </div>
                 </div>
                 <div>
                   <Label className='text-xs text-muted-foreground'>
-                    Ҳисоб №
+                    {t('invoiceNo')}
                   </Label>
                   <div className='font-semibold text-sm sm:text-base'>
                     {billingData.data._id}
                   </div>
                 </div>
                 <div className='sm:px-4 sm:text-center'>
-                  <Label className='text-xs text-muted-foreground'>Сана</Label>
+                  <Label className='text-xs text-muted-foreground'>{t('date')}</Label>
                   <div className='font-semibold text-sm sm:text-base'>
                     {format(billingData.data.created_at, 'dd.MM.yyyy')}
                   </div>
                 </div>
                 <div className='sm:px-4 sm:text-center'>
-                  <Label className='text-xs text-muted-foreground'>Ҳолат</Label>
+                  <Label className='text-xs text-muted-foreground'>{t('status')}</Label>
                   <div>{getStatusBadge(billingData.data.status)}</div>
                 </div>
               </div>
@@ -347,7 +349,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
               billingData.data.examination_id.analyses.length > 0 && (
                 <div>
                   <Label className='text-base sm:text-lg font-semibold mb-3 block'>
-                    Таҳлиллар
+                    {t('analyses')}
                   </Label>
 
                   {/* Desktop Table */}
@@ -356,19 +358,19 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       <thead className='bg-muted'>
                         <tr>
                           <th className='text-left py-3 px-4 font-medium text-sm'>
-                            Таҳлил тури
+                            {t('analysisType')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Даража
+                            {t('level')}
                           </th>
                           <th className='text-left py-3 px-4 font-medium text-sm'>
-                            Клиник кўрсатмалар
+                            {t('clinicalIndications')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Ҳолат
+                            {t('status')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Сана
+                            {t('date')}
                           </th>
                         </tr>
                       </thead>
@@ -396,15 +398,15 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                     analysis.status === 'pending'
                                       ? 'bg-yellow-100 text-yellow-700'
                                       : analysis.status === 'COMPLETED' ||
-                                        analysis.status === 'completed'
-                                      ? 'bg-green-100 text-green-700'
+                                          analysis.status === 'completed'
+                                        ? 'bg-green-100 text-green-700'
                                       : 'bg-gray-100 text-gray-700'
                                   }`}
                                 >
                                   {analysis.status === 'pending'
-                                    ? 'Кутилмоқда'
+                                    ? t('pending')
                                     : analysis.status === 'completed'
-                                    ? 'Бажарилган'
+                                    ? t('completed')
                                     : analysis.status}
                                 </span>
                               </td>
@@ -430,7 +432,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             <div className='flex items-start justify-between gap-2'>
                               <div>
                                 <Label className='text-xs text-muted-foreground'>
-                                  Таҳлил тури
+                                  {t('analysisType')}
                                 </Label>
                                 <div className='text-sm font-medium'>
                                   {typeof analysis.analysis_type === 'object'
@@ -450,9 +452,9 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                 }`}
                               >
                                 {analysis.status === 'pending'
-                                  ? 'Кутилмоқда'
+                                  ? t('pending')
                                   : analysis.status === 'completed'
-                                  ? 'Бажарилган'
+                                  ? t('completed')
                                   : analysis.status}
                               </span>
                             </div>
@@ -460,7 +462,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             <div className='grid grid-cols-2 gap-2 pt-2 border-t'>
                               <div>
                                 <Label className='text-xs text-muted-foreground'>
-                                  Даража
+                                  {t('level')}
                                 </Label>
                                 <div className='text-sm mt-1'>
                                   <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700'>
@@ -470,7 +472,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                               </div>
                               <div>
                                 <Label className='text-xs text-muted-foreground'>
-                                  Сана
+                                  {t('date')}
                                 </Label>
                                 <div className='text-sm mt-1'>
                                   {format(
@@ -484,7 +486,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             {analysis.analysis_type?.description && (
                               <div className='pt-2 border-t'>
                                 <Label className='text-xs text-muted-foreground'>
-                                  Клиник кўрсатмалар
+                                  {t('clinicalIndications')}
                                 </Label>
                                 <div className='text-sm mt-1'>
                                   {analysis.analysis_type?.description}
@@ -504,7 +506,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
               (billingData.data.examination_id as any).services.length > 0 && (
                 <div>
                   <Label className='text-base sm:text-lg font-semibold mb-3 block'>
-                    Кўрик хизматлари
+                    {t('examinationServices')}
                   </Label>
 
                   {/* Desktop Table */}
@@ -513,19 +515,19 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       <thead className='bg-muted'>
                         <tr>
                           <th className='text-left py-3 px-4 font-medium text-sm'>
-                            Хизмат номи
+                            {t('serviceName')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Код
+                            {t('code')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Сони
+                            {t('quantity')}
                           </th>
                           <th className='text-right py-3 px-4 font-medium text-sm'>
-                            Нархи
+                            {t('price')}
                           </th>
                           <th className='text-right py-3 px-4 font-medium text-sm'>
-                            Жами
+                            {t('subtotal')}
                           </th>
                         </tr>
                       </thead>
@@ -557,7 +559,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
               billingData.data.examination_id.images.length > 0 && (
                 <div>
                   <Label className='text-base sm:text-lg font-semibold mb-3 block'>
-                    Тасвирлар
+                    {t('images')}
                   </Label>
 
                   {/* Desktop Table */}
@@ -566,10 +568,10 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       <thead className='bg-muted'>
                         <tr>
                           <th className='text-left py-3 px-4 font-medium text-sm'>
-                            Тасвирлаш тури
+                            {t('imagingType')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Вaқт
+                            {t('time')}
                           </th>
                         </tr>
                       </thead>
@@ -578,7 +580,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                           <tr key={image._id} className='border-b'>
                             <td className='py-2 px-4'>
                               <div className='font-medium text-sm'>
-                                {image.imaging_type_id?.name || 'Номаълум'}
+                                {image.imaging_type_id?.name || t('unknown')}
                               </div>
                               {/* {image._id && (
                                 <div className='text-xs text-muted-foreground'>
@@ -605,10 +607,10 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                         <div className='space-y-2'>
                           <div>
                             <Label className='text-xs text-muted-foreground'>
-                              Тасвирлаш тури
+                              {t('imagingType')}
                             </Label>
                             <div className='text-sm font-medium mt-1'>
-                              {image.imaging_type_id?.name || 'Номаълум'}
+                              {image.imaging_type_id?.name || t('unknown')}
                             </div>
                             {/* {image._id && (
                               <div className='text-xs text-muted-foreground mt-0.5'>
@@ -619,7 +621,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
 
                           <div className='pt-2 border-t'>
                             <Label className='text-xs text-muted-foreground'>
-                              Вaқт
+                              {t('time')}
                             </Label>
                             <div className='text-sm mt-1'>
                               {format(
@@ -640,7 +642,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
               billingData.data.examination_id.rooms.length > 0 && (
                 <div>
                   <Label className='text-base sm:text-lg font-semibold mb-3 block'>
-                    Палаталар
+                    {t('rooms')}
                   </Label>
 
                   {/* Desktop Table */}
@@ -649,19 +651,19 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       <thead className='bg-muted'>
                         <tr>
                           <th className='text-left py-3 px-4 font-medium text-sm'>
-                            Палата
+                            {t('room')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Қават
+                            {t('floor')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Бошланиш
+                            {t('startDate')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Тугаш
+                            {t('endDate')}
                           </th>
                           <th className='text-right py-3 px-4 font-medium text-sm'>
-                            Нархи
+                            {t('price')}
                           </th>
                         </tr>
                       </thead>
@@ -671,7 +673,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             <tr key={room._id || index} className='border-b'>
                               <td className='py-2 px-4'>
                                 <div className='font-medium text-sm'>
-                                  {room.room_name || 'Номаълум'}
+                                  {room.room_name || t('unknown')}
                                 </div>
                                 {/* {room.room_id && (
                                   <div className='text-xs text-muted-foreground'>
@@ -696,7 +698,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                     )
                                   : (room as any).estimated_leave_time && (
                                       <span className='text-yellow-600'>
-                                        Давом этмоқда (
+                                        {t('ongoing')} (
                                         {format(
                                           new Date(
                                             (room as any).estimated_leave_time
@@ -726,12 +728,12 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             <div className='flex items-start justify-between'>
                               <div>
                                 <div className='font-medium text-sm'>
-                                  {room.room_name || 'Номаълум'}
+                                  {room.room_name || t('unknown')}
                                 </div>
                               </div>
                               {room.floor_number && (
                                 <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700'>
-                                  {room.floor_number}-қават
+                                  {room.floor_number}-{t('floorSuffix')}
                                 </span>
                               )}
                             </div>
@@ -739,7 +741,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             <div className='grid grid-cols-2 gap-2 pt-2 border-t'>
                               <div>
                                 <Label className='text-xs text-muted-foreground'>
-                                  Бошланиш
+                                  {t('startDate')}
                                 </Label>
                                 <div className='text-sm mt-1'>
                                   {format(
@@ -750,7 +752,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                               </div>
                               <div>
                                 <Label className='text-xs text-muted-foreground'>
-                                  Тугаш
+                                  {t('endDate')}
                                 </Label>
                                 <div className='text-sm mt-1'>
                                   {room.end_date ? (
@@ -767,7 +769,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                     )
                                   ) : (
                                     <span className='text-yellow-600'>
-                                      Давом этмоқда
+                                      {t('ongoing')}
                                     </span>
                                   )}
                                 </div>
@@ -776,7 +778,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
 
                             <div className='pt-2 border-t flex justify-between items-center'>
                               <span className='text-xs text-muted-foreground'>
-                                Нархи:
+                                {t('price')}:
                               </span>
                               <span className='font-semibold text-sm'>
                                 {formatCurrency(room.room_price || 0)}
@@ -795,7 +797,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
               billingData.data.examination_id.service.items.length > 0 && (
                 <div>
                   <Label className='text-base sm:text-lg font-semibold mb-3 block'>
-                    Хизматлар
+                    {t('services')}
                   </Label>
 
                   {/* Desktop Table */}
@@ -804,16 +806,16 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       <thead className='bg-muted'>
                         <tr>
                           <th className='text-left py-3 px-4 font-medium text-sm'>
-                            Хизмат номи
+                            {t('serviceName')}
                           </th>
                           <th className='text-left py-3 px-4 font-medium text-sm'>
-                            Изоҳ
+                            {t('notes')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Кунлар сони
+                            {t('daysCount')}
                           </th>
                           <th className='text-center py-3 px-4 font-medium text-sm'>
-                            Бажарилган кунлар
+                            {t('completedDays')}
                           </th>
                         </tr>
                       </thead>
@@ -822,7 +824,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                           (item: any) => (
                             <tr key={item._id} className='border-b'>
                               <td className='py-2 px-4 text-sm'>
-                                {item.service_type_id?.name || 'Номаълум'}
+                                {item.service_type_id?.name || t('unknown')}
                               </td>
                               <td className='py-2 px-4 text-sm text-muted-foreground'>
                                 {item?.service_type_id?.description || '-'}
@@ -855,17 +857,17 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                           <div className='space-y-2'>
                             <div>
                               <Label className='text-xs text-muted-foreground'>
-                                Хизмат номи
+                                {t('serviceName')}
                               </Label>
                               <div className='text-sm font-medium mt-1'>
-                                {item.service_type_id?.name || 'Номаълум'}
+                                {item.service_type_id?.name || t('unknown')}
                               </div>
                             </div>
 
                             {item.notes && (
                               <div className='pt-2 border-t'>
                                 <Label className='text-xs text-muted-foreground'>
-                                  Изоҳ
+                                  {t('notes')}
                                 </Label>
                                 <div className='text-sm mt-1'>{item.notes}</div>
                               </div>
@@ -874,7 +876,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             <div className='grid grid-cols-2 gap-2 pt-2 border-t'>
                               <div>
                                 <Label className='text-xs text-muted-foreground'>
-                                  Кунлар сони
+                                  {t('daysCount')}
                                 </Label>
                                 <div className='text-sm mt-1'>
                                   {item.days?.length || 0}
@@ -882,7 +884,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                               </div>
                               <div>
                                 <Label className='text-xs text-muted-foreground'>
-                                  Бажарилган кунлар
+                                  {t('completedDays')}
                                 </Label>
                                 <div className='text-sm mt-1'>
                                   <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700'>
@@ -904,7 +906,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
             {/* Services */}
             <div>
               <Label className='text-base sm:text-lg font-semibold mb-3 block'>
-                Хизмат Нархлари
+                {t('servicePrices')}
               </Label>
 
               {/* Desktop Table */}
@@ -913,20 +915,20 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                   <thead className='bg-muted'>
                     <tr>
                       <th className='text-left py-3 px-4 font-medium text-sm'>
-                        Хизмат номи
+                        {t('serviceName')}
                       </th>
                       <th className='text-center py-3 px-4 font-medium text-sm w-[170px]'>
-                        Тури
+                        {t('type')}
                       </th>
                       <th className='text-center py-3 px-4 font-medium text-sm w-24'>
-                        Сони
+                        {t('quantity')}
                       </th>
                       <th className='text-right py-3 px-4 font-medium text-sm w-48'>
-                        Нархи
+                        {t('price')}
                       </th>
                       {isEditMode && (
                         <th className='text-center py-3 px-4 font-medium text-sm'>
-                          Амал
+                          {t('action')}
                         </th>
                       )}
                     </tr>
@@ -964,7 +966,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                               }
                             >
                               <SelectTrigger className='h-9 text-sm w-[170px]'>
-                                <SelectValue placeholder='Турини танланг' />
+                                <SelectValue placeholder={t('selectType')} />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value='KORIK'>
@@ -1070,7 +1072,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                   className='mt-3 w-full hidden md:flex items-center justify-center'
                 >
                   <span className='text-lg mr-2'>+</span>
-                  Хизмат қўшиш
+                  {t('addService')}
                 </Button>
               )}
 
@@ -1081,7 +1083,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                     <div className='space-y-3'>
                       <div>
                         <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                          Хизмат номи
+                          {t('serviceName')}
                         </Label>
                         {isEditMode ? (
                           <Input
@@ -1104,7 +1106,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
 
                       <div>
                         <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                          Хизмат тури
+                          {t('serviceType')}
                         </Label>
                         {isEditMode ? (
                           <Select
@@ -1118,7 +1120,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             }
                           >
                             <SelectTrigger className='text-sm'>
-                              <SelectValue placeholder='Турини танланг' />
+                              <SelectValue placeholder={t('selectType')} />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value='KORIK'>
@@ -1151,7 +1153,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       <div className='grid grid-cols-2 gap-3'>
                         <div>
                           <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                            Сони
+                            {t('quantity')}
                           </Label>
                           {isEditMode ? (
                             <Input
@@ -1177,7 +1179,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                         </div>
                         <div>
                           <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                            Нархи
+                            {t('price')}
                           </Label>
                           {isEditMode ? (
                             <Input
@@ -1211,7 +1213,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                           onClick={() => handleRemoveService(service.id)}
                           className='w-full mt-2'
                         >
-                          Ўчириш
+                          {t('delete')}
                         </Button>
                       )}
                     </div>
@@ -1227,7 +1229,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                   className='mt-3 w-full md:hidden flex items-center justify-center'
                 >
                   <span className='text-lg mr-2'>+</span>
-                  Хизмат қўшиш
+                  {t('addService')}
                 </Button>
               )}
             </div>
@@ -1235,12 +1237,12 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
             {/* Payment Info */}
             <Card className='p-3 sm:p-4 bg-primary/5'>
               <Label className='text-base font-semibold mb-3 block'>
-                Тўлов маълумотлари
+                {t('paymentInfo')}
               </Label>
               <div className='space-y-2'>
                 <div className='flex justify-between items-center text-sm'>
                   <span className='text-muted-foreground'>
-                    {isEditMode ? 'Хизматлар жами (янги):' : 'Жами сумма:'}
+                    {isEditMode ? t('newServicesTotal') : t('totalAmount')}
                   </span>
                   <span className='font-semibold'>
                     {formatCurrency(
@@ -1252,20 +1254,19 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                 </div>
                 {isEditMode && (
                   <div className='flex justify-between items-center text-sm'>
-                    <span className='text-muted-foreground'>Аввалги жами:</span>
+                    <span className='text-muted-foreground'>{t('previousTotal')}</span>
                     <span className='font-semibold'>
                       {formatCurrency(billingData.data.total_amount)}
                     </span>
                   </div>
-                )}
-                <div className='flex justify-between items-center text-sm'>
-                  <span className='text-muted-foreground'>Тўланган:</span>
+                )}n                <div className='flex justify-between items-center text-sm'>
+                  <span className='text-muted-foreground'>{t('paidAmount')}</span>
                   <span className='font-semibold text-success'>
                     {formatCurrency(billingData.data.paid_amount)}
                   </span>
                 </div>
                 <div className='flex justify-between items-center text-sm border-t pt-2'>
-                  <span className='font-semibold'>Қолган қарз:</span>
+                  <span className='font-semibold'>{t('remainingDebt')}</span>
                   <span className='text-lg font-bold text-danger'>
                     {formatCurrency(billingData.data.debt_amount)}
                   </span>
@@ -1277,7 +1278,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                 billingData.data.payments.length > 0 && (
                   <div className='mt-4 pt-4 border-t'>
                     <Label className='text-sm font-semibold mb-2 block'>
-                      Тўловлар тарихи
+                      {t('paymentHistory')}
                     </Label>
                     <div className='space-y-2'>
                       {billingData.data.payments.map((payment) => (
@@ -1308,7 +1309,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                         </div>
                       ))}
                       <div className='flex justify-between items-center text-sm font-semibold pt-2 border-t'>
-                        <span>Жами тўланған:</span>
+                        <span>{t('totalPaid')}</span>
                         <span className='text-success'>
                           {formatCurrency(billingData.data.paid_amount)}
                         </span>
@@ -1322,12 +1323,12 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
             {billingData.data.debt_amount > 0 && !isEditMode && (
               <Card className='p-3 sm:p-4'>
                 <Label className='text-base font-semibold mb-3 block'>
-                  Тўлов қўшиш
+                  {t('addPayment')}
                 </Label>
                 <div className='grid grid-cols-1 md:grid-cols-4 gap-3'>
                   <div>
                     <Label className='text-sm mb-1.5 block'>
-                      Тўлов миқдори
+                      {t('paymentAmount')}
                     </Label>
                     <Input
                       type='text'
@@ -1349,7 +1350,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                   </div>
 
                   <div>
-                    <Label className='text-sm mb-1.5 block'>Тўлов усули</Label>
+                    <Label className='text-sm mb-1.5 block'>{t('paymentMethod')}</Label>
                     <Select
                       value={paymentMethod}
                       onValueChange={setPaymentMethod}
@@ -1361,17 +1362,17 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                         <SelectItem value={PAYMENT.CASH}>
                           <div className='flex items-center'>
                             <CreditCard className='w-4 h-4 mr-2' />
-                            Нақд
+                            {t('cash')}
                           </div>
                         </SelectItem>
-                        <SelectItem value={PAYMENT.CARD}>Карта</SelectItem>
+                        <SelectItem value={PAYMENT.CARD}>{t('card')}</SelectItem>
                         <SelectItem value={PAYMENT.ONLINE}>Online</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label className='text-sm mb-1.5 block'>Тўлов тури</Label>
+                    <Label className='text-sm mb-1.5 block'>{t('paymentType')}</Label>
                     <Select
                       value={paymentType}
                       onValueChange={(value: ServiceType) =>
@@ -1379,14 +1380,14 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       }
                     >
                       <SelectTrigger className='text-sm'>
-                        <SelectValue placeholder='Тўлов турини танланг' />
+                        <SelectValue placeholder={t('selectPaymentType')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value='KORIK'>Кўрик</SelectItem>
-                        <SelectItem value='XIZMAT'>Хизмат</SelectItem>
-                        <SelectItem value='XONA'>Хона</SelectItem>
-                        <SelectItem value='TASVIR'>Тасвир</SelectItem>
-                        <SelectItem value='TAHLIL'>Таҳлил</SelectItem>
+                        <SelectItem value='KORIK'>{t('serviceTypes.examination')}</SelectItem>
+                        <SelectItem value='XIZMAT'>{t('service')}</SelectItem>
+                        <SelectItem value='XONA'>{t('serviceTypes.room')}</SelectItem>
+                        <SelectItem value='TASVIR'>{t('serviceTypes.image')}</SelectItem>
+                        <SelectItem value='TAHLIL'>{t('serviceTypes.analysis')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1398,7 +1399,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       disabled={isPaymentUpdating}
                     >
                       <CreditCard className='w-4 h-4 mr-2' />
-                      {isPaymentUpdating ? 'Қўшилмоқда...' : 'Тўлов қўшиш'}
+                      {isPaymentUpdating ? t('adding') : t('addPayment')}
                     </Button>
                   </div>
                 </div>

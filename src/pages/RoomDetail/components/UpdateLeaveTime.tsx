@@ -1,5 +1,6 @@
 import { useUpdateLeaveTimeMutation } from "@/app/api/roomApi";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ export const UpdateLeaveTime = ({
   onOpenChange,
   patient_id,
 }: UpdateLeaveTimeProps) => {
+  const { t } = useTranslation("inpatient");
   const [estimatedLeaveTime, setEstimatedLeaveTime] = useState<string>("");
   const handleRequest = useHandleRequest();
   const { id: roomId } = useParams();
@@ -39,11 +41,11 @@ export const UpdateLeaveTime = ({
           estimated_leave_time: estimatedLeaveTime,
         }).unwrap(),
       onSuccess: () => {
-        toast.success("Чиқиш вақти муваффақиятли янгиланди");
+        toast.success(t("leaveTimeUpdatedSuccess"));
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Янгилашда хатолик");
+        toast.error(data?.error?.msg || t("updateError"));
       },
     });
   };
@@ -53,7 +55,7 @@ export const UpdateLeaveTime = ({
       <DialogContent>
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
-            Чиқиш вақтини янгилаш
+            {t("updateLeaveTime")}
           </DialogTitle>
         </DialogHeader>
 
@@ -75,7 +77,7 @@ export const UpdateLeaveTime = ({
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto order-2 sm:order-1"
           >
-            Бекор қилиш
+            {t("cancel")}
           </Button>
           <Button
             type="submit"
@@ -84,7 +86,7 @@ export const UpdateLeaveTime = ({
             className="gradient-primary w-full sm:w-auto order-1 sm:order-2"
           >
             <Save className="w-4 h-4 mr-2" />
-            {isUpdateLeaveTimeLoading ? "Loading..." : "Сақлаш"}
+            {isUpdateLeaveTimeLoading ? t("loading") : t("save")}
           </Button>
         </DialogFooter>
       </DialogContent>

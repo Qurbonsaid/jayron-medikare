@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -12,6 +13,7 @@ import { uz } from "date-fns/locale";
 import { PatientSearchModal, PatientBookingsModal } from "./components";
 
 const RoomsList = () => {
+  const { t } = useTranslation("inpatient");
   const navigate = useNavigate();
   const [selectedCorpusId, setSelectedCorpusId] = useState<string>("");
   const [showPatientSearch, setShowPatientSearch] = useState(false);
@@ -78,10 +80,10 @@ const RoomsList = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">
-              Стационар Хоналар
+              {t("roomsList.title")}
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Хонани танланг ва брон қилиш учун календарга ўтинг
+              {t("roomsList.subtitle")}
             </p>
           </div>
 
@@ -91,7 +93,7 @@ const RoomsList = () => {
             className="w-full sm:w-auto"
           >
             <Search className="w-4 h-4 mr-2" />
-            Бемор Қидириш
+            {t("roomsList.searchPatient")}
           </Button>
         </div>
 
@@ -108,7 +110,7 @@ const RoomsList = () => {
                 className="flex items-center gap-2"
               >
                 <Building2 className="w-4 h-4" />
-                Корпус {corpus.corpus_number}
+                {t("roomsList.corpus")} {corpus.corpus_number}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -120,23 +122,23 @@ const RoomsList = () => {
         <Card className="p-8 sm:p-12 text-center">
           <div className="flex flex-col items-center gap-4 text-muted-foreground">
             <Building2 className="w-10 h-10 sm:w-12 sm:h-12 opacity-50" />
-            <p className="text-base sm:text-lg">Корпусни танланг</p>
+            <p className="text-base sm:text-lg">{t("roomsList.selectCorpus")}</p>
           </div>
         </Card>
       ) : roomsLoading ? (
         <div className="flex flex-col items-center justify-center h-48 sm:h-64">
           <LoadingSpinner size="lg" />
           <p className="text-xs sm:text-sm text-muted-foreground ml-3 mt-2">
-            Хоналар юкланмоқда...
+            {t("roomsList.loadingRooms")}
           </p>
         </div>
       ) : roomsError ? (
         <Card className="p-8 sm:p-12 text-center">
           <div className="flex flex-col items-center gap-4 text-red-500">
             <Building2 className="w-10 h-10 sm:w-12 sm:h-12 opacity-50" />
-            <p className="text-base sm:text-lg">Хоналарни юклашда хатолик юз берди</p>
+            <p className="text-base sm:text-lg">{t("roomsList.loadError")}</p>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Илтимос, қайтадан уриниб кўринг
+              {t("roomsList.tryAgain")}
             </p>
           </div>
         </Card>
@@ -190,7 +192,7 @@ const RoomsList = () => {
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Users className="w-4 h-4" />
                       <span className="text-xs sm:text-sm font-medium">
-                        Жойлар ({totalBeds} та):
+                        {t("roomsList.beds")} ({totalBeds} {t("roomsList.bedsCount")}):
                       </span>
                     </div>
 
@@ -203,12 +205,12 @@ const RoomsList = () => {
                               : 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'
                             }`}
                         >
-                          <div className="font-semibold">{bed.bed}-жой</div>
+                          <div className="font-semibold">{bed.bed}-{t("roomsList.bed")}</div>
                           {bed.status === 'available' ? (
-                            <div className="text-[10px] sm:text-xs">Бўш</div>
+                            <div className="text-[10px] sm:text-xs">{t("roomsList.free")}</div>
                           ) : (
                             <div className="text-[10px] sm:text-xs">
-                              {bed.leave_date ? format(parseISO(bed.leave_date), "d MMM", { locale: uz }) : 'Банд'}
+                              {bed.leave_date ? format(parseISO(bed.leave_date), "d MMM", { locale: uz }) : t("roomsList.occupied")}
                             </div>
                           )}
                         </div>
@@ -247,9 +249,9 @@ const RoomsList = () => {
         <Card className="p-8 sm:p-12 text-center">
           <div className="flex flex-col items-center gap-4 text-muted-foreground">
             <Building2 className="w-10 h-10 sm:w-12 sm:h-12 opacity-50" />
-            <p className="text-base sm:text-lg">Бу корпусда хоналар топилмади</p>
+            <p className="text-base sm:text-lg">{t("roomsList.noRoomsInCorpus")}</p>
             <p className="text-xs sm:text-sm">
-              Ёки танланган вақт оралиғида бўш хоналар йўқ
+              {t("roomsList.noAvailableRooms")}
             </p>
           </div>
         </Card>

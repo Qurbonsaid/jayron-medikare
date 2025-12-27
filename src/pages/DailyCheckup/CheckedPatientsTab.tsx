@@ -7,8 +7,10 @@ import { DailyCheckupTable } from './components/DailyCheckupTable'
 import { DailyCheckupPagination } from './components/DailyCheckupPagination'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { format } from 'date-fns'
+import { useTranslation } from 'react-i18next'
 
 export const CheckedPatientsTab = () => {
+	const { t } = useTranslation('inpatient')
 	// State for filters
 	const [searchQuery, setSearchQuery] = useState('')
 	const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -132,7 +134,7 @@ export const CheckedPatientsTab = () => {
 					{!isLoading && !isFetching && checkups.length > 0 && pagination && (
 						<div className="p-4 border-b">
 							<p className="text-sm text-muted-foreground">
-								Жами: <span className="font-semibold text-foreground">{pagination.total}</span> та ёзув
+								{t('dailyCheckup.total')}: <span className="font-semibold text-foreground">{pagination.total}</span> {t('dailyCheckup.records')}
 							</p>
 						</div>
 					)}

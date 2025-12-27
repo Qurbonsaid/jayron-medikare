@@ -75,5 +75,63 @@
   "filterByModality": "Usul bo'yicha filtrlash",
   "filterByDate": "Sana bo'yicha filtrlash",
   "history": "Tarix",
-  "previousStudies": "Oldingi tekshiruvlar"
+  "previousStudies": "Oldingi tekshiruvlar",
+  "cancel": "Bekor qilish",
+  "submit": "Yuborish",
+  "unknown": "Noma'lum",
+  "deleteMedicalImage": "Tibbiy tasvirni o'chirish",
+  "deleteMedicalImageConfirm": "Rostdan ham {{patientName}} bemorning tibbiy tasvirlarini o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi.",
+  "deleteImagingType": "Tekshirish turini o'chirish",
+  "deleteImagingTypeConfirm": "Rostdan ham {{name}} tekshirish turini o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi.",
+  "deleting": "O'chirilmoqda...",
+  "yesDelete": "Ha, o'chirilsin",
+  "imageDeletedSuccess": "Tibbiy tasvir muvaffaqiyatli o'chirildi",
+  "imagingTypeDeletedSuccess": "Tekshirish turi muvaffaqiyatli o'chirildi",
+  "deleteError": "O'chirishda xatolik",
+  "modalities": {
+    "mri": "MRT",
+    "ct": "KT",
+    "xray": "Rentgen"
+  },
+  "bodyParts": {
+    "brain": "Bosh miya",
+    "chest": "O'pka",
+    "abdomen": "Qorin bo'shlig'i"
+  },
+  "statuses": {
+    "scheduled": "Rejalangan",
+    "completed": "Tugallangan",
+    "pending": "Kutilmoqda"
+  },
+  "priorities": {
+    "normal": "Oddiy",
+    "urgent": "Shoshilinch"
+  },
+  "templates": {
+    "normal": "Norma",
+    "stroke": "Insult",
+    "tumor": "O'sma"
+  },
+  "newOrderModal": {
+    "title": "Yangi rentgen buyurtmasi",
+    "selectPatient": "Bemor tanlash",
+    "selectPatientPlaceholder": "Bemorni tanlang...",
+    "selectPlaceholder": "Tanlang...",
+    "clinicalIndication": "Klinik ko'rsatma",
+    "indicationPlaceholder": "Tekshirish sababi...",
+    "priority": "Ustunlik"
+  },
+  "viewer": {
+    "slice": "Kesim",
+    "reset": "Qayta",
+    "examInfo": "Tekshirish ma'lumotlari",
+    "date": "Sana",
+    "protocol": "Protokol",
+    "radiologistConclusion": "Radiolog xulosasi",
+    "template": "Shablon",
+    "conclusionPlaceholder": "Xulosa yozing...",
+    "submitConclusion": "Xulosani yuborish",
+    "brightness": "Yorug'lik",
+    "contrast": "Kontrast"
+  }
 }

@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   isEditModalOpen: boolean;
@@ -47,22 +48,24 @@ const EditVisit = ({
   handleUpdate,
   isUpdating,
 }: Props) => {
+  const { t } = useTranslation('examinations');
+  
   return (
     <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
       <DialogContent className='max-w-2xl'>
         <DialogHeader>
-          <DialogTitle>Кўрикни таҳрирлаш</DialogTitle>
+          <DialogTitle>{t('editModal.title')}</DialogTitle>
           <DialogDescription>
-            Кўрик маълумотларини ўзгартиринг
+            {t('editModal.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-4'>
           {/* Complaints */}
           <div className='space-y-2'>
-            <Label>Шикоят</Label>
+            <Label>{t('complaint')}</Label>
             <Textarea
-              placeholder='Бемор шикоятини киритинг...'
+              placeholder={t('complaintPlaceholder')}
               value={editForm.complaints}
               onChange={(e) =>
                 setEditForm({ ...editForm, complaints: e.target.value })
@@ -73,7 +76,7 @@ const EditVisit = ({
 
           {/* Diagnosis */}
           <div className='space-y-2'>
-            <Label>Ташхис</Label>
+            <Label>{t('diagnosis')}</Label>
             <Select
               value={editForm.diagnosis}
               onValueChange={(value) =>
@@ -81,7 +84,7 @@ const EditVisit = ({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder='Ташхисни танланг...' />
+                <SelectValue placeholder={t('diagnosisPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {diagnoses.map((diagnosis: any) => (
@@ -95,9 +98,9 @@ const EditVisit = ({
 
           {/* Description */}
           <div className='space-y-2'>
-            <Label>Тавсия</Label>
+            <Label>{t('recommendation')}</Label>
             <Textarea
-              placeholder='Кўрик натижаси ва тавсияларни киритинг...'
+              placeholder={t('recommendationPlaceholder')}
               value={editForm.description}
               onChange={(e) =>
                 setEditForm({ ...editForm, description: e.target.value })
@@ -113,10 +116,10 @@ const EditVisit = ({
             onClick={() => setIsEditModalOpen(false)}
             disabled={isUpdating}
           >
-            Бекор қилиш
+            {t('cancel')}
           </Button>
           <Button onClick={handleUpdate} disabled={isUpdating}>
-            {isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
+            {isUpdating ? t('saving') : t('save')}
           </Button>
         </DialogFooter>
       </DialogContent>

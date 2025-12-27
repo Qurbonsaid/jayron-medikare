@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { FileQuestion } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function NotFound() {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
@@ -14,18 +16,18 @@ export default function NotFound() {
         
         <div className="space-y-2">
           <h1 className="text-6xl font-bold text-primary">404</h1>
-          <h2 className="text-2xl font-semibold">Саҳифа топилмади</h2>
+          <h2 className="text-2xl font-semibold">{t('notFound.title')}</h2>
           <p className="text-muted-foreground">
-            Сиз излаган саҳифа мавжуд эмас ёки кўчирилган
+            {t('notFound.description')}
           </p>
         </div>
 
         <div className="flex gap-3 justify-center pt-4">
           <Button onClick={() => navigate(-1)} variant="outline">
-            Орқага қайтиш
+            {t('goBack')}
           </Button>
           <Button onClick={() => navigate("/")}>
-            Бош саҳифага
+            {t('goHome')}
           </Button>
         </div>
       </div>

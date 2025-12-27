@@ -3,6 +3,7 @@ import { Corpuses } from "@/app/api/corpusApi/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,7 @@ import { DeleteWarnBuilding, NewBuilding, UpdatedBuilding } from "./components";
 import { PatientSearchModal } from "./components/PatientSearchModal";
 
 const Inpatient = () => {
+  const { t } = useTranslation("inpatient");
   const { canCreate, canUpdate, canDelete } = usePermission("inpatient");
   const [showNewBuilding, setShowNewBuilding] = useState(false);
   const [showDeleteWarnBuilding, setShowDeleteWarnBuilding] = useState(false);
@@ -52,10 +54,10 @@ const Inpatient = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">
-              Korpuslar Рўйхати
+              {t("buildingsList")}
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Барча Korpuslarni кўриш ва бошқариш
+              {t("viewAndManageBuildings")}
             </p>
           </div>
           <div className="flex flex-col justify-between items-center gap-2">
@@ -65,7 +67,7 @@ const Inpatient = () => {
                 onClick={() => setShowNewBuilding(true)}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Янги Korpus
+                {t("newBuilding")}
               </Button>
             )}
             <Button
@@ -73,7 +75,7 @@ const Inpatient = () => {
               className="w-full"
             >
               <Search className="w-4 h-4 mr-2" />
-              Бемор Қидириш
+              {t("searchPatient")}
             </Button>
           </div>
         </div>
@@ -82,7 +84,7 @@ const Inpatient = () => {
           <Card className="card-shadow p-8 sm:p-12">
             <LoadingSpinner
               size="lg"
-              text="Юкланмоқда..."
+              text={t("loading")}
               className="justify-center"
             />
           </Card>
@@ -123,7 +125,7 @@ const Inpatient = () => {
                                 className="w-32 hover:bg-yellow-600 hover:text-white transition-smooth text-xs xl:text-sm"
                               >
                                 <Edit className="w-4 h-4" />
-                                Таҳрирлаш
+                                {t("edit")}
                               </Button>
                             </DropdownMenuItem>
                           )}
@@ -140,7 +142,7 @@ const Inpatient = () => {
                                 className="w-32 hover:bg-red-600 hover:text-white transition-smooth text-xs xl:text-sm"
                               >
                                 <Trash2 className="w-4 h-4" />
-                                Ўчириш
+                                {t("delete")}
                               </Button>
                             </DropdownMenuItem>
                           )}
@@ -154,11 +156,11 @@ const Inpatient = () => {
                     >
                       <Building2 className="h-8 w-8" />
                       <div className="font-bold">
-                        <span>Korpus: </span>
+                        <span>{t("building")}: </span>
                         <Badge>{corpus.corpus_number}</Badge>
                       </div>
                       <span>
-                        Хоналар сони: <strong>{corpus.total_rooms}</strong> та
+                        {t("roomsCount")}: <strong>{corpus.total_rooms}</strong> {t("count")}
                       </span>
 
                       <p className="text-sm font-medium">
@@ -166,10 +168,10 @@ const Inpatient = () => {
                       </p>
 
                       <p>
-                        Chiqadigan:{" "}
+                        {t("leavingPatients")}:{" "}
                         {corpus.room_statistics.leaving_today > 0
-                          ? corpus.room_statistics.leaving_today + " ta"
-                          : "Yo'q"}
+                          ? corpus.room_statistics.leaving_today + " " + t("count")
+                          : t("none")}
                       </p>
                     </div>
                   </Card>
@@ -183,18 +185,18 @@ const Inpatient = () => {
               icon={Building}
               title={
                 searchQuery || corpusNumber || currentPage > 1
-                  ? "Ҳеч нарса топилмади"
-                  : "Ҳали Korpuslar йўқ"
+                  ? t("nothingFound")
+                  : t("noBuildingsYet")
               }
               description={
                 searchQuery || corpusNumber || currentPage > 1
-                  ? "Қидирув сўзини текширинг ёки филтрни ўзгартиринг"
-                  : "Биринчи Korpusni қўшиш учун қуйидаги тугмани босинг"
+                  ? t("checkSearchOrFilter")
+                  : t("addFirstBuilding")
               }
               actionLabel={
                 searchQuery || corpusNumber || currentPage > 1
-                  ? "Филтрни тозалаш"
-                  : "+ Янги Korpus Қўшиш"
+                  ? t("clearFilter")
+                  : t("addNewBuilding")
               }
               onAction={() =>
                 searchQuery || corpusNumber || currentPage > 1

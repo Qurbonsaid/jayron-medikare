@@ -4,6 +4,7 @@ import { useAddPatientRoomMutation } from '@/app/api/roomApi'
 import { useUploadFilesMutation } from '@/app/api/upload'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { useTranslation } from 'react-i18next'
 import {
 	Command,
 	CommandEmpty,
@@ -33,6 +34,7 @@ interface RoomNewPatientProps {
 }
 
 export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
+	const { t } = useTranslation('inpatient')
 	const [searchQuery, setSearchQuery] = useState('')
 	const [selectedPatient, setSelectedPatient] = useState(null)
 	const [estimatedLeaveTime, setEstimatedLeaveTime] = useState<string>('')
@@ -132,11 +134,11 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			}
 
 			setImageError('')
-			toast.success('Kamera tayyor ✓')
+			toast.success(t('cameraReady'))
 		} catch (error) {
 			console.error('Camera error:', error)
-			toast.error('Kamerani ochishda xatolik')
-			setImageError('Kamera ruxsati berilmadi')
+			toast.error(t('cameraOpenError'))
+			setImageError(t('cameraPermissionDenied'))
 			// Cleanup on error
 			if (streamRef.current) {
 				streamRef.current.getTracks().forEach(track => track.stop())
@@ -163,12 +165,12 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 
 	const capturePhoto = () => {
 		if (!videoRef.current || !canvasRef.current) {
-			toast.error('Kamera tayyor emas')
+			toast.error(t('cameraNotReady'))
 			return
 		}
 
 		if (biometricImages.length >= 5) {
-			toast.error("Ko'pi bilan 5 ta rasm olish mumkin")
+			toast.error(t('maxPhotosReached'))
 			return
 		}
 
@@ -187,13 +189,13 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			videoRef.current.videoHeight === 0
 		) {
 			console.error('❌ Video not ready yet')
-			toast.error('Kamera hali tayyor emas, biroz kuting')
+			toast.error(t('cameraNotReadyWait'))
 			return
 		}
 
 		const context = canvasRef.current.getContext('2d')
 		if (!context) {
-			toast.error('Canvas xatosi')
+			toast.error(t('canvasError'))
 			return
 		}
 
@@ -208,7 +210,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 		canvasRef.current.toBlob(
 			blob => {
 				if (!blob) {
-					toast.error('Rasmni saqlashda xatolik')
+					toast.error(t('imageSaveError'))
 					return
 				}
 
@@ -226,12 +228,12 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 				setCaptureCount(newImages.length)
 
 				console.log(`📸 Photo ${newImages.length} captured`)
-				toast.success(`Rasm ${newImages.length}/5 olindi`)
+				toast.success(t('photoCaptured', { count: newImages.length }))
 
 				// Stop camera if reached 5 images
 				if (newImages.length >= 5) {
 					stopCamera()
-					toast.success('5 ta rasm olindi ✓')
+					toast.success(t('allPhotosCaptured'))
 				}
 			},
 			'image/jpeg',
@@ -242,13 +244,13 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 	const onSubmit = async () => {
 		// Validate patient selection
 		if (!selectedPatient) {
-			toast.error('Bemorni tanlang')
+			toast.error(t('selectPatient'))
 			return
 		}
 
 		// Validate estimated leave time
 		if (!estimatedLeaveTime) {
-			toast.error('Ketish vaqtini tanlang')
+			toast.error(t('selectLeaveTime'))
 			return
 		}
 
@@ -265,7 +267,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			},
 			onSuccess: () => {
 				toast.success(
-					'Бемор муваффақиятли қўшилди ва биометрик маълумотлар сақланди'
+					t('patientAddedSuccess')
 				)
 				// Clean up preview URLs
 				imagePreviewUrls.forEach(url => URL.revokeObjectURL(url))
@@ -278,7 +280,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 				onOpenChange(false)
 			},
 			onError: ({ data }) => {
-				toast.error(data?.error?.msg || 'Қўшишда хатолик')
+				toast.error(data?.error?.msg || t('addError'))
 			},
 		})
 	}
@@ -313,14 +315,14 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			<DialogContent className='max-w-[95vw] sm:max-w-[90vw] lg:max-w-2xl max-h-[85vh] p-0 border-2 border-primary/30 flex flex-col'>
 				<DialogHeader className='p-4 sm:p-6 pb-3 m-0 flex-shrink-0'>
 					<DialogTitle className='text-xl m-0 p-0'>
-						Xonaga yangi bemor qo'shish
+						{t('addNewPatientToRoom')}
 					</DialogTitle>
 				</DialogHeader>
 
 				<div className='p-4 sm:p-6 pt-0 overflow-y-auto flex-1'>
 					<div className='flex items-center gap-3 mb-4'>
 						<User className='w-3 h-3 sm:w-4 sm:h-4 text-primary' />
-						<h3 className='text-base font-bold'>Беморни танланг</h3>
+						<h3 className='text-base font-bold'>{t('selectPatientLabel')}</h3>
 					</div>
 
 					<Button
@@ -342,7 +344,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 						) : (
 							<span className='flex items-center gap-2 text-sm'>
 								<Search className='w-3 h-3 sm:w-4 sm:h-4  ' />
-								Беморни қидириш...
+								{t('searchPatientPlaceholder')}
 							</span>
 						)}
 					</Button>
@@ -359,7 +361,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 							<Card className='absolute top-0 left-0 w-full z-30 bg-white '>
 								<Command shouldFilter={false}>
 									<CommandInput
-										placeholder='Исм, телефон орқали қидириш...'
+										placeholder={t('searchByNamePhone')}
 										value={searchQuery}
 										onValueChange={setSearchQuery}
 										className='text-sm'
@@ -368,11 +370,11 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 										<CommandEmpty className='text-sm py-6'>
 											{isLoading ? (
 												<div className='flex flex-col items-center gap-2'>
-													<span>Юкланмоқда...</span>
+													<span>{t('loading')}</span>
 												</div>
 											) : (
 												<div className='flex flex-col items-center gap-2 text-muted-foreground'>
-													<span>Бемор топилмади</span>
+													<span>{t('patientNotFound')}</span>
 												</div>
 											)}
 										</CommandEmpty>
@@ -409,7 +411,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 
 					<div className='flex items-center gap-3 my-4'>
 						<Clock className='w-3 h-3 sm:w-4 sm:h-4 text-primary' />
-						<h3 className='text-base font-bold'>Ketish vaqtini tanlang</h3>
+						<h3 className='text-base font-bold'>{t('selectLeaveTimeLabel')}</h3>
 					</div>
 					<Input
 						type='date'
@@ -428,7 +430,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 						onClick={() => onOpenChange(false)}
 						className='w-full sm:w-auto order-2 sm:order-1'
 					>
-						Бекор қилиш
+						{t('cancel')}
 					</Button>
 					<Button
 						type='submit'
@@ -438,8 +440,8 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 					>
 						<Save className='w-4 h-4 mr-2' />
 						{isAddPatientLoading || isUploadLoading
-							? 'Юкланмоқда...'
-							: 'Сақлаш'}
+							? t('loading')
+							: t('save')}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

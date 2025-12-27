@@ -22,6 +22,7 @@ import {
 import { PAYMENT } from '@/constants/payment';
 import { CreditCard, Plus, Printer, Send } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Service } from '../Billing';
 import { AnalysisItem } from './AnalysisItem';
@@ -35,6 +36,7 @@ interface Props {
 }
 
 const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
+  const { t } = useTranslation('billing');
   const [page, setPage] = React.useState(1);
   const [allExams, setAllExams] = React.useState<any[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
@@ -298,16 +300,14 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
   const handleSaveBilling = async () => {
     // Validation
     if (!selectedExaminationId) {
-      toast.error('Илтимос, кўрикни танланг');
+      toast.error(t('validation.selectExamination'));
       return;
     }
 
     // Validate services - either general services or examination services should exist
     const examinationServicesTotal = calculateExaminationServicesTotal();
     if (services.length === 0 && examinationServicesTotal === 0) {
-      toast.error(
-        'Илтимос, камида битта хизмат қўшинг ёки кўрикда хизматлар бўлиши керак'
-      );
+      toast.error(t('validation.atLeastOneService'));
       return;
     }
 
@@ -316,11 +316,11 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     );
     if (invalidService) {
       if (!invalidService.name.trim()) {
-        toast.error('Илтимос, хизмат номини киритинг');
+        toast.error(t('validation.enterServiceName'));
       } else if (invalidService.quantity <= 0) {
-        toast.error('Илтимос, хизмат сонини тўғри киритинг');
+        toast.error(t('validation.enterValidQuantity'));
       } else if (invalidService.unitPrice <= 0) {
-        toast.error('Илтимос, хизмат нархини киритинг');
+        toast.error(t('validation.enterServicePrice'));
       }
       return;
     }
@@ -330,13 +330,13 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
       paymentAmount === null ||
       paymentAmount === undefined
     ) {
-      toast.error('Илтимос, тўлов миқдорини киритинг');
+      toast.error(t('validation.enterPaymentAmount'));
       return;
     }
 
     const grandTotal = calculateGrandTotal();
     if (parseFloat(paymentAmount) > grandTotal) {
-      toast.error('Тўлов миқдори жами суммадан ошиб кетмаслиги керак');
+      toast.error(t('validation.paymentExceedsTotal'));
       return;
     }
 
@@ -359,7 +359,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
           const price = analysisType?.price ?? analysis.price ?? 0;
           if (price > 0) {
             examinationServices.push({
-              name: analysisType?.name || 'Таҳлил',
+              name: analysisType?.name || t('serviceTypes.analysis'),
               count: 1,
               price: price,
               service_type: 'TAHLIL',
@@ -382,7 +382,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
             days > 0 ? (room?.room_price || 0) * days : room?.room_price || 0;
           if (roomTotal > 0) {
             examinationServices.push({
-              name: room?.room_name || 'Палата',
+              name: room?.room_name || t('serviceTypes.room'),
               count: days > 0 ? days : 1,
               price: room?.room_price || 0,
               service_type: 'XONA',
@@ -412,7 +412,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
             const itemTotal = item.total_price ?? unitPrice * quantity;
             if (itemTotal > 0) {
               examinationServices.push({
-                name: serviceType.name || 'Хизмат',
+                name: serviceType.name || t('service'),
                 count: quantity,
                 price: unitPrice,
                 service_type: 'XIZMAT',
@@ -446,7 +446,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
       const result = await createBilling(billingData).unwrap();
 
       if (result.success) {
-        toast.success('Ҳисоб-фактура муваффақиятли яратилди');
+        toast.success(t('invoiceCreatedSuccess'));
         setIsInvoiceModalOpen(false);
         // Reset form
         setSelectedExaminationId('');
@@ -455,7 +455,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
         setSelectedRooms([]);
       }
     } catch (error: any) {
-      toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+      toast.error(error?.data?.error?.msg || t('errorOccurred'));
     }
   };
 
@@ -464,13 +464,13 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
       <DialogContent className='max-w-[95vw] sm:max-w-[90vw] lg:max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6'>
         <AlertDialogHeader>
           <DialogTitle className='text-xl sm:text-2xl'>
-            Янги ҳисоб-фактура
+            {t('newInvoice')}
           </DialogTitle>
         </AlertDialogHeader>
 
         <div className='space-y-4 sm:space-y-6'>
           <div>
-            <Label className='text-sm mb-2 block'>Кўрикни танланг *</Label>
+            <Label className='text-sm mb-2 block'>{t('selectExamination')} *</Label>
             <Select
               value={selectedExaminationId}
               onValueChange={setSelectedExaminationId}
@@ -483,11 +483,11 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                         {selectedExam.patient_id.fullname}
                       </div>
                       <div className='text-xs text-muted-foreground truncate'>
-                        <span className='font-medium'>Шикоят:</span>{' '}
+                        <span className='font-medium'>{t('complaint')}:</span>{' '}
                         {selectedExam.complaints}
                       </div>
                       <div className='text-xs text-muted-foreground truncate'>
-                        <span className='font-medium'>Доктор:</span>{' '}
+                        <span className='font-medium'>{t('doctor')}:</span>{' '}
                         {selectedExam.doctor_id.fullname}
                       </div>
                     </div>
@@ -497,7 +497,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   </div>
                 ) : (
                   <span className='text-muted-foreground text-sm'>
-                    Кўрикни танланг
+                    {t('selectExamination')}
                   </span>
                 )}
               </SelectTrigger>
@@ -522,11 +522,11 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                             {exam.patient_id.fullname}
                           </div>
                           <div className='text-xs text-muted-foreground line-clamp-2'>
-                            <span className='font-medium'>Шикоят:</span>{' '}
+                            <span className='font-medium'>{t('complaint')}:</span>{' '}
                             {exam.complaints}
                           </div>
                           <div className='text-xs text-muted-foreground'>
-                            <span className='font-medium'>Доктор:</span>{' '}
+                            <span className='font-medium'>{t('doctor')}:</span>{' '}
                             {exam.doctor_id.fullname}
                           </div>
                         </div>
@@ -538,7 +538,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   ))
                 ) : (
                   <div className='p-4 text-center text-muted-foreground text-sm'>
-                    Актив кўриклар топилмади
+                    {t('noActiveExaminations')}
                   </div>
                 )}
                 {isFetching && allExams.length > 0 && (
@@ -555,7 +555,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
             <Card className='p-3 sm:p-4 bg-muted/50'>
               <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'>
                 <div>
-                  <Label className='text-xs text-muted-foreground'>Бемор</Label>
+                  <Label className='text-xs text-muted-foreground'>{t('patient')}</Label>
                   <div className='font-semibold text-sm sm:text-base'>
                     {selectedExam.patient_id.fullname}
                   </div>
@@ -568,7 +568,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                 </div>
                 <div className='sm:col-span-2 lg:col-span-1'>
                   <Label className='text-xs text-muted-foreground'>
-                    Телефон
+                    {t('phone')}
                   </Label>
                   <div className='font-semibold text-sm sm:text-base'>
                     {selectedExam.patient_id.phone}
@@ -585,7 +585,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
               <div>
                 <div className='mb-3'>
                   <Label className='text-base sm:text-lg font-semibold'>
-                    Таҳлиллар
+                    {t('analyses')}
                   </Label>
                 </div>
 
@@ -597,19 +597,19 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                         <thead className='bg-muted'>
                           <tr>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
-                              Таҳлил тури
+                              {t('analysisType')}
                             </th>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
-                              Даража
+                              {t('level')}
                             </th>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
-                              Клиник кўрсатмалар
+                              {t('clinicalIndications')}
                             </th>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
-                              Холат
+                              {t('status')}
                             </th>
                             <th className='text-right py-3 px-4 font-medium text-sm'>
-                              Сана
+                              {t('date')}
                             </th>
                           </tr>
                         </thead>
@@ -637,7 +637,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   </div>
                 ) : (
                   <div className='p-8 text-center text-muted-foreground text-sm border rounded-lg bg-muted/20'>
-                    Таҳлиллар топилмади
+                    {t('noAnalysesFound')}
                   </div>
                 )}
               </div>
@@ -646,7 +646,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
               <div>
                 <div className='mb-3'>
                   <Label className='text-base sm:text-lg font-semibold'>
-                    Палаталар
+                    {t('rooms')}
                   </Label>
                 </div>
 
@@ -658,22 +658,22 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                         <thead className='bg-muted'>
                           <tr>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
-                              Палата
+                              {t('room')}
                             </th>
                             <th className='text-center py-3 px-4 font-medium text-sm'>
-                              Холат
+                              {t('status')}
                             </th>
                             <th className='text-center py-3 px-4 font-medium text-sm'>
-                              Бошланиш
+                              {t('startDate')}
                             </th>
                             <th className='text-center py-3 px-4 font-medium text-sm'>
-                              Тугаш
+                              {t('endDate')}
                             </th>
                             <th className='text-center py-3 px-4 font-medium text-sm'>
-                              Кунлар
+                              {t('days')}
                             </th>
                             <th className='text-right py-3 px-4 font-medium text-sm'>
-                              Нархи
+                              {t('price')}
                             </th>
                           </tr>
                         </thead>
@@ -714,7 +714,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   </div>
                 ) : (
                   <div className='p-8 text-center text-muted-foreground text-sm border rounded-lg bg-muted/20'>
-                    Палаталар топилмади
+                    {t('noRoomsFound')}
                   </div>
                 )}
               </div>
@@ -723,7 +723,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
               <div>
                 <div className='mb-3'>
                   <Label className='text-base sm:text-lg font-semibold'>
-                    Хизматлар
+                    {t('services')}
                   </Label>
                 </div>
 
@@ -735,19 +735,19 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                         <thead className='bg-muted'>
                           <tr>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
-                              Хизмат номи
+                              {t('serviceName')}
                             </th>
                             <th className='text-left py-3 px-4 font-medium text-sm'>
-                              Код
+                              {t('code')}
                             </th>
                             <th className='text-center py-3 px-4 font-medium text-sm'>
-                              Сони
+                              {t('quantity')}
                             </th>
                             <th className='text-right py-3 px-4 font-medium text-sm'>
-                              Нархи
+                              {t('price')}
                             </th>
                             <th className='text-right py-3 px-4 font-medium text-sm'>
-                              Жами
+                              {t('subtotal')}
                             </th>
                           </tr>
                         </thead>
@@ -768,7 +768,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   </div>
                 ) : (
                   <div className='p-8 text-center text-muted-foreground text-sm border rounded-lg bg-muted/20'>
-                    Хизматлар топилмади
+                    {t('noServicesFound')}
                   </div>
                 )}
               </div>
@@ -780,7 +780,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
             <div>
               <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3'>
                 <Label className='text-base sm:text-lg font-semibold'>
-                  Умумий хизматлар
+                  {t('generalServices')}
                 </Label>
               </div>
 
@@ -790,16 +790,16 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   <thead className='bg-muted'>
                     <tr>
                       <th className='text-left py-3 px-4 font-medium text-sm'>
-                        Хизмат номи
+                        {t('serviceName')}
                       </th>
                       <th className='text-left py-3 px-4 font-medium text-sm w-[170px]'>
-                        Хизмат тури
+                        {t('serviceType')}
                       </th>
                       <th className='text-center py-3 px-4 font-medium text-sm w-24'>
-                        Сони
+                        {t('quantity')}
                       </th>
                       <th className='text-right py-3 px-4 font-medium text-sm w-48'>
-                        Нархи
+                        {t('price')}
                       </th>
                       <th className='w-16'></th>
                     </tr>
@@ -813,7 +813,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                             onChange={(e) =>
                               updateService(service.id, 'name', e.target.value)
                             }
-                            placeholder='Хизмат номи...'
+                            placeholder={t('serviceNamePlaceholder')}
                             className='text-sm'
                           />
                         </td>
@@ -825,14 +825,14 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                             }
                           >
                             <SelectTrigger className='h-9 text-sm w-[170px]'>
-                              <SelectValue placeholder='Турини танланг' />
+                              <SelectValue placeholder={t('selectType')} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value='KORIK'>Кўрик</SelectItem>
-                              <SelectItem value='XIZMAT'>Хизмат</SelectItem>
-                              <SelectItem value='XONA'>Хона</SelectItem>
-                              <SelectItem value='TASVIR'>Тасвир</SelectItem>
-                              <SelectItem value='TAHLIL'>Таҳлил</SelectItem>
+                              <SelectItem value='KORIK'>{t('serviceTypes.examination')}</SelectItem>
+                              <SelectItem value='XIZMAT'>{t('service')}</SelectItem>
+                              <SelectItem value='XONA'>{t('serviceTypes.room')}</SelectItem>
+                              <SelectItem value='TASVIR'>{t('serviceTypes.image')}</SelectItem>
+                              <SelectItem value='TAHLIL'>{t('serviceTypes.analysis')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </td>
@@ -896,7 +896,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                     className='w-full sm:w-auto text-xs sm:text-sm bg-blue-500 text-white'
                   >
                     <Plus className='w-3 h-3 sm:w-4 sm:h-4 mr-2' />
-                    Хизмат қўшиш
+                    {t('addService')}
                   </Button>
                 </div>
               </div>
@@ -908,21 +908,21 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                     <div className='space-y-3'>
                       <div>
                         <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                          Хизмат номи
+                          {t('serviceName')}
                         </Label>
                         <Input
                           value={service.name}
                           onChange={(e) =>
                             updateService(service.id, 'name', e.target.value)
                           }
-                          placeholder='Хизмат номи...'
+                          placeholder={t('serviceNamePlaceholder')}
                           className='text-sm'
                         />
                       </div>
 
                       <div>
                         <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                          Хизмат тури
+                          {t('serviceType')}
                         </Label>
                         <Select
                           value={service.service_type}
@@ -931,14 +931,14 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                           }
                         >
                           <SelectTrigger className='text-sm'>
-                            <SelectValue placeholder='Турини танланг' />
+                            <SelectValue placeholder={t('selectType')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value='KORIK'>Кўрик</SelectItem>
-                            <SelectItem value='XIZMAT'>Хизмат</SelectItem>
-                            <SelectItem value='XONA'>Хона</SelectItem>
-                            <SelectItem value='TASVIR'>Тасвир</SelectItem>
-                            <SelectItem value='TAHLIL'>Таҳлил</SelectItem>
+                            <SelectItem value='KORIK'>{t('serviceTypes.examination')}</SelectItem>
+                            <SelectItem value='XIZMAT'>{t('service')}</SelectItem>
+                            <SelectItem value='XONA'>{t('serviceTypes.room')}</SelectItem>
+                            <SelectItem value='TASVIR'>{t('serviceTypes.image')}</SelectItem>
+                            <SelectItem value='TAHLIL'>{t('serviceTypes.analysis')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -946,7 +946,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                       <div className='grid grid-cols-2 gap-3'>
                         <div>
                           <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                            Сони
+                            {t('quantity')}
                           </Label>
                           <Input
                             type='text'
@@ -969,7 +969,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                         </div>
                         <div>
                           <Label className='text-xs text-muted-foreground mb-1.5 block'>
-                            Нархи
+                            {t('price')}
                           </Label>
                           <Input
                             type='text'
@@ -996,7 +996,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                         onClick={() => removeService(service.id)}
                         className='text-danger hover:text-danger w-full mt-2'
                       >
-                        Ўчириш
+                        {t('delete')}
                       </Button>
                     </div>
                   </Card>
@@ -1010,7 +1010,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   className='w-full text-sm bg-blue-500 text-white'
                 >
                   <Plus className='w-4 h-4 mr-2' />
-                  Хизмат қўшиш
+                  {t('addService')}
                 </Button>
               </div>
             </div>
@@ -1023,12 +1023,12 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
             {selectedExam && (
               <Card className='p-4 bg-muted/30'>
                 <Label className='text-base sm:text-lg font-semibold mb-3 block'>
-                  Тўлов тафсилотлари
+                  {t('paymentDetails')}
                 </Label>
                 <div className='space-y-2'>
                   {calculateAnalysesTotal() > 0 && (
                     <div className='flex justify-between items-center text-sm'>
-                      <span className='text-muted-foreground'>Таҳлиллар:</span>
+                      <span className='text-muted-foreground'>{t('analyses')}:</span>
                       <span className='font-medium'>
                         {formatCurrency(calculateAnalysesTotal())}
                       </span>
@@ -1036,7 +1036,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   )}
                   {calculateRoomsTotal() > 0 && (
                     <div className='flex justify-between items-center text-sm'>
-                      <span className='text-muted-foreground'>Палаталар:</span>
+                      <span className='text-muted-foreground'>{t('rooms')}:</span>
                       <span className='font-medium'>
                         {formatCurrency(calculateRoomsTotal())}
                       </span>
@@ -1045,7 +1045,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   {calculateExaminationServicesItemsTotal() > 0 && (
                     <div className='flex justify-between items-center text-sm'>
                       <span className='text-muted-foreground'>
-                        Кўрик хизматлари:
+                        {t('examinationServices')}:
                       </span>
                       <span className='font-medium'>
                         {formatCurrency(
@@ -1057,7 +1057,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   {calculateSubtotal() > 0 && (
                     <div className='flex justify-between items-center text-sm'>
                       <span className='text-muted-foreground'>
-                        Умумий хизматлар:
+                        {t('generalServices')}:
                       </span>
                       <span className='font-medium'>
                         {formatCurrency(calculateSubtotal())}
@@ -1066,14 +1066,14 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   )}
                   {discount > 0 && (
                     <div className='flex justify-between items-center text-sm text-red-600'>
-                      <span>Чегирма:</span>
+                      <span>{t('discount')}:</span>
                       <span className='font-medium'>
                         -{formatCurrency(discount)}
                       </span>
                     </div>
                   )}
                   <div className='border-t pt-2 mt-2 flex justify-between items-center'>
-                    <span className='text-base font-semibold'>Жами:</span>
+                    <span className='text-base font-semibold'>{t('total')}:</span>
                     <span className='text-lg font-bold text-primary'>
                       {formatCurrency(calculateGrandTotal())}
                     </span>
@@ -1094,7 +1094,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
 
             <div className='space-y-3 sm:space-y-4'>
               <div>
-                <Label className='text-sm'>Тўлов миқдори</Label>
+                <Label className='text-sm'>{t('paymentAmount')}</Label>
                 <Input
                   type='text'
                   inputMode='numeric'
@@ -1115,7 +1115,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
               </div>
 
               <div>
-                <Label className='text-sm'>Тўлов усули</Label>
+                <Label className='text-sm'>{t('paymentMethod')}</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                   <SelectTrigger className='text-sm'>
                     <SelectValue />
@@ -1124,36 +1124,36 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                     <SelectItem value={PAYMENT.CASH}>
                       <div className='flex items-center'>
                         <CreditCard className='w-4 h-4 mr-2' />
-                        Нақд
+                        {t('cash')}
                       </div>
                     </SelectItem>
-                    <SelectItem value={PAYMENT.CARD}>Карта</SelectItem>
+                    <SelectItem value={PAYMENT.CARD}>{t('card')}</SelectItem>
                     <SelectItem value={PAYMENT.ONLINE}>Online</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label className='text-sm'>Тўлов тури</Label>
+                <Label className='text-sm'>{t('paymentType')}</Label>
                 <Select
                   value={paymentType}
                   onValueChange={(value: service_type) => setPaymentType(value)}
                 >
                   <SelectTrigger className='text-sm'>
-                    <SelectValue placeholder='Тўлов турини танланг' />
+                    <SelectValue placeholder={t('selectPaymentType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='KORIK'>Кўрик</SelectItem>
-                    <SelectItem value='XIZMAT'>Хизмат</SelectItem>
-                    <SelectItem value='XONA'>Хона</SelectItem>
-                    <SelectItem value='TASVIR'>Тасвир</SelectItem>
-                    <SelectItem value='TAHLIL'>Таҳлил</SelectItem>
+                    <SelectItem value='KORIK'>{t('serviceTypes.examination')}</SelectItem>
+                    <SelectItem value='XIZMAT'>{t('service')}</SelectItem>
+                    <SelectItem value='XONA'>{t('serviceTypes.room')}</SelectItem>
+                    <SelectItem value='TASVIR'>{t('serviceTypes.image')}</SelectItem>
+                    <SelectItem value='TAHLIL'>{t('serviceTypes.analysis')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className='text-xs text-muted-foreground mt-2'>
-                Жами: {formatCurrency(calculateGrandTotal())}
+                {t('total')}: {formatCurrency(calculateGrandTotal())}
               </div>
             </div>
           </div>
@@ -1165,7 +1165,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
             onClick={() => setIsInvoiceModalOpen(false)}
             className='w-full sm:w-auto text-sm'
           >
-            Бекор қилиш
+            {t('cancel')}
           </Button>
           <Button
             variant='outline'
@@ -1173,7 +1173,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
             disabled
           >
             <Send className='w-4 h-4 mr-2' />
-            Беморга юбориш
+            {t('sendToPatient')}
           </Button>
           <Button
             variant='outline'
@@ -1181,14 +1181,14 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
             disabled
           >
             <Printer className='w-4 h-4 mr-2' />
-            Чоп этиш
+            {t('print')}
           </Button>
           <Button
             className='w-full sm:w-auto text-sm'
             onClick={handleSaveBilling}
             disabled={isCreating || !selectedExaminationId}
           >
-            {isCreating ? 'Сақланмоқда...' : 'Сақлаш'}
+            {isCreating ? t('saving') : t('save')}
           </Button>
         </AlertDialogFooter>
       </DialogContent>

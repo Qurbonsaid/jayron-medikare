@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
 import { CalendarIcon, Clock } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface NewAppointmentProps {
   open: boolean;
@@ -49,6 +50,7 @@ const NewAppointment = ({
   onOpenChange,
   onSubmit,
 }: NewAppointmentProps) => {
+  const { t } = useTranslation('appointments');
   const [date, setDate] = useState<Date>();
   const [formData, setFormData] = useState<AppointmentFormData>({
     patientName: '',
@@ -79,7 +81,7 @@ const NewAppointment = ({
       !formData.doctor ||
       !formData.type
     ) {
-      alert('Илтимос, барча майдонларни тўлдиринг!');
+      alert(t('fillAllFieldsAlert'));
       return;
     }
 
@@ -114,10 +116,10 @@ const NewAppointment = ({
       <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='text-xl sm:text-2xl font-bold'>
-            Янги навбат қўшиш
+            {t('addNewAppointment')}
           </DialogTitle>
           <DialogDescription>
-            Беморнинг навбат маълумотларини киритинг
+            {t('enterPatientAppointmentInfo')}
           </DialogDescription>
         </DialogHeader>
 
@@ -126,11 +128,11 @@ const NewAppointment = ({
             {/* Patient Name */}
             <div className='grid gap-2'>
               <Label htmlFor='patientName' className='text-sm font-semibold'>
-                Беморнинг исми <span className='text-danger'>*</span>
+                {t('patientName')} <span className='text-danger'>*</span>
               </Label>
               <Input
                 id='patientName'
-                placeholder='Мисол: Алиев Жасур'
+                placeholder={t('patientNamePlaceholder')}
                 value={formData.patientName}
                 onChange={(e) => handleChange('patientName', e.target.value)}
                 className='w-full'
@@ -141,7 +143,7 @@ const NewAppointment = ({
             {/* Phone */}
             <div className='grid gap-2'>
               <Label htmlFor='phone' className='text-sm font-semibold'>
-                Телефон рақами <span className='text-danger'>*</span>
+                {t('phoneNumber')} <span className='text-danger'>*</span>
               </Label>
               <Input
                 id='phone'
@@ -159,7 +161,7 @@ const NewAppointment = ({
               {/* Date Picker */}
               <div className='grid gap-2'>
                 <Label className='text-sm font-semibold'>
-                  Сана <span className='text-danger'>*</span>
+                  {t('date')} <span className='text-danger'>*</span>
                 </Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -171,7 +173,7 @@ const NewAppointment = ({
                       {date ? (
                         format(date, 'PPP', { locale: uz })
                       ) : (
-                        <span>Санани танланг</span>
+                        <span>{t('selectDate')}</span>
                       )}
                     </Button>
                   </PopoverTrigger>
@@ -190,7 +192,7 @@ const NewAppointment = ({
               {/* Time Select */}
               <div className='grid gap-2'>
                 <Label htmlFor='time' className='text-sm font-semibold'>
-                  Вақт <span className='text-danger'>*</span>
+                  {t('time')} <span className='text-danger'>*</span>
                 </Label>
                 <Select
                   value={formData.time}
@@ -199,7 +201,7 @@ const NewAppointment = ({
                 >
                   <SelectTrigger className='w-full'>
                     <Clock className='mr-2 h-4 w-4' />
-                    <SelectValue placeholder='Вақтни танланг' />
+                    <SelectValue placeholder={t('selectTime')} />
                   </SelectTrigger>
                   <SelectContent className='max-h-60'>
                     {timeSlots.map((time) => (
@@ -217,7 +219,7 @@ const NewAppointment = ({
               {/* Doctor Select */}
               <div className='grid gap-2'>
                 <Label htmlFor='doctor' className='text-sm font-semibold'>
-                  Шифокор <span className='text-danger'>*</span>
+                  {t('doctor')} <span className='text-danger'>*</span>
                 </Label>
                 <Select
                   value={formData.doctor}
@@ -225,13 +227,13 @@ const NewAppointment = ({
                   required
                 >
                   <SelectTrigger className='w-full'>
-                    <SelectValue placeholder='Шифокорни танланг' />
+                    <SelectValue placeholder={t('selectDoctor')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='alimov'>Др. Алимов</SelectItem>
-                    <SelectItem value='nurmatova'>Др. Нурматова</SelectItem>
-                    <SelectItem value='karimov'>Др. Каримов</SelectItem>
-                    <SelectItem value='rakhimova'>Др. Раҳимова</SelectItem>
+                    <SelectItem value='alimov'>{t('drAlimov')}</SelectItem>
+                    <SelectItem value='nurmatova'>{t('drNurmatova')}</SelectItem>
+                    <SelectItem value='karimov'>{t('drKarimov')}</SelectItem>
+                    <SelectItem value='rakhimova'>{t('drRakhimova')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -239,7 +241,7 @@ const NewAppointment = ({
               {/* Appointment Type */}
               <div className='grid gap-2'>
                 <Label htmlFor='type' className='text-sm font-semibold'>
-                  Навбат тури <span className='text-danger'>*</span>
+                  {t('appointmentType')} <span className='text-danger'>*</span>
                 </Label>
                 <Select
                   value={formData.type}
@@ -247,13 +249,13 @@ const NewAppointment = ({
                   required
                 >
                   <SelectTrigger className='w-full'>
-                    <SelectValue placeholder='Турини танланг' />
+                    <SelectValue placeholder={t('selectType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='initial'>Дастлабки кўрик</SelectItem>
-                    <SelectItem value='followup'>Такрорий кўрик</SelectItem>
-                    <SelectItem value='consultation'>Маслаҳат</SelectItem>
-                    <SelectItem value='checkup'>Текширув</SelectItem>
+                    <SelectItem value='initial'>{t('typeInitial')}</SelectItem>
+                    <SelectItem value='followup'>{t('typeFollowup')}</SelectItem>
+                    <SelectItem value='consultation'>{t('typeConsultation')}</SelectItem>
+                    <SelectItem value='checkup'>{t('typeCheckup')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -262,11 +264,11 @@ const NewAppointment = ({
             {/* Notes */}
             <div className='grid gap-2'>
               <Label htmlFor='notes' className='text-sm font-semibold'>
-                Қўшимча маълумот
+                {t('additionalInfo')}
               </Label>
               <Textarea
                 id='notes'
-                placeholder='Навбат ҳақида қўшимча маълумотлар...'
+                placeholder={t('additionalInfoPlaceholder')}
                 value={formData.notes}
                 onChange={(e) => handleChange('notes', e.target.value)}
                 className='min-h-20 resize-none'
@@ -280,10 +282,10 @@ const NewAppointment = ({
               variant='outline'
               onClick={() => onOpenChange(false)}
             >
-              Бекор қилиш
+              {t('cancel')}
             </Button>
             <Button type='submit' className='gradient-primary'>
-              Навбат қўшиш
+              {t('addAppointment')}
             </Button>
           </DialogFooter>
         </form>

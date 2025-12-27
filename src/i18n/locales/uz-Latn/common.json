@@ -85,5 +85,27 @@
   "thisMonth": "Bu oy",
   "thisYear": "Bu yil",
   "from": "dan",
-  "to": "gacha"
+  "to": "gacha",
+  "notFound": {
+    "title": "Sahifa topilmadi",
+    "description": "Siz izlagan sahifa mavjud emas yoki ko'chirilgan"
+  },
+  "errorBoundary": {
+    "title": "Xatolik yuz berdi",
+    "description": "Iltimos, keyinroq qayta urinib ko'ring",
+    "reload": "Qayta yuklash"
+  },
+  "statuses": {
+    "active": "Faol",
+    "completed": "Tugallangan",
+    "pending": "Tugallanmagan",
+    "inactive": "Faol emas",
+    "deleted": "O'chirilgan",
+    "paid": "To'langan",
+    "unpaid": "To'lanmagan",
+    "partiallyPaid": "Qisman to'langan",
+    "cancelled": "Bekor qilingan",
+    "confirmed": "Tasdiqlangan",
+    "waiting": "Kutmoqda"
+  }
 }
