@@ -36,7 +36,16 @@ export function AppLayout({ children }: AppLayoutProps) {
 		const saved = localStorage.getItem('sidebar-state')
 		return saved !== 'false'
 	})
-
+	// Role tarjimasini olish funksiyasi
+	const getRoleLabel = (role: string): string => {
+		const roleMap: Record<string, string> = {
+			ceo: 'Admin',
+			doctor: 'Shifokor',
+			nurse: 'Hamshira',
+			receptionist: 'Qabulxona',
+		}
+		return roleMap[role.toLowerCase()] || role
+	}
 	const location = useLocation()
 
 	useEffect(() => {
@@ -160,7 +169,9 @@ export function AppLayout({ children }: AppLayoutProps) {
 										</div>
 										<div className='hidden md:block text-right'>
 											<p className='text-sm font-medium'>{me.fullname}</p>
-											<p className='text-xs text-muted-foreground'>{me.role}</p>
+											<p className='text-xs text-muted-foreground'>
+												{getRoleLabel(me.role)}
+											</p>
 										</div>
 									</Button>
 								</Link>
