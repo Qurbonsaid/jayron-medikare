@@ -13,24 +13,23 @@ import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
 import { profileSchema } from '@/validation/validationProfile'
 import { Mail, Phone, Shield, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 // Role tarjimasini olish funksiyasi
 const getRoleLabel = (role: string): string => {
 	const roleMap: Record<string, string> = {
-		ceo: 'Direktor',
-		admin: 'Admin',
+		ceo: 'Admin',
 		doctor: 'Shifokor',
 		nurse: 'Hamshira',
 		receptionist: 'Qabulxona',
-		pharmacist: 'Apteka',
 	}
 	return roleMap[role.toLowerCase()] || role
 }
 
 export default function ProfilePage() {
 	const navigate = useNavigate()
+	const [searchParams, setSearchParams] = useSearchParams()
 	const [editOpen, setEditOpen] = useState(false)
 	const [logoutOpen, setLogoutOpen] = useState(false)
 	const handleRequest = useHandleRequest()
@@ -52,7 +51,16 @@ export default function ProfilePage() {
 
 	const { refetch } = useMeQuery(undefined, { skip: false })
 
-	// Ma’lumotlarni tahrirlash modal ochilganda formni to‘ldirish
+	// URL parametrini tekshirib edit modalni ochish
+	useEffect(() => {
+		if (searchParams.get('edit') === 'true') {
+			setEditOpen(true)
+			// URL'dan parametrni olib tashlash
+			setSearchParams({})
+		}
+	}, [searchParams, setSearchParams])
+
+	// Ma'lumotlarni tahrirlash modal ochilganda formni to'ldirish
 	useEffect(() => {
 		if (user?.data) {
 			setFormData({
@@ -120,7 +128,6 @@ export default function ProfilePage() {
 
 	return (
 		<div className='min-h-screen bg-background flex flex-col'>
-
 			{/* Asosiy kontent */}
 			<main className='flex-grow w-full flex flex-col items-center justify-start py-8 sm:py-12 px-3 sm:px-6'>
 				<div className='w-full max-w-4xl flex flex-col gap-10'>
@@ -346,11 +353,16 @@ export default function ProfilePage() {
 						</Button>
 						<Button
 							onClick={() => {
+								// 1. Token va cache tozalash
 								clearAuthTokens()
-								navigate('/login')
 								localStorage.removeItem('rtk_cache')
+								localStorage.removeItem('sidebar-state')
+
+								// 2. Redux store ni to'liq reset qilish
 								baseApi.util.resetApiState()
-								refetch()
+
+								// 3. Login sahifasiga o'tish va sahifani reload qilish
+								window.location.href = '/login'
 							}}
 							className='bg-red-600 hover:bg-red-700 text-white'
 						>

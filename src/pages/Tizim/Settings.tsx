@@ -48,12 +48,10 @@ import { toast } from 'sonner'
 // Role tarjimasini olish funksiyasi
 const getRoleLabel = (role: string): string => {
 	const roleMap: Record<string, string> = {
-		ceo: 'Direktor',
-		admin: 'Admin',
+		ceo: 'Admin',
 		doctor: 'Shifokor',
 		nurse: 'Hamshira',
 		receptionist: 'Qabulxona',
-		pharmacist: 'Apteka',
 	}
 	return roleMap[role.toLowerCase()] || role
 }

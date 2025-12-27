@@ -100,46 +100,48 @@ export function AppLayout({ children }: AppLayoutProps) {
 						</div>
 						<div className='flex items-center gap-4 px-4'>
 							<div className='flex items-center gap-3'>
-								{/* 3 chiziqli menyu */}
-								<div ref={menuRef} className='relative flex-shrink-0'>
-									<button
-										className='flex flex-col justify-center items-center gap-1 w-8 h-8 p-1 rounded hover:bg-gray-200 transition'
-										onClick={() => setMenuOpen(prev => !prev)}
-									>
-										<span className='w-5 h-0.5 bg-gray-600 block rounded' />
-										<span className='w-5 h-0.5 bg-gray-600 block rounded' />
-										<span className='w-5 h-0.5 bg-gray-600 block rounded' />
-									</button>
+								{/* 3 chiziqli menyu - faqat profile sahifasida ko'rsatiladi */}
+								{location.pathname === '/profile' && (
+									<div ref={menuRef} className='relative flex-shrink-0'>
+										<button
+											className='flex flex-col justify-center items-center gap-1 w-8 h-8 p-1 rounded hover:bg-gray-200 transition'
+											onClick={() => setMenuOpen(prev => !prev)}
+										>
+											<span className='w-5 h-0.5 bg-gray-600 block rounded' />
+											<span className='w-5 h-0.5 bg-gray-600 block rounded' />
+											<span className='w-5 h-0.5 bg-gray-600 block rounded' />
+										</button>
 
-									{menuOpen && (
-										<div className='absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-20'>
-											<button
-												className='flex gap-2 items-center w-full text-left px-3 py-2 hover:bg-gray-100'
-												onClick={() => {
-													navigate('/profile')
-													setMenuOpen(false)
-												}}
-											>
-												<span>
-													<Edit size={12} />
-												</span>
-												<span>Tahrirlash</span>
-											</button>
-											<button
-												className='flex gap-2 items-center w-full text-left px-3 py-2 hover:bg-gray-100 text-red-600'
-												onClick={() => {
-													setLogoutOpen(true)
-													setMenuOpen(false)
-												}}
-											>
-												<span>
-													<Trash size={13} />
-												</span>
-												<span>Logout</span>
-											</button>
-										</div>
-									)}
-								</div>
+										{menuOpen && (
+											<div className='absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-20'>
+												<button
+													className='flex gap-2 items-center w-full text-left px-3 py-2 hover:bg-gray-100'
+													onClick={() => {
+														navigate('/profile?edit=true')
+														setMenuOpen(false)
+													}}
+												>
+													<span>
+														<Edit size={12} />
+													</span>
+													<span>Tahrirlash</span>
+												</button>
+												<button
+													className='flex gap-2 items-center w-full text-left px-3 py-2 hover:bg-gray-100 text-red-600'
+													onClick={() => {
+														setLogoutOpen(true)
+														setMenuOpen(false)
+													}}
+												>
+													<span>
+														<Trash size={13} />
+													</span>
+													<span>Logout</span>
+												</button>
+											</div>
+										)}
+									</div>
+								)}
 
 								{/* Language Selector */}
 								<LanguageSelector />
@@ -190,10 +192,16 @@ export function AppLayout({ children }: AppLayoutProps) {
 						</Button>
 						<Button
 							onClick={() => {
+								// 1. Token va cache tozalash
 								clearAuthTokens()
-								navigate('/login')
 								localStorage.removeItem('rtk_cache')
+								localStorage.removeItem('sidebar-state')
+
+								// 2. Redux store ni to'liq reset qilish
 								baseApi.util.resetApiState()
+
+								// 3. Login sahifasiga o'tish va sahifani reload qilish
+								window.location.href = '/login'
 							}}
 							className='bg-red-600 hover:bg-red-700 text-white'
 						>
