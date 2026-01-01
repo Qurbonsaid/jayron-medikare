@@ -39,7 +39,8 @@ export function AppLayout({ children }: AppLayoutProps) {
 	// Role tarjimasini olish funksiyasi
 	const getRoleLabel = (role: string): string => {
 		const roleMap: Record<string, string> = {
-			ceo: 'Admin',
+			ceo:'Rahbar',
+			admin: 'Admin',
 			doctor: 'Shifokor',
 			nurse: 'Hamshira',
 			receptionist: 'Qabulxona',
