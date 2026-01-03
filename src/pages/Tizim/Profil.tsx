@@ -161,7 +161,7 @@ export default function ProfilePage() {
 							</div>
 						</div>
 
-						<div className='flex items-center gap-4 border-b pb-3'>
+						{/* <div className='flex items-center gap-4 border-b pb-3'>
 							<Mail className='w-6 h-6 text-indigo-600 shrink-0' />
 							<div>
 								<p className='text-xs text-muted-foreground uppercase'>Email</p>
@@ -169,7 +169,7 @@ export default function ProfilePage() {
 									{user.data.email || '-'}
 								</p>
 							</div>
-						</div>
+						</div> */}
 
 						<div className='flex items-center gap-4 border-b pb-3'>
 							<Phone className='w-6 h-6 text-indigo-600 shrink-0' />
@@ -254,7 +254,7 @@ export default function ProfilePage() {
 							)}
 						</div>
 
-						<div className='flex flex-col space-y-1'>
+						{/* <div className='flex flex-col space-y-1'>
 							<label
 								htmlFor='email'
 								className='text-sm font-medium text-gray-700'
@@ -272,7 +272,7 @@ export default function ProfilePage() {
 							{errors.email && (
 								<p className='text-red-500 text-sm'>{errors.email}</p>
 							)}
-						</div>
+						</div> */}
 
 						<div className='flex flex-col space-y-1'>
 							<label
