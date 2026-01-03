@@ -38,7 +38,7 @@ import ExamFilter from './components/ExamFilter';
 import VisitDetail from './components/VisitDetail';
 
 const Examinations = () => {
-  const { canCreate } = usePermission('examination');
+  const { canCreate } = usePermission('examinations');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');

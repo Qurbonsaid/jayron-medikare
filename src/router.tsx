@@ -11,6 +11,7 @@ import Reports from '@/pages/Reports';
 import Settings from '@/pages/Tizim/Settings';
 import { Navigate } from 'react-router-dom';
 import Billing from './pages/Billing/Billing';
+import DailyCheckup from './pages/DailyCheckup/DailyCheckup';
 import AddDiagnostika from './pages/Diagnostika/AddDiagnostika';
 import AnalysisParamsModal from './pages/Diagnostika/AnalysisParamsModal';
 import Disease from './pages/Examination/Disease';
@@ -25,7 +26,6 @@ import Medicine from './pages/Medicine/Medicine';
 import RoomDetail from './pages/RoomDetail/RoomDetail';
 import Rooms from './pages/Rooms/Rooms';
 import Profil from './pages/Tizim/Profil';
-import DailyCheckup from './pages/DailyCheckup/DailyCheckup'
 
 export interface RouteConfig {
   path: string;
@@ -45,12 +45,12 @@ export const routers: RouteConfig[] = [
   {
     path: '/examinations',
     element: <Examinations />,
-    permission: 'examination',
+    permission: 'examinations',
   },
   {
     path: '/examination/:id',
     element: <ExaminationDetail />,
-    permission: 'examination',
+    permission: 'examinations',
   },
   {
     path: '/appointments',
@@ -96,7 +96,11 @@ export const routers: RouteConfig[] = [
   { path: '/inpatient/:id', element: <Rooms />, permission: 'room' },
   { path: '/room/:id', element: <RoomDetail />, permission: 'room' },
   { path: '/medicine', element: <Medicine />, permission: 'medication' },
-  {path:"/daily-checkup",element:<DailyCheckup/> , permission:"daily_checkup"},
+  {
+    path: '/daily-checkup',
+    element: <DailyCheckup />,
+    permission: 'daily_checkup',
+  },
   { path: '/billing', element: <Billing />, permission: 'billing' },
   { path: '/reports', element: <Reports />, permission: 'reports' },
   { path: '/settings', element: <Settings />, permission: 'ceo_only' },
