@@ -1,30 +1,42 @@
-import { useState, useEffect, useRef } from 'react'
+import { useMeQuery, useUpdateMeMutation } from '@/app/api/authApi'
+import { baseApi, clearAuthTokens } from '@/app/api/baseApi'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
 	DialogContent,
+	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogFooter,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { ArrowLeft, User, Mail, Phone, Shield, Edit, Trash } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
-import { useMeQuery, useUpdateMeMutation } from '@/app/api/authApi'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
-import { toast } from 'sonner'
 import { profileSchema } from '@/validation/validationProfile'
-import { baseApi, clearAuthTokens } from '@/app/api/baseApi'
+import { Edit, Mail, Phone, Shield, Trash, User } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { toast } from 'sonner'
+
+// Role tarjimasini olish funksiyasi
+const getRoleLabel = (role: string): string => {
+	const roleMap: Record<string, string> = {
+		ceo: 'Rahbar',
+		admin: 'Admin',
+		doctor: 'Shifokor',
+		nurse: 'Hamshira',
+		receptionist: 'Qabulxona',
+	}
+	return roleMap[role.toLowerCase()] || role
+}
 
 export default function ProfilePage() {
 	const navigate = useNavigate()
 	const { t } = useTranslation('settings')
+	const [searchParams, setSearchParams] = useSearchParams()
 	const [editOpen, setEditOpen] = useState(false)
 	const [logoutOpen, setLogoutOpen] = useState(false)
 	const [menuOpen, setMenuOpen] = useState(false)
 	const handleRequest = useHandleRequest()
-
 	const menuRef = useRef<HTMLDivElement | null>(null)
 
 	// 🔹 Tashqariga bosilganda menyuni yopish
@@ -61,9 +73,18 @@ export default function ProfilePage() {
 		license_number: '',
 	})
 
-	const { refetch } = useMeQuery(undefined, { skip: false });
+	const { refetch } = useMeQuery(undefined, { skip: false })
 
-	// Ma’lumotlarni tahrirlash modal ochilganda formni to‘ldirish
+	// URL parametrini tekshirib edit modalni ochish
+	useEffect(() => {
+		if (searchParams.get('edit') === 'true') {
+			setEditOpen(true)
+			// URL'dan parametrni olib tashlash
+			setSearchParams({})
+		}
+	}, [searchParams, setSearchParams])
+
+	// Ma'lumotlarni tahrirlash modal ochilganda formni to'ldirish
 	useEffect(() => {
 		if (user?.data) {
 			setFormData({
@@ -136,13 +157,6 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 				<div className='w-full px-4 sm:px-6 py-4 flex flex-row flex-wrap items-center justify-between gap-3'>
 					{/* Chap taraf */}
 					<div className='flex items-center gap-3 min-w-0'>
-						{/* <Button
-							variant='ghost'
-							size='icon'
-							onClick={() => navigate('/patients')}
-						>
-							<ArrowLeft className='w-5 h-5' />
-						</Button> */}
 						<div className='min-w-0'>
 							<h1 className='text-lg sm:text-xl font-bold truncate'>{t('profile')}</h1>
 							<p className='text-xs sm:text-sm text-muted-foreground truncate'>
@@ -207,7 +221,7 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 								{user.data.fullname}
 							</h2>
 							<p className='text-muted-foreground text-sm sm:text-base'>
-								role : {user.data.role}
+								Рол: {getRoleLabel(user.data.role)}
 							</p>
 						</div>
 					</div>
@@ -226,7 +240,7 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 							</div>
 						</div>
 
-						<div className='flex items-center gap-4 border-b pb-3'>
+						{/* <div className='flex items-center gap-4 border-b pb-3'>
 							<Mail className='w-6 h-6 text-indigo-600 shrink-0' />
 							<div>
 								<p className='text-xs text-muted-foreground uppercase'>{t('email')}</p>
@@ -234,7 +248,7 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 									{user.data.email || '-'}
 								</p>
 							</div>
-						</div>
+						</div> */}
 
 						<div className='flex items-center gap-4 border-b pb-3'>
 							<Phone className='w-6 h-6 text-indigo-600 shrink-0' />
@@ -319,7 +333,7 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 							)}
 						</div>
 
-						<div className='flex flex-col space-y-1'>
+						{/* <div className='flex flex-col space-y-1'>
 							<label
 								htmlFor='email'
 								className='text-sm font-medium text-gray-700'
@@ -337,7 +351,7 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 							{errors.email && (
 								<p className='text-red-500 text-sm'>{errors.email}</p>
 							)}
-						</div>
+						</div> */}
 
 						<div className='flex flex-col space-y-1'>
 							<label
@@ -419,11 +433,16 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 						</Button>
 						<Button
 							onClick={() => {
+								// 1. Token va cache tozalash
 								clearAuthTokens()
-								navigate('/login')
-								localStorage.removeItem('rtk_cache');
+								localStorage.removeItem('rtk_cache')
+								localStorage.removeItem('sidebar-state')
+
+								// 2. Redux store ni to'liq reset qilish
 								baseApi.util.resetApiState()
-								refetch()
+
+								// 3. Login sahifasiga o'tish va sahifani reload qilish
+								window.location.href = '/login'
 							}}
 							className='bg-red-600 hover:bg-red-700 text-white'
 						>

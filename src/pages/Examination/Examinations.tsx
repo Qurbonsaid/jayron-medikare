@@ -40,7 +40,7 @@ import VisitDetail from './components/VisitDetail';
 
 const Examinations = () => {
   const { t } = useTranslation('examinations');
-  const { canCreate } = usePermission('examination');
+  const { canCreate } = usePermission('examinations');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');

@@ -33,7 +33,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RoleConstants } from '@/constants/Roles'
 import { SectionConstants } from '@/constants/section'
@@ -41,11 +40,23 @@ import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
 import { useRouteActions } from '@/hooks/RBS'
 import { settingsSchema } from '@/validation/validationSettings'
 import { userSchema } from '@/validation/validationUser'
-import { Edit, Plus, Search, Trash2, Upload } from 'lucide-react'
+import { Edit, Plus, Trash2, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+
+// Role tarjimasini olish funksiyasi
+const getRoleLabel = (role: string): string => {
+	const roleMap: Record<string, string> = {
+		ceo: 'Rahbar',
+		admin: 'Admin',
+		doctor: 'Shifokor',
+		nurse: 'Hamshira',
+		receptionist: 'Qabulxona',
+	}
+	return roleMap[role.toLowerCase()] || role
+}
 
 export type Settings = {
 	clinic_name: string
@@ -94,10 +105,9 @@ const Settings = () => {
 	const [errorsUser, setErrorsUser] = useState<Record<string, string>>({})
 	const [isUploading, setIsUploading] = useState(false)
 
-
 	const { canRead } = useRouteActions('/reports')
-	
-		if (!canRead) return <CantRead />
+
+	if (!canRead) return <CantRead />
 
 	// --- API HOOKLAR ---
 	const [createUser] = useCreateUserMutation()
@@ -658,7 +668,9 @@ const Settings = () => {
 														</p>
 														<p className='text-[10px] sm:text-xs text-muted-foreground'>
 															{t('role')}:{' '}
-															<span className='font-medium'>{user.role}</span>
+															<span className='font-medium'>
+																{getRoleLabel(user.role)}
+															</span>
 														</p>
 														<p className='text-[10px] sm:text-xs text-muted-foreground'>
 															{t('department')}:{' '}
@@ -803,7 +815,9 @@ const Settings = () => {
 																</div>
 															</td>
 															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-																<Badge variant='outline'>{user.role}</Badge>
+																<Badge variant='outline'>
+																	{getRoleLabel(user.role)}
+																</Badge>
 															</td>
 															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
 																{user.section}
@@ -1312,7 +1326,7 @@ const Settings = () => {
 								)}
 							</div>
 						</div>
-						 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 							{/* <div>
 								<Label className='text-xs sm:text-sm'>Email</Label>
 								<Input
@@ -1342,7 +1356,7 @@ const Settings = () => {
 									</p>
 								)}
 							</div>
-						</div> 
+						</div>
 						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 							<div>
 								<Label className='text-xs sm:text-sm'>{t('role')}</Label>

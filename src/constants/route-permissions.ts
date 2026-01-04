@@ -98,6 +98,13 @@ export const RoutePermissions: RoutePermission[] = [
     description: 'View examinations list',
   },
   {
+    path: '/examinations',
+    name: 'Create Examination',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Create examination',
+  },
+  {
     path: '/examination/:id',
     name: 'Examination Detail',
     method: 'GET',
