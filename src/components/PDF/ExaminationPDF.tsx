@@ -1386,7 +1386,6 @@ const neurologicFieldLabels: Record<string, string> = {
   topical_diagnosis_justification: 'Топический диагноз',
 };
 
-// Неврологик статус maydonlari tartibi
 const neurologicFieldOrder = [
   'meningeal_symptoms',
   'i_para_n_olfactorius',
@@ -1551,7 +1550,6 @@ const NeurologicStatusPDF: React.FC<NeurologicStatusPDFProps> = ({
   );
 };
 
-// Неврологик статус uchun PDF yuklab olish komponenti
 interface NeurologicStatusDownloadButtonProps {
   exam: any;
   neurologic: any;
