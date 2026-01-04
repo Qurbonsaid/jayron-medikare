@@ -305,7 +305,7 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
                 </View>
                 <View style={[styles.tableCol, { flex: 2 }]}>
                   <Text style={[styles.tableCell, { textAlign: 'left' }]}>
-                    {medicationWithDosage}
+                    {medication.name}
                   </Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 1.2 }]}>
@@ -727,7 +727,7 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                     </View>
                     <View style={[styles.tableCol, { flex: 2 }]}>
                       <Text style={[styles.tableCell, { textAlign: 'left' }]}>
-                        {medicationWithDosage}
+                        {medication.name + (prescription.addons ? (" ------ " + prescription.addons) : '')}
                       </Text>
                     </View>
                     <View style={[styles.tableCol, { flex: 0.6 }]}>
