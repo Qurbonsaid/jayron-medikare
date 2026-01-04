@@ -279,19 +279,6 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
           {prescriptions.map((prescription: any, index: number) => {
             // Prescriptions are already flattened, so use directly
             const medication = prescription.medication_id;
-            const medicationName =
-              typeof medication === 'object' && medication
-                ? medication.name
-                : medication || "Noma'lum";
-            const dosage =
-              typeof medication === 'object' && medication
-                ? `${medication.dosage || ''} ${
-                    medication.dosage_unit || ''
-                  }`.trim()
-                : '';
-            const medicationWithDosage = dosage
-              ? `${medicationName} - ${dosage}`
-              : medicationName;
 
             // Get frequency, duration, instructions
             const frequency = prescription.frequency ?? 0;
@@ -391,16 +378,6 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
     return (
       types[exam.treatment_type] || exam.treatment_type || "Ko'rsatilmagan"
     );
-  };
-
-  // Statusni olish
-  const getStatus = (): string => {
-    const statuses: Record<string, string> = {
-      pending: 'Kutilmoqda',
-      active: 'Faol',
-      completed: 'Yakunlangan',
-    };
-    return statuses[exam.status] || exam.status || "Ko'rsatilmagan";
   };
 
   return (
@@ -702,11 +679,6 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
               {/* Jadval qatorlari */}
               {prescriptionItems.map((prescription: any, index: number) => {
                 const medication = prescription.medication_id;
-                const medicationName =
-                  typeof medication === 'object' && medication
-                    ? medication.name
-                    : medication || "Noma'lum";
-
                 const frequency = prescription.frequency ?? 0;
                 const duration = prescription.duration ?? 0;
                 const instructions = prescription.instructions || '-';
