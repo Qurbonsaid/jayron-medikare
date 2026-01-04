@@ -118,22 +118,25 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
+    alignItems: 'stretch',
+    minHeight: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#000',
-    borderBottomStyle: 'solid',
-    alignItems: 'center',
-    minHeight: 16,
   },
+
   tableHeader: {
     backgroundColor: '#f0f0f0',
     fontWeight: 'bold',
+    borderTopWidth: 1,
+    borderTopColor: '#000',
   },
+
   tableCol: {
     flex: 1,
     padding: 2,
     borderRightWidth: 1,
     borderRightColor: '#000',
-    borderRightStyle: 'solid',
+    justifyContent: 'center',
   },
   tableColLast: {
     flex: 1,
@@ -142,11 +145,14 @@ const styles = StyleSheet.create({
     borderRightColor: '#000',
     borderRightStyle: 'solid',
   },
+
   tableCell: {
     fontSize: 8,
     textAlign: 'center',
     flexWrap: 'wrap',
+    lineHeight: 1.2,
   },
+
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -249,19 +255,22 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
               },
             ]}
           >
-            <View style={[styles.tableCol, { flex: 0.3 }]}>
+            <View style={[styles.tableCol, { flex: 0.25 }]}>
               <Text style={styles.tableCell}>#</Text>
             </View>
-            <View style={[styles.tableCol, { flex: 2 }]}>
+            <View style={[styles.tableCol, { flex: 1.5 }]}>
               <Text style={styles.tableCell}>Dori nomi</Text>
+            </View>
+            <View style={[styles.tableCol, { flex: 0.75 }]}>
+              <Text style={styles.tableCell}>Qo'shimcha</Text>
             </View>
             <View style={[styles.tableCol, { flex: 1.2 }]}>
               <Text style={styles.tableCell}>Ko'rsatmalar</Text>
             </View>
-            <View style={[styles.tableCol, { flex: 0.6 }]}>
+            <View style={[styles.tableCol, { flex: 0.5 }]}>
               <Text style={styles.tableCell}>Kuniga</Text>
             </View>
-            <View style={[styles.tableColLast, { flex: 0.6 }]}>
+            <View style={[styles.tableColLast, { flex: 0.5 }]}>
               <Text style={styles.tableCell}>Muddati</Text>
             </View>
           </View>
@@ -697,15 +706,6 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                   typeof medication === 'object' && medication
                     ? medication.name
                     : medication || "Noma'lum";
-                const dosage =
-                  typeof medication === 'object' && medication
-                    ? `${medication.dosage || ''} ${
-                        medication.dosage_unit || ''
-                      }`.trim()
-                    : '';
-                const medicationWithDosage = dosage
-                  ? `${medicationName} - ${dosage}`
-                  : medicationName;
 
                 const frequency = prescription.frequency ?? 0;
                 const duration = prescription.duration ?? 0;
@@ -728,7 +728,10 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                     </View>
                     <View style={[styles.tableCol, { flex: 2 }]}>
                       <Text style={[styles.tableCell, { textAlign: 'left' }]}>
-                        {medication.name + (prescription.addons ? (" ------ " + prescription.addons) : '')}
+                        {medication.name +
+                          (prescription.addons
+                            ? ' ------ ' + prescription.addons
+                            : '')}
                       </Text>
                     </View>
                     <View style={[styles.tableCol, { flex: 0.6 }]}>
@@ -740,7 +743,7 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                       <Text
                         style={[
                           styles.tableCell,
-                          { textAlign: 'left', fontSize:8 },
+                          { textAlign: 'left', fontSize: 8 },
                         ]}
                       >
                         {instructions}
