@@ -27,6 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Save } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import z from "zod";
@@ -54,6 +55,7 @@ interface UpdateRoomProps {
 }
 
 export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
+  const { t } = useTranslation("inpatient");
   const [updatedRooms, { isLoading: isCreatedLoading }] =
     useUpdateRoomMutation();
   const handleRequest = useHandleRequest();
@@ -88,12 +90,12 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
       request: async () =>
         await updatedRooms(submitData as UpdatedRoomRequest).unwrap(),
       onSuccess: () => {
-        toast.success("Хона муваффақиятли янгиланди");
+        toast.success(t("roomUpdatedSuccess"));
         form.reset();
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Янгилашда хатолик");
+        toast.error(data?.error?.msg || t("roomUpdateError"));
       },
     });
   };
@@ -103,7 +105,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
-            Хона маълумотларини янгилаш
+            {t("updateRoom")}
           </DialogTitle>
         </DialogHeader>
 
@@ -121,11 +123,11 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Хона номи <span className="text-red-500">*</span>
+                        {t("roomNumber")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="101-хона"
+                          placeholder={t("roomNumberPlaceholder")}
                           className="border-slate-400 border-2 w-full"
                           {...field}
                         />
@@ -141,7 +143,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Хона нархи <span className="text-red-500">*</span>
+                        {t("pricePerDay")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -167,7 +169,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Хона сиғими <span className="text-red-500">*</span>
+                        {t("capacity")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -193,7 +195,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Хона қавати <span className="text-red-500">*</span>
+                        {t("floor")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -218,10 +220,10 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
                   defaultValue={room?.description}
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel>Изоҳ</FormLabel>
+                      <FormLabel>{t("notes")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Асосий корпус"
+                          placeholder={t("notesPlaceholder")}
                           className="border-slate-400 border-2 w-full"
                           {...field}
                         />
@@ -242,7 +244,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto order-2 sm:order-1"
           >
-            Бекор қилиш
+            {t("cancel")}
           </Button>
           <Button
             type="submit"
@@ -251,7 +253,7 @@ export const UpdateRoom = ({ open, onOpenChange, room }: UpdateRoomProps) => {
             className="gradient-primary w-full sm:w-auto order-1 sm:order-2"
           >
             <Save className="w-4 h-4 mr-2" />
-            {isCreatedLoading ? "Loading..." : "Сақлаш"}
+            {isCreatedLoading ? t("saving") : t("save")}
           </Button>
         </DialogFooter>
       </DialogContent>

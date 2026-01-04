@@ -3,6 +3,7 @@ import {
 	useUpdateDailyCheckupMutation,
 } from '@/app/api/dailyCheckup/dailyCheckupApi'
 import { Button } from '@/components/ui/button'
+import { useTranslation } from 'react-i18next'
 import {
 	Dialog,
 	DialogContent,
@@ -29,6 +30,7 @@ const UpdateBloodPressure = ({
 	dailyCheckupId,
 	refetch,
 }: UpdateBloodPressureProps) => {
+	const { t } = useTranslation('inpatient')
 	const [systolic, setSystolic] = useState('')
 	const [diastolic, setDiastolic] = useState('')
 	const [notes, setNotes] = useState('')
@@ -56,12 +58,12 @@ const UpdateBloodPressure = ({
 	const handleSubmit = async () => {
 		// Validation
 		if (!systolic || !diastolic) {
-			toast.error('Систолик ва диастолик қийматларни киритинг')
+			toast.error(t('enterSystolicDiastolic'))
 			return
 		}
 
 		if (!dailyCheckupId) {
-			toast.error('Қон босими маълумотлари топилмади')
+			toast.error(t('bloodPressureDataNotFound'))
 			return
 		}
 
@@ -74,7 +76,7 @@ const UpdateBloodPressure = ({
 			systolicNum <= 0 ||
 			diastolicNum <= 0
 		) {
-			toast.error('Қон босими қийматлари нотўғри')
+			toast.error(t('bloodPressureValuesInvalid'))
 			return
 		}
 
@@ -92,7 +94,7 @@ const UpdateBloodPressure = ({
 			body: requestBody,
 		}).unwrap()
 
-		toast.success('Қон босими муваффақиятли янгиланди')
+		toast.success(t('bloodPressureUpdatedSuccess'))
 		refetch() // Room ma'lumotlarini yangilash
 		onOpenChange(false)
 		} catch (error: unknown) {
@@ -108,7 +110,7 @@ const UpdateBloodPressure = ({
 				typeof error.data.error === 'object' &&
 				'msg' in error.data.error
 					? String(error.data.error.msg)
-					: 'Хатолик юз берди. Қайта уриниб кўринг'
+					: t('errorOccurredTryAgain')
 			toast.error(errorMessage)
 		}
 	}
@@ -118,18 +120,18 @@ const UpdateBloodPressure = ({
 			<DialogContent className='sm:max-w-[500px]'>
 				<DialogHeader className='p-4 sm:p-6 pb-0'>
 					<DialogTitle className='text-xl sm:text-2xl'>
-						Қон босимини ўзгартириш
+						{t('updateBloodPressure')}
 					</DialogTitle>
 				</DialogHeader>
 
 				<div className='p-4 sm:p-6 space-y-4'>
 					{isLoadingCheckup ? (
-						<div className='text-center py-4'>Юкланмоқда...</div>
+						<div className='text-center py-4'>{t('loading')}</div>
 					) : (
 						<>
 							<div className='grid grid-cols-2 gap-4'>
 								<div className='space-y-2'>
-									<Label htmlFor='systolic'>Систолик (мм рт.ст.)</Label>
+									<Label htmlFor='systolic'>{t('systolicMmHg')}</Label>
 									<Input
 										id='systolic'
 										type='number'
@@ -141,7 +143,7 @@ const UpdateBloodPressure = ({
 								</div>
 
 								<div className='space-y-2'>
-									<Label htmlFor='diastolic'>Диастолик (мм рт.ст.)</Label>
+									<Label htmlFor='diastolic'>{t('diastolicMmHg')}</Label>
 									<Input
 										id='diastolic'
 										type='number'
@@ -154,10 +156,10 @@ const UpdateBloodPressure = ({
 							</div>
 
 							<div className='space-y-2'>
-								<Label htmlFor='notes'>Изоҳ (ихтиёрий)</Label>
+								<Label htmlFor='notes'>{t('notesOptional')}</Label>
 								<Textarea
 									id='notes'
-									placeholder='Қўшимча маълумот киритинг...'
+									placeholder={t('enterAdditionalInfo')}
 									value={notes}
 									onChange={e => setNotes(e.target.value)}
 									rows={3}
@@ -175,7 +177,7 @@ const UpdateBloodPressure = ({
 						className='w-full sm:w-auto order-2 sm:order-1'
 						disabled={isUpdating}
 					>
-						Бекор қилиш
+						{t('cancel')}
 					</Button>
 					<Button
 						type='submit'
@@ -183,7 +185,7 @@ const UpdateBloodPressure = ({
 						disabled={isUpdating || isLoadingCheckup}
 						className='gradient-primary w-full sm:w-auto order-1 sm:order-2'
 					>
-						{isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
+						{isUpdating ? t('saving') : t('save')}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

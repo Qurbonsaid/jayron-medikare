@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/tooltip'
 import { format } from 'date-fns'
 import { Activity, Calendar, FileText, Home, Search, User } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface Patient {
 	_id: string
@@ -49,10 +50,11 @@ interface DailyCheckupTableProps {
 }
 
 export const DailyCheckupTable = ({ checkups, rooms, isLoading }: DailyCheckupTableProps) => {
+	const { t } = useTranslation('inpatient')
 	if (isLoading) {
 		return (
 			<div className="p-8 sm:p-12">
-				<LoadingSpinner size="lg" text="Юкланмоқда..." className="justify-center" />
+				<LoadingSpinner size="lg" text={t('dailyCheckup.loading')} className="justify-center" />
 			</div>
 		)
 	}
@@ -62,8 +64,8 @@ export const DailyCheckupTable = ({ checkups, rooms, isLoading }: DailyCheckupTa
 			<div className="p-8 sm:p-12">
 				<EmptyState
 					icon={Search}
-					title="Маълумот топилмади"
-					description="Ҳеч қандай қон босими ёзуви топилмади"
+					title={t('dailyCheckup.noDataFound')}
+					description={t('dailyCheckup.noBloodPressureRecords')}
 				/>
 			</div>
 		)
@@ -133,12 +135,12 @@ export const DailyCheckupTable = ({ checkups, rooms, isLoading }: DailyCheckupTa
 				<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead>Хона</TableHead>
-						<TableHead>Бемор</TableHead>
-						<TableHead>Қон Босими</TableHead>
-						<TableHead>Ҳамшира</TableHead>
-						<TableHead>Эслатма</TableHead>
-						<TableHead>Сана</TableHead>
+						<TableHead>{t('dailyCheckup.room')}</TableHead>
+						<TableHead>{t('dailyCheckup.patient')}</TableHead>
+						<TableHead>{t('dailyCheckup.bloodPressure')}</TableHead>
+						<TableHead>{t('dailyCheckup.nurse')}</TableHead>
+						<TableHead>{t('dailyCheckup.notes')}</TableHead>
+						<TableHead>{t('dailyCheckup.date')}</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>

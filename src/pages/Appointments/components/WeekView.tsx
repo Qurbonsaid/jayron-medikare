@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Appointment {
   day: number;
@@ -24,15 +25,16 @@ const WeekView = ({
   onDateChange,
   getStatusColor,
 }: WeekViewProps) => {
+  const { t } = useTranslation('appointments');
   const timeSlots = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 to 20:00
   const weekDays = [
-    'Душанба',
-    'Сешанба',
-    'Чоршанба',
-    'Пайшанба',
-    'Жума',
-    'Шанба',
-    'Якшанба',
+    t('dayMonday'),
+    t('dayTuesday'),
+    t('dayWednesday'),
+    t('dayThursday'),
+    t('dayFriday'),
+    t('daySaturday'),
+    t('daySunday'),
   ];
 
   const getWeekDates = (date: Date) => {
@@ -107,7 +109,7 @@ const WeekView = ({
 
             <div className='flex-1 text-center'>
               <h2 className='text-base sm:text-lg lg:text-xl font-bold'>
-                Ҳафта
+                {t('week')}
               </h2>
               <p className='text-xs sm:text-sm text-muted-foreground'>
                 {formatWeekRange()}
@@ -131,7 +133,7 @@ const WeekView = ({
               onClick={handleToday}
               className='h-8 sm:h-9 text-xs sm:text-sm'
             >
-              Бу ҳафта
+              {t('thisWeek')}
             </Button>
           </div>
         </div>
@@ -144,7 +146,7 @@ const WeekView = ({
             {/* Header */}
             <div className='grid grid-cols-8 border-b bg-muted/50 sticky top-0 z-10'>
               <div className='p-1.5 sm:p-2 lg:p-4 font-semibold border-r text-[10px] sm:text-xs lg:text-sm'>
-                Вақт
+                {t('time')}
               </div>
               {weekDays.map((day, idx) => (
                 <div

@@ -149,7 +149,7 @@ const Reports = () => {
 					/>
 					<StatisticsCard
 						title={t('totalIncome')}
-						value={formatCurrency(totalBilling) + ' сўм'}
+						value={formatCurrency(totalBilling) + ' ' + t('currency')}
 						icon={DollarSign}
 						variant='success'
 					/>

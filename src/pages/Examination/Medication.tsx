@@ -64,6 +64,7 @@ import {
 	Trash2,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 export enum MedicationForm {
@@ -74,6 +75,7 @@ export enum MedicationForm {
 }
 
 function Medication() {
+	const { t } = useTranslation('medication')
 	const { canCreate, canUpdate, canDelete } = usePermission('medication')
 	const [searchTerm, setSearchTerm] = useState('')
 	const [filterForm, setFilterForm] = useState<MedicationForm | 'all'>('all')
@@ -148,13 +150,13 @@ function Medication() {
 		await handleRequest({
 			request: () => createMedication(formData).unwrap(),
 			onSuccess: () => {
-				toast.success("Muvaffaqiyat! Dori muvaffaqiyatli qo'shildi")
+				toast.success(t('addSuccess'))
 				setIsCreateOpen(false)
 				resetForm()
 				refetch()
 			},
 			onError: err => {
-				toast.error(err?.data?.error?.msg)
+				toast.error(err?.data?.error?.msg || t('errorOccurred'))
 			},
 		})
 	}
@@ -169,14 +171,14 @@ function Medication() {
 					body: formData,
 				}).unwrap(),
 			onSuccess: async () => {
-				toast.success('Muvaffaqiyat! Dori muvaffaqiyatli yangilandi ')
+				toast.success(t('updateSuccess'))
 				setIsEditOpen(false)
 				setSelectedMedicationId(null)
 				resetForm()
 				await refetch()
 			},
 			onError: err => {
-				toast.error(err?.data?.error?.msg)
+				toast.error(err?.data?.error?.msg || t('errorOccurred'))
 			},
 		})
 	}
@@ -187,13 +189,13 @@ function Medication() {
 		await handleRequest({
 			request: () => deleteMedication({ id: deleteId }).unwrap(),
 			onSuccess: async () => {
-				toast.success("Muvaffaqiyat! Dori muvaffaqiyatli o'chirildi")
+				toast.success(t('deleteSuccess'))
 				setIsDeleteOpen(false)
 				setDeleteId(null)
 				refetch()
 			},
 			onError: err => {
-				toast.error(err?.data?.error?.msg)
+				toast.error(err?.data?.error?.msg || t('errorOccurred'))
 			},
 		})
 	}
@@ -229,10 +231,10 @@ function Medication() {
 
 	const getFormLabel = (form: MedicationForm) => {
 		const labels = {
-			[MedicationForm.SOLID]: 'Qattiq',
-			[MedicationForm.LIQUID]: 'Suyuq',
-			[MedicationForm.INJECTION]: 'Inyeksiya',
-			[MedicationForm.TOPICAL]: 'Tashqi',
+			[MedicationForm.SOLID]: t('solid'),
+			[MedicationForm.LIQUID]: t('liquid'),
+			[MedicationForm.INJECTION]: t('injection'),
+			[MedicationForm.TOPICAL]: t('topical'),
 		}
 		return labels[form]
 	}
@@ -256,10 +258,10 @@ function Medication() {
 				<div className='space-y-1'>
 					<h1 className='text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2'>
 						<PackagePlus className='h-6 w-6 sm:h-8 sm:w-8 text-primary' />
-						Dorilar boshqaruvi
+						{t('title')}
 					</h1>
 					<p className='text-sm sm:text-base text-muted-foreground'>
-						Barcha dorilarni ko'ring, tahrirlang va boshqaring
+						{t('subtitle')}
 					</p>
 				</div>
 				{canCreate && (
@@ -269,7 +271,7 @@ function Medication() {
 						className='gap-2 w-full md:w-auto'
 					>
 						<Plus className='h-4 w-4' />
-						<span className='sm:inline'>Yangi dori qo'shish</span>
+						<span className='sm:inline'>{t('addNew')}</span>
 					</Button>
 				)}
 			</div>
@@ -279,20 +281,20 @@ function Medication() {
 				<CardHeader className='pb-3 sm:pb-6'>
 					<CardTitle className='flex items-center gap-2 text-base sm:text-lg'>
 						<Filter className='h-4 w-4 sm:h-5 sm:w-5' />
-						Filter va qidiruv
+						{t('filterAndSearch')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent className='space-y-4'>
 					<div className='grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'>
 						<div className='space-y-2'>
 							<Label htmlFor='search' className='text-sm'>
-								Qidiruv
+								{t('searchLabel')}
 							</Label>
 							<div className='relative'>
 								<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 								<Input
 									id='search'
-									placeholder='Dori nomini kiriting...'
+									placeholder={t('enterMedicationName')}
 									value={searchTerm}
 									onChange={e => setSearchTerm(e.target.value)}
 									className='pl-9 h-10'
@@ -300,7 +302,7 @@ function Medication() {
 							</div>
 						</div>
 						<div className='space-y-2'>
-							<Label className='text-sm'>Shakl bo'yicha</Label>
+							<Label className='text-sm'>{t('byForm')}</Label>
 							<Select
 								value={filterForm}
 								onValueChange={value =>
@@ -308,39 +310,39 @@ function Medication() {
 								}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder='Shakl tanlang' />
+									<SelectValue placeholder={t('selectForm')} />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value='all'>Barchasi</SelectItem>
+									<SelectItem value='all'>{t('all')}</SelectItem>
 									<SelectItem value={MedicationForm.SOLID}>
 										<div className='flex items-center gap-2'>
 											<Pill className='h-4 w-4' />
-											Qattiq
+											{t('solidForm')}
 										</div>
 									</SelectItem>
 									<SelectItem value={MedicationForm.LIQUID}>
 										<div className='flex items-center gap-2'>
 											<Droplets className='h-4 w-4' />
-											Suyuq
+											{t('liquidForm')}
 										</div>
 									</SelectItem>
 									<SelectItem value={MedicationForm.INJECTION}>
 										<div className='flex items-center gap-2'>
 											<Syringe className='h-4 w-4' />
-											Inyeksiya
+											{t('injectionForm')}
 										</div>
 									</SelectItem>
 									<SelectItem value={MedicationForm.TOPICAL}>
 										<div className='flex items-center gap-2'>
 											<Paintbrush className='h-4 w-4' />
-											Tashqi
+											{t('topicalForm')}
 										</div>
 									</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 						<div className='space-y-2'>
-							<Label>Holat bo'yicha</Label>
+							<Label>{t('byStatus')}</Label>
 							<Select
 								value={
 									filterActive === undefined
@@ -356,12 +358,12 @@ function Medication() {
 								}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder='Holat tanlang' />
+									<SelectValue placeholder={t('selectStatus')} />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value='all'>Barchasi</SelectItem>
-									<SelectItem value='active'>Faol</SelectItem>
-									<SelectItem value='inactive'>Faol emas</SelectItem>
+									<SelectItem value='all'>{t('all')}</SelectItem>
+									<SelectItem value='active'>{t('active')}</SelectItem>
+									<SelectItem value='inactive'>{t('inactive')}</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -373,10 +375,10 @@ function Medication() {
 			<Card>
 				<CardHeader className='pb-3 sm:pb-6'>
 					<CardTitle className='text-base sm:text-lg'>
-						Dorilar ro'yxati
+						{t('medicationsList')}
 					</CardTitle>
 					<CardDescription className='text-sm'>
-						{medicationsData?.pagination.total_items || 0} ta dori topildi
+						{t('medicationsFound', { count: medicationsData?.pagination.total_items || 0 })}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -386,11 +388,11 @@ function Medication() {
 							<TableHeader>
 								<TableRow className='bg-muted/50'>
 									<TableHead className='w-[50px]'>#</TableHead>
-									<TableHead>Nomi</TableHead>
-									<TableHead>Shakl</TableHead>
-									<TableHead>Dozasi</TableHead>
-									<TableHead>Holat</TableHead>
-									<TableHead className='text-right'>Amallar</TableHead>
+									<TableHead>{t('name')}</TableHead>
+									<TableHead>{t('form')}</TableHead>
+									<TableHead>{t('dosage')}</TableHead>
+									<TableHead>{t('status')}</TableHead>
+									<TableHead className='text-right'>{t('actions')}</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -400,7 +402,7 @@ function Medication() {
 											<div className='flex items-center justify-center gap-2'>
 												<div className='h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent'></div>
 												<span className='text-muted-foreground'>
-													Yuklanmoqda...
+													{t('loading')}
 												</span>
 											</div>
 										</TableCell>
@@ -411,7 +413,7 @@ function Medication() {
 											<div className='flex flex-col items-center gap-2'>
 												<PackagePlus className='h-12 w-12 text-muted-foreground/50' />
 												<p className='text-muted-foreground'>
-													Dorilar topilmadi
+													{t('noMedicationsYet')}
 												</p>
 											</div>
 										</TableCell>
@@ -444,14 +446,14 @@ function Medication() {
 														variant='outline'
 														className='bg-green-500/10 text-green-600 border-green-200'
 													>
-														Faol
+														{t('active')}
 													</Badge>
 												) : (
 													<Badge
 														variant='outline'
 														className='bg-gray-500/10 text-gray-600 border-gray-200'
 													>
-														Faol emas
+														{t('inactive')}
 													</Badge>
 												)}
 											</TableCell>
@@ -504,7 +506,7 @@ function Medication() {
 								<div className='flex items-center justify-center gap-2'>
 									<div className='h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent'></div>
 									<span className='text-sm text-muted-foreground'>
-										Yuklanmoqda...
+										{t('loading')}
 									</span>
 								</div>
 							</div>
@@ -513,7 +515,7 @@ function Medication() {
 								<div className='flex flex-col items-center gap-2'>
 									<PackagePlus className='h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50' />
 									<p className='text-sm text-muted-foreground'>
-										Dorilar topilmadi
+										{t('noMedicationsYet')}
 									</p>
 								</div>
 							</div>
@@ -544,14 +546,14 @@ function Medication() {
 															variant='outline'
 															className='bg-green-500/10 text-green-600 border-green-200 text-xs'
 														>
-															Faol
+															{t('active')}
 														</Badge>
 													) : (
 														<Badge
 															variant='outline'
 															className='bg-gray-500/10 text-gray-600 border-gray-200 text-xs'
 														>
-															Faol emas
+															{t('inactive')}
 														</Badge>
 													)}
 												</div>
@@ -563,7 +565,7 @@ function Medication() {
 											<div className='grid grid-cols-2 gap-12'>
 												<div className='space-y-1 grid'>
 													<Label className='text-xs text-muted-foreground'>
-														Shakl
+														{t('form')}
 													</Label>
 													<Badge
 														variant='outline'
@@ -575,7 +577,7 @@ function Medication() {
 												</div>
 												<div className='space-y-1'>
 													<Label className='text-xs text-muted-foreground'>
-														Dozasi
+														{t('dosage')}
 													</Label>
 													<p className='font-medium'>{medication.dosage}</p>
 												</div>
@@ -592,7 +594,7 @@ function Medication() {
 													className='flex-1 gap-2'
 												>
 													<Eye className='h-4 w-4' />
-													Ko'rish
+													{t('view')}
 												</Button>
 												{canUpdate && (
 													<Button
@@ -602,7 +604,7 @@ function Medication() {
 														className='flex-1 gap-2'
 													>
 														<Pencil className='h-4 w-4' />
-														Tahrirlash
+														{t('edit')}
 													</Button>
 												)}
 												{canDelete && (
@@ -630,7 +632,7 @@ function Medication() {
 					{medicationsData && medicationsData.pagination.total_pages > 1 && (
 						<div className='mt-6 flex flex-col lg:flex-row items-center justify-between gap-4'>
 							<div className='flex items-center gap-2'>
-								<span className='text-sm text-muted-foreground'>Саҳифада:</span>
+								<span className='text-sm text-muted-foreground'>{t('perPage')}:</span>
 								<Select
 									value={itemsPerPage.toString()}
 									onValueChange={value => {
@@ -762,7 +764,7 @@ function Medication() {
 							</div>
 
 							<div className='text-sm text-muted-foreground lg:min-w-[180px] text-center lg:text-right'>
-								Жами: {medicationsData.pagination?.total_items || 0} та
+								{t('total')}: {medicationsData.pagination?.total_items || 0} {t('items')}
 							</div>
 						</div>
 					)}
@@ -781,21 +783,21 @@ function Medication() {
 					<DialogHeader>
 						<DialogTitle className='flex items-center gap-2 text-lg sm:text-xl'>
 							<Plus className='h-4 w-4 sm:h-5 sm:w-5' />
-							Yangi dori qo'shish
+							{t('addNewMedication')}
 						</DialogTitle>
 						<DialogDescription className='text-sm'>
-							Yangi dori ma'lumotlarini kiriting
+							{t('enterNewMedicationData')}
 						</DialogDescription>
 					</DialogHeader>
 
 					<div className='grid gap-4 py-4'>
 						<div className='grid gap-2'>
 							<Label htmlFor='name' className='text-sm'>
-								Dori nomi *
+								{t('medicationNameRequired')}
 							</Label>
 							<Input
 								id='name'
-								placeholder='Masalan: Paracetamol'
+								placeholder={t('medicationNamePlaceholder')}
 								value={formData.name}
 								onChange={e =>
 									setFormData({ ...formData, name: e.target.value })
@@ -806,7 +808,7 @@ function Medication() {
 						<div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
 							<div className='grid gap-2'>
 								<Label htmlFor='form' className='text-sm'>
-									Shakl *
+									{t('formRequired')}
 								</Label>
 								<Select
 									value={formData.form}
@@ -821,25 +823,25 @@ function Medication() {
 										<SelectItem value={MedicationForm.SOLID}>
 											<div className='flex items-center gap-2'>
 												<Pill className='h-4 w-4' />
-												Qattiq (Tabletka, Kapsula)
+												{t('solidFormFull')}
 											</div>
 										</SelectItem>
 										<SelectItem value={MedicationForm.LIQUID}>
 											<div className='flex items-center gap-2'>
 												<Droplets className='h-4 w-4' />
-												Suyuq (Sirop, Suspenziya)
+												{t('liquidFormFull')}
 											</div>
 										</SelectItem>
 										<SelectItem value={MedicationForm.INJECTION}>
 											<div className='flex items-center gap-2'>
 												<Syringe className='h-4 w-4' />
-												Inyeksiya (In'ektsiya)
+												{t('injectionFormFull')}
 											</div>
 										</SelectItem>
 										<SelectItem value={MedicationForm.TOPICAL}>
 											<div className='flex items-center gap-2'>
 												<Paintbrush className='h-4 w-4' />
-												Tashqi (Malham, Krem)
+												{t('topicalFormFull')}
 											</div>
 										</SelectItem>
 									</SelectContent>
@@ -848,11 +850,11 @@ function Medication() {
 
 							<div className='grid gap-2'>
 								<Label htmlFor='dosage' className='text-sm'>
-									Dozasi *
+									{t('dosageRequired')}
 								</Label>
 								<Input
 									id='dosage'
-									placeholder='Masalan: 500mg'
+									placeholder={t('dosagePlaceholder')}
 									value={formData.dosage}
 									onChange={e =>
 										setFormData({ ...formData, dosage: e.target.value })
@@ -870,7 +872,7 @@ function Medication() {
 								}
 							/>
 							<Label htmlFor='is_active' className='cursor-pointer'>
-								Faol holat
+								{t('activeStatus')}
 							</Label>
 						</div>
 					</div>
@@ -881,14 +883,14 @@ function Medication() {
 							onClick={() => setIsCreateOpen(false)}
 							className='w-full sm:w-auto'
 						>
-							Bekor qilish
+							{t('cancel')}
 						</Button>
 						<Button
 							onClick={handleCreate}
 							disabled={isCreating}
 							className='w-full sm:w-auto'
 						>
-							{isCreating ? 'Saqlanmoqda...' : 'Saqlash'}
+							{isCreating ? t('saving') : t('save')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -909,21 +911,21 @@ function Medication() {
 					<DialogHeader>
 						<DialogTitle className='flex items-center gap-2 text-lg sm:text-xl'>
 							<Pencil className='h-4 w-4 sm:h-5 sm:w-5' />
-							Dorini tahrirlash
+							{t('editMedicationTitle')}
 						</DialogTitle>
 						<DialogDescription className='text-sm'>
-							Dori ma'lumotlarini o'zgartiring
+							{t('editMedicationDesc')}
 						</DialogDescription>
 					</DialogHeader>
 
 					<div className='grid gap-4 py-4'>
 						<div className='grid gap-2'>
 							<Label htmlFor='edit-name' className='text-sm'>
-								Dori nomi *
+								{t('medicationNameRequired')}
 							</Label>
 							<Input
 								id='edit-name'
-								placeholder='Masalan: Paracetamol'
+								placeholder={t('medicationNamePlaceholder')}
 								value={formData.name}
 								onChange={e =>
 									setFormData({ ...formData, name: e.target.value })
@@ -934,7 +936,7 @@ function Medication() {
 						<div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
 							<div className='grid gap-2'>
 								<Label htmlFor='edit-form' className='text-sm'>
-									Shakl *
+									{t('formRequired')}
 								</Label>
 								<Select
 									value={formData.form}
@@ -949,25 +951,25 @@ function Medication() {
 										<SelectItem value={MedicationForm.SOLID}>
 											<div className='flex items-center gap-2'>
 												<Pill className='h-4 w-4' />
-												Qattiq (Tabletka, Kapsula)
+												{t('solidFormFull')}
 											</div>
 										</SelectItem>
 										<SelectItem value={MedicationForm.LIQUID}>
 											<div className='flex items-center gap-2'>
 												<Droplets className='h-4 w-4' />
-												Suyuq (Sirop, Suspenziya)
+												{t('liquidFormFull')}
 											</div>
 										</SelectItem>
 										<SelectItem value={MedicationForm.INJECTION}>
 											<div className='flex items-center gap-2'>
 												<Syringe className='h-4 w-4' />
-												Inyeksiya (In'ektsiya)
+												{t('injectionFormFull')}
 											</div>
 										</SelectItem>
 										<SelectItem value={MedicationForm.TOPICAL}>
 											<div className='flex items-center gap-2'>
 												<Paintbrush className='h-4 w-4' />
-												Tashqi (Malham, Krem)
+												{t('topicalFormFull')}
 											</div>
 										</SelectItem>
 									</SelectContent>
@@ -976,11 +978,11 @@ function Medication() {
 
 							<div className='grid gap-2'>
 								<Label htmlFor='edit-dosage' className='text-sm'>
-									Dozasi *
+									{t('dosageRequired')}
 								</Label>
 								<Input
 									id='edit-dosage'
-									placeholder='Masalan: 500mg'
+									placeholder={t('dosagePlaceholder')}
 									value={formData.dosage}
 									onChange={e =>
 										setFormData({ ...formData, dosage: e.target.value })
@@ -998,7 +1000,7 @@ function Medication() {
 								}
 							/>
 							<Label htmlFor='edit-is_active' className='cursor-pointer'>
-								Faol holat
+								{t('activeStatus')}
 							</Label>
 						</div>
 					</div>
@@ -1013,14 +1015,14 @@ function Medication() {
 							}}
 							className='w-full sm:w-auto'
 						>
-							Bekor qilish
+							{t('cancel')}
 						</Button>
 						<Button
 							onClick={handleUpdate}
 							disabled={isUpdating}
 							className='w-full sm:w-auto'
 						>
-							{isUpdating ? 'Saqlanmoqda...' : 'Saqlash'}
+							{isUpdating ? t('saving') : t('save')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -1040,9 +1042,9 @@ function Medication() {
 					<DialogHeader>
 						<DialogTitle className='flex items-center gap-2 text-xl'>
 							<Eye className='h-5 w-5' />
-							Dori haqida ma'lumot
+							{t('viewMedicationTitle')}
 						</DialogTitle>
-						<DialogDescription>To'liq ma'lumotlarni ko'ring</DialogDescription>
+						<DialogDescription>{t('viewFullDetails')}</DialogDescription>
 					</DialogHeader>
 
 					{selectedMedication?.data && (
@@ -1050,7 +1052,7 @@ function Medication() {
 							<div className='grid gap-4'>
 								<div className='space-y-2'>
 									<Label className='text-xs sm:text-sm text-muted-foreground'>
-										Dori nomi
+										{t('medicationNameLabel')}
 									</Label>
 									<div className='text-lg sm:text-xl font-semibold break-words'>
 										{selectedMedication.data.name}
@@ -1061,7 +1063,7 @@ function Medication() {
 
 								<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 									<div className='space-y-2'>
-										<Label className='text-muted-foreground'>Shakl</Label>
+										<Label className='text-muted-foreground'>{t('formLabel')}</Label>
 										<div>
 											<Badge
 												variant='outline'
@@ -1076,7 +1078,7 @@ function Medication() {
 									</div>
 
 									<div className='space-y-2'>
-										<Label className='text-muted-foreground'>Dozasi</Label>
+										<Label className='text-muted-foreground'>{t('dosage')}</Label>
 										<div className='text-lg font-medium'>
 											{selectedMedication.data.dosage}
 										</div>
@@ -1086,12 +1088,12 @@ function Medication() {
 								<Separator />
 
 								<div className='space-y-2'>
-									<Label className='text-muted-foreground'>Holat</Label>
+									<Label className='text-muted-foreground'>{t('status')}</Label>
 									<div>
 										{selectedMedication.data.is_active ? (
-											<Badge className='bg-green-500 text-white'>✓ Faol</Badge>
+											<Badge className='bg-green-500 text-white'>✓ {t('active')}</Badge>
 										) : (
-											<Badge variant='secondary'>○ Faol emas</Badge>
+											<Badge variant='secondary'>○ {t('inactive')}</Badge>
 										)}
 									</div>
 								</div>
@@ -1101,7 +1103,7 @@ function Medication() {
 								<div className='grid grid-cols-2 gap-4'>
 									<div className='space-y-2'>
 										<Label className='text-muted-foreground'>
-											Yaratilgan sana
+											{t('createdAt')}
 										</Label>
 										<div className='text-sm'>
 											{new Date(
@@ -1118,7 +1120,7 @@ function Medication() {
 
 									<div className='space-y-2'>
 										<Label className='text-muted-foreground'>
-											Oxirgi yangilanish
+											{t('updatedAt')}
 										</Label>
 										<div className='text-sm'>
 											{new Date(
@@ -1146,7 +1148,7 @@ function Medication() {
 							}}
 							className='w-full sm:w-auto'
 						>
-							Yopish
+							{t('close')}
 						</Button>
 						<Button
 							onClick={() => {
@@ -1158,7 +1160,7 @@ function Medication() {
 							className='gap-2 w-full sm:w-auto'
 						>
 							<Pencil className='h-4 w-4' />
-							Tahrirlash
+							{t('edit')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -1167,19 +1169,19 @@ function Medication() {
 			<Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
 				<DialogContent className='w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'>
 					<DialogHeader>
-						<DialogTitle>Dorini o‘chirish</DialogTitle>
+						<DialogTitle>{t('deleteMedicationTitle')}</DialogTitle>
 						<DialogDescription>
-							Haqiqatdan ham bu dorini o‘chirmoqchimisiz?
+							{t('deleteMedicationDesc')}
 							<br />
 							<span className='font-semibold text-red-600'>
-								Bu amalni qaytarib bo‘lmaydi.
+								{t('deleteMedicationWarning')}
 							</span>
 						</DialogDescription>
 					</DialogHeader>
 
 					<DialogFooter className='flex justify-end gap-2'>
 						<Button variant='outline' onClick={() => setIsDeleteOpen(false)}>
-							Bekor qilish
+							{t('cancel')}
 						</Button>
 
 						<Button
@@ -1187,7 +1189,7 @@ function Medication() {
 							onClick={confirmDelete}
 							disabled={isDeleting}
 						>
-							{isDeleting ? 'O‘chirilmoqda...' : 'Ha, o‘chirilsin'}
+							{isDeleting ? t('deleting') : t('confirmDelete')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

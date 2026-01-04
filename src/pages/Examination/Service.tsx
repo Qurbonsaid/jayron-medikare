@@ -20,6 +20,7 @@ import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { usePermission } from '@/hooks/usePermission';
 import { Edit, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 interface FormState {
@@ -43,6 +44,7 @@ const initialFormState: FormState = {
 };
 
 export default function Service() {
+  const { t } = useTranslation(['common', 'service']);
   const handleRequest = useHandleRequest();
   const { canCreate, canUpdate, canDelete } = usePermission('service');
 
@@ -80,12 +82,12 @@ export default function Service() {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!form.code.trim()) newErrors.code = 'Хизмат коди мажбурий';
-    if (!form.name.trim()) newErrors.name = 'Хизмат номи мажбурий';
-    if (!form.description.trim()) newErrors.description = 'Тавсиф мажбурий';
-    if (form.price <= 0) newErrors.price = 'Нархни киритинг';
+    if (!form.code.trim()) newErrors.code = t('service:validation.codeRequired');
+    if (!form.name.trim()) newErrors.name = t('service:validation.nameRequired');
+    if (!form.description.trim()) newErrors.description = t('service:validation.descriptionRequired');
+    if (form.price <= 0) newErrors.price = t('service:validation.priceRequired');
     if (form.duration_minutes <= 0)
-      newErrors.duration_minutes = 'Давомийликни киритинг';
+      newErrors.duration_minutes = t('service:validation.durationRequired');
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -108,7 +110,7 @@ export default function Service() {
       await handleRequest({
         request: () => updateService({ id: editingService._id, body: payload }),
         onSuccess: () => {
-          toast.success('Хизмат муваффақиятли янгиланди 🎉');
+          toast.success(t('updateSuccess'));
           handleClose();
           refetch();
         },
@@ -117,7 +119,7 @@ export default function Service() {
       await handleRequest({
         request: () => createService(payload),
         onSuccess: () => {
-          toast.success('Хизмат муваффақиятли қўшилди 🎉');
+          toast.success(t('createSuccess'));
           handleClose();
           refetch();
         },
@@ -143,7 +145,7 @@ export default function Service() {
     await handleRequest({
       request: () => deleteService(id),
       onSuccess: () => {
-        toast.success('Хизмат муваффақиятли ўчирилди');
+        toast.success(t('deleteSuccess'));
         setDeleteId(null);
         refetch();
       },
@@ -158,12 +160,12 @@ export default function Service() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
+    return new Intl.NumberFormat('uz-UZ').format(amount) + ' ' + t('service:currency');
   };
 
-  if (isLoading) return <p className='p-4'>Юкланмоқда...</p>;
+  if (isLoading) return <p className='p-4'>{t('service:loading')}</p>;
   if (isError || !data)
-    return <p className='p-4 text-red-500'>Хатолик юз берди!</p>;
+    return <p className='p-4 text-red-500'>{t('service:error')}</p>;
 
   return (
     <div className='min-h-screen bg-background flex flex-col'>
@@ -171,7 +173,7 @@ export default function Service() {
         <div className='w-full px-4 sm:px-6 py-5 flex items-center justify-between gap-3'>
           <div className='flex-1 max-w-md'>
             <Input
-              placeholder='Хизмат қидириш...'
+              placeholder={t('service:searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className='w-full'
@@ -183,7 +185,7 @@ export default function Service() {
               className='bg-blue-600 hover:bg-blue-700 text-white'
               onClick={() => setOpen(true)}
             >
-              + Хизмат қўшиш
+              + {t('service:addService')}
             </Button>
           )}
         </div>
@@ -204,7 +206,7 @@ export default function Service() {
                     {service.code}
                   </h3>
                   <p className='text-xs text-muted-foreground'>
-                    Номи: <span className='font-bold'>{service.name}</span>
+                    {t('service:name')}: <span className='font-bold'>{service.name}</span>
                   </p>
                 </div>
                 <div className='flex flex-col items-end gap-1'>
@@ -213,11 +215,11 @@ export default function Service() {
                   </span>
                   {service.is_active ? (
                     <Badge className='bg-green-100 text-green-700 hover:bg-green-100 text-[10px] px-2 py-0'>
-                      Актив
+                      {t('service:active')}
                     </Badge>
                   ) : (
                     <Badge className='bg-red-100 text-red-700 hover:bg-red-100 text-[10px] px-2 py-0'>
-                      Нофаол
+                      {t('service:inactive')}
                     </Badge>
                   )}
                 </div>
@@ -227,7 +229,7 @@ export default function Service() {
               <div className='space-y-1.5 text-xs sm:text-sm'>
                 <div className='flex flex-col gap-1'>
                   <span className='text-muted-foreground font-medium'>
-                    Нархи:
+                    {t('service:price')}:
                   </span>
                   <span className='font-bold text-primary'>
                     {formatCurrency(service.price)}
@@ -235,20 +237,20 @@ export default function Service() {
                 </div>
                 <div className='flex flex-col gap-1'>
                   <span className='text-muted-foreground font-medium'>
-                    Давомийлик:
+                    {t('service:duration')}:
                   </span>
                   <span className='font-medium'>
-                    {service.duration_minutes} дақиқа
+                    {service.duration_minutes} {t('service:minutes')}
                   </span>
                 </div>
                 <div className='flex flex-col gap-1'>
                   <span className='text-muted-foreground font-medium'>
-                    Талаблар:
+                    {t('service:requirements')}:
                   </span>
                   <span className='font-medium'>
                     {service.requirements.length > 0
                       ? service.requirements.join(', ')
-                      : 'Йўқ'}
+                      : t('service:none')}
                   </span>
                 </div>
               </div>
@@ -263,7 +265,7 @@ export default function Service() {
                     onClick={() => handleEdit(service)}
                   >
                     <Edit size={12} />
-                    Таҳрирлаш
+                    {t('service:edit')}
                   </Button>
                 )}
 
@@ -283,15 +285,15 @@ export default function Service() {
                         disabled={deleting}
                       >
                         <Trash2 size={12} />
-                        Ўчириш
+                        {t('service:delete')}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className='max-w-xs rounded-xl'>
                       <DialogTitle className='text-sm'>
-                        Хизматни ўчириш
+                        {t('service:deleteService')}
                       </DialogTitle>
                       <p className='text-xs text-muted-foreground'>
-                        Ростан ҳам ушбу хизматни ўчирмоқчимисиз?
+                        {t('service:deleteConfirm')}
                       </p>
                       <DialogFooter className='flex justify-end gap-2 pt-2'>
                         <Button
@@ -300,7 +302,7 @@ export default function Service() {
                           className='h-7 text-xs'
                           onClick={() => setDeleteId(null)}
                         >
-                          Йўқ
+                          {t('service:no')}
                         </Button>
                         <Button
                           size='sm'
@@ -308,7 +310,7 @@ export default function Service() {
                           onClick={() => handleDelete(service._id)}
                           disabled={deleting}
                         >
-                          {deleting ? 'Ўчирилмоқда...' : 'Ҳа'}
+                          {deleting ? t('service:deleting') : t('service:yes')}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -328,13 +330,13 @@ export default function Service() {
               <thead className='bg-muted/50'>
                 <tr>
                   {[
-                    'Хизмат коди',
-                    'Хизмат номи',
-                    'Нархи',
-                    'Давомийлик',
-                    'Талаблар',
-                    'Ҳолати',
-                    'Ҳаракатлар',
+                    t('service:serviceCode'),
+                    t('service:serviceName'),
+                    t('service:price'),
+                    t('service:duration'),
+                    t('service:requirements'),
+                    t('service:status'),
+                    t('service:actions'),
                   ].map((i) => (
                     <th
                       key={i}
@@ -363,21 +365,21 @@ export default function Service() {
                       {formatCurrency(service.price)}
                     </td>
                     <td className='px-3 xl:px-5 py-3 xl:py-4 text-xs xl:text-sm'>
-                      {service.duration_minutes} дақиқа
+                      {service.duration_minutes} {t('service:minutes')}
                     </td>
                     <td className='px-3 xl:px-5 py-3 xl:py-4 text-xs xl:text-sm'>
                       {service.requirements.length > 0
                         ? service.requirements.join(', ')
-                        : 'Йўқ'}
+                        : t('service:none')}
                     </td>
                     <td className='px-3 xl:px-5 py-3 xl:py-4'>
                       {service.is_active ? (
                         <Badge className='bg-green-100 text-green-700 hover:bg-green-100'>
-                          Актив
+                          {t('service:active')}
                         </Badge>
                       ) : (
                         <Badge className='bg-red-100 text-red-700 hover:bg-red-100'>
-                          Нофаол
+                          {t('service:inactive')}
                         </Badge>
                       )}
                     </td>
@@ -413,23 +415,23 @@ export default function Service() {
                               </Button>
                             </DialogTrigger>
                             <DialogContent className='max-w-xs rounded-xl'>
-                              <DialogTitle>Хизматни ўчириш</DialogTitle>
+                              <DialogTitle>{t('service:deleteService')}</DialogTitle>
                               <p className='text-sm text-muted-foreground'>
-                                Ростан ҳам ушбу хизматни ўчирмоқчимисиз?
+                                {t('service:deleteConfirm')}
                               </p>
                               <DialogFooter className='flex justify-end gap-2'>
                                 <Button
                                   variant='outline'
                                   onClick={() => setDeleteId(null)}
                                 >
-                                  Йўқ
+                                  {t('service:no')}
                                 </Button>
                                 <Button
                                   className='bg-red-600 text-white'
                                   onClick={() => handleDelete(service._id)}
                                   disabled={deleting}
                                 >
-                                  {deleting ? 'Ўчирилмоқда...' : 'Ҳа'}
+                                  {deleting ? t('service:deleting') : t('service:yes')}
                                 </Button>
                               </DialogFooter>
                             </DialogContent>

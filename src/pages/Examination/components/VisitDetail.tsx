@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { CheckCircle2, Edit, FilePlus, Trash2 } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 interface Props {
@@ -31,13 +32,15 @@ const VisitDetail = ({
   isCompleting,
 }: Props) => {
   const navigate = useNavigate();
+  const { t } = useTranslation('examinations');
+  
   return (
     <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
       <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>Кўрик Тафсилотлари</DialogTitle>
+          <DialogTitle className='text-xl'>{t('detailModal.title')}</DialogTitle>
           <DialogDescription>
-            Кўрик ва бемор ҳақида тўлиқ маълумот
+            {t('detailModal.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -46,29 +49,29 @@ const VisitDetail = ({
             {/* Patient Information */}
             <div className='space-y-3'>
               <h3 className='text-lg font-semibold border-b pb-2'>
-                Бемор Маълумотлари
+                {t('detailModal.patientInfo')}
               </h3>
               <div className='grid grid-cols-2 gap-4 text-sm'>
                 <div>
-                  <span className='text-muted-foreground'>Исм:</span>
+                  <span className='text-muted-foreground'>{t('name')}:</span>
                   <p className='font-medium'>
                     {selectedExam.patient_id?.fullname}
                   </p>
                 </div>
                 <div>
-                  <span className='text-muted-foreground'>Телефон:</span>
+                  <span className='text-muted-foreground'>{t('phone')}:</span>
                   <p className='font-medium'>
                     {selectedExam.patient_id?.phone}
                   </p>
                 </div>
                 <div>
-                  <span className='text-muted-foreground'>Шифокор:</span>
+                  <span className='text-muted-foreground'>{t('doctor')}:</span>
                   <p className='font-medium'>
                     {selectedExam.doctor_id?.fullname}
                   </p>
                 </div>
                 <div>
-                  <span className='text-muted-foreground'>Статус:</span>
+                  <span className='text-muted-foreground'>{t('status')}:</span>
                   <div className='mt-1'>
                     {getStatusBadge(selectedExam.status)}
                   </div>
@@ -79,38 +82,38 @@ const VisitDetail = ({
             {/* Examination Details */}
             <div className='space-y-3'>
               <h3 className='text-lg font-semibold border-b pb-2'>
-                Кўрик Маълумотлари
+                {t('detailModal.examInfo')}
               </h3>
               <div className='space-y-3 text-sm'>
                 <div>
                   <span className='text-muted-foreground block mb-1'>
-                    Шикоят:
+                    {t('complaint')}:
                   </span>
                   <p className='font-medium bg-muted p-3 rounded-md'>
-                    {selectedExam.complaints || 'Киритилмаган'}
+                    {selectedExam.complaints || t('notEntered')}
                   </p>
                 </div>
                 <div>
                   <span className='text-muted-foreground block mb-1'>
-                    Ташхис:
+                    {t('diagnosis')}:
                   </span>
                   <p className='font-medium bg-muted p-3 rounded-md'>
                     {selectedExam.diagnosis?.name ||
                       selectedExam.diagnosis ||
-                      'Киритилмаган'}
+                      t('notEntered')}
                   </p>
                 </div>
                 <div>
                   <span className='text-muted-foreground block mb-1'>
-                    Тавсия:
+                    {t('recommendation')}:
                   </span>
                   <p className='font-medium bg-muted p-3 rounded-md'>
-                    {selectedExam.description || 'Киритилмаган'}
+                    {selectedExam.description || t('notEntered')}
                   </p>
                 </div>
                 <div>
                   <span className='text-muted-foreground block mb-1'>
-                    Сана:
+                    {t('date')}:
                   </span>
                   <p className='font-medium'>
                     {new Date(selectedExam.created_at).toLocaleString('uz-UZ', {
@@ -130,9 +133,9 @@ const VisitDetail = ({
               selectedExam.prescriptions.length > 0 && (
                 <div className='space-y-3'>
                   <h3 className='text-lg font-semibold border-b pb-2 flex items-center justify-between'>
-                    <span>Рецептлар</span>
+                    <span>{t('prescriptions')}</span>
                     <span className='text-sm font-normal text-muted-foreground'>
-                      ({selectedExam.prescriptions.length} та)
+                      ({selectedExam.prescriptions.length} {t('count')})
                     </span>
                   </h3>
                   <div className='space-y-3'>
@@ -144,13 +147,13 @@ const VisitDetail = ({
                         >
                           <div className='flex items-center justify-between'>
                             <span className='text-xs font-medium text-primary'>
-                              Рецепт #{index + 1}
+                              {t('prescription')} #{index + 1}
                             </span>
                           </div>
                           <div className='grid grid-cols-2 gap-3 text-sm'>
                             <div>
                               <span className='text-muted-foreground block mb-1'>
-                                Дори Номи:
+                                {t('medicineName')}:
                               </span>
                               <p className='font-semibold'>
                                 {prescription.medication}
@@ -158,33 +161,33 @@ const VisitDetail = ({
                             </div>
                             <div>
                               <span className='text-muted-foreground block mb-1'>
-                                Дозаси:
+                                {t('dosage')}:
                               </span>
                               <p className='font-semibold'>
-                                {prescription.dosage} мг
+                                {prescription.dosage} {t('mg')}
                               </p>
                             </div>
                             <div>
                               <span className='text-muted-foreground block mb-1'>
-                                Қабул Қилиш:
+                                {t('intake')}:
                               </span>
                               <p className='font-semibold'>
-                                Кунига {prescription.frequency} марта
+                                {t('timesPerDay', { count: prescription.frequency })}
                               </p>
                             </div>
                             <div>
                               <span className='text-muted-foreground block mb-1'>
-                                Муддати:
+                                {t('duration')}:
                               </span>
                               <p className='font-semibold'>
-                                {prescription.duration} кун
+                                {prescription.duration} {t('days')}
                               </p>
                             </div>
                           </div>
                           {prescription.instructions && (
                             <div className='pt-2 border-t border-primary/10'>
                               <span className='text-muted-foreground text-xs block mb-1'>
-                                Қўшимча Кўрсатмалар:
+                                {t('additionalInstructions')}:
                               </span>
                               <p className='text-sm font-medium'>
                                 {prescription.instructions}
@@ -200,7 +203,7 @@ const VisitDetail = ({
 
             {/* Action Buttons */}
             <div className='space-y-2 pt-4 border-t'>
-              <h3 className='text-lg font-semibold mb-3'>Ҳаракатлар</h3>
+              <h3 className='text-lg font-semibold mb-3'>{t('actions')}</h3>
               <div className='grid grid-cols-2 gap-3'>
                 <Button
                   variant='outline'
@@ -213,7 +216,7 @@ const VisitDetail = ({
                   }}
                 >
                   <FilePlus className='w-4 h-4 mr-2' />
-                  Рецепт Ёзиш
+                  {t('writePrescription')}
                 </Button>
                 <Button
                   variant='outline'
@@ -221,7 +224,7 @@ const VisitDetail = ({
                   onClick={handleDeleteFromDetail}
                 >
                   <Trash2 className='w-4 h-4 mr-2' />
-                  Ўчириш
+                  {t('delete')}
                 </Button>
                 <Button
                   variant='outline'
@@ -229,7 +232,7 @@ const VisitDetail = ({
                   onClick={handleEditFromDetail}
                 >
                   <Edit className='w-4 h-4 mr-2' />
-                  Таҳрирлаш
+                  {t('edit')}
                 </Button>
                 <Button
                   variant='default'
@@ -239,10 +242,10 @@ const VisitDetail = ({
                 >
                   <CheckCircle2 className='w-4 h-4 mr-2' />
                   {isCompleting
-                    ? 'Якунланмоқда...'
+                    ? t('completing')
                     : selectedExam.status === 'completed'
-                    ? 'Якунланган'
-                    : 'Кўрикни Якунлаш'}
+                    ? t('completed')
+                    : t('completeExam')}
                 </Button>
               </div>
             </div>

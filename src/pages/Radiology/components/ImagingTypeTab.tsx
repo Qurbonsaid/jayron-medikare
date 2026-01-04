@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ import { UpdateImagingType } from ".";
 import { DeleteWarnImagingType } from ".";
 
 export const ImagingTypeTab = () => {
+  const { t } = useTranslation('radiology');
   const [showNewModal, setShowNewModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -70,9 +72,9 @@ export const ImagingTypeTab = () => {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-1">
-          <h2 className="text-xl font-semibold">Текшириш турлари</h2>
+          <h2 className="text-xl font-semibold">{t('imagingTypeTab.title')}</h2>
           <p className="text-sm text-muted-foreground">
-            МРТ, КТ, Рентген ва бошқа текшириш турларини бошқариш
+            {t('imagingTypeTab.subtitle')}
           </p>
         </div>
         <Button
@@ -80,7 +82,7 @@ export const ImagingTypeTab = () => {
           className="w-full sm:w-auto"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Янги тур қўшиш
+          {t('imagingTypeTab.addNewType')}
         </Button>
       </div>
 
@@ -91,7 +93,7 @@ export const ImagingTypeTab = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                 <Input
-                  placeholder="Номи бўйича қидириш..."
+                  placeholder={t('imagingTypeTab.searchByName')}
                   className="pl-9 sm:pl-10 h-10 sm:h-12 text-sm sm:text-base"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -111,7 +113,7 @@ export const ImagingTypeTab = () => {
                 disabled={!searchQuery && currentPage === 1}
               >
                 <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="ml-2">Қидирувни тозалаш</span>
+                <span className="ml-2">{t('imagingTypeTab.clearSearch')}</span>
               </Button>
             </div>
           </div>
@@ -121,11 +123,11 @@ export const ImagingTypeTab = () => {
       {imagingTypes && imagingTypes?.data && imagingTypes?.data.length > 0 && (
         <div className="flex items-start sm:items-center justify-between gap-3 mb-4">
           <p className="text-sm sm:text-base text-muted-foreground">
-            Жами:{" "}
+            {t('imagingTypeTab.total')}:{" "}
             <span className="font-semibold text-foreground">
               {imagingTypes?.pagination?.total || 0}
             </span>{" "}
-            тур
+            {t('imagingTypeTab.type')}
           </p>
           <Select
             value={itemsPerPage.toString()}
@@ -151,7 +153,7 @@ export const ImagingTypeTab = () => {
         <Card className="card-shadow p-8 sm:p-12">
           <LoadingSpinner
             size="lg"
-            text="Юкланмоқда..."
+            text={t('viewer.loading')}
             className="justify-center"
           />
         </Card>
@@ -163,9 +165,9 @@ export const ImagingTypeTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-center">№</TableHead>
-                  <TableHead className="text-center">Номи</TableHead>
-                  <TableHead className="text-center">Тавсиф</TableHead>
-                  <TableHead className="text-right">Ҳаракатлар</TableHead>
+                  <TableHead className="text-center">{t('imagingTypeTab.name')}</TableHead>
+                  <TableHead className="text-center">{t('imagingTypeTab.description')}</TableHead>
+                  <TableHead className="text-right">{t('imagingTypeTab.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -178,7 +180,7 @@ export const ImagingTypeTab = () => {
                       {type.name}
                     </TableCell>
                     <TableCell className="text-center">
-                      {type.description || "Тавсиф йўқ"}
+                      {type.description || t('imagingTypeTab.noDescription')}
                     </TableCell>
                     <TableCell className="flex justify-end pr-6">
                       <DropdownMenu>
@@ -199,7 +201,7 @@ export const ImagingTypeTab = () => {
                               className="w-full bg-yellow-600 text-white"
                             >
                               <Edit className="w-4 h-4 mr-2" />
-                              Таҳрирлаш
+                              {t('imagingTypeTab.edit')}
                             </Button>
                           </DropdownMenuItem>
                           <DropdownMenuItem>
@@ -213,7 +215,7 @@ export const ImagingTypeTab = () => {
                               className="w-full bg-red-600 text-white"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Ўчириш
+                              {t('imagingTypeTab.delete')}
                             </Button>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -237,7 +239,7 @@ export const ImagingTypeTab = () => {
                         {type.name}
                       </h3>
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        {type.description || "Тавсиф йўқ"}
+                        {type.description || t('imagingTypeTab.noDescription')}
                       </p>
                     </div>
                     <DropdownMenu>
@@ -258,7 +260,7 @@ export const ImagingTypeTab = () => {
                             className="w-full bg-yellow-600 text-white"
                           >
                             <Edit className="w-4 h-4 mr-2" />
-                            Таҳрирлаш
+                            {t('imagingTypeTab.edit')}
                           </Button>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
@@ -272,7 +274,7 @@ export const ImagingTypeTab = () => {
                             className="w-full bg-red-600 text-white"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Ўчириш
+                            {t('imagingTypeTab.delete')}
                           </Button>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -286,9 +288,9 @@ export const ImagingTypeTab = () => {
           {/* Pagination */}
           <div className="px-3 xl:px-6 py-2 xl:py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="text-xs xl:text-sm text-muted-foreground min-w-max">
-              Sahifa {imagingTypes.pagination.page} dan{" "}
-              {imagingTypes.pagination.pages} (Жами:{" "}
-              {imagingTypes.pagination.total} та)
+              {t('imagingTypeTab.page')} {imagingTypes.pagination.page} {t('imagingTypeTab.of')}{" "}
+              {imagingTypes.pagination.pages} ({t('imagingTypeTab.totalItems')}:{" "}
+              {imagingTypes.pagination.total} {t('imagingTypeTab.items')})
             </div>
 
             <div className="flex gap-2">
@@ -300,7 +302,7 @@ export const ImagingTypeTab = () => {
                 className="text-xs xl:text-sm"
               >
                 <IconLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Олдинги</span>
+                <span className="hidden sm:inline">{t('imagingTypeTab.previous')}</span>
               </Button>
               {(() => {
                 const pages = [];
@@ -360,7 +362,7 @@ export const ImagingTypeTab = () => {
                 onClick={() => setCurrentPage(currentPage + 1)}
                 className="text-xs xl:text-sm"
               >
-                <span className="hidden sm:inline">Кейинги</span>
+                <span className="hidden sm:inline">{t('imagingTypeTab.next')}</span>
                 <IconRight className="w-4 h-4" />
               </Button>
             </div>
@@ -372,18 +374,18 @@ export const ImagingTypeTab = () => {
             icon={Activity}
             title={
               searchQuery || currentPage > 1
-                ? "Ҳеч нарса топилмади"
-                : "Ҳали текшириш турлари йўқ"
+                ? t('imagingTypeTab.nothingFound')
+                : t('imagingTypeTab.noImagingTypesYet')
             }
             description={
               searchQuery || currentPage > 1
-                ? "Қидирув сўзини текширинг ёки филтрни ўзгартиринг"
-                : "Биринчи текшириш турини қўшиш учун қуйидаги тугмани босинг"
+                ? t('imagingTypeTab.checkSearchOrFilter')
+                : t('imagingTypeTab.addFirstType')
             }
             actionLabel={
               searchQuery || currentPage > 1
-                ? "Филтрни тозалаш"
-                : "+ Янги тур қўшиш"
+                ? t('imagingTypeTab.clearFilter')
+                : t('imagingTypeTab.addNewTypeBtn')
             }
             onAction={() =>
               searchQuery || currentPage > 1

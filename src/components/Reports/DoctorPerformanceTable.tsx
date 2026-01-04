@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Stethoscope } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { DateRangeFilter } from './DateRangeFilter'
 
 interface DoctorPerformanceTableProps {
@@ -30,6 +31,8 @@ export const DoctorPerformanceTable = ({
 	interval,
 	onIntervalChange,
 }: DoctorPerformanceTableProps) => {
+	const { t } = useTranslation('reports')
+
 	const formatDate = (year: number, month?: number, day?: number) => {
 		if (day) return `${day}.${month}.${year}`
 		if (month) return `${month}.${year}`
@@ -65,7 +68,7 @@ export const DoctorPerformanceTable = ({
 			<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4'>
 				<h3 className='text-base sm:text-lg font-semibold flex items-center gap-2'>
 					<Stethoscope className='w-5 h-5 text-blue-600' />
-					Шифокорлар фаолияти
+					{t('doctorsActivity')}
 				</h3>
 				<div className='w-full sm:w-48'>
 					<DateRangeFilter value={interval} onChange={onIntervalChange} />
@@ -76,16 +79,16 @@ export const DoctorPerformanceTable = ({
 					<thead>
 						<tr className='border-b'>
 							<th className='text-left py-3 px-2 text-sm font-medium text-muted-foreground'>
-								Сана
+								{t('date')}
 							</th>
 							<th className='text-left py-3 px-2 text-sm font-medium text-muted-foreground'>
-								Шифокор
+								{t('doctor')}
 							</th>
 							<th className='text-left py-3 px-2 text-sm font-medium text-muted-foreground hidden sm:table-cell'>
-								Телефон
+								{t('phone')}
 							</th>
 							<th className='text-center py-3 px-2 text-sm font-medium text-muted-foreground'>
-								Кўриклар
+								{t('examinations')}
 							</th>
 						</tr>
 					</thead>
@@ -122,7 +125,7 @@ export const DoctorPerformanceTable = ({
 				</table>
 				{sortedData.length === 0 && (
 					<div className='text-center py-8 text-muted-foreground'>
-						Маълумот топилмади
+						{t('noDataFound')}
 					</div>
 				)}
 			</div>

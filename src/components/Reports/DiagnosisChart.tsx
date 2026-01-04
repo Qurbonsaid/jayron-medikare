@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Activity } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
 	Cell,
 	Legend,
@@ -34,6 +35,8 @@ const COLORS = [
 ]
 
 export const DiagnosisChart = ({ data, isLoading }: DiagnosisChartProps) => {
+	const { t } = useTranslation('reports')
+
 	const chartData = data.map(item => ({
 		name: `${item.diagnosis_name} ${item.diagnosis_code ? `(${item.diagnosis_code})` : ''}`,
 		value: item.count,
@@ -52,7 +55,7 @@ export const DiagnosisChart = ({ data, isLoading }: DiagnosisChartProps) => {
 		<Card className='p-4 sm:p-6'>
 			<h3 className='text-base sm:text-lg font-semibold mb-4 flex items-center gap-2'>
 				<Activity className='w-5 h-5 text-purple-600' />
-				Ташхислар тақсимоти
+				{t('diagnosisDistribution')}
 			</h3>
 			<ResponsiveContainer width='100%' height={350}>
 				<PieChart>

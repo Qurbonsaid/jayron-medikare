@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ export const QuickAddPatientModal = ({
   onOpenChange,
   onPatientCreated,
 }: QuickAddPatientModalProps) => {
+  const { t } = useTranslation("inpatient");
   const [fullname, setFullname] = useState("");
   const [phone, setPhone] = useState("+998");
   const [gender, setGender] = useState<"male" | "female" | "">("");
@@ -52,38 +54,38 @@ export const QuickAddPatientModal = ({
 
     // Validation
     if (!fullname.trim()) {
-      toast.error("Исм-фамилия киритинг");
+      toast.error(t("quickAddPatient.enterFullname"));
       return;
     }
 
     const cleanedPhone = phone.replace(/\D/g, "");
     if (!cleanedPhone || cleanedPhone.length !== 12) {
-      toast.error("Телефон рақамини тўлиқ киритинг");
+      toast.error(t("quickAddPatient.enterFullPhone"));
       return;
     }
 
     if (!gender) {
-      toast.error("Жинсни танланг");
+      toast.error(t("quickAddPatient.selectGender"));
       return;
     }
 
     if (!dateOfBirth) {
-      toast.error("Туғилган санани киритинг");
+      toast.error(t("quickAddPatient.enterBirthDate"));
       return;
     }
 
     if (!address.trim()) {
-      toast.error("Манзил киритинг");
+      toast.error(t("quickAddPatient.enterAddress"));
       return;
     }
 
     if (!passportSeries || passportSeries.length !== 2) {
-      toast.error("Паспорт сериясини киритинг (2 та ҳарф)");
+      toast.error(t("quickAddPatient.enterPassportSeries"));
       return;
     }
 
     if (!passportNumber || passportNumber.length !== 7) {
-      toast.error("Паспорт рақамини киритинг (7 та рақам)");
+      toast.error(t("quickAddPatient.enterPassportNumber"));
       return;
     }
 
@@ -104,17 +106,17 @@ export const QuickAddPatientModal = ({
       
       // Backend muvaffaqiyatli javob qaytardi
       if (response.success && response.data?._id) {
-        toast.success("Бемор муваффақиятли қўшилди!");
+        toast.success(t("quickAddPatient.addSuccess"));
         onPatientCreated(response.data._id);
         resetForm();
         onOpenChange(false);
       } else {
-        toast.error("Бемор қўшилди, лекин маълумот олишда хатолик");
+        toast.error(t("quickAddPatient.addSuccessNoData"));
       }
     } catch (error) {
       // Network yoki backend xatolari
       const err = error as { data?: { message?: string; error?: { msg?: string } }; message?: string };
-      const errorMsg = err?.data?.message || err?.data?.error?.msg || err?.message || "Бемор қўшишда хатолик юз берди";
+      const errorMsg = err?.data?.message || err?.data?.error?.msg || err?.message || t("quickAddPatient.addError");
       toast.error(errorMsg);
       console.error("Patient creation error:", error);
     }
@@ -136,10 +138,10 @@ export const QuickAddPatientModal = ({
         <DialogHeader className="space-y-2 sm:space-y-3">
           <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
             <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-            Янги Бемор Қўшиш
+            {t("quickAddPatient.title")}
           </DialogTitle>
           <DialogDescription className="text-sm sm:text-base">
-            Тезкор бемор қўшиш - асосий маълумотлар
+            {t("quickAddPatient.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -147,11 +149,11 @@ export const QuickAddPatientModal = ({
           {/* Full Name */}
           <div className="space-y-2">
             <Label htmlFor="fullname" className="text-sm sm:text-base">
-              Исм-фамилия <span className="text-red-500">*</span>
+              {t("quickAddPatient.fullname")} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="fullname"
-              placeholder="Алиев Валий Собирович"
+              placeholder={t("quickAddPatient.fullnamePlaceholder")}
               value={fullname}
               onChange={(e) => {
                 const value = e.target.value.replace(
@@ -168,7 +170,7 @@ export const QuickAddPatientModal = ({
           {/* Phone */}
           <div className="space-y-2">
             <Label htmlFor="phone" className="text-sm sm:text-base">
-              Телефон <span className="text-red-500">*</span>
+              {t("quickAddPatient.phone")} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="phone"
@@ -192,22 +194,22 @@ export const QuickAddPatientModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label htmlFor="gender" className="text-sm sm:text-base">
-                Жинси <span className="text-red-500">*</span>
+                {t("quickAddPatient.gender")} <span className="text-red-500">*</span>
               </Label>
               <Select value={gender} onValueChange={(value: "male" | "female") => setGender(value)}>
                 <SelectTrigger className="text-sm sm:text-base h-10 sm:h-11">
-                  <SelectValue placeholder="Жинсни танланг" />
+                  <SelectValue placeholder={t("quickAddPatient.selectGenderPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="male" className="text-sm sm:text-base">Эркак</SelectItem>
-                  <SelectItem value="female" className="text-sm sm:text-base">Аёл</SelectItem>
+                  <SelectItem value="male" className="text-sm sm:text-base">{t("quickAddPatient.male")}</SelectItem>
+                  <SelectItem value="female" className="text-sm sm:text-base">{t("quickAddPatient.female")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="date_of_birth" className="text-sm sm:text-base">
-                Туғилган сана <span className="text-red-500">*</span>
+                {t("quickAddPatient.birthDate")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="date_of_birth"
@@ -224,11 +226,11 @@ export const QuickAddPatientModal = ({
           {/* Address */}
           <div className="space-y-2">
             <Label htmlFor="address" className="text-sm sm:text-base">
-              Манзил <span className="text-red-500">*</span>
+              {t("quickAddPatient.address")} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="address"
-              placeholder="Кўча номи, уй рақами"
+              placeholder={t("quickAddPatient.addressPlaceholder")}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               required
@@ -238,7 +240,7 @@ export const QuickAddPatientModal = ({
 
           {/* Passport */}
           <div className="space-y-2">
-            <Label className="text-sm sm:text-base">Паспорт маълумотлари <span className="text-red-500">*</span></Label>
+            <Label className="text-sm sm:text-base">{t("quickAddPatient.passport")} <span className="text-red-500">*</span></Label>
             <div className="grid grid-cols-5 gap-2">
               <div className="col-span-2">
                 <Input
@@ -283,7 +285,7 @@ export const QuickAddPatientModal = ({
               disabled={isLoading}
               className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
             >
-              Бекор қилиш
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
@@ -295,7 +297,7 @@ export const QuickAddPatientModal = ({
               ) : (
                 <>
                   <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                  Сақлаш ва Давом Этиш
+                  {t("quickAddPatient.saveAndContinue")}
                 </>
               )}
             </Button>

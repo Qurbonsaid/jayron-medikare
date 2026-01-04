@@ -2,6 +2,7 @@ import { REPORT_DATE_FILTER } from '@/app/api/report/types'
 import { Card } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
 	CartesianGrid,
 	Legend,
@@ -32,6 +33,7 @@ export const PatientChart = ({
 	interval,
 	onIntervalChange,
 }: PatientChartProps) => {
+	const { t } = useTranslation('reports')
 	const formatDate = (item: PatientChartProps['data'][0]) => {
 		const { year, month, day } = item._id
 		if (day) return `${day}.${month}.${year}`
@@ -55,9 +57,9 @@ export const PatientChart = ({
 
 	const chartData = sortedData.map(item => ({
 		name: formatDate(item),
-		Жами: item.totalPatients,
-		Актив: item.activePatients,
-		Ноактив: item.inactivePatients,
+		[t('total')]: item.totalPatients,
+		[t('active')]: item.activePatients,
+		[t('inactive')]: item.inactivePatients,
 	}))
 
 	if (isLoading) {
@@ -73,7 +75,7 @@ export const PatientChart = ({
 			<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4'>
 				<h3 className='text-base sm:text-lg font-semibold flex items-center gap-2'>
 					<Users className='w-5 h-5 text-blue-600' />
-					Беморлар статистикаси
+					{t('patientsStatistics')}
 				</h3>
 				<div className='w-full sm:w-48'>
 					<DateRangeFilter value={interval} onChange={onIntervalChange} />
@@ -88,19 +90,19 @@ export const PatientChart = ({
 					<Legend />
 					<Line
 						type='monotone'
-						dataKey='Жами'
+						dataKey={t('total')}
 						stroke='#3b82f6'
 						strokeWidth={2}
 					/>
 					<Line
 						type='monotone'
-						dataKey='Актив'
+						dataKey={t('active')}
 						stroke='#10b981'
 						strokeWidth={2}
 					/>
 					<Line
 						type='monotone'
-						dataKey='Ноактив'
+						dataKey={t('inactive')}
 						stroke='#ef4444'
 						strokeWidth={2}
 					/>

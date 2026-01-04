@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { LucideIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface StatisticsCardProps {
 	title: string
@@ -22,6 +23,7 @@ export const StatisticsCard = ({
 	trend,
 	variant = 'default',
 }: StatisticsCardProps) => {
+	const { t } = useTranslation('reports')
 	const variantStyles = {
 		default: 'bg-primary/10 text-primary',
 		success:
@@ -50,7 +52,7 @@ export const StatisticsCard = ({
 							>
 								{trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
 							</span>
-							<span className='text-xs text-muted-foreground'>охирги давр</span>
+							<span className='text-xs text-muted-foreground'>{t('lastPeriod')}</span>
 						</div>
 					)}
 				</div>

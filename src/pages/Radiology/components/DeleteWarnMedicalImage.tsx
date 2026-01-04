@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 interface DeleteWarnMedicalImageProps {
@@ -22,13 +23,14 @@ export const DeleteWarnMedicalImage = ({
   onOpenChange,
   medicalImage,
 }: DeleteWarnMedicalImageProps) => {
+  const { t } = useTranslation("radiology");
   const [deleteMedicalImage, { isLoading }] = useDeleteMedicalImageMutation();
   const handleRequest = useHandleRequest();
 
   const getPatientName = () => {
-    if (!medicalImage) return "Номаълум";
-    if (typeof medicalImage.patient_id === "string") return "Номаълум";
-    return (medicalImage.patient_id as PatientInfo)?.fullname || "Номаълум";
+    if (!medicalImage) return t("unknown");
+    if (typeof medicalImage.patient_id === "string") return t("unknown");
+    return (medicalImage.patient_id as PatientInfo)?.fullname || t("unknown");
   };
 
   const handleDelete = async () => {
@@ -38,11 +40,11 @@ export const DeleteWarnMedicalImage = ({
       request: async () =>
         await deleteMedicalImage({ id: medicalImage._id }).unwrap(),
       onSuccess: () => {
-        toast.success("Тиббий таsvир муваффақиятли ўчирилди");
+        toast.success(t("imageDeletedSuccess"));
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Ўчиришда хатолик");
+        toast.error(data?.error?.msg || t("deleteError"));
       },
     });
   };
@@ -50,21 +52,20 @@ export const DeleteWarnMedicalImage = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogTitle>Тиббий тасвирни ўчириш</DialogTitle>
+        <DialogTitle>{t("deleteMedicalImage")}</DialogTitle>
         <DialogDescription>
-          Ростан ҳам <strong>{getPatientName()}</strong> беморнинг тиббий
-          тасвирларини ўчирмоқчимисиз? Бу амални бекор қилиб бўлмайди.
+          {t("deleteMedicalImageConfirm", { patientName: getPatientName() })}
         </DialogDescription>
         <DialogFooter className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Бекор қилиш
+            {t("cancel")}
           </Button>
           <Button
             variant="destructive"
             disabled={isLoading}
             onClick={handleDelete}
           >
-            {isLoading ? "Ўчирилмоқда..." : "Ҳа, ўчирилсин"}
+            {isLoading ? t("deleting") : t("yesDelete")}
           </Button>
         </DialogFooter>
       </DialogContent>

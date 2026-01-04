@@ -76,6 +76,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import AllPrescriptionsDownloadButton, {
@@ -85,36 +86,43 @@ import AllPrescriptionsDownloadButton, {
 } from '../../components/PDF/ExaminationPDF';
 import { ViewMedicalImage } from '../Radiology/components';
 
-// Tana qismlari uchun o'zbek nomlari
-const bodyPartLabels: Record<string, string> = {
-  [BodyPartConstants.HEAD]: 'Бош',
-  [BodyPartConstants.NECK]: 'Бўйин',
-  [BodyPartConstants.CHEST]: 'Кўкрак',
-  [BodyPartConstants.ABDOMEN]: 'Қорин',
-  [BodyPartConstants.PELVIS]: 'Тос',
-  [BodyPartConstants.SPINE]: 'Умуртқа поғонаси',
-  [BodyPartConstants.ARM]: 'Қўл',
-  [BodyPartConstants.LEG]: 'Оёқ',
-  [BodyPartConstants.KNEE]: 'Тиззя',
-  [BodyPartConstants.SHOULDER]: 'Елка',
-  [BodyPartConstants.HAND]: 'Кафт',
-  [BodyPartConstants.FOOT]: 'Тобан',
-};
+// Body part labels will be loaded from translations
+const getBodyPartLabels = (t: (key: string) => string): Record<string, string> => ({
+  [BodyPartConstants.HEAD]: t('examinations:detail.bodyParts.head'),
+  [BodyPartConstants.NECK]: t('examinations:detail.bodyParts.neck'),
+  [BodyPartConstants.CHEST]: t('examinations:detail.bodyParts.chest'),
+  [BodyPartConstants.ABDOMEN]: t('examinations:detail.bodyParts.abdomen'),
+  [BodyPartConstants.PELVIS]: t('examinations:detail.bodyParts.pelvis'),
+  [BodyPartConstants.SPINE]: t('examinations:detail.bodyParts.spine'),
+  [BodyPartConstants.ARM]: t('examinations:detail.bodyParts.arm'),
+  [BodyPartConstants.LEG]: t('examinations:detail.bodyParts.leg'),
+  [BodyPartConstants.KNEE]: t('examinations:detail.bodyParts.knee'),
+  [BodyPartConstants.SHOULDER]: t('examinations:detail.bodyParts.shoulder'),
+  [BodyPartConstants.HAND]: t('examinations:detail.bodyParts.hand'),
+  [BodyPartConstants.FOOT]: t('examinations:detail.bodyParts.foot'),
+});
 
-const roomType = {
-  stasionar: 'Стасионар',
-  ambulator: 'Амбулатор',
-};
+const getRoomType = (t: (key: string) => string) => ({
+  stasionar: t('examinations:detail.roomTypes.stasionar'),
+  ambulator: t('examinations:detail.roomTypes.ambulator'),
+});
 
-const statusMap: Record<string, { label: string; bgColor: string }> = {
-  pending: { label: 'Кутилмоқда', bgColor: 'bg-yellow-500' },
-  active: { label: 'Фаол', bgColor: 'bg-blue-500' },
-  completed: { label: 'Тайёр', bgColor: 'bg-green-500' },
-};
+const getStatusMap = (t: (key: string) => string): Record<string, { label: string; bgColor: string }> => ({
+  pending: { label: t('examinations:detail.statuses.pending'), bgColor: 'bg-yellow-500' },
+  active: { label: t('examinations:detail.statuses.active'), bgColor: 'bg-blue-500' },
+  completed: { label: t('examinations:detail.statuses.completed'), bgColor: 'bg-green-500' },
+});
 
 const ExaminationDetail = () => {
+  const { t } = useTranslation(['examinations', 'common']);
   const navigate = useNavigate();
   const { id } = useParams();
+  
+  // Get translated labels
+  const bodyPartLabels = getBodyPartLabels(t);
+  const roomType = getRoomType(t);
+  const statusMap = getStatusMap(t);
+  
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -443,7 +451,7 @@ const ExaminationDetail = () => {
 
   const handleUpdate = async () => {
     if (!editForm.complaints.trim()) {
-      toast.error('Илтимос, шикоятни киритинг');
+      toast.error(t('examinations:detail.enterComplaint'));
       return;
     }
 
@@ -461,12 +469,12 @@ const ExaminationDetail = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли янгиланди');
+        toast.success(t('examinations:detail.examUpdated'));
         setIsEditMode(false);
         refetch();
       },
       onError: (err) => {
-        toast.error(err?.error?.msg || 'Хатолик юз берди');
+        toast.error(err?.error?.msg || t('examinations:detail.errorOccurred'));
       },
     });
   };
@@ -478,11 +486,11 @@ const ExaminationDetail = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли ўчирилди');
+        toast.success(t('examinations:detail.examDeleted'));
         navigate(-1);
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+        toast.error(error?.data?.error?.msg || t('examinations:detail.errorOccurred'));
       },
     });
   };
@@ -494,18 +502,18 @@ const ExaminationDetail = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли якунланди');
+        toast.success(t('examinations:detail.examCompleted'));
         refetch();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+        toast.error(error?.data?.error?.msg || t('examinations:detail.errorOccurred'));
       },
     });
   };
 
   const handleDeletePrescription = async (prescriptionId: string) => {
     // Delete prescription functionality is currently disabled in the API
-    toast.error('Рецептни ўчириш функцияси ҳозирча мавжуд эмас');
+    toast.error(t('examinations:detail.deletePrescriptionNotAvailable'));
   };
 
   // Service handlers
@@ -640,13 +648,13 @@ const ExaminationDetail = () => {
 
   const handleSaveService = async () => {
     if (services.length === 0) {
-      toast.error('Илтимос, хизмат қўшинг');
+      toast.error(t('examinations:detail.addServiceError'));
       return;
     }
 
     const invalidService = services.find((s) => !s.service_type_id);
     if (invalidService) {
-      toast.error('Илтимос, барча хизматлар учун турини танланг');
+      toast.error(t('examinations:detail.selectServiceTypeError'));
       return;
     }
 
@@ -790,8 +798,8 @@ const ExaminationDetail = () => {
       onSuccess: () => {
         toast.success(
           isEdit
-            ? 'Хизмат муваффақиятли янгиланди'
-            : 'Хизматлар муваффақиятли қўшилди'
+            ? t('examinations:detail.serviceUpdated')
+            : t('examinations:detail.serviceAdded')
         );
         setIsAddingService(false);
         setEditingServiceId(null);
@@ -804,8 +812,8 @@ const ExaminationDetail = () => {
         toast.error(
           error?.data?.error?.msg ||
             (isEdit
-              ? 'Хизматни янгилашда хатолик'
-              : 'Хизматларни қўшишда хатолик')
+              ? t('examinations:detail.serviceDeleteError')
+              : t('examinations:detail.errorOccurred'))
         );
       },
     });
@@ -813,12 +821,12 @@ const ExaminationDetail = () => {
 
   const handleUpdateService = async (serviceId: string) => {
     // Update service functionality - to be implemented
-    toast.error('Хизматни янгилаш функцияси ҳозирча мавжуд эмас');
+    toast.error(t('examinations:detail.updateServiceNotAvailable'));
   };
 
   const handleDeleteService = async (serviceId: string) => {
     if (!serviceId) {
-      toast.error('Хизмат маълумотлари топилмади');
+      toast.error(t('examinations:detail.serviceDataNotFound'));
       return;
     }
 
@@ -828,7 +836,7 @@ const ExaminationDetail = () => {
     );
 
     if (!serviceDoc || !serviceDoc.items) {
-      toast.error('Хизмат топилмади');
+      toast.error(t('examinations:detail.serviceNotFoundError'));
       return;
     }
 
@@ -868,12 +876,12 @@ const ExaminationDetail = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Хизмат муваффақиятли ўчирилди');
+        toast.success(t('examinations:detail.serviceDeleted'));
         setDeletingServiceId(null);
         refetchPatientServices();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хизматни ўчиришда хатолик');
+        toast.error(error?.data?.error?.msg || t('examinations:detail.serviceDeleteError'));
         setDeletingServiceId(null);
       },
     });
@@ -953,26 +961,26 @@ const ExaminationDetail = () => {
 
   const handleUpdatePrescription = async () => {
     if (!editingPrescriptionId || !editingPrescriptionDocId) {
-      toast.error('Рецепт маълумотлари топилмади');
+      toast.error(t('examinations:detail.prescriptionDataNotFound'));
       return;
     }
 
     if (!prescriptionForm.medication_id.trim()) {
-      toast.error('Илтимос, дорини танланг');
+      toast.error(t('examinations:detail.selectMedicationError'));
       return;
     }
     if (
       !prescriptionForm.frequency ||
       parseInt(prescriptionForm.frequency) <= 0
     ) {
-      toast.error('Илтимос, тўғри қабул қилиш частотасини киритинг');
+      toast.error(t('examinations:detail.frequencyError'));
       return;
     }
     if (
       !prescriptionForm.duration ||
       parseInt(prescriptionForm.duration) <= 0
     ) {
-      toast.error('Илтимос, тўғри муддатни киритинг');
+      toast.error(t('examinations:detail.durationError'));
       return;
     }
 
@@ -996,7 +1004,7 @@ const ExaminationDetail = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Рецепт муваффақиятли янгиланди');
+        toast.success(t('examinations:detail.prescriptionUpdated'));
         setEditingPrescriptionId(null);
         setEditingPrescriptionDocId(null);
         setPrescriptionForm({
@@ -1010,33 +1018,32 @@ const ExaminationDetail = () => {
         refetchPrescriptions();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Рецептни янгилашда хатолик');
+        toast.error(error?.data?.error?.msg || t('examinations:detail.prescriptionUpdateError'));
       },
     });
   };
 
   // Neurologic status handlers
   const neurologicFieldLabels: Record<string, string> = {
-    meningeal_symptoms: 'Менингеальные симптомы',
-    i_para_n_olfactorius: 'I пара – n.olfactorius',
-    ii_para_n_opticus: 'II пара – n. opticus',
-    iii_para_n_oculomotorius:
-      'III, IV, VI пары – n. oculomotorius, n. trochlearis, n. abducens',
-    iv_para_n_trochlearis: 'V пара – n.trigeminus',
-    v_para_n_trigeminus: 'VII пара – n. facialis',
-    vi_para_n_abducens: 'VIII пара – n. vestibulocochlearis',
-    vii_para_n_fascialis: 'IX, X пара – n. glossopharingeus, n. vagus',
-    viii_para_n_vestibulocochlearis: 'XI пара – n. accessorius',
-    ix_para_n_glossopharyngeus: 'XII пара – n. hypoglossus',
-    x_para_n_vagus: 'Симптомы орального автоматизма',
-    xi_para_n_accessorius: 'Двигательная система',
-    xii_para_n_hypoglossus: 'Чувствительная сфера',
-    motor_system: 'Координаторная сфера',
-    sensory_sphere: 'Высшие мозговые функции',
-    coordination_sphere: 'Синдромологический диагноз, обоснование',
-    higher_brain_functions: 'Топический диагноз и его обоснование',
-    syndromic_diagnosis_justification: 'Синдромологический диагноз',
-    topical_diagnosis_justification: 'Топический диагноз',
+    meningeal_symptoms: t('examinations:detail.neurologic.meningealSymptoms'),
+    i_para_n_olfactorius: t('examinations:detail.neurologic.paraN1'),
+    ii_para_n_opticus: t('examinations:detail.neurologic.paraN2'),
+    iii_para_n_oculomotorius: t('examinations:detail.neurologic.paraN3_4_6'),
+    iv_para_n_trochlearis: t('examinations:detail.neurologic.paraN5'),
+    v_para_n_trigeminus: t('examinations:detail.neurologic.paraN7'),
+    vi_para_n_abducens: t('examinations:detail.neurologic.paraN8'),
+    vii_para_n_fascialis: t('examinations:detail.neurologic.paraN9_10'),
+    viii_para_n_vestibulocochlearis: t('examinations:detail.neurologic.paraN11'),
+    ix_para_n_glossopharyngeus: t('examinations:detail.neurologic.paraN12'),
+    x_para_n_vagus: t('examinations:detail.neurologic.oralAutomatism'),
+    xi_para_n_accessorius: t('examinations:detail.neurologic.motorSystem'),
+    xii_para_n_hypoglossus: t('examinations:detail.neurologic.sensorySphere'),
+    motor_system: t('examinations:detail.neurologic.coordinationSphere'),
+    sensory_sphere: t('examinations:detail.neurologic.higherBrainFunctions'),
+    coordination_sphere: t('examinations:detail.neurologic.syndromicDiagnosisJustification'),
+    higher_brain_functions: t('examinations:detail.neurologic.topicalDiagnosisJustification'),
+    syndromic_diagnosis_justification: t('examinations:detail.neurologic.syndromicDiagnosis'),
+    topical_diagnosis_justification: t('examinations:detail.neurologic.topicalDiagnosis'),
   };
 
   const handleAddNeurologic = async () => {
@@ -1049,14 +1056,14 @@ const ExaminationDetail = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Неврологик статус муваффақиятли қўшилди');
+        toast.success(t('examinations:detail.neurologicCreated'));
         setIsAddingNeurologic(false);
         setNeurologicForm(initialNeurologicForm);
         refetchNeurologic();
       },
       onError: (error) => {
         toast.error(
-          error?.data?.error?.msg || 'Неврологик статусни қўшишда хатолик'
+          error?.data?.error?.msg || t('examinations:detail.neurologicAddError')
         );
       },
     });
@@ -1072,21 +1079,21 @@ const ExaminationDetail = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Неврологик статус муваффақиятли янгиланди');
+        toast.success(t('examinations:detail.neurologicUpdated'));
         setEditingNeurologicId(null);
         setNeurologicForm(initialNeurologicForm);
         refetchNeurologic();
       },
       onError: (error) => {
         toast.error(
-          error?.data?.error?.msg || 'Неврологик статусни янгилашда хатолик'
+          error?.data?.error?.msg || t('examinations:detail.neurologicUpdateError')
         );
       },
     });
   };
 
   const handleDeleteNeurologic = async (neurologicId: string) => {
-    if (!window.confirm('Бу неврологик статусни ўчиришни хоҳлайсизми?')) {
+    if (!window.confirm(t('examinations:detail.neurologicDeleteConfirm'))) {
       return;
     }
 
@@ -1096,12 +1103,12 @@ const ExaminationDetail = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Неврологик статус муваффақиятли ўчирилди');
+        toast.success(t('examinations:detail.neurologicDeleted'));
         refetchNeurologic();
       },
       onError: (error) => {
         toast.error(
-          error?.data?.error?.msg || 'Неврологик статусни ўчиришда хатолик'
+          error?.data?.error?.msg || t('examinations:detail.neurologicDeleteError')
         );
       },
     });
@@ -1145,7 +1152,7 @@ const ExaminationDetail = () => {
       <div className='min-h-screen bg-background flex items-center justify-center'>
         <div className='text-center'>
           <Loader2 className='h-12 w-12 animate-spin text-primary mx-auto mb-4' />
-          <p className='text-muted-foreground'>Юкланмоқда...</p>
+          <p className='text-muted-foreground'>{t('examinations:detail.loading')}</p>
         </div>
       </div>
     );
@@ -1155,10 +1162,10 @@ const ExaminationDetail = () => {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
         <div className='text-center'>
-          <p className='text-muted-foreground mb-4'>Кўрик топилмади</p>
+          <p className='text-muted-foreground mb-4'>{t('examinations:detail.notFound')}</p>
           <Button onClick={() => navigate(-1)}>
             <ArrowLeft className='w-4 h-4 mr-2' />
-            Орқага
+            {t('examinations:detail.back')}
           </Button>
         </div>
       </div>
@@ -1171,31 +1178,31 @@ const ExaminationDetail = () => {
         {/* Patient Info Card */}
         <Card className='mb-6'>
           <CardHeader className='flex flex-row items-center justify-between'>
-            <CardTitle>Бемор Маълумотлари</CardTitle>
+            <CardTitle>{t('detail.patientInfo')}</CardTitle>
             <ExaminationInfoDownloadButton exam={exam} />
           </CardHeader>
           <CardContent>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
               <div>
-                <Label className='text-muted-foreground'>Исм</Label>
+                <Label className='text-muted-foreground'>{t('detail.name')}</Label>
                 <p className='font-medium mt-1'>{exam.patient_id?.fullname}</p>
               </div>
               <div>
-                <Label className='text-muted-foreground'>Телефон</Label>
+                <Label className='text-muted-foreground'>{t('detail.phone')}</Label>
                 <p className='font-medium mt-1'>{exam.patient_id?.phone}</p>
               </div>
               <div>
-                <Label className='text-muted-foreground'>Шифокор</Label>
+                <Label className='text-muted-foreground'>{t('detail.doctor')}</Label>
                 <p className='font-medium mt-1'>{exam.doctor_id?.fullname}</p>
               </div>
               <div>
-                <Label className='text-muted-foreground'>Сана</Label>
+                <Label className='text-muted-foreground'>{t('detail.date')}</Label>
                 <p className='font-medium mt-1'>
                   {new Date(exam.created_at).toLocaleDateString('uz-UZ')}
                 </p>
               </div>
               <div>
-                <Label className='text-muted-foreground mr-5'>Тури :</Label>
+                <Label className='text-muted-foreground mr-5'>{t('type')} :</Label>
                 <p
                   className={`font-medium mt-1 inline-block px-2 py-0.5 rounded ${
                     exam.treatment_type === 'stasionar'
@@ -1207,7 +1214,7 @@ const ExaminationDetail = () => {
                 </p>
               </div>
               <div>
-                <Label className='text-muted-foreground mr-5'>Статус :</Label>
+                <Label className='text-muted-foreground mr-5'>{t('status')} :</Label>
                 <p
                   className={`font-medium mt-1 inline-block px-2 py-0.5 rounded text-white ${
                     statusMap[exam.status]?.bgColor || 'bg-gray-500'
@@ -1235,7 +1242,7 @@ const ExaminationDetail = () => {
                   }}
                 >
                   <FilePlus className='w-4 h-4 mr-2' />
-                  Рецепт Ёзиш
+                  {t('detail.writePrescription')}
                 </Button>
               ) : (
                 ''
@@ -1248,7 +1255,7 @@ const ExaminationDetail = () => {
                   disabled={isEditMode}
                 >
                   <Edit className='w-4 h-4 mr-2' />
-                  Таҳрирлаш
+                  {t('detail.editExam')}
                 </Button>
               ) : (
                 ''
@@ -1260,7 +1267,7 @@ const ExaminationDetail = () => {
                   onClick={() => setIsDeleteConfirm(true)}
                 >
                   <Trash2 className='w-4 h-4 mr-2' />
-                  Ўчириш
+                  {t('detail.deleteExam')}
                 </Button>
               ) : (
                 ''
@@ -1273,10 +1280,10 @@ const ExaminationDetail = () => {
               >
                 <CheckCircle2 className='w-4 h-4 mr-2' />
                 {isCompleting
-                  ? 'Якунланмоқда...'
+                  ? t('examinations:detail.completing')
                   : exam.status === 'completed'
-                  ? 'Якунланган'
-                  : 'Якунлаш'}
+                  ? t('examinations:detail.completed')
+                  : t('examinations:detail.completeExam')}
               </Button>
             </div>
           </CardContent>
@@ -1287,14 +1294,12 @@ const ExaminationDetail = () => {
           value={activeTab}
           onValueChange={(value) => {
             if (!tabPermissions[value]) {
-              toast.error('Ушбу бўлим учун руҳсат йўқ');
+              toast.error(t('examinations:detail.noPermission'));
               return;
             }
             // Tahrirlash rejimida boshqa tablarga o'tishni bloklash
             if (isEditMode && value !== 'examination') {
-              toast.error(
-                'Илтимос, аввал таҳрирлашни тугатинг ёки бекор қилинг'
-              );
+              toast.error(t('examinations:detail.tabLoadError'));
               return;
             }
             setActiveTab(value);
@@ -1307,7 +1312,7 @@ const ExaminationDetail = () => {
                 value='examination'
                 className='py-2 sm:py-3 text-xs sm:text-sm'
               >
-                Кўрик
+                {t('examinations:detail.tabs.examination')}
               </TabsTrigger>
             )}
             {canReadPrescription && (
@@ -1316,7 +1321,7 @@ const ExaminationDetail = () => {
                 className='py-2 sm:py-3 text-xs sm:text-sm'
                 disabled={isEditMode}
               >
-                Рецептлар
+                {t('examinations:detail.tabs.prescriptions')}
               </TabsTrigger>
             )}
             {canReadServices && (
@@ -1325,7 +1330,7 @@ const ExaminationDetail = () => {
                 className='py-2 sm:py-3 text-xs sm:text-sm'
                 disabled={isEditMode}
               >
-                Хизматлар
+                {t('examinations:detail.tabs.services')}
               </TabsTrigger>
             )}
             {canReadVisits && (
@@ -1334,7 +1339,7 @@ const ExaminationDetail = () => {
                 className='py-2 sm:py-3 text-xs sm:text-sm'
                 disabled={isEditMode}
               >
-                Таҳлил
+                {t('examinations:detail.tabs.visits')}
               </TabsTrigger>
             )}
             {canReadImages && (
@@ -1343,7 +1348,7 @@ const ExaminationDetail = () => {
                 className='py-2 sm:py-3 text-xs sm:text-sm'
                 disabled={isEditMode}
               >
-                Тасвирлар
+                {t('examinations:detail.tabs.images')}
               </TabsTrigger>
             )}
             {canReadExamination && (
@@ -1352,7 +1357,7 @@ const ExaminationDetail = () => {
                 className='py-2 sm:py-3 text-xs sm:text-sm'
                 disabled={isEditMode}
               >
-                Неврологик Статус
+                {t('examinations:detail.tabs.neurologic')}
               </TabsTrigger>
             )}
           </TabsList>
@@ -1362,15 +1367,15 @@ const ExaminationDetail = () => {
             <TabsContent value='examination'>
               <Card>
                 <CardHeader>
-                  <CardTitle>Кўрик Маълумотлари</CardTitle>
+                  <CardTitle>{t('examinations:detail.examInfo')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {isEditMode ? (
                     <div className='space-y-4'>
                       <div className='space-y-2'>
-                        <Label>Шикоят</Label>
+                        <Label>{t('examinations:detail.complaint')}</Label>
                         <Textarea
-                          placeholder='Бемор шикоятини киритинг...'
+                          placeholder={t('examinations:detail.enterComplaint')}
                           value={editForm.complaints}
                           onChange={(e) =>
                             setEditForm({
@@ -1383,7 +1388,7 @@ const ExaminationDetail = () => {
                       </div>
 
                       <div className='space-y-2'>
-                        <Label>Ташхис</Label>
+                        <Label>{t('detail.diagnosis')}</Label>
                         <Select
                           value={editForm.diagnosis}
                           onValueChange={(value) =>
@@ -1391,7 +1396,7 @@ const ExaminationDetail = () => {
                           }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder='Ташхисни танланг...' />
+                            <SelectValue placeholder={t('detail.selectDiagnosis')} />
                           </SelectTrigger>
                           <SelectContent>
                             {diagnoses.map((diagnosis: any) => (
@@ -1407,9 +1412,9 @@ const ExaminationDetail = () => {
                       </div>
 
                       <div className='space-y-2'>
-                        <Label>Тавсия</Label>
+                        <Label>{t('detail.recommendation')}</Label>
                         <Textarea
-                          placeholder='Кўрик натижаси ва тавсияларни киритинг...'
+                          placeholder={t('detail.enterRecommendationPlaceholder')}
                           value={editForm.description}
                           onChange={(e) =>
                             setEditForm({
@@ -1427,36 +1432,36 @@ const ExaminationDetail = () => {
                           onClick={handleCancelEdit}
                           disabled={isUpdating}
                         >
-                          Бекор қилиш
+                          {t('common:cancel')}
                         </Button>
                         <Button onClick={handleUpdate} disabled={isUpdating}>
-                          {isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
+                          {isUpdating ? t('common:saving') : t('common:save')}
                         </Button>
                       </div>
                     </div>
                   ) : (
                     <div className='space-y-4'>
                       <div>
-                        <Label className='text-muted-foreground'>Шикоят</Label>
+                        <Label className='text-muted-foreground'>{t('examinations:detail.complaint')}</Label>
                         <p className='font-medium bg-muted p-3 rounded-md mt-1'>
-                          {exam.complaints || 'Киритилмаган'}
+                          {exam.complaints || t('examinations:detail.notEntered')}
                         </p>
                       </div>
                       <div>
-                        <Label className='text-muted-foreground'>Ташхис</Label>
+                        <Label className='text-muted-foreground'>{t('examinations:detail.diagnosis')}</Label>
                         <p className='font-medium bg-muted p-3 rounded-md mt-1'>
                           {typeof exam.diagnosis === 'object' &&
                           exam.diagnosis?.name
                             ? exam.diagnosis.name
                             : typeof exam.diagnosis === 'string'
                             ? exam.diagnosis
-                            : 'Киритилмаган'}
+                            : t('examinations:detail.notEntered')}
                         </p>
                       </div>
                       <div>
-                        <Label className='text-muted-foreground'>Тавсия</Label>
+                        <Label className='text-muted-foreground'>{t('detail.recommendation')}</Label>
                         <p className='font-medium bg-muted p-3 rounded-md mt-1'>
-                          {exam.description || 'Киритилмаган'}
+                          {exam.description || t('detail.notEntered')}
                         </p>
                       </div>
                     </div>
@@ -1468,7 +1473,7 @@ const ExaminationDetail = () => {
               {exam.rooms && exam.rooms.length > 0 && (
                 <Card className='mt-6'>
                   <CardHeader>
-                    <CardTitle>Хоналар Маълумотлари</CardTitle>
+                    <CardTitle>{t('detail.roomInfo')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className='space-y-4'>
@@ -1481,40 +1486,40 @@ const ExaminationDetail = () => {
                             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
                               <div>
                                 <Label className='text-muted-foreground'>
-                                  Хона Номи
+                                  {t('detail.roomName')}
                                 </Label>
                                 <p className='font-medium mt-1'>
-                                  {room.room_name || 'Номаълум'}
+                                  {room.room_name || t('detail.unknown')}
                                 </p>
                               </div>
                               <div>
                                 <Label className='text-muted-foreground'>
-                                  Қават
+                                  {t('detail.floor')}
                                 </Label>
                                 <p className='font-medium mt-1'>
-                                  {room.floor_number || 'Номаълум'}
+                                  {room.floor_number || t('detail.unknown')}
                                 </p>
                               </div>
                               <div>
                                 <Label className='text-muted-foreground'>
-                                  Нархи
+                                  {t('detail.price')}
                                 </Label>
                                 <p className='font-medium mt-1'>
                                   {room.room_price
-                                    ? `${room.room_price.toLocaleString()} сўм`
-                                    : 'Номаълум'}
+                                    ? `${room.room_price.toLocaleString()} ${t('detail.sum')}`
+                                    : t('detail.unknown')}
                                 </p>
                               </div>
                               <div>
                                 <Label className='text-muted-foreground'>
-                                  Муддати
+                                  {t('detail.duration')}
                                 </Label>
                                 <p className='font-medium mt-1'>
                                   {room.start_date
                                     ? new Date(
                                         room.start_date
                                       ).toLocaleDateString('uz-UZ')
-                                    : 'Номаълум'}
+                                    : t('detail.unknown')}
                                   {room.end_date && (
                                     <>
                                       {' - '}
@@ -1543,10 +1548,10 @@ const ExaminationDetail = () => {
                 <CardHeader>
                   <CardTitle className='flex items-center justify-between'>
                     <div className='flex items-center gap-2'>
-                      <span>Рецептлар</span>
+                      <span>{t('detail.prescriptions')}</span>
                       {prescriptions.length > 0 && (
                         <span className='text-sm font-normal text-muted-foreground'>
-                          ({prescriptions.length} та)
+                          ({prescriptions.length} {t('detail.items')})
                         </span>
                       )}
                     </div>
@@ -1566,7 +1571,7 @@ const ExaminationDetail = () => {
                         }}
                       >
                         <Plus className='w-4 h-4 mr-2' />
-                        Рецепт Қўшиш
+                        {t('detail.addPrescription')}
                       </Button>
                     </div>
                   </CardTitle>
@@ -1584,7 +1589,7 @@ const ExaminationDetail = () => {
                               <div className='mb-3'>
                                 <div className='flex items-center justify-between'>
                                   <span className='text-sm font-medium text-primary'>
-                                    Рецепт #{docIndex + 1} -{' '}
+                                    {t('detail.prescriptionNum')} #{docIndex + 1} -{' '}
                                     {new Date(
                                       prescriptionDoc.created_at
                                     ).toLocaleDateString('uz-UZ')}
@@ -1607,13 +1612,13 @@ const ExaminationDetail = () => {
                                         <div className='space-y-4'>
                                           <div className='flex items-center justify-between mb-2'>
                                             <span className='text-sm font-semibold text-primary'>
-                                              Дори #{itemIndex + 1} ни таҳрирлаш
+                                              {t('detail.editMedication')} #{itemIndex + 1}
                                             </span>
                                           </div>
                                           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
                                             <div>
                                               <Label className='text-xs'>
-                                                Дори
+                                                {t('detail.medication')}
                                               </Label>
                                               <Select
                                                 value={
@@ -1636,13 +1641,13 @@ const ExaminationDetail = () => {
                                                 }}
                                               >
                                                 <SelectTrigger className='mt-1'>
-                                                  <SelectValue placeholder='Дорини танланг...' />
+                                                  <SelectValue placeholder={t('detail.selectMedication')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                   <div className='p-2'>
                                                     <Input
                                                       ref={medicationSearchRef}
-                                                      placeholder='Қидириш...'
+                                                      placeholder={t('detail.search')}
                                                       value={medicationSearch}
                                                       onChange={(e) =>
                                                         setMedicationSearch(
@@ -1679,7 +1684,7 @@ const ExaminationDetail = () => {
                                             </div>
                                             <div>
                                               <Label className='text-xs'>
-                                                Қабул қилиш (кунига)
+                                                {t('detail.intakePerDay')}
                                               </Label>
                                               <Input
                                                 type='number'
@@ -1694,12 +1699,12 @@ const ExaminationDetail = () => {
                                                   })
                                                 }
                                                 className='mt-1'
-                                                placeholder='Кунига неча марта'
+                                                placeholder={t('detail.timesPerDay')}
                                               />
                                             </div>
                                             <div>
                                               <Label className='text-xs'>
-                                                Муддат (кун)
+                                                {t('detail.durationDays')}
                                               </Label>
                                               <Input
                                                 type='number'
@@ -1714,12 +1719,12 @@ const ExaminationDetail = () => {
                                                   })
                                                 }
                                                 className='mt-1'
-                                                placeholder='Қанча кун'
+                                                placeholder={t('detail.howManyDays')}
                                               />
                                             </div>
                                             <div>
                                               <Label className='text-xs'>
-                                                Кўрсатма
+                                                {t('detail.instruction')}
                                               </Label>
                                               <Input
                                                 value={
@@ -1733,13 +1738,13 @@ const ExaminationDetail = () => {
                                                   })
                                                 }
                                                 className='mt-1'
-                                                placeholder='Кўрсатма...'
+                                                placeholder={t('detail.instructionPlaceholder')}
                                               />
                                             </div>
                                           </div>
                                           <div>
                                             <Label className='text-xs'>
-                                              Қўшимча
+                                              {t('detail.additional')}
                                             </Label>
                                             <Textarea
                                               value={prescriptionForm.addons}
@@ -1750,7 +1755,7 @@ const ExaminationDetail = () => {
                                                 })
                                               }
                                               className='mt-1'
-                                              placeholder='Қўшимча маълумот...'
+                                              placeholder={t('detail.additionalInfo')}
                                               rows={2}
                                             />
                                           </div>
@@ -1762,7 +1767,7 @@ const ExaminationDetail = () => {
                                               disabled={isUpdatingPrescription}
                                             >
                                               <X className='w-3 h-3 mr-1' />
-                                              Бекор
+                                              {t('detail.cancel')}
                                             </Button>
                                             <Button
                                               size='sm'
@@ -1771,8 +1776,8 @@ const ExaminationDetail = () => {
                                             >
                                               <Save className='w-3 h-3 mr-1' />
                                               {isUpdatingPrescription
-                                                ? 'Сақланмоқда...'
-                                                : 'Сақлаш'}
+                                                ? t('detail.saving')
+                                                : t('detail.save')}
                                             </Button>
                                           </div>
                                         </div>
@@ -1781,7 +1786,7 @@ const ExaminationDetail = () => {
                                         <>
                                           <div className='flex items-center justify-between mb-2'>
                                             <span className='text-xs font-medium text-muted-foreground'>
-                                              Дори #{itemIndex + 1}
+                                              {t('detail.medication')} #{itemIndex + 1}
                                             </span>
                                             <div className='flex gap-1'>
                                               <Button
@@ -1805,35 +1810,35 @@ const ExaminationDetail = () => {
                                           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2'>
                                             <div>
                                               <Label className='text-xs text-muted-foreground'>
-                                                Дори
+                                                {t('detail.medication')}
                                               </Label>
                                               <p className='font-semibold text-sm'>
                                                 {item.medication_id?.name ||
-                                                  'Номаълум'}{' '}
+                                                  t('detail.unknown')}{' '}
                                                 {item.medication_id?.dosage &&
                                                   `(${item.medication_id.dosage})`}
                                               </p>
                                             </div>
                                             <div>
                                               <Label className='text-xs text-muted-foreground'>
-                                                Муддати
+                                                {t('detail.duration')}
                                               </Label>
                                               <p className='font-semibold text-sm'>
-                                                {item.duration} кун
+                                                {item.duration} {t('detail.days')}
                                               </p>
                                             </div>
                                             <div>
                                               <Label className='text-xs text-muted-foreground'>
-                                                Қабул Қилиш
+                                                {t('detail.intake')}
                                               </Label>
                                               <p className='font-semibold text-sm'>
-                                                Кунига {item.frequency} марта
+                                                {t('detail.timesPerDayCount', { count: item.frequency })}
                                               </p>
                                             </div>
                                             {item.instructions && (
                                               <div>
                                                 <Label className='text-xs text-muted-foreground'>
-                                                  Кўрсатма
+                                                  {t('detail.instruction')}
                                                 </Label>
                                                 <p className='text-sm'>
                                                   {item.instructions}
@@ -1846,7 +1851,7 @@ const ExaminationDetail = () => {
                                             item.days.length > 0 && (
                                               <div className='mt-2 pt-2 border-t'>
                                                 <Label className='text-xs text-muted-foreground mb-1 block'>
-                                                  Қабул қилиш кунлари
+                                                  {t('detail.intakeDays')}
                                                 </Label>
                                                 <div className='flex flex-wrap gap-1'>
                                                   {item.days.map((day: any) => (
@@ -1893,7 +1898,7 @@ const ExaminationDetail = () => {
                   ) : (
                     <div className='text-center py-8'>
                       <p className='text-muted-foreground mb-4'>
-                        Ҳали рецептлар қўшилмаган
+                        {t('detail.noPrescriptions')}
                       </p>
                       <Button
                         onClick={() => {
@@ -1903,7 +1908,7 @@ const ExaminationDetail = () => {
                         }}
                       >
                         <FilePlus className='w-4 h-4 mr-2' />
-                        Рецепт Ёзиш
+                        {t('detail.writePrescription')}
                       </Button>
                     </div>
                   )}
@@ -1919,10 +1924,10 @@ const ExaminationDetail = () => {
                 <CardHeader>
                   <CardTitle className='flex items-center justify-between'>
                     <div className='flex items-center gap-2'>
-                      <span>Хизматлар</span>
+                      <span>{t('detail.services')}</span>
                       {patientServices.length > 0 && (
                         <span className='text-sm font-normal text-muted-foreground'>
-                          ({patientServices.length} та)
+                          ({patientServices.length} {t('detail.items')})
                         </span>
                       )}
                     </div>
@@ -1982,7 +1987,7 @@ const ExaminationDetail = () => {
                         disabled={isAddingService}
                       >
                         <Plus className='w-4 h-4 mr-2' />
-                        Хизмат Қўшиш
+                        {t('detail.addService')}
                       </Button>
                     </div>
                   </CardTitle>
@@ -1997,14 +2002,14 @@ const ExaminationDetail = () => {
                         <CardContent className='pt-4'>
                           <div className='flex items-center justify-between mb-3'>
                             <Label className='text-sm font-semibold'>
-                              Хизматлар жадвали
+                              {t('detail.servicesTable')}
                             </Label>
                             {/* Show form controls if adding or editing */}
                             {(isAddingService || editingServiceId) && (
                               <div className='flex items-end gap-2'>
                                 <div className='w-32'>
                                   <Label className='text-xs'>
-                                    Муддат (кун)
+                                    {t('detail.durationDays')}
                                   </Label>
                                   <Input
                                     type='number'
@@ -2112,7 +2117,7 @@ const ExaminationDetail = () => {
                                 </div>
                                 <div>
                                   <Label className='text-xs'>
-                                    Бошланиш санаси
+                                    {t('detail.startDate')}
                                   </Label>
                                   <Input
                                     type='date'
@@ -2145,7 +2150,7 @@ const ExaminationDetail = () => {
                                   disabled={services.length === 0}
                                   className='h-8'
                                 >
-                                  Ҳар куни
+                                  {t('detail.everyDay')}
                                 </Button>
                                 <Button
                                   variant='outline'
@@ -2154,7 +2159,7 @@ const ExaminationDetail = () => {
                                   disabled={services.length === 0}
                                   className='h-8'
                                 >
-                                  2 кунда бир
+                                  {t('detail.everyOtherDay')}
                                 </Button>
                                 <Button
                                   variant='outline'
@@ -2211,7 +2216,7 @@ const ExaminationDetail = () => {
                                   className='h-8 bg-blue-500 hover:bg-blue-600 text-white'
                                 >
                                   <Plus className='w-3 h-3 mr-1' />
-                                  Қўшиш
+                                  {t('detail.add')}
                                 </Button>
                               </div>
                             )}
@@ -2321,7 +2326,7 @@ const ExaminationDetail = () => {
                                             className='border px-3 py-2 text-left font-semibold min-w-[150px]'
                                             rowSpan={headerChunks.length}
                                           >
-                                            Хизмат номи
+                                            {t('detail.serviceName')}
                                           </th>
                                         )}
                                         {chunk.map((dayNum) => (
@@ -2347,7 +2352,7 @@ const ExaminationDetail = () => {
                                             className='border px-2 py-2 text-center font-semibold w-12'
                                             rowSpan={headerChunks.length}
                                           >
-                                            Харакатлар
+                                            {t('detail.actions')}
                                           </th>
                                         )}
                                       </tr>
@@ -2461,8 +2466,8 @@ const ExaminationDetail = () => {
                                                         ? getServiceById(
                                                             editingService.service_type_id
                                                           )?.name ||
-                                                          'Танланг...'
-                                                        : 'Танланг...'}
+                                                          t('detail.select')
+                                                        : t('detail.select')}
                                                       <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                                                     </Button>
                                                   </PopoverTrigger>
@@ -2472,7 +2477,7 @@ const ExaminationDetail = () => {
                                                     >
                                                       <CommandInput
                                                         ref={serviceSearchRef}
-                                                        placeholder='Хизматни қидириш...'
+                                                        placeholder={t('detail.searchService')}
                                                         value={serviceSearch}
                                                         onValueChange={
                                                           setServiceSearch
@@ -2507,13 +2512,13 @@ const ExaminationDetail = () => {
                                                           <div className='flex items-center justify-center py-4'>
                                                             <Loader2 className='h-4 w-4 animate-spin mr-2' />
                                                             <span className='text-sm text-muted-foreground'>
-                                                              Юкланмоқда...
+                                                              {t('detail.loading')}
                                                             </span>
                                                           </div>
                                                         ) : serviceTypes.length ===
                                                           0 ? (
                                                           <CommandEmpty>
-                                                            Хизмат топилмади
+                                                            {t('detail.serviceNotFound')}
                                                           </CommandEmpty>
                                                         ) : (
                                                           <CommandGroup>
@@ -2644,7 +2649,7 @@ const ExaminationDetail = () => {
                                                 </Popover>
                                               ) : (
                                                 service.service_type_id?.name ||
-                                                'Номаълум'
+                                                t('detail.unknown')
                                               )}
                                             </td>
                                           ) : null}
@@ -2669,7 +2674,7 @@ const ExaminationDetail = () => {
                                               }}
                                             >
                                               <span className='font-bold text-xs block'>
-                                                {dayItem.dayNumber}-кун
+                                                {dayItem.dayNumber}-{t('detail.day')}
                                               </span>
                                               {dayItem.dayData?.date ? (
                                                 <div className='flex items-center justify-center'>
@@ -2727,7 +2732,7 @@ const ExaminationDetail = () => {
                                                         disabled={
                                                           !editingService?.service_type_id
                                                         }
-                                                        title='Ҳар куни'
+                                                        title={t('detail.everyDay')}
                                                       >
                                                         <CalendarDays className='w-3 h-3' />
                                                       </Button>
@@ -2744,7 +2749,7 @@ const ExaminationDetail = () => {
                                                         disabled={
                                                           !editingService?.service_type_id
                                                         }
-                                                        title='2 кунда бир'
+                                                        title={t('detail.everyOtherDay')}
                                                       >
                                                         <Repeat className='w-3 h-3' />
                                                       </Button>
@@ -2763,7 +2768,7 @@ const ExaminationDetail = () => {
                                                       deletingServiceId ===
                                                       service._id
                                                     }
-                                                    title='Таҳрирлаш'
+                                                    title={t('detail.editExam')}
                                                   >
                                                     <Edit className='h-3 w-3' />
                                                   </Button>
@@ -2781,7 +2786,7 @@ const ExaminationDetail = () => {
                                                         service._id ||
                                                       isAddingService
                                                     }
-                                                    title='Ўчириш'
+                                                    title={t('detail.deleteExam')}
                                                   >
                                                     {deletingServiceId ===
                                                     service._id ? (
@@ -2863,8 +2868,8 @@ const ExaminationDetail = () => {
                                                         ? getServiceById(
                                                             service.service_type_id
                                                           )?.name ||
-                                                          'Танланг...'
-                                                        : 'Танланг...'}
+                                                          t('detail.select')
+                                                        : t('detail.select')}
                                                       <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                                                     </Button>
                                                   </PopoverTrigger>
@@ -2874,7 +2879,7 @@ const ExaminationDetail = () => {
                                                     >
                                                       <CommandInput
                                                         ref={serviceSearchRef}
-                                                        placeholder='Хизматни қидириш...'
+                                                        placeholder={t('detail.searchService')}
                                                         value={serviceSearch}
                                                         onValueChange={
                                                           setServiceSearch
@@ -2909,13 +2914,13 @@ const ExaminationDetail = () => {
                                                           <div className='flex items-center justify-center py-4'>
                                                             <Loader2 className='h-4 w-4 animate-spin mr-2' />
                                                             <span className='text-sm text-muted-foreground'>
-                                                              Юкланмоқда...
+                                                              {t('common:loading')}
                                                             </span>
                                                           </div>
                                                         ) : serviceTypes.length ===
                                                           0 ? (
                                                           <CommandEmpty>
-                                                            Хизмат топилмади
+                                                            {t('services.serviceNotFound')}
                                                           </CommandEmpty>
                                                         ) : (
                                                           <CommandGroup>
@@ -3054,7 +3059,7 @@ const ExaminationDetail = () => {
                                                 }
                                               >
                                                 <span className='font-bold text-xs block'>
-                                                  {day.day}-кун
+                                                  {day.day}-{t('detail.day')}
                                                 </span>
                                                 {day.date ? (
                                                   <div className='text-xs font-medium text-primary'>
@@ -3105,7 +3110,7 @@ const ExaminationDetail = () => {
                                                       disabled={
                                                         !service.service_type_id
                                                       }
-                                                      title='Ҳар куни'
+                                                      title={t('detail.everyDay')}
                                                     >
                                                       <CalendarDays className='w-3 h-3' />
                                                     </Button>
@@ -3121,7 +3126,7 @@ const ExaminationDetail = () => {
                                                       disabled={
                                                         !service.service_type_id
                                                       }
-                                                      title='2 кунда бир'
+                                                      title={t('detail.everyOtherDay')}
                                                     >
                                                       <Repeat className='w-3 h-3' />
                                                     </Button>
@@ -3133,7 +3138,7 @@ const ExaminationDetail = () => {
                                                       removeService(service.id)
                                                     }
                                                     className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-                                                    title='Ўчириш'
+                                                    title={t('detail.deleteExam')}
                                                   >
                                                     <Trash2 className='w-3 h-3' />
                                                   </Button>
@@ -3179,11 +3184,11 @@ const ExaminationDetail = () => {
                                 <Save className='w-4 h-4 mr-2' />
                                 {editingServiceId
                                   ? isUpdatingService
-                                    ? 'Янгиланмоқда...'
-                                    : 'Янгилаш'
+                                    ? t('detail.updating')
+                                    : t('detail.update')
                                   : isAddingServiceMutation
-                                  ? 'Сақланмоқда...'
-                                  : 'Сақлаш'}
+                                  ? t('detail.saving')
+                                  : t('detail.save')}
                               </Button>
                             </div>
                           )}
@@ -3194,7 +3199,7 @@ const ExaminationDetail = () => {
                     {patientServices.length === 0 ? (
                       <div className='text-center py-8'>
                         <p className='text-muted-foreground mb-4'>
-                          Ҳали хизматлар қўшилмаган
+                          {t('detail.noServices')}
                         </p>
                         {!isAddingService && (
                           <Button
@@ -3247,7 +3252,7 @@ const ExaminationDetail = () => {
                             }}
                           >
                             <Plus className='w-4 h-4 mr-2' />
-                            Хизмат Қўшиш
+                            {t('services.addService')}
                           </Button>
                         )}
                       </div>
@@ -3264,10 +3269,10 @@ const ExaminationDetail = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className='flex items-center justify-between'>
-                    <span>Таҳлиллар</span>
+                    <span>{t('laboratory.title')}</span>
                     {exam.analyses && exam.analyses.length > 0 && (
                       <span className='text-sm font-normal text-muted-foreground'>
-                        ({exam.analyses.length} та)
+                        ({exam.analyses.length} {t('laboratory.count')})
                       </span>
                     )}
                   </CardTitle>
@@ -3486,11 +3491,11 @@ const ExaminationDetail = () => {
                                         }`}
                                       >
                                         {analysis.status === 'completed'
-                                          ? 'Тугалланган'
+                                          ? t('detail.statuses.completed')
                                           : analysis.status === 'active'
-                                          ? 'Фаол'
+                                          ? t('detail.statuses.active')
                                           : analysis.status === 'pending'
-                                          ? 'Кутилмоқда'
+                                          ? t('detail.statuses.pending')
                                           : analysis.status}
                                       </span>
                                     </div>
@@ -3501,7 +3506,7 @@ const ExaminationDetail = () => {
                                   {analysis.analysis_type && (
                                     <div>
                                       <Label className='text-xs text-muted-foreground'>
-                                        Таҳлил Тури
+                                        {t('detail.analysisType')}
                                       </Label>
                                       <p className='font-semibold text-sm mt-1'>
                                         {typeof analysis.analysis_type ===
@@ -3515,7 +3520,7 @@ const ExaminationDetail = () => {
                                   {analysis.level && (
                                     <div>
                                       <Label className='text-xs text-muted-foreground'>
-                                        Даража
+                                        {t('detail.level')}
                                       </Label>
                                       <p className='font-semibold text-sm mt-1'>
                                         {analysis.level}
@@ -3691,7 +3696,7 @@ const ExaminationDetail = () => {
                   ) : (
                     <div className='text-center py-8'>
                       <p className='text-muted-foreground'>
-                        Ҳали таҳлиллар қўшилмаган
+                        {t('laboratory.noAnalysesYet')}
                       </p>
                     </div>
                   )}
@@ -3706,7 +3711,7 @@ const ExaminationDetail = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className='flex items-center justify-between'>
-                    <span>Тасвирлар</span>
+                    <span>{t('radiology.title')}</span>
                     {exam.images &&
                       Array.isArray(exam.images) &&
                       exam.images.length > 0 &&
@@ -3748,9 +3753,9 @@ const ExaminationDetail = () => {
                         const bodyPartLabel =
                           bodyPartLabels[image.body_part] ||
                           image.body_part ||
-                          'Кўрсатилмаган';
+                          t('detail.notSpecified');
                         const imagingTypeName =
-                          image.imaging_type_id?.name || 'Номаълум';
+                          image.imaging_type_id?.name || t('detail.unknown');
                         const imageDate = image.created_at
                           ? new Date(image.created_at).toLocaleDateString(
                               'uz-UZ'
@@ -3771,7 +3776,7 @@ const ExaminationDetail = () => {
                                 <img
                                   src={thumbnailPath}
                                   alt={
-                                    image.description || `Тасвир ${index + 1}`
+                                    image.description || `${t('detail.image')} ${index + 1}`
                                   }
                                   className='w-full h-full object-cover hover:scale-105 transition-transform'
                                   onError={(e) => {
@@ -3795,7 +3800,7 @@ const ExaminationDetail = () => {
                                     className='font-semibold text-base line-clamp-2'
                                     title={image.description}
                                   >
-                                    {image.description || 'Тавсиф йўқ'}
+                                    {image.description || t('detail.noDescription')}
                                   </h4>
                                   <div className='flex flex-wrap items-center gap-3 text-sm text-muted-foreground'>
                                     <div className='flex items-center gap-1'>
@@ -3810,7 +3815,7 @@ const ExaminationDetail = () => {
                                     <span>•</span>
                                     <div className='flex items-center gap-1'>
                                       <span>
-                                        {image.image_paths.length} та тасвир
+                                        {image.image_paths.length} {t('detail.imagesCount')}
                                       </span>
                                     </div>
                                   </div>
@@ -3827,7 +3832,7 @@ const ExaminationDetail = () => {
                   ) : (
                     <div className='text-center py-8'>
                       <p className='text-muted-foreground'>
-                        Ҳали тасвирлар қўшилмаган
+                        {t('radiology.noImagesYet')}
                       </p>
                     </div>
                   )}
@@ -3841,7 +3846,7 @@ const ExaminationDetail = () => {
             <TabsContent value='neurologic'>
               <Card>
                 <CardHeader>
-                  <CardTitle>Неврологик Статус</CardTitle>
+                  <CardTitle>{t('neurologic.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className='py-6'>
@@ -3851,7 +3856,7 @@ const ExaminationDetail = () => {
                         <CardContent className='pt-4'>
                           <div className='space-y-4'>
                             <h3 className='font-semibold text-lg mb-4'>
-                              Янги Неврологик Статус
+                              {t('neurologic.newStatus')}
                             </h3>
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                               {Object.keys(neurologicForm).map((field) => (
@@ -3862,7 +3867,7 @@ const ExaminationDetail = () => {
                                   <Textarea
                                     placeholder={`${
                                       neurologicFieldLabels[field] || field
-                                    } киритинг...`}
+                                    } ${t('neurologic.enterField')}`}
                                     value={
                                       neurologicForm[
                                         field as keyof typeof neurologicForm
@@ -3890,7 +3895,7 @@ const ExaminationDetail = () => {
                                 disabled={isCreatingNeurologic}
                               >
                                 <X className='w-4 h-4 mr-2' />
-                                Бекор қилиш
+                                {t('detail.cancel')}
                               </Button>
                               <Button
                                 onClick={handleAddNeurologic}
@@ -3898,8 +3903,8 @@ const ExaminationDetail = () => {
                               >
                                 <Save className='w-4 h-4 mr-2' />
                                 {isCreatingNeurologic
-                                  ? 'Сақланмоқда...'
-                                  : 'Сақлаш'}
+                                  ? t('detail.saving')
+                                  : t('detail.save')}
                               </Button>
                             </div>
                           </div>
@@ -3919,7 +3924,7 @@ const ExaminationDetail = () => {
                                 {editingNeurologicId === neurologic._id ? (
                                   <div className='space-y-4'>
                                     <h3 className='font-semibold text-lg mb-4'>
-                                      Таҳрирлаш
+                                      {t('detail.editExam')}
                                     </h3>
                                     <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                                       {Object.keys(neurologicForm).map(
@@ -3936,7 +3941,7 @@ const ExaminationDetail = () => {
                                               placeholder={`${
                                                 neurologicFieldLabels[field] ||
                                                 field
-                                              } киритинг...`}
+                                              } ${t('neurologic.enterField')}`}
                                               value={
                                                 neurologicForm[
                                                   field as keyof typeof neurologicForm
@@ -3962,7 +3967,7 @@ const ExaminationDetail = () => {
                                         disabled={isUpdatingNeurologic}
                                       >
                                         <X className='w-4 h-4 mr-2' />
-                                        Бекор қилиш
+                                        {t('detail.cancel')}
                                       </Button>
                                       <Button
                                         onClick={() =>
@@ -3972,8 +3977,8 @@ const ExaminationDetail = () => {
                                       >
                                         <Save className='w-4 h-4 mr-2' />
                                         {isUpdatingNeurologic
-                                          ? 'Сақланмоқда...'
-                                          : 'Сақлаш'}
+                                          ? t('detail.saving')
+                                          : t('detail.save')}
                                       </Button>
                                     </div>
                                   </div>
@@ -3983,7 +3988,7 @@ const ExaminationDetail = () => {
                                       <div className='flex items-center gap-2'>
                                         <Brain className='w-5 h-5 text-primary' />
                                         <span className='text-sm font-medium text-primary'>
-                                          Неврологик Статус #{index + 1}
+                                          {t('detail.neurologicStatusNumber')} #{index + 1}
                                         </span>
                                       </div>
                                       <div className='flex gap-2'>
@@ -4060,11 +4065,11 @@ const ExaminationDetail = () => {
                           <div className='text-center py-8'>
                             <Brain className='w-12 h-12 text-muted-foreground mx-auto mb-4' />
                             <p className='text-muted-foreground mb-4'>
-                              Ҳали неврологик статус қўшилмаган
+                              {t('neurologic.noStatusYet')}
                             </p>
                             <Button onClick={() => setIsAddingNeurologic(true)}>
                               <Plus className='w-4 h-4 mr-2' />
-                              Неврологик Статус Қўшиш
+                              {t('neurologic.addStatus')}
                             </Button>
                           </div>
                         )}
@@ -4119,14 +4124,14 @@ const ExaminationDetail = () => {
                 onClick={() => setIsDeleteConfirm(false)}
                 disabled={isDeleting}
               >
-                Бекор қилиш
+                {t('detail.cancel')}
               </Button>
               <Button
                 variant='destructive'
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
-                {isDeleting ? 'Ўчирилмоқда...' : 'Ўчириш'}
+                {isDeleting ? t('detail.deleting') : t('detail.deleteExam')}
               </Button>
             </DialogFooter>
           </DialogContent>

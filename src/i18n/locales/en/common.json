@@ -5,6 +5,7 @@
   "error": "Error",
   "success": "Success",
   "save": "Save",
+  "saving": "Saving...",
   "cancel": "Cancel",
   "delete": "Delete",
   "edit": "Edit",
@@ -68,10 +69,14 @@
   "deleteSuccess": "Successfully deleted",
   "updateSuccess": "Successfully updated",
   "createSuccess": "Successfully created",
+  "addSuccess": "Successfully added",
+  "itemAlreadyExists": "This item already exists",
   "operationFailed": "Operation failed",
   "tryAgain": "Try again",
   "noData": "No data available",
   "refresh": "Refresh",
+  "downloadPdf": "Download PDF",
+  "loadingText": "Loading...",
   "showing": "Showing",
   "items": "items",
   "page": "Page",
@@ -85,5 +90,27 @@
   "thisMonth": "This month",
   "thisYear": "This year",
   "from": "from",
-  "to": "to"
+  "to": "to",
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has been moved"
+  },
+  "errorBoundary": {
+    "title": "An error occurred",
+    "description": "Please try again later",
+    "reload": "Reload"
+  },
+  "statuses": {
+    "active": "Active",
+    "completed": "Completed",
+    "pending": "Pending",
+    "inactive": "Inactive",
+    "deleted": "Deleted",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "partiallyPaid": "Partially paid",
+    "cancelled": "Cancelled",
+    "confirmed": "Confirmed",
+    "waiting": "Waiting"
+  }
 }

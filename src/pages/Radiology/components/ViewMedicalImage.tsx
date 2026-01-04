@@ -19,6 +19,7 @@ import {
 import { formatDate } from "date-fns";
 import { Image as ImageIcon, Maximize2, Minimize2, Download } from "lucide-react";
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { BodyPartConstants } from "@/constants/BodyPart";
 import { useGetOneMedicalImageQuery } from "@/app/api/radiologyApi";
 import { SERVER_URL } from "@/constants/ServerUrl";
@@ -31,20 +32,20 @@ import { RTFViewer } from "./viewers/RTFViewer";
 import { MDFXViewer } from "./viewers/MDFXViewer";
 import { DownloadOnlyCard } from "./viewers/DownloadOnlyCard";
 
-// Tana qismlari uchun o'zbek nomlari
-const bodyPartLabels: Record<string, string> = {
-  [BodyPartConstants.HEAD]: "Бош",
-  [BodyPartConstants.NECK]: "Бўйин",
-  [BodyPartConstants.CHEST]: "Кўкрак қафаси",
-  [BodyPartConstants.ABDOMEN]: "Қорин бўшлиғи",
-  [BodyPartConstants.PELVIS]: "Тос суяги",
-  [BodyPartConstants.SPINE]: "Умуртқа поғонаси",
-  [BodyPartConstants.ARM]: "Қўл",
-  [BodyPartConstants.LEG]: "Оёқ",
-  [BodyPartConstants.KNEE]: "Тизза",
-  [BodyPartConstants.SHOULDER]: "Елка",
-  [BodyPartConstants.HAND]: "Кафт",
-  [BodyPartConstants.FOOT]: "Оёқ табани",
+// Tana qismlari uchun keys
+const bodyPartKeys: Record<string, string> = {
+  [BodyPartConstants.HEAD]: "head",
+  [BodyPartConstants.NECK]: "neck",
+  [BodyPartConstants.CHEST]: "chestCage",
+  [BodyPartConstants.ABDOMEN]: "abdomen",
+  [BodyPartConstants.PELVIS]: "pelvis",
+  [BodyPartConstants.SPINE]: "spine",
+  [BodyPartConstants.ARM]: "arm",
+  [BodyPartConstants.LEG]: "leg",
+  [BodyPartConstants.KNEE]: "knee",
+  [BodyPartConstants.SHOULDER]: "shoulder",
+  [BodyPartConstants.HAND]: "hand",
+  [BodyPartConstants.FOOT]: "foot",
 };
 
 interface ViewMedicalImageProps {
@@ -58,6 +59,7 @@ export const ViewMedicalImage = memo(({
   onOpenChange,
   medicalImage,
 }: ViewMedicalImageProps) => {
+  const { t } = useTranslation("radiology");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
@@ -206,7 +208,7 @@ export const ViewMedicalImage = memo(({
         <DialogHeader className="p-2 sm:pb-3 border-b flex-shrink-0">
           <DialogTitle className="text-sm md:text-base lg:text-lg line-clamp-1 sm:line-clamp-2">
             {medicalImage?.imaging_type_id?.name} -{" "}
-            {medicalImage?.patient_id?.fullname || "Номаълум бемор"}
+            {medicalImage?.patient_id?.fullname || t("unknown")}
           </DialogTitle>
         </DialogHeader>
 
@@ -249,7 +251,7 @@ export const ViewMedicalImage = memo(({
                         src={getImageUrl(
                           medicalImage.image_paths[selectedImageIndex]
                         )}
-                        alt={`Тасвир ${selectedImageIndex + 1}`}
+                        alt={`${t('viewMedicalImage.image')} ${selectedImageIndex + 1}`}
                         className={`max-w-full object-contain rounded-lg select-none ${
                           isFullscreen
                             ? "max-h-[85vh]"
@@ -258,7 +260,7 @@ export const ViewMedicalImage = memo(({
                         draggable={false}
                         onError={(e) => {
                           e.currentTarget.src =
-                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23333' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='20'%3EТасвир топилмади%3C/text%3E%3C/svg%3E";
+                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23333' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='20'%3EImage not found%3C/text%3E%3C/svg%3E";
                         }}
                       />
                     </div>
@@ -322,7 +324,7 @@ export const ViewMedicalImage = memo(({
               ) : (
                 <div className="flex flex-col items-center justify-center text-white">
                   <ImageIcon className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mb-2 sm:mb-3 md:mb-4" />
-                  <p className="text-xs sm:text-sm md:text-base">Файл йўқ</p>
+                  <p className="text-xs sm:text-sm md:text-base">{t("viewMedicalImage.noFile")}</p>
                 </div>
               )}
 
@@ -446,9 +448,9 @@ export const ViewMedicalImage = memo(({
                     variant="ghost"
                     className="text-white hover:bg-white/20 h-7 sm:h-8 px-2 text-xs"
                     onClick={handleResetView}
-                    title="Reset View"
+                    title={t('viewMedicalImage.resetView')}
                   >
-                    Қайта
+                    {t('viewMedicalImage.reset')}
                   </Button>
                   <Button
                     size="sm"
@@ -458,7 +460,7 @@ export const ViewMedicalImage = memo(({
                       getImageUrl(medicalImage.image_paths[selectedImageIndex]),
                       medicalImage.image_paths[selectedImageIndex].split('/').pop()
                     )}
-                    title="Расмни юклаб олиш"
+                    title={t('viewMedicalImage.downloadImage')}
                   >
                     <Download className="h-4 w-4" />
                   </Button>
@@ -483,7 +485,7 @@ export const ViewMedicalImage = memo(({
                 <div className="flex gap-3 sm:gap-4 items-center">
                   <div className="flex items-center gap-2 min-w-[120px] sm:min-w-[150px]">
                     <span className="text-[10px] text-white/80 whitespace-nowrap">
-                      Ёруғлик
+                      {t('viewMedicalImage.brightness')}
                     </span>
                     <input
                       type="range"
@@ -499,7 +501,7 @@ export const ViewMedicalImage = memo(({
                   </div>
                   <div className="flex items-center gap-2 min-w-[120px] sm:min-w-[150px]">
                     <span className="text-[10px] text-white/80 whitespace-nowrap">
-                      Контраст
+                      {t('viewMedicalImage.contrast')}
                     </span>
                     <input
                       type="range"
@@ -538,12 +540,12 @@ export const ViewMedicalImage = memo(({
                     {/* Patient Info */}
                     <div>
                       <h3 className="font-semibold mb-1.5 text-xs sm:text-sm flex items-center gap-1">
-                        Бемор
+                        {t("viewMedicalImage.patient")}
                       </h3>
                       <div className="space-y-1 text-[10px] sm:text-xs">
                         <div className="flex justify-between gap-1">
                           <span className="text-muted-foreground flex-shrink-0">
-                            Исм:
+                            {t("viewMedicalImage.name")}:
                           </span>
                           {medicalImage?.patient_id?.fullname &&
                           medicalImage.patient_id.fullname.length > 20 ? (
@@ -569,7 +571,7 @@ export const ViewMedicalImage = memo(({
                         </div>
                         <div className="flex justify-between gap-1">
                           <span className="text-muted-foreground flex-shrink-0">
-                            Телефон:
+                            {t("viewMedicalImage.phone")}:
                           </span>
                           <span className="font-medium">
                             {formatPhoneNumber(medicalImage?.patient_id?.phone)}
@@ -581,12 +583,12 @@ export const ViewMedicalImage = memo(({
                     {/* Examination Info */}
                     <div>
                       <h3 className="font-semibold mb-1.5 text-xs sm:text-sm flex items-center gap-1">
-                        Текшириш
+                        {t("viewMedicalImage.examination")}
                       </h3>
                       <div className="space-y-1 text-[10px] sm:text-xs">
                         <div className="flex justify-between gap-1">
                           <span className="text-muted-foreground flex-shrink-0">
-                            Сана:
+                            {t("viewMedicalImage.date")}:
                           </span>
                           <span className="font-medium">
                             {formatDate(
@@ -597,7 +599,7 @@ export const ViewMedicalImage = memo(({
                         </div>
                         <div className="flex justify-between gap-1">
                           <span className="text-muted-foreground flex-shrink-0">
-                            Тури:
+                            {t("viewMedicalImage.type")}:
                           </span>
                           {medicalImage.imaging_type_id?.name &&
                           medicalImage.imaging_type_id.name.length > 15 ? (
@@ -617,13 +619,13 @@ export const ViewMedicalImage = memo(({
                             </Tooltip>
                           ) : (
                             <span className="font-medium text-right">
-                              {medicalImage.imaging_type_id?.name || "Номаълум"}
+                              {medicalImage.imaging_type_id?.name || t("unknown")}
                             </span>
                           )}
                         </div>
                         <div className="flex justify-between gap-1">
                           <span className="text-muted-foreground flex-shrink-0">
-                            Қисми:
+                            {t("viewMedicalImage.bodyPart")}:
                           </span>
                           {medicalImage.body_part &&
                           medicalImage.body_part.length > 15 ? (
@@ -639,16 +641,16 @@ export const ViewMedicalImage = memo(({
                             </Tooltip>
                           ) : (
                             <span className="font-medium text-right">
-                              {medicalImage.body_part || "Кўрсатилмаган"}
+                              {medicalImage.body_part || t("viewMedicalImage.notSpecified")}
                             </span>
                           )}
                         </div>
                         <div className="flex justify-between gap-1">
                           <span className="text-muted-foreground flex-shrink-0">
-                            Файллар:
+                            {t("viewMedicalImage.files")}:
                           </span>
                           <span className="font-medium">
-                            {medicalImage.image_paths?.length || 0} та
+                            {medicalImage.image_paths?.length || 0} {t("viewMedicalImage.items")}
                           </span>
                         </div>
                       </div>
@@ -658,7 +660,7 @@ export const ViewMedicalImage = memo(({
                     {medicalImage.description && (
                       <div>
                         <h3 className="font-semibold mb-1.5 text-xs sm:text-sm flex items-center gap-1">
-                          Тавсиф
+                          {t("viewMedicalImage.description")}
                         </h3>
                         {medicalImage.description.length > 100 ? (
                           <Tooltip>

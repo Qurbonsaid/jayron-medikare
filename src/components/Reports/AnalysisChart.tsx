@@ -2,6 +2,7 @@ import { REPORT_DATE_FILTER } from '@/app/api/report/types'
 import { Card } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { FlaskConical } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
 	Bar,
 	BarChart,
@@ -30,6 +31,7 @@ export const AnalysisChart = ({
 	interval,
 	onIntervalChange,
 }: AnalysisChartProps) => {
+	const { t } = useTranslation('reports')
 	const formatDate = (item: AnalysisChartProps['data'][0]) => {
 		const { year, month, day } = item._id
 		if (day) return `${day}.${month}.${year}`
@@ -53,7 +55,7 @@ export const AnalysisChart = ({
 
 	const chartData = sortedData.map(item => ({
 		name: formatDate(item),
-		Таҳлиллар: item.totalAnalyses,
+		[t('analyses')]: item.totalAnalyses,
 	}))
 
 	if (isLoading) {
@@ -69,7 +71,7 @@ export const AnalysisChart = ({
 			<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4'>
 				<h3 className='text-base sm:text-lg font-semibold flex items-center gap-2'>
 					<FlaskConical className='w-5 h-5 text-cyan-600' />
-					Таҳлиллар статистикаси
+					{t('analysisStatistics')}
 				</h3>
 				<div className='w-full sm:w-48'>
 					<DateRangeFilter value={interval} onChange={onIntervalChange} />
@@ -82,7 +84,7 @@ export const AnalysisChart = ({
 					<YAxis />
 					<Tooltip />
 					<Legend />
-					<Bar dataKey='Таҳлиллар' fill='#06b6d4' radius={[8, 8, 0, 0]} />
+					<Bar dataKey={t('analyses')} fill='#06b6d4' radius={[8, 8, 0, 0]} />
 				</BarChart>
 			</ResponsiveContainer>
 		</Card>

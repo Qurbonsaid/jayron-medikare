@@ -1,4 +1,5 @@
 import { Room } from '@/app/api/examinationApi/types';
+import { useTranslation } from 'react-i18next';
 import { formatCurrency } from './BillingBadge';
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export const RoomItem = ({ isMobile, room }: Props) => {
+  const { t } = useTranslation('billing');
   console.log(room);
 
   const days = Math.ceil(
@@ -32,7 +34,7 @@ export const RoomItem = ({ isMobile, room }: Props) => {
           <div className='grid grid-cols-2 gap-2 text-xs'>
             {room?.start_date && (
               <div>
-                <span className='text-muted-foreground'>Кириш:</span>
+                <span className='text-muted-foreground'>{t('entryDate')}:</span>
                 <div className='font-medium'>
                   {new Date(room?.start_date).toLocaleDateString('uz-UZ')}
                 </div>
@@ -40,16 +42,16 @@ export const RoomItem = ({ isMobile, room }: Props) => {
             )}
             {room?.end_date ? (
               <div>
-                <span className='text-muted-foreground'>Чиқиш:</span>
+                <span className='text-muted-foreground'>{t('exitDate')}:</span>
                 <div className='font-medium'>
                   {new Date(room.end_date).toLocaleDateString('uz-UZ')}
                 </div>
               </div>
             ) : room?.estimated_leave_time ? (
               <div>
-                <span className='text-muted-foreground'>Чиқиш:</span>
+                <span className='text-muted-foreground'>{t('exitDate')}:</span>
                 <div className='font-medium text-yellow-600'>
-                  Давом этмоқда (
+                  {t('ongoing')} (
                   {new Date(room.estimated_leave_time).toLocaleDateString(
                     'uz-UZ'
                   )}
@@ -58,21 +60,21 @@ export const RoomItem = ({ isMobile, room }: Props) => {
               </div>
             ) : (
               <div>
-                <span className='text-muted-foreground'>Чиқиш:</span>
+                <span className='text-muted-foreground'>{t('exitDate')}:</span>
                 <div className='font-medium text-yellow-600'>
-                  Давом этмоқда
+                  {t('ongoing')}
                 </div>
               </div>
             )}
           </div>
           {days && (
             <div className='text-xs'>
-              <span className='text-muted-foreground'>Кунлар сони:</span>
+              <span className='text-muted-foreground'>{t('daysCount')}:</span>
               <span className='font-medium ml-1'>{days}</span>
             </div>
           )}
           <div className='pt-2 border-t flex justify-between items-center'>
-            <span className='text-xs text-muted-foreground'>Нархи:</span>
+            <span className='text-xs text-muted-foreground'>{t('price')}:</span>
             <span className='font-semibold text-sm'>
               {formatCurrency(totalPrice)}
             </span>
@@ -102,13 +104,13 @@ export const RoomItem = ({ isMobile, room }: Props) => {
       ) : room?.estimated_leave_time ? (
         <td className='py-3 px-4 text-sm text-center'>
           <span className='text-yellow-600'>
-            Давом этмоқда (
+            {t('ongoing')} (
             {new Date(room?.estimated_leave_time).toLocaleDateString('uz-UZ')})
           </span>
         </td>
       ) : (
         <td className='py-3 px-4 text-sm text-center'>
-          <span className='text-yellow-600'>Давом этмоқда</span>
+          <span className='text-yellow-600'>{t('ongoing')}</span>
         </td>
       )}
 

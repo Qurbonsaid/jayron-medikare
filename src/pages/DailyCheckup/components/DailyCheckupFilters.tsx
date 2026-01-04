@@ -17,8 +17,9 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
-import { uz } from 'date-fns/locale'
+import { useDateLocale } from '@/hooks/useDateLocale'
 import { CalendarIcon, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface Room {
 	_id: string
@@ -57,6 +58,8 @@ export const DailyCheckupFilters = ({
 	nurses,
 	onClearFilters,
 }: DailyCheckupFiltersProps) => {
+	const { t } = useTranslation('inpatient')
+	const dateLocale = useDateLocale()
 	const goToPreviousDay = () => {
 		const newDate = new Date(selectedDate)
 		newDate.setDate(newDate.getDate() - 1)
@@ -84,7 +87,7 @@ export const DailyCheckupFilters = ({
 		<Card className="card-shadow">
 			<CardHeader className="pb-3 sm:pb-4">
 				<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-					<h2 className="text-base sm:text-lg font-semibold">Филтрлар</h2>
+					<h2 className="text-base sm:text-lg font-semibold">{t('dailyCheckup.filters')}</h2>
 					<div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
 						<Button 
 							variant="outline" 
@@ -106,9 +109,9 @@ export const DailyCheckupFilters = ({
 								>
 									<CalendarIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
 									{selectedDate ? (
-										format(selectedDate, 'PPP', { locale: uz })
+										format(selectedDate, 'PPP', { locale: dateLocale })
 									) : (
-										<span>Санани танланг</span>
+										<span>{t('dailyCheckup.selectDate')}</span>
 									)}
 								</Button>
 							</PopoverTrigger>
@@ -139,7 +142,7 @@ export const DailyCheckupFilters = ({
 							className="h-9 sm:h-10 text-xs sm:text-sm flex-1 sm:flex-none"
 						>
 							<X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-							Тозалаш
+							{t('dailyCheckup.clear')}
 						</Button>
 					</div>
 				</div>
@@ -149,11 +152,11 @@ export const DailyCheckupFilters = ({
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
 					{/* Search - full width on mobile, half on desktop */}
 					<div className="w-full">
-						<Label className="text-xs text-muted-foreground mb-2 block">Қидириш</Label>
+						<Label className="text-xs text-muted-foreground mb-2 block">{t('dailyCheckup.search')}</Label>
 						<div className="relative">
 							<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
 							<Input
-								placeholder="Бемор ёки эслатма бўйича қидириш..."
+								placeholder={t('dailyCheckup.searchPlaceholder')}
 								className="pl-10 h-10 sm:h-11 text-sm"
 								value={searchQuery}
 								onChange={e => setSearchQuery(e.target.value)}
@@ -165,13 +168,13 @@ export const DailyCheckupFilters = ({
 					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 						{/* Room Filter */}
 						<div className="w-full">
-							<Label className="text-xs text-muted-foreground mb-2 block">Хона</Label>
+							<Label className="text-xs text-muted-foreground mb-2 block">{t('dailyCheckup.room')}</Label>
 							<Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
 								<SelectTrigger className="h-10 sm:h-11 text-sm">
-									<SelectValue placeholder="Барча хоналар" />
+									<SelectValue placeholder={t('dailyCheckup.allRooms')} />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="all">Барчаси</SelectItem>
+									<SelectItem value="all">{t('dailyCheckup.all')}</SelectItem>
 									{rooms.map(room => (
 										<SelectItem key={room._id} value={room._id}>
 											{room.room_name}
@@ -183,13 +186,13 @@ export const DailyCheckupFilters = ({
 
 						{/* Nurse Filter */}
 						<div className="w-full">
-							<Label className="text-xs text-muted-foreground mb-2 block">Ҳамшира</Label>
+							<Label className="text-xs text-muted-foreground mb-2 block">{t('dailyCheckup.nurse')}</Label>
 							<Select value={selectedNurseId} onValueChange={setSelectedNurseId}>
 								<SelectTrigger className="h-10 sm:h-11 text-sm">
-									<SelectValue placeholder="Барча ҳамширалар" />
+									<SelectValue placeholder={t('dailyCheckup.allNurses')} />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="all">Барчаси</SelectItem>
+									<SelectItem value="all">{t('dailyCheckup.all')}</SelectItem>
 									{nurses.map(nurse => (
 										<SelectItem key={nurse._id} value={nurse._id}>
 											{nurse.fullname}

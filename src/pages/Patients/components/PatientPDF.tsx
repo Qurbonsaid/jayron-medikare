@@ -10,6 +10,7 @@ import {
 } from '@react-pdf/renderer';
 import { Download } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 // Kirill harflarini qo'llab-quvvatlovchi shriftni ro'yxatdan o'tkazish
@@ -374,6 +375,7 @@ const PatientPDFButton: React.FC<PatientPDFButtonProps> = ({
   className = '',
 }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const { t } = useTranslation('common');
 
   const handleDownload = async () => {
     if (!patient) {
@@ -425,7 +427,7 @@ const PatientPDFButton: React.FC<PatientPDFButtonProps> = ({
     >
       <Download className='w-4 h-4 sm:mr-2' />
       <span className='hidden sm:inline'>
-        {isGenerating ? 'Yuklanmoqda...' : 'PDF yuklash'}
+        {isGenerating ? t('loadingText') : t('downloadPdf')}
       </span>
     </Button>
   );

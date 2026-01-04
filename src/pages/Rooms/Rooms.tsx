@@ -1,6 +1,7 @@
 import { useGetOneCorpusQuery } from "@/app/api/corpusApi";
 import { Button } from "@/components/ui/button";
 import { formatNumber } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 import {
   Building2,
   Edit,
@@ -51,6 +52,7 @@ import { DeleteWarnRoom } from "./components/deleteWarnRoom";
 import { useGetRoomsFromRoomApiQuery } from "@/app/api/roomApi";
 
 const Rooms = () => {
+  const { t } = useTranslation('inpatient');
   const { id } = useParams();
   const navigate = useNavigate();
   const [showNewRoom, setShowNewRoom] = useState(false);
@@ -106,10 +108,10 @@ const Rooms = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">
-              {getCorpus?.data.corpus_number || ""} - Корпус Хоналар Рўйхати
+              {getCorpus?.data.corpus_number || ""} - {t('corpusRooms')}
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Барча хоналарни кўриш ва бошқариш
+              {t('viewAndManageRooms')}
             </p>
           </div>
           <Button
@@ -117,7 +119,7 @@ const Rooms = () => {
             className="w-full sm:w-auto"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Янги Хона
+            {t('newRoom')}
           </Button>
         </div>
 
@@ -125,7 +127,7 @@ const Rooms = () => {
           <Card className="card-shadow p-8 sm:p-12">
             <LoadingSpinner
               size="lg"
-              text="Юкланмоқда..."
+              text={t('loading')}
               className="justify-center"
             />
           </Card>
@@ -136,33 +138,33 @@ const Rooms = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 xl:gap-6">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Корпус номи
+                    {t('corpusName')}
                   </h3>
                   <p className="mt-1 text-lg font-semibold">
-                    {getCorpus?.data.corpus_number || ""} - Корпус
+                    {getCorpus?.data.corpus_number || ""} - {t('corpus')}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Хоналар сони
-                  </h3>
-
-                  <p className="mt-1 text-lg font-semibold">
-                    {getCorpus?.data.total_rooms || 0} ta
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    Умумий сиғим
+                    {t('roomsCount')}
                   </h3>
 
                   <p className="mt-1 text-lg font-semibold">
-                    {getCorpus?.data?.room_statistics.total_capacity || 0} ta
+                    {getCorpus?.data.total_rooms || 0} {t('count')}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Умумий бандлик
+                    {t('totalBeds')}
+                  </h3>
+
+                  <p className="mt-1 text-lg font-semibold">
+                    {getCorpus?.data?.room_statistics.total_capacity || 0} {t('count')}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    {t('occupiedBeds')}
                   </h3>
 
                   <p
@@ -176,17 +178,16 @@ const Rooms = () => {
                     }`}
                   >
                     {getCorpus?.data?.room_statistics.occupied === 0
-                      ? "Bo'sh"
+                      ? t('emptyText')
                       : getCorpus?.data?.room_statistics.occupied ===
                         getCorpus?.data?.room_statistics.total_capacity
-                      ? "To'liq"
-                      : (getCorpus?.data?.room_statistics.occupied || 0) +
-                        "ta"}{" "}
+                      ? t('fullText')
+                      : t('occupiedCount', { count: getCorpus?.data?.room_statistics.occupied || 0 })}{" "}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Мавжуд хоналар
+                    {t('bedsAvailable')}
                   </h3>
 
                   <p
@@ -197,14 +198,14 @@ const Rooms = () => {
                     }`}
                   >
                     {getCorpus?.data?.room_statistics.available === 0
-                      ? "Yo'q"
+                      ? t('noText')
                       : (getCorpus?.data?.room_statistics.available || 0) +
-                        " ta"}
+                        " " + t('count')}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Бугун чиқадиганлар
+                    {t('leavingToday')}
                   </h3>
 
                   <p
@@ -215,14 +216,14 @@ const Rooms = () => {
                     }`}
                   >
                     {getCorpus?.data?.room_statistics.leaving_today === 0
-                      ? "Yo'q"
+                      ? t('noText')
                       : (getCorpus?.data?.room_statistics.leaving_today || 0) +
-                        "ta"}
+                        " " + t('count')}
                   </p>
                 </div>
                 <div className="col-span-2 xl:col-span-1">
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Tavsif
+                    {t('descriptionLabel')}
                   </h3>
 
                   <p className="mt-1 text-md font-semibold">
@@ -233,11 +234,11 @@ const Rooms = () => {
                             ? getCorpus?.data.description.length > 20
                               ? getCorpus?.data.description.slice(0, 20) + "..."
                               : getCorpus?.data.description
-                            : "Berilmagan"}
+                            : t('notProvided')}
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {getCorpus?.data.description || "Berilmagan"}
+                        {getCorpus?.data.description || t('notProvided')}
                       </TooltipContent>
                     </Tooltip>
                   </p>
@@ -252,7 +253,7 @@ const Rooms = () => {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                       <Input
-                        placeholder="Хоналар номи ёки тавсиф бўйича қидириш..."
+                        placeholder={t('searchRooms')}
                         className="pl-9 sm:pl-10 h-10 sm:h-12 text-sm sm:text-base"
                         value={searchQuery}
                         onChange={(e) => {
@@ -274,7 +275,7 @@ const Rooms = () => {
                       disabled={!searchQuery && currentPage === 1}
                     >
                       <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="ml-2">Қидирувни тозалаш</span>
+                      <span className="ml-2">{t('filter')}</span>
                     </Button>
                   </div>
                 </div>
@@ -284,11 +285,11 @@ const Rooms = () => {
             {getRooms && getRooms?.data && getRooms?.data.length > 0 && (
               <div className="flex items-start sm:items-center justify-between gap-3 mb-4">
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Жами:{" "}
+                  {t('allPatients')}:{" "}
                   <span className="font-semibold text-foreground">
                     {getRooms?.pagination?.total_items || 0}
                   </span>{" "}
-                  Хона
+                  {t('room')}
                 </p>
                 <Select
                   value={itemsPerPage.toString()}
@@ -316,13 +317,13 @@ const Rooms = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-center">№</TableHead>
-                    <TableHead className="text-center">Хона номи</TableHead>
-                    <TableHead className="text-center">Хона нархи</TableHead>
-                    <TableHead className="text-center">Сиғим</TableHead>
-                    <TableHead className="text-center">Бандлик</TableHead>
-                    <TableHead className="text-center">Хона қавати</TableHead>
-                    <TableHead className="text-center">Tavsif</TableHead>
-                    <TableHead className="text-center">Harakatlar</TableHead>
+                    <TableHead className="text-center">{t('roomNumber')}</TableHead>
+                    <TableHead className="text-center">{t('pricePerDay')}</TableHead>
+                    <TableHead className="text-center">{t('capacity')}</TableHead>
+                    <TableHead className="text-center">{t('occupied')}</TableHead>
+                    <TableHead className="text-center">{t('floor')}</TableHead>
+                    <TableHead className="text-center">{t('notes')}</TableHead>
+                    <TableHead className="text-center">{t('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -344,11 +345,11 @@ const Rooms = () => {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        {formatNumber(room.room_price)} сўм
+                        {formatNumber(room.room_price)} {t('sum')}
                       </TableCell>
 
                       <TableCell className="text-center">
-                        {room.patient_capacity} кишилик
+                        {room.patient_capacity} {t('capacityUnit')}
                       </TableCell>
 
                       <TableCell
@@ -362,13 +363,13 @@ const Rooms = () => {
                       >
                         {room.patient_occupied
                           ? room.patient_occupied === room.patient_capacity
-                            ? "To'liq band"
-                            : `${room.patient_occupied} ta band`
-                          : "Bo'sh"}
+                            ? t('fullText')
+                            : t('occupiedCount', { count: room.patient_occupied })
+                          : t('emptyText')}
                       </TableCell>
 
                       <TableCell className="text-center">
-                        {room.floor_number} - қават
+                        {room.floor_number} - {t('floor')}
                       </TableCell>
 
                       <TableCell className="text-center">
@@ -379,11 +380,11 @@ const Rooms = () => {
                                 ? room.description.length > 20
                                   ? room.description.slice(0, 20) + "..."
                                   : room.description
-                                : "Berilmagan"}
+                                : t('notProvided')}
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {room.description || "Berilmagan"}
+                            {room.description || t('notProvided')}
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
@@ -397,7 +398,7 @@ const Rooms = () => {
                             className="hover:bg-primary hover:text-white transition-smooth"
                           >
                             <Eye className="w-4 h-4" />
-                            Кўриш
+                            {t('view')}
                           </Button>
 
                           <DropdownMenu>
@@ -419,7 +420,7 @@ const Rooms = () => {
                                   className="w-full justify-start hover:bg-yellow-600 hover:text-white transition-smooth"
                                 >
                                   <Edit className="w-4 h-4 mr-2" />
-                                  Таҳрирлаш
+                                  {t('edit')}
                                 </Button>
                               </DropdownMenuItem>
 
@@ -434,7 +435,7 @@ const Rooms = () => {
                                   className="w-full justify-start hover:bg-red-600 hover:text-white transition-smooth"
                                 >
                                   <Trash2 className="w-4 h-4 mr-2" />
-                                  Ўчириш
+                                  {t('delete')}
                                 </Button>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -457,21 +458,21 @@ const Rooms = () => {
                         <h3 className="font-semibold text-base sm:text-lg mb-1">
                           {room.room_name}{" "}
                           <span className="text-sm">
-                            Қават: {room.floor_number}
+                            {t('floor')}: {room.floor_number}
                           </span>
                         </h3>
                         <p className="text-xs sm:text-sm text-muted-foreground">
-                          {room.description || "Izoh berilmagan"}
+                          {room.description || t('notes')}
                         </p>
                       </div>
                     </div>
                     <div className="space-y-2 mb-3">
                       <div className="flex items-center gap-2 text-xs sm:text-sm">
-                        <span>Хона нархи {formatNumber(room.room_price)} сўм</span>
+                        <span>{t('pricePerDay')} {formatNumber(room.room_price)} {t('sum')}</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs sm:text-sm">
                         <span>
-                          Сиғим: {room.patient_capacity} кишилик |{" "}
+                          {t('capacity')}: {room.patient_capacity} |{" "}
                           <span
                             className={`text-center font-bold ${
                               room.patient_occupied
@@ -482,12 +483,12 @@ const Rooms = () => {
                                 : "text-green-600"
                             }`}
                           >
-                            Бандлик:{" "}
+                            {t('occupied')}:{" "}
                             {room.patient_occupied
                               ? room.patient_occupied === room.patient_capacity
-                                ? "Тўлиқ банд"
-                                : `${room.patient_occupied} та банд`
-                              : "бўш"}
+                                ? t('occupied')
+                                : `${room.patient_occupied}`
+                              : t('available')}
                           </span>{" "}
                         </span>
                       </div>
@@ -512,7 +513,7 @@ const Rooms = () => {
                               className="w-full bg-yellow-600 text-white"
                             >
                               <Edit className="w-4 h-4 mr-2" />
-                              Таҳрирлаш
+                              {t('edit')}
                             </Button>
                           </DropdownMenuItem>
 
@@ -527,7 +528,7 @@ const Rooms = () => {
                               className="w-full bg-red-600 text-white"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Ўчириш
+                              {t('delete')}
                             </Button>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -539,7 +540,7 @@ const Rooms = () => {
                       onClick={() => navigate(`/room/${room._id}`)}
                     >
                       <Eye className="w-4 h-4 mr-2" />
-                      Кўриш
+                      {t('view')}
                     </Button>
                   </div>
                 </Card>
@@ -550,9 +551,9 @@ const Rooms = () => {
             <div className="px-3 xl:px-6 py-2 xl:py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="text-xs xl:text-sm text-muted-foreground min-w-max">
-                  Sahifa {getRooms.pagination.page} dan{" "}
-                  {getRooms.pagination.total_pages} (Жами:{" "}
-                  {getRooms.pagination.total_items} та)
+                  {t('page')} {getRooms.pagination.page} {t('of')}{" "}
+                  {getRooms.pagination.total_pages} ({t('allPatients')}:{" "}
+                  {getRooms.pagination.total_items})
                 </div>
               </div>
 
@@ -565,7 +566,7 @@ const Rooms = () => {
                   className="text-xs xl:text-sm"
                 >
                   <IconLeft className="w-4 h-4" />
-                  <span className="hidden sm:inline">Олдинги</span>
+                  <span className="hidden sm:inline">{t('prev')}</span>
                 </Button>
                 {(() => {
                   const pages = [];
@@ -636,7 +637,7 @@ const Rooms = () => {
                   onClick={() => setCurrentPage(currentPage + 1)}
                   className="text-xs xl:text-sm"
                 >
-                  <span className="hidden sm:inline">Кейинги</span>
+                  <span className="hidden sm:inline">{t('next')}</span>
                   <IconRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -648,18 +649,18 @@ const Rooms = () => {
               icon={Building2}
               title={
                 searchQuery || currentPage > 1
-                  ? "Ҳеч нарса топилмади"
-                  : "Ҳали Хоналар йўқ"
+                  ? t('noRooms')
+                  : t('noRooms')
               }
               description={
                 searchQuery || currentPage > 1
-                  ? "Қидирув сўзини текширинг ёки филтрни ўзгартиринг"
-                  : "Биринчи Хонани қўшиш учун қуйидаги тугмани босинг"
+                  ? t('noRoomsDescription')
+                  : t('noRoomsDescription')
               }
               actionLabel={
                 searchQuery || currentPage > 1
-                  ? "Филтрни тозалаш"
-                  : "+ Янги Хона Қўшиш"
+                  ? t('filter')
+                  : t('createRoom')
               }
               onAction={() =>
                 searchQuery || currentPage > 1

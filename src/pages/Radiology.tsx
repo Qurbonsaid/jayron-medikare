@@ -31,6 +31,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 
 interface RadiologyOrder {
 	orderId: string
@@ -43,6 +44,7 @@ interface RadiologyOrder {
 }
 
 const Radiology = () => {
+	const { t } = useTranslation('radiology')
 	const navigate = useNavigate()
 	const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
 	const [isViewerOpen, setIsViewerOpen] = useState(false)
@@ -55,18 +57,18 @@ const Radiology = () => {
 		{
 			orderId: 'RAD-2025-001',
 			patientName: 'Алиев Анвар Рашидович',
-			modality: 'МРТ',
-			bodyPart: 'Бош мия',
-			status: 'Буюртма берилган',
+			modality: t('mri'),
+			bodyPart: t('head'),
+			status: t('ordered'),
 			scheduledDate: '08.10.2025 10:00',
 			diagnostika: 'Revmatizm',
 		},
 		{
 			orderId: 'RAD-2025-002',
 			patientName: 'Каримова Нилуфар Азизовна',
-			modality: 'КТ',
-			bodyPart: 'Ўпка',
-			status: 'Бажарилмоқда',
+			modality: t('ct'),
+			bodyPart: t('chest'),
+			status: t('inProgress'),
 			scheduledDate: '07.10.2025 14:30',
 			diagnostika: 'Revmatizm',
 		},
@@ -74,16 +76,16 @@ const Radiology = () => {
 
 	const getStatusBadge = (status: string) => {
 		const colors: Record<string, string> = {
-			'Буюртма берилган': 'bg-blue-100 text-blue-700',
-			Бажарилмоқда: 'bg-yellow-100 text-yellow-700',
-			Тайёр: 'bg-green-100 text-green-700',
-			'Хулоса ёзилган': 'bg-purple-100 text-purple-700',
+			[t('ordered')]: 'bg-blue-100 text-blue-700',
+			[t('inProgress')]: 'bg-yellow-100 text-yellow-700',
+			[t('completed')]: 'bg-green-100 text-green-700',
+			[t('reported')]: 'bg-purple-100 text-purple-700',
 		}
 		return <Badge className={colors[status] || ''}>{status}</Badge>
 	}
 
 	const handleSubmitOrder = () => {
-		toast.success('Рентген буюртмаси юборилди')
+		toast.success(t('orderCreated'))
 		setIsOrderModalOpen(false)
 	}
 
@@ -109,10 +111,10 @@ const Radiology = () => {
 						</Button> */}
 						<div>
 							<h1 className='text-lg sm:text-xl font-bold'>
-								Рентген / МРТ / КТ
+								{t('title')}
 							</h1>
 							<p className='text-xs sm:text-sm text-muted-foreground'>
-								Тасвирлаш текширувлари
+								{t('subtitle')}
 							</p>
 						</div>
 					</div>
@@ -120,7 +122,7 @@ const Radiology = () => {
 						onClick={() => setIsOrderModalOpen(true)}
 						className='w-full sm:w-auto'
 					>
-						<Plus className='w-4 h-4 mr-2' /> Янги буюртма
+						<Plus className='w-4 h-4 mr-2' /> {t('newOrder')}
 					</Button>
 				</div>
 			</header>
@@ -152,7 +154,7 @@ const Radiology = () => {
 								className='w-full'
 								onClick={() => setIsViewerOpen(true)}
 							>
-								Кўриш
+								{t('viewReport')}
 							</Button>
 						</Card>
 					))}
@@ -161,18 +163,18 @@ const Radiology = () => {
 				{/* Desktop Table View */}
 				<Card className='hidden lg:block'>
 					<div className='p-6'>
-						<h2 className='text-xl font-semibold mb-4'>Буюртмалар рўйхати</h2>
+						<h2 className='text-xl font-semibold mb-4'>{t('noOrders') ? t('title') : t('title')}</h2>
 						<table className='w-full text-sm'>
 							<thead className='bg-muted/50'>
 								<tr>
-									<th className='px-4 py-2 text-left'>Буюртма №</th>
-									<th className='px-4 py-2 text-left'>Бемор</th>
-									<th className='px-4 py-2 text-left'>Тури</th>
-									<th className='px-4 py-2 text-left'>Диагностика</th>
-									<th className='px-4 py-2 text-left'>Қисм</th>
-									<th className='px-4 py-2 text-left'>Ҳолат</th>
-									<th className='px-4 py-2 text-left'>Режа</th>
-									<th className='px-4 py-2 text-left'>Ҳаракатлар</th>
+									<th className='px-4 py-2 text-left'>{t('orderNumber')}</th>
+									<th className='px-4 py-2 text-left'>{t('patient')}</th>
+									<th className='px-4 py-2 text-left'>{t('modality')}</th>
+									<th className='px-4 py-2 text-left'>{t('indication')}</th>
+									<th className='px-4 py-2 text-left'>{t('bodyPart')}</th>
+									<th className='px-4 py-2 text-left'>{t('status')}</th>
+									<th className='px-4 py-2 text-left'>{t('scheduledDate')}</th>
+									<th className='px-4 py-2 text-left'></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -194,7 +196,7 @@ const Radiology = () => {
 										<td className='px-4 py-2'>{order.scheduledDate}</td>
 										<td className='px-4 py-2'>
 											<Button size='sm' onClick={() => setIsViewerOpen(true)}>
-												Кўриш
+												{t('viewReport')}
 											</Button>
 										</td>
 									</tr>
@@ -210,15 +212,15 @@ const Radiology = () => {
 				<DialogContent className='w-[95%] h-auto sm:max-w-2xl overflow-y-auto rounded-lg'>
 					<DialogHeader>
 						<DialogTitle className='text-lg sm:text-xl'>
-							Янги рентген буюртмаси
+							{t('newOrderModal.title')}
 						</DialogTitle>
 					</DialogHeader>
 					<div className='space-y-4'>
 						<div>
-							<Label>Бемор танлаш</Label>
+							<Label>{t('newOrderModal.selectPatient')}</Label>
 							<Select>
 								<SelectTrigger>
-									<SelectValue placeholder='Беморни танланг...' />
+									<SelectValue placeholder={t('newOrderModal.selectPatientPlaceholder')} />
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value='p1'>Алиев Анвар</SelectItem>
@@ -228,50 +230,50 @@ const Radiology = () => {
 						</div>
 						<div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
 							<div>
-								<Label>Тури</Label>
+								<Label>{t('modality')}</Label>
 								<Select>
 									<SelectTrigger>
-										<SelectValue placeholder='Танланг...' />
+										<SelectValue placeholder={t('newOrderModal.selectPlaceholder')} />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value='mri'>МРТ</SelectItem>
-										<SelectItem value='ct'>КТ</SelectItem>
+										<SelectItem value='mri'>{t('modalities.mri')}</SelectItem>
+										<SelectItem value='ct'>{t('modalities.ct')}</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
 							<div>
-								<Label>Танани қисми</Label>
+								<Label>{t('bodyPart')}</Label>
 								<Select>
 									<SelectTrigger>
-										<SelectValue placeholder='Танланг...' />
+										<SelectValue placeholder={t('newOrderModal.selectPlaceholder')} />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value='brain'>Бош мия</SelectItem>
-										<SelectItem value='chest'>Ўпка</SelectItem>
+										<SelectItem value='brain'>{t('bodyParts.brain')}</SelectItem>
+										<SelectItem value='chest'>{t('bodyParts.chest')}</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
 						</div>
 						<div>
-							<Label>Клиник кўрсатма</Label>
-							<Textarea rows={3} placeholder='Текшириш сабаби...' />
+							<Label>{t('newOrderModal.clinicalIndication')}</Label>
+							<Textarea rows={3} placeholder={t('newOrderModal.indicationPlaceholder')} />
 						</div>
 						<div className='grid grid-cols-2 gap-4'>
 							<div>
-								<Label>Устунлик</Label>
+								<Label>{t('newOrderModal.priority')}</Label>
 								<Select defaultValue='normal'>
 									<SelectTrigger>
 										<SelectValue />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value='normal'>Оддий</SelectItem>
-										<SelectItem value='urgent'>Шошилинч</SelectItem>
+										<SelectItem value='normal'>{t('priorities.normal')}</SelectItem>
+										<SelectItem value='urgent'>{t('priorities.urgent')}</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
 
 							<div>
-								<Label>Режалаштирилган сана</Label>
+								<Label>{t('scheduledDate')}</Label>
 								<Input type='datetime-local' />
 							</div>
 						</div>
@@ -280,9 +282,9 @@ const Radiology = () => {
 								variant='outline'
 								onClick={() => setIsOrderModalOpen(false)}
 							>
-								Бекор
+								{t('cancel')}
 							</Button>
-							<Button onClick={handleSubmitOrder}>Юбориш</Button>
+							<Button onClick={handleSubmitOrder}>{t('submit')}</Button>
 						</DialogFooter>
 					</div>
 				</DialogContent>
@@ -293,7 +295,7 @@ const Radiology = () => {
 				<DialogContent className='w-[95%] h-[90%] sm:max-w-6xl sm:max-h-[95vh] overflow-y-auto rounded-lg p-3 sm:p-6'>
 					<DialogHeader>
 						<DialogTitle className='text-lg sm:text-xl'>
-							МРТ - Бош мия | Алиев Анвар
+							{t('modalities.mri')} - {t('bodyParts.brain')} | Алиев Анвар
 						</DialogTitle>
 					</DialogHeader>
 
@@ -305,7 +307,7 @@ const Radiology = () => {
 									key={i}
 									className='aspect-square bg-gray-700 rounded flex items-center justify-center text-white text-xs'
 								>
-									Slice {i}
+									{t('viewer.slice')} {i}
 								</div>
 							))}
 						</div>
@@ -366,7 +368,7 @@ const Radiology = () => {
 									className='text-white'
 									onClick={handleResetView}
 								>
-									Қайта
+									{t('viewer.reset')}
 								</Button>
 							</div>
 						</div>
@@ -386,52 +388,52 @@ const Radiology = () => {
   '
 						>
 							<Card className='p-3 sm:p-4'>
-								<h3 className='font-semibold mb-3'>Текшириш маълумотлари</h3>
+								<h3 className='font-semibold mb-3'>{t('viewer.examInfo')}</h3>
 								<div className='space-y-2 text-sm'>
 									<div className='flex justify-between'>
-										<span className='text-muted-foreground'>Сана:</span>
+										<span className='text-muted-foreground'>{t('viewer.date')}:</span>
 										<span className='font-medium'>07.10.2025</span>
 									</div>
 									<div className='flex justify-between'>
-										<span className='text-muted-foreground'>Тури:</span>
-										<span className='font-medium'>МРТ</span>
+										<span className='text-muted-foreground'>{t('modality')}:</span>
+										<span className='font-medium'>{t('modalities.mri')}</span>
 									</div>
 									<div className='flex justify-between'>
-										<span className='text-muted-foreground'>Протокол:</span>
+										<span className='text-muted-foreground'>{t('viewer.protocol')}:</span>
 										<span className='font-medium'>T1, T2, FLAIR</span>
 									</div>
 								</div>
 							</Card>
 
 							<Card className='p-3 sm:p-4'>
-								<h3 className='font-semibold mb-3'>Радиолог хулосаси</h3>
+								<h3 className='font-semibold mb-3'>{t('viewer.radiologistConclusion')}</h3>
 								<div className='mb-3'>
-									<Label className='text-xs'>Шаблон</Label>
+									<Label className='text-xs'>{t('viewer.template')}</Label>
 									<Select>
 										<SelectTrigger className='h-8 text-sm'>
-											<SelectValue placeholder='Танланг...' />
+											<SelectValue placeholder={t('newOrderModal.selectPlaceholder')} />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value='normal'>Норма</SelectItem>
-											<SelectItem value='stroke'>Инсульт</SelectItem>
-											<SelectItem value='tumor'>Ўсма</SelectItem>
+											<SelectItem value='normal'>{t('templates.normal')}</SelectItem>
+											<SelectItem value='stroke'>{t('templates.stroke')}</SelectItem>
+											<SelectItem value='tumor'>{t('templates.tumor')}</SelectItem>
 										</SelectContent>
 									</Select>
 								</div>
 								<Textarea
-									placeholder='Хулоса ёзинг...'
+									placeholder={t('viewer.conclusionPlaceholder')}
 									rows={8}
 									className='text-sm'
 								/>
 								<Button className='w-full mt-3' size='sm'>
-									Хулосани юбориш
+									{t('viewer.submitConclusion')}
 								</Button>
 							</Card>
 
 							<Card className='p-3 sm:p-4'>
 								<div className='space-y-3'>
 									<div>
-										<Label className='text-xs'>Ёруғлик: {brightness}%</Label>
+										<Label className='text-xs'>{t('viewer.brightness')}: {brightness}%</Label>
 										<input
 											type='range'
 											min='0'
@@ -442,7 +444,7 @@ const Radiology = () => {
 										/>
 									</div>
 									<div>
-										<Label className='text-xs'>Контраст: {contrast}%</Label>
+										<Label className='text-xs'>{t('viewer.contrast')}: {contrast}%</Label>
 										<input
 											type='range'
 											min='0'

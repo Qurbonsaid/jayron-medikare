@@ -17,8 +17,10 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Bed, FileQuestion, Home, Phone, User } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export const UncheckedPatientsTab = () => {
+	const { t } = useTranslation('inpatient')
 	const { data, isLoading } = useGetUncheckedPatientsQuery()
 
 	return (
@@ -27,14 +29,14 @@ export const UncheckedPatientsTab = () => {
 				<CardContent className="p-0">
 					{isLoading ? (
 						<div className="p-8 sm:p-12">
-							<LoadingSpinner size="lg" text="Yuklanmoqda..." className="justify-center" />
+							<LoadingSpinner size="lg" text={t('dailyCheckup.loading')} className="justify-center" />
 						</div>
 					) : !data?.data || data.data.length === 0 ? (
 						<div className="p-8 sm:p-12">
 							<EmptyState
 								icon={FileQuestion}
-								title="Текширилмаган беморлар йўқ"
-								description="Барча беморларнинг қон босими ўлчанган"
+								title={t('dailyCheckup.noUncheckedPatients')}
+								description={t('dailyCheckup.allPatientsMeasured')}
 							/>
 						</div>
 					) : (
@@ -42,7 +44,7 @@ export const UncheckedPatientsTab = () => {
 							{/* Stats */}
 							<div className="p-4 border-b">
 								<p className="text-sm text-muted-foreground">
-									Жами: <span className="font-semibold text-foreground">{data.total}</span> та бемор
+									{t('dailyCheckup.total')}: <span className="font-semibold text-foreground">{data.total}</span> {t('dailyCheckup.patients')}
 								</p>
 							</div>
 
@@ -50,7 +52,7 @@ export const UncheckedPatientsTab = () => {
 						<div className="block lg:hidden space-y-3 p-4">
 							{data.data.map((item, index) => {
 								const patientName = item.patient.fullname
-								const genderText = item.patient.gender === 'male' ? 'Эркак' : item.patient.gender === 'female' ? 'Аёл' : item.patient.gender
+								const genderText = item.patient.gender === 'male' ? t('dailyCheckup.male') : item.patient.gender === 'female' ? t('dailyCheckup.female') : item.patient.gender
 
 								return (
 									<Card key={index} className="card-shadow">
@@ -69,7 +71,7 @@ export const UncheckedPatientsTab = () => {
 											<div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-2 border-t text-xs">
 												<div className="flex items-center gap-1.5">
 													<Home className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-													<span className="whitespace-nowrap">{item.room.room_name} ({item.room.floor_number}-қ)</span>
+													<span className="whitespace-nowrap">{item.room.room_name} ({item.room.floor_number}-{t('dailyCheckup.floorShort')})</span>
 												</div>
 												<div className="flex items-center gap-1.5">
 													<Phone className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
@@ -77,7 +79,7 @@ export const UncheckedPatientsTab = () => {
 												</div>
 												<div className="flex items-center gap-1.5">
 													<Bed className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-													<span className="whitespace-nowrap">Ётоқ: {item.bed_number}</span>
+													<span className="whitespace-nowrap">{t('dailyCheckup.bed')}: {item.bed_number}</span>
 												</div>
 											</div>
 										</div>
@@ -89,26 +91,26 @@ export const UncheckedPatientsTab = () => {
 								<Table>
 									<TableHeader>
 										<TableRow>
-											<TableHead>Хона</TableHead>
-											<TableHead>Қават</TableHead>
-											<TableHead>Бемор</TableHead>
-											<TableHead>Жинси</TableHead>
-											<TableHead>Телефон</TableHead>
-											<TableHead>Ётоқ</TableHead>
+											<TableHead>{t('dailyCheckup.room')}</TableHead>
+											<TableHead>{t('dailyCheckup.floor')}</TableHead>
+											<TableHead>{t('dailyCheckup.patient')}</TableHead>
+											<TableHead>{t('dailyCheckup.gender')}</TableHead>
+											<TableHead>{t('dailyCheckup.phone')}</TableHead>
+											<TableHead>{t('dailyCheckup.bed')}</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
 										{data.data.map((item, index) => {
 											const patientName = item.patient.fullname
 											const shouldTruncate = patientName.length > 20
-											const genderText = item.patient.gender === 'male' ? 'Эркак' : item.patient.gender === 'female' ? 'Аёл' : item.patient.gender
+											const genderText = item.patient.gender === 'male' ? t('dailyCheckup.male') : item.patient.gender === 'female' ? t('dailyCheckup.female') : item.patient.gender
 
 											return (
 												<TableRow key={index}>
 													<TableCell>
 														<span className="font-medium">{item.room.room_name}</span>
 													</TableCell>
-													<TableCell>{item.room.floor_number}-қават</TableCell>
+													<TableCell>{item.room.floor_number}-{t('dailyCheckup.floorLabel')}</TableCell>
 													<TableCell>
 														<div className="font-medium">
 															{shouldTruncate ? (

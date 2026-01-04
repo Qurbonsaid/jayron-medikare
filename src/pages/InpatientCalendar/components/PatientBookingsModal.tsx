@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +27,7 @@ import {
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format, parseISO, startOfWeek } from "date-fns";
-import { uz } from "date-fns/locale";
+import { useDateLocale } from "@/hooks/useDateLocale";
 import type { Booking } from "@/app/api/bookingApi";
 
 interface PatientBookingsModalProps {
@@ -42,6 +43,8 @@ export const PatientBookingsModal = ({
   patientId,
   onBack,
 }: PatientBookingsModalProps) => {
+  const { t } = useTranslation("inpatient");
+  const dateLocale = useDateLocale();
   const navigate = useNavigate();
 
   // Fetch patient bookings
@@ -100,7 +103,7 @@ export const PatientBookingsModal = ({
           <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4 sm:px-6">
             <LoadingSpinner size="lg" />
             <p className="text-xs sm:text-sm text-muted-foreground mt-4">
-              Маълумотлар юкланмоқда...
+              {t("patientBookings.loading")}
             </p>
           </div>
         ) : error ? (
@@ -108,12 +111,12 @@ export const PatientBookingsModal = ({
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="text-sm">
-                Маълумотларни юклашда хатолик юз берди. Илтимос, қайтадан уриниб кўринг.
+                {t("patientBookings.loadError")}
               </AlertDescription>
             </Alert>
             <DialogFooter className="mt-4 sm:mt-6">
               <Button variant="outline" onClick={handleClose} className="w-full text-sm sm:text-base">
-                Ёпиш
+                {t("common.close")}
               </Button>
             </DialogFooter>
           </div>
@@ -122,23 +125,23 @@ export const PatientBookingsModal = ({
             <DialogHeader className="space-y-2 sm:space-y-3">
               <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                Бронлар
+                {t("patientBookings.bookings")}
               </DialogTitle>
             </DialogHeader>
             <Card className="p-6 sm:p-8 text-center mt-4 sm:mt-6">
               <div className="flex flex-col items-center gap-3 sm:gap-4 text-muted-foreground">
                 <Calendar className="w-12 h-12 sm:w-16 sm:h-16 opacity-40" />
                 <div className="space-y-1 sm:space-y-2">
-                  <p className="text-base sm:text-lg font-semibold">Бронь топилмади</p>
+                  <p className="text-base sm:text-lg font-semibold">{t("patientBookings.noBookingFound")}</p>
                   <p className="text-xs sm:text-sm">
-                    Бу беморнинг ҳозирча бирорта ҳам брони йўқ
+                    {t("patientBookings.noBookingMessage")}
                   </p>
                 </div>
               </div>
             </Card>
             <DialogFooter className="mt-4 sm:mt-6">
               <Button variant="outline" onClick={handleClose} className="w-full text-sm sm:text-base">
-                Ёпиш
+                {t("common.close")}
               </Button>
             </DialogFooter>
           </div>
@@ -160,7 +163,7 @@ export const PatientBookingsModal = ({
                     </>
                   )}
                   <Badge className="mt-2 sm:mt-3 bg-white/20 hover:bg-white/30 text-white border-0 text-xs sm:text-sm">
-                    {latestBooking.status === "active" ? "Одам бор" : "Бронланган"}
+                    {latestBooking.status === "active" ? t("patientBookings.occupied") : t("patientBookings.booked")}
                   </Badge>
                 </div>
               </div>
@@ -175,11 +178,11 @@ export const PatientBookingsModal = ({
                     <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm text-muted-foreground">Бронь муддати</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{t("patientBookings.bookingPeriod")}</p>
                     <p className="font-semibold text-sm sm:text-base mt-0.5 sm:mt-1 break-words">
-                      {format(parseISO(latestBooking.start_at), "d MMM yyyy", { locale: uz })}
+                      {format(parseISO(latestBooking.start_at), "d MMM yyyy", { locale: dateLocale })}
                       {" — "}
-                      {format(parseISO(latestBooking.end_at), "d MMM yyyy", { locale: uz })}
+                      {format(parseISO(latestBooking.end_at), "d MMM yyyy", { locale: dateLocale })}
                     </p>
                   </div>
                 </div>
@@ -195,9 +198,9 @@ export const PatientBookingsModal = ({
                         <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm text-muted-foreground">Корпус</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{t("patientBookings.corpus")}</p>
                         <p className="font-semibold text-sm sm:text-base mt-0.5 sm:mt-1 break-words">
-                          {latestBooking.corpus_id.corpus_number}-корпус
+                          {latestBooking.corpus_id.corpus_number}-{t("patientBookings.corpusSuffix")}
                         </p>
                       </div>
                     </div>
@@ -210,7 +213,7 @@ export const PatientBookingsModal = ({
                         <Home className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm text-muted-foreground">Хона</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{t("patientBookings.room")}</p>
                         <p className="font-semibold text-sm sm:text-base mt-0.5 sm:mt-1 break-words">
                           {latestBooking.room_id.room_name}
                         </p>
@@ -228,9 +231,9 @@ export const PatientBookingsModal = ({
                       <Bed className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm text-muted-foreground">Жой рақами</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{t("patientBookings.bedNumber")}</p>
                       <p className="font-semibold text-sm sm:text-base mt-0.5 sm:mt-1">
-                        {latestBooking?.bed_number || 0}-жой
+                        {latestBooking?.bed_number || 0}-{t("patientBookings.bed")}
                       </p>
                     </div>
                   </div>
@@ -241,9 +244,9 @@ export const PatientBookingsModal = ({
                       <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm text-muted-foreground">Яратилган вақт</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{t("patientBookings.createdTime")}</p>
                       <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-muted-foreground break-words">
-                        {format(parseISO(latestBooking.created_at), "d MMM yyyy, HH:mm", { locale: uz })}
+                        {format(parseISO(latestBooking.created_at), "d MMM yyyy, HH:mm", { locale: dateLocale })}
                       </p>
                     </div>
                   </div>
@@ -257,9 +260,9 @@ export const PatientBookingsModal = ({
                     <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm text-muted-foreground">Изоҳ</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{t("patientBookings.note")}</p>
                     <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-muted-foreground leading-relaxed break-words">
-                      {latestBooking?.note || "berilmagan"}
+                      {latestBooking?.note || t("patientBookings.notProvided")}
                     </p>
                   </div>
                 </div>
@@ -275,14 +278,14 @@ export const PatientBookingsModal = ({
                   className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-sm sm:text-base"
                 >
                   <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                  Календарда кўриш
+                  {t("patientBookings.viewInCalendar")}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleClose}
                   className="flex-1 sm:flex-none text-sm sm:text-base"
                 >
-                  Ёпиш
+                  {t("common.close")}
                 </Button>
               </div>
             </div>

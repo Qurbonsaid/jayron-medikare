@@ -11,6 +11,7 @@ import {
 } from '@react-pdf/renderer';
 import { Download } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Telefon raqamini +998 91 123 45 67 formatiga o'zgartirish
 const formatPhone = (phone: string | undefined): string => {
@@ -908,6 +909,7 @@ const ExaminationInfoDownloadButton: React.FC<
   ExaminationInfoDownloadButtonProps
 > = ({ exam }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const { t } = useTranslation('common');
   const patientId = exam?.patient_id?._id || exam?.patient_id;
   const { data: patientData } = useGetPatientByIdQuery(patientId, {
     skip: !patientId,
@@ -958,7 +960,7 @@ const ExaminationInfoDownloadButton: React.FC<
       className='flex items-center gap-2'
     >
       <Download className='h-4 w-4' />
-      {isGenerating ? 'Yuklanmoqda...' : 'PDF Yuklab olish'}
+      {isGenerating ? t('loadingText') : t('downloadPdf')}
     </Button>
   );
 };
@@ -973,6 +975,7 @@ const AllPrescriptionsDownloadButton: React.FC<
   AllPrescriptionsDownloadButtonProps
 > = ({ exam, prescriptions: propPrescriptions }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const { t } = useTranslation('common');
 
   // Use prop prescriptions or fall back to exam.prescriptions
   // If prescriptions is array of GetOnePresc objects, extract items from each
@@ -1034,7 +1037,7 @@ const AllPrescriptionsDownloadButton: React.FC<
       className='flex items-center gap-2'
     >
       <Download className='h-4 w-4' />
-      {isGenerating ? 'Yuklanmoqda...' : 'PDF Yuklab olish'}
+      {isGenerating ? t('loadingText') : t('downloadPdf')}
     </Button>
   );
 };
@@ -1312,6 +1315,7 @@ const ServicesDownloadButton: React.FC<ServicesDownloadButtonProps> = ({
   services: propServices,
 }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const { t } = useTranslation('common');
 
   // Flatten services if they contain items arrays (GetOneServiceRes format)
   let allServices: any[] = propServices || exam.services || [];
@@ -1374,7 +1378,7 @@ const ServicesDownloadButton: React.FC<ServicesDownloadButtonProps> = ({
       className='flex items-center gap-2'
     >
       <Download className='h-4 w-4' />
-      {isGenerating ? 'Yuklanmoqda...' : 'PDF Yuklab olish'}
+      {isGenerating ? t('loadingText') : t('downloadPdf')}
     </Button>
   );
 };
@@ -1582,6 +1586,7 @@ const NeurologicStatusDownloadButton: React.FC<
   NeurologicStatusDownloadButtonProps
 > = ({ exam, neurologic }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const { t } = useTranslation('common');
 
   const handleDownloadNeurologicStatus = async () => {
     if (!neurologic) {
@@ -1629,7 +1634,7 @@ const NeurologicStatusDownloadButton: React.FC<
       className='flex items-center gap-2'
     >
       <Download className='h-4 w-4' />
-      {isGenerating ? 'Yuklanmoqda...' : 'PDF Yuklab olish'}
+      {isGenerating ? t('loadingText') : t('downloadPdf')}
     </Button>
   );
 };

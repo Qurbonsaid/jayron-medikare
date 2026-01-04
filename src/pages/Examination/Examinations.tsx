@@ -31,6 +31,7 @@ import { Eye, FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { getStatusBadge } from '../../components/common/StatusBadge';
 import DeleteVisit from './components/DeleteVisit';
 import EditVisit from './components/EditVisit';
@@ -38,6 +39,7 @@ import ExamFilter from './components/ExamFilter';
 import VisitDetail from './components/VisitDetail';
 
 const Examinations = () => {
+  const { t } = useTranslation('examinations');
   const { canCreate } = usePermission('examinations');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,12 +119,12 @@ const Examinations = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли якунланди');
+        toast.success(t('completed'));
         setIsDetailModalOpen(false);
         refetch();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+        toast.error(error?.data?.error?.msg || t('errorOccurred'));
       },
     });
   };
@@ -141,7 +143,7 @@ const Examinations = () => {
   // Handle update
   const handleUpdate = async () => {
     if (!editForm.complaints.trim()) {
-      toast.error('Илтимос, шикоятни киритинг');
+      toast.error(t('enterComplaintRequired'));
       return;
     }
 
@@ -159,12 +161,12 @@ const Examinations = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли янгиланди');
+        toast.success(t('updated'));
         setIsEditModalOpen(false);
         refetch();
       },
       onError: (err) => {
-        toast.error(err?.error?.msg || 'Хатолик юз берди');
+        toast.error(err?.error?.msg || t('errorOccurred'));
       },
     });
   };
@@ -177,12 +179,12 @@ const Examinations = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли ўчирилди');
+        toast.success(t('deleted'));
         setIsDeleteModalOpen(false);
         refetch();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+        toast.error(error?.data?.error?.msg || t('errorOccurred'));
       },
     });
   };
@@ -194,10 +196,10 @@ const Examinations = () => {
         <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8'>
           <div>
             <h1 className='text-2xl sm:text-3xl font-bold mb-1 sm:mb-2'>
-              Кўриклар
+              {t('title')}
             </h1>
             <p className='text-sm sm:text-base text-muted-foreground'>
-              Барча кўрикларни кўриш ва бошқариш
+              {t('subtitle')}
             </p>
           </div>
           {canCreate && (
@@ -206,7 +208,7 @@ const Examinations = () => {
               onClick={() => navigate('/new-visit')}
             >
               <Plus className='w-4 h-4 mr-2' />
-              Янги Кўрик
+              {t('newExamination')}
             </Button>
           )}
         </div>
@@ -217,12 +219,12 @@ const Examinations = () => {
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
               <div className='sm:col-span-2'>
                 <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
-                  Қидирув
+                  {t('search')}
                 </label>
                 <div className='relative'>
                   <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground' />
                   <Input
-                    placeholder='Бемор, шифокор ёки телефон бўйича қидириш...'
+                    placeholder={t('searchPlaceholder')}
                     className='pl-9 sm:pl-10 h-10 sm:h-12 text-sm sm:text-base'
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -232,35 +234,35 @@ const Examinations = () => {
 
               <div>
                 <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
-                  Статус
+                  {t('status')}
                 </label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
-                    <SelectValue placeholder='Статус' />
+                    <SelectValue placeholder={t('status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='all'>Барчаси</SelectItem>
-                    <SelectItem value='completed'>Тугалланган</SelectItem>
-                    <SelectItem value='pending'>Тугалланмаган</SelectItem>
+                    <SelectItem value='all'>{t('all')}</SelectItem>
+                    <SelectItem value='completed'>{t('statusCompleted')}</SelectItem>
+                    <SelectItem value='pending'>{t('pending')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
                 <label className='block text-sm font-medium text-muted-foreground mb-1.5'>
-                  Даволаш тури
+                  {t('treatmentType')}
                 </label>
                 <Select
                   value={treatmentTypeFilter}
                   onValueChange={setTreatmentTypeFilter}
                 >
                   <SelectTrigger className='h-10 sm:h-12 text-sm sm:text-base'>
-                    <SelectValue placeholder='Даволаш тури' />
+                    <SelectValue placeholder={t('treatmentType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='all'>Барчаси</SelectItem>
-                    <SelectItem value='ambulator'>Амбулатор</SelectItem>
-                    <SelectItem value='stasionar'>Стационар</SelectItem>
+                    <SelectItem value='all'>{t('all')}</SelectItem>
+                    <SelectItem value='ambulator'>{t('ambulatory')}</SelectItem>
+                    <SelectItem value='stasionar'>{t('stationary')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -273,7 +275,7 @@ const Examinations = () => {
           <Card className='card-shadow p-8 sm:p-12'>
             <LoadingSpinner
               size='lg'
-              text='Юкланмоқда...'
+              text={t('loadingExaminations')}
               className='justify-center'
             />
           </Card>
@@ -281,14 +283,14 @@ const Examinations = () => {
           <Card className='card-shadow p-4 sm:p-0'>
             <EmptyState
               icon={FileText}
-              title={searchQuery ? 'Ҳеч нарса топилмади' : 'Ҳали кўриклар йўқ'}
+              title={searchQuery ? t('notFound') : t('noExamsYet')}
               description={
                 searchQuery
-                  ? 'Қидирув сўзини текширинг'
-                  : 'Биринчи кўрикни яратиш учун қуйидаги тугмани босинг'
+                  ? t('checkSearch')
+                  : t('createFirstExam')
               }
               actionLabel={
-                searchQuery ? 'Қидирувни тозалаш' : '+ Янги Кўрик Яратиш'
+                searchQuery ? t('clearSearch') : t('createNew')
               }
               onAction={() =>
                 searchQuery ? setSearchQuery('') : navigate('/new-visit')
@@ -301,13 +303,13 @@ const Examinations = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Бемор</TableHead>
-                    <TableHead>Шифокор</TableHead>
-                    <TableHead>Шикоят</TableHead>
-                    <TableHead>Тури</TableHead>
-                    <TableHead>Статус</TableHead>
-                    <TableHead className='min-w-[120px]'>Сана</TableHead>
-                    <TableHead>Ҳаракатлар</TableHead>
+                    <TableHead>{t('patient')}</TableHead>
+                    <TableHead>{t('doctor')}</TableHead>
+                    <TableHead>{t('complaint')}</TableHead>
+                    <TableHead>{t('type')}</TableHead>
+                    <TableHead>{t('status')}</TableHead>
+                    <TableHead className='min-w-[120px]'>{t('date')}</TableHead>
+                    <TableHead>{t('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -342,8 +344,8 @@ const Examinations = () => {
                           }`}
                         >
                           {exam.treatment_type === 'stasionar'
-                            ? 'Стационар'
-                            : 'Амбулатор'}
+                            ? t('stationary')
+                            : t('ambulatory')}
                         </span>
                       </TableCell>
                       <TableCell>{getStatusBadge(exam.status)}</TableCell>
@@ -357,10 +359,10 @@ const Examinations = () => {
                             variant='outline'
                             className='text-primary hover:text-primary/80'
                             onClick={() => navigate(`/examination/${exam._id}`)}
-                            title='Батафсил'
+                            title={t('examinationDetails')}
                           >
                             <Eye className='w-4 h-4 mr-1' />
-                            Батафсил
+                            {t('examinationDetails')}
                           </Button>
                         </div>
                       </TableCell>
@@ -377,7 +379,7 @@ const Examinations = () => {
                   {/* Items per page */}
                   <div className='flex items-center gap-2'>
                     <span className='text-sm text-muted-foreground'>
-                      Саҳифада:
+                      {t('pagination.perPage')}:
                     </span>
                     <Select
                       value={itemsPerPage.toString()}
@@ -412,7 +414,7 @@ const Examinations = () => {
                         examsData.pagination.page * examsData.pagination.limit,
                         examsData.pagination.total_items
                       )}{' '}
-                      дан {examsData.pagination.total_items} та
+                      {t('pagination.of')} {examsData.pagination.total_items} {t('pagination.items')}
                     </div>
 
                     {/* Page buttons */}
@@ -424,7 +426,7 @@ const Examinations = () => {
                         onClick={() => setCurrentPage(currentPage - 1)}
                         className='h-9 px-3'
                       >
-                        Олдинги
+                        {t('pagination.previous')}
                       </Button>
 
                       <div className='flex items-center gap-1'>
@@ -502,7 +504,7 @@ const Examinations = () => {
                         onClick={() => setCurrentPage(currentPage + 1)}
                         className='h-9 px-3'
                       >
-                        Кейинги
+                        {t('pagination.next')}
                       </Button>
                     </div>
                   </div>
