@@ -385,7 +385,10 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                               </td>
                               <td className='py-2 px-4 text-center'>
                                 <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700'>
-                                  {analysis.level || '-'}
+                                  {analysis.level === 'ODDIY' ? t('levels.normal') : 
+                                   analysis.level === 'SHOSHILINCH' ? t('levels.urgent') : 
+                                   analysis.level === 'JUDA_SHOSHILINCH' ? t('levels.veryUrgent') : 
+                                   analysis.level || '-'}
                                 </span>
                               </td>
                               <td className='py-2 px-4 text-sm'>
@@ -403,9 +406,9 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                       : 'bg-gray-100 text-gray-700'
                                   }`}
                                 >
-                                  {analysis.status === 'pending'
+                                  {analysis.status === 'pending' || analysis.status === 'PENDING'
                                     ? t('pending')
-                                    : analysis.status === 'completed'
+                                    : analysis.status === 'completed' || analysis.status === 'COMPLETED'
                                     ? t('completed')
                                     : analysis.status}
                                 </span>
@@ -451,9 +454,9 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                     : 'bg-gray-100 text-gray-700'
                                 }`}
                               >
-                                {analysis.status === 'pending'
+                                {analysis.status === 'pending' || analysis.status === 'PENDING'
                                   ? t('pending')
-                                  : analysis.status === 'completed'
+                                  : analysis.status === 'completed' || analysis.status === 'COMPLETED'
                                   ? t('completed')
                                   : analysis.status}
                               </span>
@@ -466,7 +469,10 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                                 </Label>
                                 <div className='text-sm mt-1'>
                                   <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700'>
-                                    {analysis.level}
+                                    {analysis.level === 'ODDIY' ? t('levels.normal') : 
+                                     analysis.level === 'SHOSHILINCH' ? t('levels.urgent') : 
+                                     analysis.level === 'JUDA_SHOSHILINCH' ? t('levels.veryUrgent') : 
+                                     analysis.level || '-'}
                                   </span>
                                 </div>
                               </div>

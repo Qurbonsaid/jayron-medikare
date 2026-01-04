@@ -9,11 +9,12 @@ import { useGetAvailableRoomsQuery } from "@/app/api/bookingApi";
 import { useNavigate } from "react-router-dom";
 import { Bed, Users, Building2, Calendar, Search } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { uz } from "date-fns/locale";
+import { useDateLocale } from "@/hooks/useDateLocale";
 import { PatientSearchModal, PatientBookingsModal } from "./components";
 
 const RoomsList = () => {
   const { t } = useTranslation("inpatient");
+  const dateLocale = useDateLocale();
   const navigate = useNavigate();
   const [selectedCorpusId, setSelectedCorpusId] = useState<string>("");
   const [showPatientSearch, setShowPatientSearch] = useState(false);
@@ -210,7 +211,7 @@ const RoomsList = () => {
                             <div className="text-[10px] sm:text-xs">{t("roomsList.free")}</div>
                           ) : (
                             <div className="text-[10px] sm:text-xs">
-                              {bed.leave_date ? format(parseISO(bed.leave_date), "d MMM", { locale: uz }) : t("roomsList.occupied")}
+                              {bed.leave_date ? format(parseISO(bed.leave_date), "d MMM", { locale: dateLocale }) : t("roomsList.occupied")}
                             </div>
                           )}
                         </div>
@@ -223,7 +224,7 @@ const RoomsList = () => {
                     <div className="flex items-center gap-2 text-muted-foreground text-xs sm:text-sm pt-2 border-t">
                       <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>
-                        Охирги бўшалиш: {format(parseISO(nextAvailable.leave_date!), "d MMM, yyyy", { locale: uz })}
+                        Охирги бўшалиш: {format(parseISO(nextAvailable.leave_date!), "d MMM, yyyy", { locale: dateLocale })}
                       </span>
                     </div>
                   )*/}

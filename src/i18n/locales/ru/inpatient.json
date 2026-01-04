@@ -3,6 +3,17 @@
   "subtitle": "Управление стационарным отделением",
   "calendarTitle": "Календарь стационара",
   "management": "Управление стационаром",
+
+  "common": {
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "close": "Закрыть",
+    "unknown": "Неизвестно",
+    "loading": "Загрузка..."
+  },
+
   "rooms": "Палаты",
   "beds": "Койки",
   "room": "Палата",
@@ -92,6 +103,15 @@
   "filter": "Фильтр",
   "showAll": "Показать все",
   "showOccupiedOnly": "Только занятые",
+
+  "count": "шт",
+  "emptyText": "Свободно",
+  "noText": "Нет",
+  "fullText": "Полностью занято",
+  "occupiedCount": "{{count}} занято",
+  "descriptionLabel": "Описание",
+  "notProvided": "Не указано",
+  "capacityUnit": "мест",
   "showEmptyOnly": "Только свободные",
   "perPage": "/страница",
   "page": "страница",
@@ -148,12 +168,10 @@
   "persons": "мест",
   "occupancy": "Заполняемость",
   "fullyOccupied": "Полностью занята",
-  "occupiedCount": "занято",
   "empty": "Свободно",
   "roomFloor": "Этаж палаты",
   "floorSuffix": "этаж",
   "description": "Описание",
-  "notProvided": "Не указано",
 
   "change": "изменить",
   "bloodPressure": "артериальное давление",
@@ -217,7 +235,6 @@
   "viewAndManageBuildings": "Просмотр и управление всеми корпусами",
   "newBuilding": "Новый корпус",
   "building": "Корпус",
-  "count": "",
   "leavingPatients": "Выписываются",
   "none": "Нет",
   "nothingFound": "Ничего не найдено",
@@ -241,11 +258,18 @@
   "buildingUpdatedSuccess": "Корпус успешно обновлён",
 
   "calendar": {
-    "patientPresent": "Пациент есть",
+    "patientPresent": "Пациент",
     "booked": "Бронь",
     "cannotBookPastDate": "Нельзя забронировать на прошедшую дату",
     "roomNotFound": "Палата не найдена",
-    "goBack": "Вернуться"
+    "goBack": "Вернуться",
+    "capacity": "Вместимость",
+    "occupied": "Занято",
+    "available": "Свободно",
+    "bed": "место",
+    "free": "Свободно",
+    "newBooking": "Новая бронь",
+    "unknown": "Неизвестно"
   },
 
   "booking": {
@@ -423,5 +447,23 @@
     "patientCapacityMin": "Вместимость пациентов должна быть минимум 1",
     "floorNumberRequired": "Необходимо указать номер этажа",
     "descriptionMin": "Описание должно содержать минимум 5 символов"
+  },
+
+  "roomsList": {
+    "title": "Календарь стационара",
+    "subtitle": "Выберите корпус и палату для бронирования",
+    "searchPatient": "Поиск пациента",
+    "corpus": "Корпус",
+    "selectCorpus": "Выберите корпус для просмотра палат",
+    "loadingRooms": "Загрузка палат...",
+    "loadError": "Ошибка загрузки",
+    "tryAgain": "Попробуйте обновить страницу",
+    "beds": "Места",
+    "bedsCount": "мест",
+    "bed": "место",
+    "free": "Свободно",
+    "occupied": "Занято",
+    "noRoomsInCorpus": "Нет палат в этом корпусе",
+    "noAvailableRooms": "Для выбранного корпуса палаты ещё не созданы"
   }
 }

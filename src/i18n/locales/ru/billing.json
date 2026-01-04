@@ -143,5 +143,15 @@
     "enterPaymentAmount": "Пожалуйста, введите сумму оплаты",
     "paymentExceedsTotal": "Сумма оплаты не может превышать общую сумму",
     "paymentExceedsDebt": "Сумма оплаты не может превышать долг"
+  },
+  "invoicesList": "Список счетов",
+  "noInvoicesFound": "Счета не найдены",
+  "noMatchingInvoices": "Нет счетов, соответствующих критериям фильтра",
+  "noInvoicesYet": "Счета ещё не были созданы",
+  "debt": "Долг",
+  "levels": {
+    "normal": "Обычный",
+    "urgent": "Срочный",
+    "veryUrgent": "Очень срочный"
   }
 }

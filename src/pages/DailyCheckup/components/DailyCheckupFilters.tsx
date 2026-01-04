@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
-import { uz } from 'date-fns/locale'
+import { useDateLocale } from '@/hooks/useDateLocale'
 import { CalendarIcon, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -59,6 +59,7 @@ export const DailyCheckupFilters = ({
 	onClearFilters,
 }: DailyCheckupFiltersProps) => {
 	const { t } = useTranslation('inpatient')
+	const dateLocale = useDateLocale()
 	const goToPreviousDay = () => {
 		const newDate = new Date(selectedDate)
 		newDate.setDate(newDate.getDate() - 1)
@@ -108,7 +109,7 @@ export const DailyCheckupFilters = ({
 								>
 									<CalendarIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
 									{selectedDate ? (
-										format(selectedDate, 'PPP', { locale: uz })
+										format(selectedDate, 'PPP', { locale: dateLocale })
 									) : (
 										<span>{t('dailyCheckup.selectDate')}</span>
 									)}

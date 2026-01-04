@@ -379,7 +379,7 @@ const Examinations = () => {
                   {/* Items per page */}
                   <div className='flex items-center gap-2'>
                     <span className='text-sm text-muted-foreground'>
-                      Саҳифада:
+                      {t('pagination.perPage')}:
                     </span>
                     <Select
                       value={itemsPerPage.toString()}
@@ -414,7 +414,7 @@ const Examinations = () => {
                         examsData.pagination.page * examsData.pagination.limit,
                         examsData.pagination.total_items
                       )}{' '}
-                      дан {examsData.pagination.total_items} та
+                      {t('pagination.of')} {examsData.pagination.total_items} {t('pagination.items')}
                     </div>
 
                     {/* Page buttons */}
@@ -426,7 +426,7 @@ const Examinations = () => {
                         onClick={() => setCurrentPage(currentPage - 1)}
                         className='h-9 px-3'
                       >
-                        Олдинги
+                        {t('pagination.previous')}
                       </Button>
 
                       <div className='flex items-center gap-1'>
@@ -504,7 +504,7 @@ const Examinations = () => {
                         onClick={() => setCurrentPage(currentPage + 1)}
                         className='h-9 px-3'
                       >
-                        Кейинги
+                        {t('pagination.next')}
                       </Button>
                     </div>
                   </div>

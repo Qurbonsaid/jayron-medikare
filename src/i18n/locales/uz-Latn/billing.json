@@ -143,5 +143,15 @@
     "enterPaymentAmount": "Iltimos, to'lov miqdorini kiriting",
     "paymentExceedsTotal": "To'lov miqdori umumiy summadan oshmasligi kerak",
     "paymentExceedsDebt": "To'lov miqdori qarzdan oshmasligi kerak"
+  },
+  "invoicesList": "Hisob-fakturalar ro'yxati",
+  "noInvoicesFound": "Hisob-fakturalar topilmadi",
+  "noMatchingInvoices": "Filtr shartlariga mos ma'lumot topilmadi",
+  "noInvoicesYet": "Hali hisob-fakturalar yaratilmagan",
+  "debt": "Qarz",
+  "levels": {
+    "normal": "Oddiy",
+    "urgent": "Shoshilinch",
+    "veryUrgent": "Juda shoshilinch"
   }
 }

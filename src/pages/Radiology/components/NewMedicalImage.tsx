@@ -43,6 +43,7 @@ import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Save, Upload, X, ImagePlus } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import z from "zod";
 import { BodyPartConstants } from "@/constants/BodyPart";
@@ -65,31 +66,30 @@ interface UploadResponseError {
   message?: string;
 }
 
-// Tana qismlari ro'yxati
-const bodyPartOptions = [
-  { value: BodyPartConstants.HEAD, label: "Бош" },
-  { value: BodyPartConstants.NECK, label: "Бўйин" },
-  { value: BodyPartConstants.CHEST, label: "Кўкрак қафаси" },
-  { value: BodyPartConstants.ABDOMEN, label: "Қорин бўшлиғи" },
-  { value: BodyPartConstants.PELVIS, label: "Тос суяги" },
-  { value: BodyPartConstants.SPINE, label: "Умуртқа поғонаси" },
-  { value: BodyPartConstants.ARM, label: "Қўл" },
-  { value: BodyPartConstants.LEG, label: "Оёқ" },
-  { value: BodyPartConstants.KNEE, label: "Тизза" },
-  { value: BodyPartConstants.SHOULDER, label: "Елка" },
-  { value: BodyPartConstants.HAND, label: "Кафт" },
-  { value: BodyPartConstants.FOOT, label: "Оёқ табани" },
+// Tana qismlari ro'yxati - keys for translation
+const bodyPartKeys = [
+  { value: BodyPartConstants.HEAD, key: "head" },
+  { value: BodyPartConstants.NECK, key: "neck" },
+  { value: BodyPartConstants.CHEST, key: "chestCage" },
+  { value: BodyPartConstants.ABDOMEN, key: "abdomen" },
+  { value: BodyPartConstants.PELVIS, key: "pelvis" },
+  { value: BodyPartConstants.SPINE, key: "spine" },
+  { value: BodyPartConstants.ARM, key: "arm" },
+  { value: BodyPartConstants.LEG, key: "leg" },
+  { value: BodyPartConstants.KNEE, key: "knee" },
+  { value: BodyPartConstants.SHOULDER, key: "shoulder" },
+  { value: BodyPartConstants.HAND, key: "hand" },
+  { value: BodyPartConstants.FOOT, key: "foot" },
 ];
 
-const MedicalImageSchema = z.object({
-  examination_id: z.string().min(1, "Кўрикни танланг"),
-  imaging_type_id: z.string().min(1, "Текшириш турини танланг"),
-  image_paths: z.array(z.string()).min(1, "Камида 1 та файл юкланг"),
-  body_part: z.string().optional(),
-  description: z.string().optional(),
-});
-
-type MedicalImageFormData = z.infer<typeof MedicalImageSchema>;
+// Schema will be created inside component to use translations
+type MedicalImageFormData = {
+  examination_id: string;
+  imaging_type_id: string;
+  image_paths: string[];
+  body_part?: string;
+  description?: string;
+};
 
 interface NewMedicalImageProps {
   open: boolean;
@@ -100,6 +100,17 @@ export const NewMedicalImage = ({
   open,
   onOpenChange,
 }: NewMedicalImageProps) => {
+  const { t } = useTranslation("radiology");
+  
+  // Schema inside component to use translations
+  const MedicalImageSchema = z.object({
+    examination_id: z.string().min(1, t("newMedicalImage.validation.selectExamination")),
+    imaging_type_id: z.string().min(1, t("newMedicalImage.validation.selectImagingType")),
+    image_paths: z.array(z.string()).min(1, t("newMedicalImage.validation.uploadAtLeastOneFile")),
+    body_part: z.string().optional(),
+    description: z.string().optional(),
+  });
+  
   const [createMedicalImage, { isLoading }] = useCreateMedicalImageMutation();
   const [uploadImage, { isLoading: isUploading }] = useUploadCreateMutation();
   const { data: imagingTypes } = useGetAllImagingTypesQuery({ limit: 100 });
@@ -142,14 +153,14 @@ export const NewMedicalImage = ({
     const maxSize = 50 * 1024 * 1024; // 50MB
     const validFiles = fileArray.filter((file) => {
       if (file.size > maxSize) {
-        toast.warning(`"${file.name}" жуда катта (макс. 50MB)`);
+        toast.warning(t("newMedicalImage.fileTooLarge", { fileName: file.name }));
         return false;
       }
       return true;
     });
 
     if (validFiles.length === 0) {
-      toast.error("Илтимос, тўғри файлларни танланг");
+      toast.error(t("newMedicalImage.selectCorrectFiles"));
       return;
     }
 
@@ -177,7 +188,7 @@ export const NewMedicalImage = ({
           if (errorMsg) {
             toast.error(`"${file.name}": ${errorMsg}`);
           } else {
-            toast.error(`"${file.name}" юклашда хатолик юз берди`);
+            toast.error(t("newMedicalImage.fileUploadError", { fileName: file.name }));
           }
           return null;
         }
@@ -188,7 +199,7 @@ export const NewMedicalImage = ({
         if (errorMsg) {
           toast.error(`"${file.name}": ${errorMsg}`);
         } else {
-          toast.error(`"${file.name}" юклашда хатолик юз берди`);
+          toast.error(t("newMedicalImage.fileUploadError", { fileName: file.name }));
         }
         return null;
       } finally {
@@ -218,11 +229,11 @@ export const NewMedicalImage = ({
 
     // Success va error xabarlari
     if (successCount > 0) {
-      toast.success(`${successCount} та файл муваффақиятли юкланди`);
+      toast.success(t("newMedicalImage.filesUploaded", { count: successCount }));
     }
     if (duplicateCount > 0) {
       toast.warning(
-        `${duplicateCount} та файл аллақачон мавжуд ва ўтказиб юборилди`
+        t("newMedicalImage.filesAlreadyExist", { count: duplicateCount })
       );
     }
   };
@@ -232,7 +243,7 @@ export const NewMedicalImage = ({
       request: async () =>
         await createMedicalImage(data as CreatedMedicalImageRequest).unwrap(),
       onSuccess: () => {
-        toast.success("Тиббий тасвир муваффақиятли қўшилди");
+        toast.success(t("newMedicalImage.imageAddedSuccess"));
         form.reset();
         onOpenChange(false);
       },
@@ -241,7 +252,7 @@ export const NewMedicalImage = ({
         if (errorMsg) {
           toast.error(errorMsg);
         } else {
-          toast.error("Тиббий тасвир қўшишда хатолик юз берди");
+          toast.error(t("newMedicalImage.imageAddError"));
         }
       },
     });
@@ -252,7 +263,7 @@ export const NewMedicalImage = ({
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-3xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
-            Янги тиббий тасвир қўшиш
+            {t("newMedicalImage.title")}
           </DialogTitle>
         </DialogHeader>
 
@@ -269,7 +280,7 @@ export const NewMedicalImage = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Кўрик <span className="text-red-500">*</span>
+                        {t("newMedicalImage.examination")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -277,7 +288,7 @@ export const NewMedicalImage = ({
                       >
                         <FormControl>
                           <SelectTrigger className="border-slate-400 border-2">
-                            <SelectValue placeholder="Кўрикни танланг..." />
+                            <SelectValue placeholder={t("newMedicalImage.selectExamination")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -306,7 +317,7 @@ export const NewMedicalImage = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Текшириш тури <span className="text-red-500">*</span>
+                        {t("newMedicalImage.imagingType")} <span className="text-red-500">*</span>
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -314,7 +325,7 @@ export const NewMedicalImage = ({
                       >
                         <FormControl>
                           <SelectTrigger className="border-slate-400 border-2">
-                            <SelectValue placeholder="Турини танланг..." />
+                            <SelectValue placeholder={t("newMedicalImage.selectImagingType")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -336,17 +347,17 @@ export const NewMedicalImage = ({
                 name="body_part"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Танасининг қисми</FormLabel>
+                    <FormLabel>{t("newMedicalImage.bodyPart")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="border-slate-400 border-2">
-                          <SelectValue placeholder="Тана қисмини танланг..." />
+                          <SelectValue placeholder={t("newMedicalImage.selectBodyPart")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {bodyPartOptions.map((option) => (
+                        {bodyPartKeys.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
-                            {option.label}
+                            {t(`bodyParts.${option.key}`)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -362,7 +373,7 @@ export const NewMedicalImage = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Файллар (Расм, PDF, Word, Excel, RTF, MDFX) <span className="text-red-500">*</span>
+                      {t("newMedicalImage.files")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <div className="space-y-3">
@@ -378,7 +389,7 @@ export const NewMedicalImage = ({
                             disabled={isUploading}
                           >
                             <Upload className="mr-2 h-4 w-4" />
-                            {isUploading ? "Юкланмоқда..." : "Файл танланг (расм, PDF, Word, Excel, RTF, MDFX)"}
+                            {isUploading ? t("newMedicalImage.uploading") : t("newMedicalImage.selectFile")}
                           </Button>
                           <input
                             id="image-upload"
@@ -410,7 +421,7 @@ export const NewMedicalImage = ({
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
                               <p className="text-sm font-medium text-muted-foreground">
-                                Юкланган тасвирлар: {field.value.length} та
+                                {t("newMedicalImage.uploadedImages")}: {field.value.length} {t("common:items")}
                               </p>
                             </div>
                             <div className="relative max-w-[85vw] sm:max-w-[80vw] lg:max-w-2xl overflow-hidden mx-auto">
@@ -423,7 +434,7 @@ export const NewMedicalImage = ({
                                     >
                                       <img
                                         src={path}
-                                        alt={`Расм ${index + 1}`}
+                                        alt={`${t("newMedicalImage.image")} ${index + 1}`}
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
                                           e.currentTarget.src =
@@ -465,10 +476,10 @@ export const NewMedicalImage = ({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Тавсиф</FormLabel>
+                    <FormLabel>{t("newMedicalImage.description")}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Қўшимча маълумот..."
+                        placeholder={t("newMedicalImage.descriptionPlaceholder")}
                         className="border-slate-400 border-2 w-full min-h-[100px]"
                         {...field}
                       />
@@ -488,7 +499,7 @@ export const NewMedicalImage = ({
                   }}
                   disabled={isLoading}
                 >
-                  Бекор қилиш
+                  {t("cancel")}
                 </Button>
                 <Button
                   onClick={form.handleSubmit(onSubmit)}
@@ -498,12 +509,12 @@ export const NewMedicalImage = ({
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Сақланмоқда...
+                      {t("newMedicalImage.saving")}
                     </div>
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Сақлаш
+                      {t("newMedicalImage.save")}
                     </>
                   )}
                 </Button>

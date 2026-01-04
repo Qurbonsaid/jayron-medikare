@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -55,23 +56,24 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Tana qismlari uchun o'zbek nomlari
-const bodyPartLabels: Record<string, string> = {
-  [BodyPartConstants.HEAD]: "Бош",
-  [BodyPartConstants.NECK]: "Бўйин",
-  [BodyPartConstants.CHEST]: "Кўкрак",
-  [BodyPartConstants.ABDOMEN]: "Қорин",
-  [BodyPartConstants.PELVIS]: "Тос",
-  [BodyPartConstants.SPINE]: "Умуртқа поғонаси",
-  [BodyPartConstants.ARM]: "Қўл",
-  [BodyPartConstants.LEG]: "Оёқ",
-  [BodyPartConstants.KNEE]: "Тиззя",
-  [BodyPartConstants.SHOULDER]: "Елка",
-  [BodyPartConstants.HAND]: "Кафт",
-  [BodyPartConstants.FOOT]: "Тобан",
+// Body part keys for translation
+const bodyPartKeys: Record<string, string> = {
+  [BodyPartConstants.HEAD]: "head",
+  [BodyPartConstants.NECK]: "neck",
+  [BodyPartConstants.CHEST]: "chestCage",
+  [BodyPartConstants.ABDOMEN]: "abdomen",
+  [BodyPartConstants.PELVIS]: "pelvis",
+  [BodyPartConstants.SPINE]: "spine",
+  [BodyPartConstants.ARM]: "arm",
+  [BodyPartConstants.LEG]: "leg",
+  [BodyPartConstants.KNEE]: "knee",
+  [BodyPartConstants.SHOULDER]: "shoulder",
+  [BodyPartConstants.HAND]: "hand",
+  [BodyPartConstants.FOOT]: "foot",
 };
 
 export const MedicalImageTab = () => {
+  const { t } = useTranslation('radiology');
   const [showNewModal, setShowNewModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -98,29 +100,30 @@ export const MedicalImageTab = () => {
   });
 
   const getPatientName = (image: MedicalImage) => {
-    if (typeof image.examination_id === "string") return "Номаълум";
+    if (typeof image.examination_id === "string") return t('common.unknown');
     const exam = image.examination_id as ExaminationInfo;
-    if (typeof exam?.patient_id === "string") return "Номаълум";
-    return exam?.patient_id?.fullname || "Номаълум";
+    if (typeof exam?.patient_id === "string") return t('common.unknown');
+    return exam?.patient_id?.fullname || t('common.unknown');
   };
 
   const getImagingTypeName = (image: MedicalImage) => {
-    if (typeof image.imaging_type_id === "string") return "Номаълум";
-    return (image.imaging_type_id as ImagingTypeInfo)?.name || "Номаълум";
+    if (typeof image.imaging_type_id === "string") return t('common.unknown');
+    return (image.imaging_type_id as ImagingTypeInfo)?.name || t('common.unknown');
   };
 
   const getBodyPartLabel = (bodyPart: string | undefined) => {
-    if (!bodyPart) return "Кўрсатилмаган";
-    return bodyPartLabels[bodyPart] || bodyPart;
+    if (!bodyPart) return t('medicalImageTab.notSpecified');
+    const key = bodyPartKeys[bodyPart];
+    return key ? t(`bodyParts.${key}`) : bodyPart;
   };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-1">
-          <h2 className="text-xl font-semibold">Тиббий тасвирлар</h2>
+          <h2 className="text-xl font-semibold">{t('medicalImageTab.title')}</h2>
           <p className="text-sm text-muted-foreground">
-            Беморларнинг барча МРТ, КТ, Рентген тасвирлари
+            {t('medicalImageTab.description')}
           </p>
         </div>
         <Button
@@ -128,7 +131,7 @@ export const MedicalImageTab = () => {
           className="w-full sm:w-auto"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Янги тасвир қўшиш
+          {t('medicalImageTab.addNewImage')}
         </Button>
       </div>
 
@@ -139,7 +142,7 @@ export const MedicalImageTab = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                 <Input
-                  placeholder="Бемор номи ёки танасининг қисми бўйича қидириш..."
+                  placeholder={t('medicalImageTab.searchPlaceholder')}
                   className="pl-9 sm:pl-10 h-10 sm:h-12 text-sm sm:text-base"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -159,7 +162,7 @@ export const MedicalImageTab = () => {
                 disabled={!searchQuery && currentPage === 1}
               >
                 <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="ml-2">Қидирувни тозалаш</span>
+                <span className="ml-2">{t('medicalImageTab.clearSearch')}</span>
               </Button>
             </div>
           </div>
@@ -171,11 +174,11 @@ export const MedicalImageTab = () => {
         medicalImages?.data.length > 0 && (
           <div className="flex items-start sm:items-center justify-between gap-3 mb-4">
             <p className="text-sm sm:text-base text-muted-foreground">
-              Жами:{" "}
+              {t('medicalImageTab.total')}:{" "}
               <span className="font-semibold text-foreground">
                 {medicalImages?.pagination?.total || 0}
               </span>{" "}
-              тасвир
+              {t('medicalImageTab.image')}
             </p>
             <Select
               value={itemsPerPage.toString()}
@@ -201,7 +204,7 @@ export const MedicalImageTab = () => {
         <Card className="card-shadow p-8 sm:p-12">
           <LoadingSpinner
             size="lg"
-            text="Юкланмоқда..."
+            text={t('viewer.loading')}
             className="justify-center"
           />
         </Card>
@@ -213,15 +216,15 @@ export const MedicalImageTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-center">№</TableHead>
-                  <TableHead className="text-center">Бемор</TableHead>
-                  <TableHead className="text-center">Текшириш Тури</TableHead>
-                  <TableHead className="text-center">Тавсиф</TableHead>
+                  <TableHead className="text-center">{t('medicalImageTab.patient')}</TableHead>
+                  <TableHead className="text-center">{t('medicalImageTab.type')}</TableHead>
+                  <TableHead className="text-center">{t('newMedicalImage.description')}</TableHead>
                   <TableHead className="text-center">
-                    Танасининг қисми
+                    {t('medicalImageTab.bodyPart')}
                   </TableHead>
-                  <TableHead className="text-center">Тасвирлар сони</TableHead>
-                  <TableHead className="text-center">Сана</TableHead>
-                  <TableHead className="text-center">Ҳаракатлар</TableHead>
+                  <TableHead className="text-center">{t('medicalImageTab.images')}</TableHead>
+                  <TableHead className="text-center">{t('medicalImageTab.date')}</TableHead>
+                  <TableHead className="text-center">{t('medicalImageTab.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -235,11 +238,11 @@ export const MedicalImageTab = () => {
                         <TooltipTrigger>
                           {image?.patient_id?.fullname.length > 20
                             ? image?.patient_id?.fullname.slice(0, 20) + "..."
-                            : image?.patient_id?.fullname || "Номаълум"}
+                            : image?.patient_id?.fullname || t('unknown')}
                         </TooltipTrigger>
 
                         <TooltipContent>
-                          {image?.patient_id?.fullname || "Номаълум"}
+                          {image?.patient_id?.fullname || t('unknown')}
                         </TooltipContent>
                       </Tooltip>
                     </TableCell>
@@ -251,11 +254,11 @@ export const MedicalImageTab = () => {
                         <TooltipTrigger>
                           {image?.description.length > 22
                             ? image?.description.slice(0, 20) + "..."
-                            : image?.description || "Тавсиф берилмаган"}
+                            : image?.description || t('medicalImageTab.notSpecified')}
                         </TooltipTrigger>
 
                         <TooltipContent>
-                          {image?.description || "Тавсиф берилмаган"}
+                          {image?.description || t('medicalImageTab.notSpecified')}
                         </TooltipContent>
                       </Tooltip>
                     </TableCell>
@@ -263,7 +266,7 @@ export const MedicalImageTab = () => {
                       {getBodyPartLabel(image.body_part)}
                     </TableCell>
                     <TableCell className="text-center">
-                      {image.image_paths?.length || 0} та
+                      {image.image_paths?.length || 0}
                     </TableCell>
                     <TableCell className="text-center">
                       {formatDate(new Date(image.created_at), "dd.MM.yyyy")}
@@ -280,7 +283,7 @@ export const MedicalImageTab = () => {
                           className="hover:bg-primary hover:text-white transition-smooth"
                         >
                           <Eye className="w-4 h-4 mr-2" />
-                          Кўриш
+                          {t('medicalImageTab.view')}
                         </Button>
 
                         <DropdownMenu>
@@ -301,7 +304,7 @@ export const MedicalImageTab = () => {
                                 className="w-full hover:bg-yellow-600 hover:text-white transition-smooth"
                               >
                                 <Edit className="w-4 h-4 mr-2" />
-                                Ўзгартириш
+                                {t('medicalImageTab.edit')}
                               </Button>
                             </DropdownMenuItem>
 
@@ -316,7 +319,7 @@ export const MedicalImageTab = () => {
                                 className=" w-full hover:bg-red-600 hover:text-white transition-smooth"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
-                                Ўчириш
+                                {t('medicalImageTab.delete')}
                               </Button>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -344,10 +347,10 @@ export const MedicalImageTab = () => {
                     >
                       <h3 className="font-semibold text-base sm:text-lg mb-1">
                         {(currentPage - 1) * itemsPerPage + idx + 1}.{" "}
-                        {image.description || "Тавсиф берилмаган"}
+                        {image.description || t('medicalImageTab.notSpecified')}
                       </h3>
                       <p className="text-xs sm:text-sm text-muted-foreground mb-1">
-                        {image.image_paths?.length || 0} та тасвир •{" "}
+                        {image.image_paths?.length || 0} {t('medicalImageTab.image')} •{" "}
                         {getBodyPartLabel(image.body_part)}
                       </p>
                       <p className="text-sm sm:text-sm text-muted-foreground">
@@ -372,7 +375,7 @@ export const MedicalImageTab = () => {
                             className="w-full bg-yellow-600 text-white"
                           >
                             <Edit className="w-4 h-4 mr-2" />
-                            Ўзгартириш
+                            {t('medicalImageTab.edit')}
                           </Button>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
@@ -386,7 +389,7 @@ export const MedicalImageTab = () => {
                             className="w-full bg-red-600 text-white"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Ўчириш
+                            {t('medicalImageTab.delete')}
                           </Button>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -400,9 +403,9 @@ export const MedicalImageTab = () => {
           {/* Pagination */}
           <div className="px-3 xl:px-6 py-2 xl:py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="text-xs xl:text-sm text-muted-foreground min-w-max">
-              Sahifa {medicalImages.pagination.page} dan{" "}
-              {medicalImages.pagination.pages} (Жами:{" "}
-              {medicalImages.pagination.total} та)
+              {t('medicalImageTab.page')} {medicalImages.pagination.page} {t('medicalImageTab.of')}{" "}
+              {medicalImages.pagination.pages} ({t('medicalImageTab.totalItems')}:{" "}
+              {medicalImages.pagination.total} {t('medicalImageTab.items')})
             </div>
 
             <div className="flex gap-2">
@@ -414,7 +417,7 @@ export const MedicalImageTab = () => {
                 className="text-xs xl:text-sm"
               >
                 <IconLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Олдинги</span>
+                <span className="hidden sm:inline">{t('medicalImageTab.previous')}</span>
               </Button>
               {(() => {
                 const pages = [];
@@ -474,7 +477,7 @@ export const MedicalImageTab = () => {
                 onClick={() => setCurrentPage(currentPage + 1)}
                 className="text-xs xl:text-sm"
               >
-                <span className="hidden sm:inline">Кейинги</span>
+                <span className="hidden sm:inline">{t('medicalImageTab.next')}</span>
                 <IconRight className="w-4 h-4" />
               </Button>
             </div>
@@ -486,18 +489,18 @@ export const MedicalImageTab = () => {
             icon={Image}
             title={
               searchQuery || currentPage > 1
-                ? "Ҳеч нарса топилмади"
-                : "Ҳали тиббий тасвирлар йўқ"
+                ? t('medicalImageTab.nothingFound')
+                : t('medicalImageTab.noMedicalImagesYet')
             }
             description={
               searchQuery || currentPage > 1
-                ? "Қидирув сўзини текширинг ёки филтрни ўзгартиринг"
-                : "Биринчи тиббий тасвирни қўшиш учун қуйидаги тугмани босинг"
+                ? t('medicalImageTab.checkSearchOrFilter')
+                : t('medicalImageTab.addFirstImage')
             }
             actionLabel={
               searchQuery || currentPage > 1
-                ? "Филтрни тозалаш"
-                : "+ Янги тасвир қўшиш"
+                ? t('medicalImageTab.clearFilter')
+                : t('medicalImageTab.addNewImageBtn')
             }
             onAction={() =>
               searchQuery || currentPage > 1

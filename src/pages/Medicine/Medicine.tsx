@@ -335,7 +335,7 @@ const Medicine = () => {
 							{/* Room Search */}
 							<div className='flex gap-2 w-full sm:w-auto'>
 								<Input
-									placeholder={t('roomSearchPlaceholder')}
+									placeholder={t('searchByRoom')}
 									value={roomSearch}
 									onChange={e => setRoomSearch(e.target.value)}
 									onKeyDown={e => e.key === 'Enter' && handleSearch()}

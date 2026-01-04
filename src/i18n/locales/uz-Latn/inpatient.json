@@ -3,6 +3,17 @@
   "subtitle": "Statsionar bo'limi boshqaruvi",
   "calendarTitle": "Statsionar kalendari",
   "management": "Statsionar boshqaruvi",
+
+  "common": {
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "delete": "O'chirish",
+    "edit": "Tahrirlash",
+    "close": "Yopish",
+    "unknown": "Noma'lum",
+    "loading": "Yuklanmoqda..."
+  },
+
   "rooms": "Xonalar",
   "beds": "O'rinlar",
   "room": "Xona",
@@ -92,6 +103,15 @@
   "filter": "Filtr",
   "showAll": "Barchasini ko'rsatish",
   "showOccupiedOnly": "Faqat band",
+
+  "count": "ta",
+  "emptyText": "Bo'sh",
+  "noText": "Yo'q",
+  "fullText": "To'liq band",
+  "occupiedCount": "{{count}} ta band",
+  "descriptionLabel": "Tavsif",
+  "notProvided": "Berilmagan",
+  "capacityUnit": "joylik",
   "showEmptyOnly": "Faqat bo'sh",
   "perPage": "ta/sahifa",
   "page": "sahifa",
@@ -148,12 +168,10 @@
   "persons": "kishilik",
   "occupancy": "Bandlik",
   "fullyOccupied": "To'liq band",
-  "occupiedCount": "ta band",
   "empty": "Bo'sh",
   "roomFloor": "Xona qavati",
   "floorSuffix": "qavat",
   "description": "Tavsif",
-  "notProvided": "Berilmagan",
 
   "change": "o'zgartirish",
   "bloodPressure": "qon bosimi",
@@ -161,8 +179,8 @@
   "phone": "Tel:",
   "arrivedDate": "Kelgan:",
   "leavingDate": "Ketadi:",
-  "pressureMeasured": "Davlena: o'lchangan",
-  "pressureNotMeasured": "Davlena: o'lchanmagan",
+  "pressureMeasured": "Bosim: o'lchangan",
+  "pressureNotMeasured": "Bosim: o'lchanmagan",
   "noPatientsFound": "Bemorlar topilmadi",
 
   "measureBloodPressure": "Qon bosimini o'lchash",
@@ -217,7 +235,6 @@
   "viewAndManageBuildings": "Barcha korpuslarni ko'rish va boshqarish",
   "newBuilding": "Yangi korpus",
   "building": "Korpus",
-  "count": "ta",
   "leavingPatients": "Chiqadiganlar",
   "none": "Yo'q",
   "nothingFound": "Hech narsa topilmadi",
@@ -241,11 +258,18 @@
   "buildingUpdatedSuccess": "Korpus muvaffaqiyatli yangilandi",
 
   "calendar": {
-    "patientPresent": "Odam bor",
+    "patientPresent": "Bemor",
     "booked": "Bron'",
     "cannotBookPastDate": "O'tgan sanaga bron' qilib bo'lmaydi",
     "roomNotFound": "Xona topilmadi",
-    "goBack": "Orqaga qaytish"
+    "goBack": "Orqaga qaytish",
+    "capacity": "Sig'imi",
+    "occupied": "Band",
+    "available": "Bo'sh",
+    "bed": "joy",
+    "free": "Bo'sh",
+    "newBooking": "Yangi bron'",
+    "unknown": "Noma'lum"
   },
 
   "booking": {
@@ -423,5 +447,23 @@
     "patientCapacityMin": "Bemor sig'imi kamida 1 bo'lishi kerak",
     "floorNumberRequired": "Qavat raqami kiritilishi kerak",
     "descriptionMin": "Izoh kamida 5 ta belgidan iborat bo'lishi kerak"
+  },
+
+  "roomsList": {
+    "title": "Statsionar kalendari",
+    "subtitle": "Bron qilish uchun korpus va xonani tanlang",
+    "searchPatient": "Bemor qidirish",
+    "corpus": "Korpus",
+    "selectCorpus": "Xonalarni ko'rish uchun korpusni tanlang",
+    "loadingRooms": "Xonalar yuklanmoqda...",
+    "loadError": "Yuklashda xatolik",
+    "tryAgain": "Sahifani yangilab ko'ring",
+    "beds": "Joylar",
+    "bedsCount": "joylik",
+    "bed": "joy",
+    "free": "Bo'sh",
+    "occupied": "Band",
+    "noRoomsInCorpus": "Bu korpusda xonalar yo'q",
+    "noAvailableRooms": "Tanlangan korpus uchun xonalar hali yaratilmagan"
   }
 }

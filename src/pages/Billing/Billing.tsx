@@ -28,61 +28,20 @@ export interface Service {
   total: number;
 }
 
-// Custom Billing Status Badge
-const getBillingStatusBadge = (status: string) => {
-  console.log('Billing status:', status);
+// Custom Billing Status Badge - moved inside component to use translations
 
-  const statusConfig: Record<string, { text: string; class: string }> = {
-    paid: {
-      text: 'Тўланган',
-      class: 'bg-green-100 text-green-700 border text-center border-green-300',
-    },
-    unpaid: {
-      text: 'Тўланмаган',
-      class: 'bg-red-100 text-red-700 border text-center border-red-300',
-    },
-    partially_paid: {
-      text: 'Қисман тўланған',
-      class:
-        'bg-yellow-100 text-yellow-700 border text-center border-yellow-300',
-    },
-    completed: {
-      text: 'Тўланған',
-      class: 'bg-green-100 text-green-700 border text-center border-green-300',
-    },
-    incompleted: {
-      text: 'Тўланмаган',
-      class: 'bg-red-100 text-red-700 border text-center border-red-300',
-    },
-    pending: {
-      text: 'Қисман тўланған',
-      class:
-        'bg-yellow-100 text-yellow-700 border text-center border-yellow-300',
-    },
-  };
-
-  const config = statusConfig[status] || {
-    text: status,
-    class: 'bg-gray-100 text-gray-700 border text-center border-gray-300',
-  };
-
-  return (
-    <p
-      className={`inline-flex justify-center items-center px-2.5 py-1 rounded-full text-xs font-semibold text-center mx-auto ${config.class}`}
-    >
-      {config.text}
-    </p>
-  );
-};
-
-export const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
-};
+// Note: Use useFormatCurrency hook from BillingBadge for translated currency
 
 const Billing = () => {
   const { t } = useTranslation('billing');
   const { t: tCommon } = useTranslation('common');
   const { canCreate } = usePermission('billing');
+
+  // formatCurrency function using translation
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('uz-UZ').format(amount) + ' ' + t('currency');
+  };
+
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedBillingId, setSelectedBillingId] = useState<string | null>(
@@ -93,6 +52,51 @@ const Billing = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Custom Billing Status Badge with translations
+  const getBillingStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { text: string; class: string }> = {
+      paid: {
+        text: t('paid'),
+        class: 'bg-green-100 text-green-700 border text-center border-green-300',
+      },
+      unpaid: {
+        text: t('unpaid'),
+        class: 'bg-red-100 text-red-700 border text-center border-red-300',
+      },
+      partially_paid: {
+        text: t('partiallyPaid'),
+        class:
+          'bg-yellow-100 text-yellow-700 border text-center border-yellow-300',
+      },
+      completed: {
+        text: t('paid'),
+        class: 'bg-green-100 text-green-700 border text-center border-green-300',
+      },
+      incompleted: {
+        text: t('unpaid'),
+        class: 'bg-red-100 text-red-700 border text-center border-red-300',
+      },
+      pending: {
+        text: t('partiallyPaid'),
+        class:
+          'bg-yellow-100 text-yellow-700 border text-center border-yellow-300',
+      },
+    };
+
+    const config = statusConfig[status] || {
+      text: status,
+      class: 'bg-gray-100 text-gray-700 border text-center border-gray-300',
+    };
+
+    return (
+      <p
+        className={`inline-flex justify-center items-center px-2.5 py-1 rounded-full text-xs font-semibold text-center mx-auto ${config.class}`}
+      >
+        {config.text}
+      </p>
+    );
+  };
 
   const { data, isLoading } = useGetAllBillingQuery({});
 
@@ -310,7 +314,7 @@ const Billing = () => {
                     }
                     disabled={currentPage === 1}
                   >
-                    Олдинги
+                    {tCommon('previous')}
                   </Button>
                   <div className='flex items-center gap-1'>
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -347,7 +351,7 @@ const Billing = () => {
                     }
                     disabled={currentPage === totalPages}
                   >
-                    Кейинги
+                    {tCommon('next')}
                   </Button>
                 </div>
               </div>
@@ -358,7 +362,7 @@ const Billing = () => {
         {/* Invoices Cards - Mobile/Tablet View */}
         <div className='lg:hidden space-y-3'>
           <h2 className='text-lg font-semibold px-1 mb-2'>
-            Ҳисоб-фактуралар рўйхати
+            {t('invoicesList')}
           </h2>
           {isLoading ? (
             <Card className='p-8'>
@@ -370,11 +374,11 @@ const Billing = () => {
             <Card className='p-6'>
               <EmptyState
                 icon={FileText}
-                title='Ҳисоб-фактуралар топилмади'
+                title={t('noInvoicesFound')}
                 description={
                   searchQuery || statusFilter !== 'all'
-                    ? 'Филтр шартларига мос маълумот топилмади'
-                    : 'Ҳали ҳисоб-фактуралар яратилмаган'
+                    ? t('noMatchingInvoices')
+                    : t('noInvoicesYet')
                 }
               />
             </Card>
@@ -397,7 +401,7 @@ const Billing = () => {
                   <div className='grid grid-cols-2 gap-3 text-sm'>
                     <div>
                       <div className='text-xs text-muted-foreground mb-1'>
-                        Сана
+                        {t('date')}
                       </div>
                       <div className='font-medium'>
                         {format(invoice.created_at, 'dd-MM-yyy')}
@@ -405,7 +409,7 @@ const Billing = () => {
                     </div>
                     <div className='text-right'>
                       <div className='text-xs text-muted-foreground mb-1'>
-                        Жами
+                        {t('total')}
                       </div>
                       <div className='font-semibold'>
                         {formatCurrency(invoice.total_amount)}
@@ -416,7 +420,7 @@ const Billing = () => {
                   <div className='grid grid-cols-2 gap-3 text-sm'>
                     <div>
                       <div className='text-xs text-muted-foreground mb-1'>
-                        Тўланган
+                        {t('paidAmount')}
                       </div>
                       <div className='font-medium text-success'>
                         {formatCurrency(invoice.paid_amount)}
@@ -424,7 +428,7 @@ const Billing = () => {
                     </div>
                     <div className='text-right'>
                       <div className='text-xs text-muted-foreground mb-1'>
-                        Қолдиқ
+                        {t('debt')}
                       </div>
                       <div className='font-semibold text-danger'>
                         {formatCurrency(invoice.debt_amount)}
@@ -442,7 +446,7 @@ const Billing = () => {
                       }}
                       className='flex-1 text-xs'
                     >
-                      Кўриш
+                      {tCommon('view')}
                     </Button>
                   </div>
                 </div>
@@ -488,7 +492,7 @@ const Billing = () => {
                     }
                     disabled={currentPage === 1}
                   >
-                    Олдинги
+                    {tCommon('previous')}
                   </Button>
                   <span className='text-sm font-medium px-3'>
                     {currentPage} / {totalPages}
@@ -501,7 +505,7 @@ const Billing = () => {
                     }
                     disabled={currentPage === totalPages}
                   >
-                    Кейинги
+                    {tCommon('next')}
                   </Button>
                 </div>
               </div>

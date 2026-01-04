@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
-import { uz } from 'date-fns/locale';
+import { useDateLocale } from '@/hooks/useDateLocale';
 import { CalendarIcon, Clock } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -51,6 +51,7 @@ const NewAppointment = ({
   onSubmit,
 }: NewAppointmentProps) => {
   const { t } = useTranslation('appointments');
+  const dateLocale = useDateLocale();
   const [date, setDate] = useState<Date>();
   const [formData, setFormData] = useState<AppointmentFormData>({
     patientName: '',
@@ -171,7 +172,7 @@ const NewAppointment = ({
                     >
                       <CalendarIcon className='mr-2 h-4 w-4' />
                       {date ? (
-                        format(date, 'PPP', { locale: uz })
+                        format(date, 'PPP', { locale: dateLocale })
                       ) : (
                         <span>{t('selectDate')}</span>
                       )}

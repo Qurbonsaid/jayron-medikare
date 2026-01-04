@@ -16,7 +16,7 @@ import { AlertTriangle, Trash2 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Booking } from "@/app/api/bookingApi/types";
 import { format } from "date-fns";
-import { uz } from "date-fns/locale";
+import { useDateLocale } from "@/hooks/useDateLocale";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DeleteBookingModalProps {
@@ -31,6 +31,7 @@ export const DeleteBookingModal = ({
   booking,
 }: DeleteBookingModalProps) => {
   const { t } = useTranslation("inpatient");
+  const dateLocale = useDateLocale();
   const handleRequest = useHandleRequest();
   const [deleteBooking, { isLoading }] = useDeleteBookingMutation();
 
@@ -103,11 +104,11 @@ export const DeleteBookingModal = ({
               <span className="text-gray-600">{t("deleteBooking.period")}:</span>{" "}
               <strong className="text-gray-900">
                 {format(new Date(booking.start_at), "dd MMM yyyy", {
-                  locale: uz,
+                  locale: dateLocale,
                 })}{" "}
                 -{" "}
                 {format(new Date(booking.end_at), "dd MMM yyyy", {
-                  locale: uz,
+                  locale: dateLocale,
                 })}
               </strong>
             </div>

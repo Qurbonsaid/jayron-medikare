@@ -23,15 +23,9 @@ import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Save } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import z from "zod";
-
-const ImagingTypeSchema = z.object({
-  name: z.string().min(2, "Номи камида 2 та белгидан иборат бўлиши керак"),
-  description: z.string().optional(),
-});
-
-type ImagingTypeFormData = z.infer<typeof ImagingTypeSchema>;
 
 interface NewImagingTypeProps {
   open: boolean;
@@ -39,8 +33,16 @@ interface NewImagingTypeProps {
 }
 
 export const NewImagingType = ({ open, onOpenChange }: NewImagingTypeProps) => {
+  const { t } = useTranslation("radiology");
   const [createImagingType, { isLoading }] = useCreateImagingTypeMutation();
   const handleRequest = useHandleRequest();
+
+  const ImagingTypeSchema = z.object({
+    name: z.string().min(2, t("newImagingType.nameValidation")),
+    description: z.string().optional(),
+  });
+
+  type ImagingTypeFormData = z.infer<typeof ImagingTypeSchema>;
 
   const form = useForm<ImagingTypeFormData>({
     resolver: zodResolver(ImagingTypeSchema),
@@ -57,12 +59,12 @@ export const NewImagingType = ({ open, onOpenChange }: NewImagingTypeProps) => {
       request: async () =>
         await createImagingType(data as CreatedImagingTypeRequest).unwrap(),
       onSuccess: () => {
-        toast.success("Текшириш тури муваффақиятли қўшилди");
+        toast.success(t("newImagingType.addedSuccess"));
         form.reset();
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Қўшишда хатолик");
+        toast.error(data?.error?.msg || t("newImagingType.addError"));
       },
     });
   };
@@ -72,7 +74,7 @@ export const NewImagingType = ({ open, onOpenChange }: NewImagingTypeProps) => {
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-2xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
-            Янги текшириш тури қўшиш
+            {t("newImagingType.title")}
           </DialogTitle>
         </DialogHeader>
 
@@ -88,11 +90,11 @@ export const NewImagingType = ({ open, onOpenChange }: NewImagingTypeProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Номи <span className="text-red-500">*</span>
+                      {t("newImagingType.name")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="МРТ, КТ, Рентген..."
+                        placeholder={t("newImagingType.namePlaceholder")}
                         className="border-slate-400 border-2 w-full"
                         {...field}
                       />
@@ -107,10 +109,10 @@ export const NewImagingType = ({ open, onOpenChange }: NewImagingTypeProps) => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Тавсиф</FormLabel>
+                    <FormLabel>{t("newImagingType.description")}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Текшириш тури ҳақида қисқача маълумот..."
+                        placeholder={t("newImagingType.descriptionPlaceholder")}
                         className="border-slate-400 border-2 w-full min-h-[100px]"
                         {...field}
                       />
@@ -130,15 +132,15 @@ export const NewImagingType = ({ open, onOpenChange }: NewImagingTypeProps) => {
                   }}
                   disabled={isLoading}
                 >
-                  Бекор қилиш
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? (
-                    "Сақланмоқда..."
+                    t("newImagingType.saving")
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Сақлаш
+                      {t("newImagingType.save")}
                     </>
                   )}
                 </Button>

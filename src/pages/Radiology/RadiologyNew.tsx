@@ -1,10 +1,12 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, Image, Plus } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ImagingTypeTab } from "./components";
 import { MedicalImageTab } from "./components";
 
 const Radiology = () => {
+  const { t } = useTranslation('radiology');
   const [activeTab, setActiveTab] = useState("medical-images");
 
   return (
@@ -13,10 +15,10 @@ const Radiology = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">
-              Рентген / МРТ / КТ
+              {t('title')}
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Тасвирлаш текширувлари бошқаруви
+              {t('subtitle')}
             </p>
           </div>
         </div>
@@ -28,8 +30,8 @@ const Radiology = () => {
               className="flex items-center gap-2"
             >
               <Image className="w-4 h-4" />
-              <span className="hidden sm:inline">Тиббий тасвирлар</span>
-              <span className="sm:hidden">Тасвирлар</span>
+              <span className="hidden sm:inline">{t('medicalImages')}</span>
+              <span className="sm:hidden">{t('images')}</span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -37,8 +39,8 @@ const Radiology = () => {
               className="flex items-center gap-2"
             >
               <Activity className="w-4 h-4" />
-              <span className="hidden sm:inline">Текшириш турлари</span>
-              <span className="sm:hidden">Турлар</span>
+              <span className="hidden sm:inline">{t('imagingTypes')}</span>
+              <span className="sm:hidden">{t('types')}</span>
             </TabsTrigger>
           </TabsList>
 

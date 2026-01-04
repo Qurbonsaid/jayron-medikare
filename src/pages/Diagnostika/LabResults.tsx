@@ -656,7 +656,7 @@ const LabResults = () => {
 							{selectedOrder?.patient.fullname}
 						</div>
 						<DialogDescription className='mt-2 text-sm text-black text-medium'>
-							Clinic ko'rsatma : {selectedOrder?.clinical_indications}
+							{t('clinicalIndication')} : {selectedOrder?.clinical_indications}
 						</DialogDescription>
 					</DialogHeader>
 

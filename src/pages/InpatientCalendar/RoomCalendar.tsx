@@ -25,7 +25,7 @@ import {
   isWithinInterval,
   isValid,
 } from "date-fns";
-import { uz } from "date-fns/locale";
+import { useDateLocale } from "@/hooks/useDateLocale";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
 import {
@@ -38,6 +38,7 @@ import type { Booking } from "@/app/api/bookingApi";
 
 const RoomCalendar = () => {
   const { t } = useTranslation("inpatient");
+  const dateLocale = useDateLocale();
   const { roomId, corpusId } = useParams<{
     roomId: string;
     corpusId: string;
@@ -312,8 +313,8 @@ const RoomCalendar = () => {
 
             <div className="text-center flex-1 min-w-0">
               <p className="text-sm sm:text-base md:text-lg font-semibold truncate">
-                {format(weekStart, "d MMM", { locale: uz })} -{" "}
-                {format(weekEnd, "d MMM yyyy", { locale: uz })}
+                {format(weekStart, "d MMM", { locale: dateLocale })} -{" "}
+                {format(weekEnd, "d MMM yyyy", { locale: dateLocale })}
               </p>
             </div>
 
@@ -398,7 +399,7 @@ const RoomCalendar = () => {
                         }`}
                     >
                       <p className="text-[10px] sm:text-xs font-semibold uppercase">
-                        {format(day, "EEEEEE", { locale: uz })}
+                        {format(day, "EEEEEE", { locale: dateLocale })}
                       </p>
                       <p
                         className={`font-bold ${isToday ? "text-xl sm:text-2xl md:text-3xl" : "text-lg sm:text-xl md:text-2xl"
@@ -407,7 +408,7 @@ const RoomCalendar = () => {
                         {format(day, "dd")}
                       </p>
                       <p className="text-[10px] sm:text-xs opacity-90">
-                        {format(day, "MMM", { locale: uz })}
+                        {format(day, "MMM", { locale: dateLocale })}
                       </p>
                     </div>
                   );
@@ -463,7 +464,7 @@ const RoomCalendar = () => {
                     } else if (bedAvailability.available_from) {
                       // Format: "14 Dek" (no year, short month)
                       const date = new Date(bedAvailability.available_from);
-                      const formatted = format(date, "d MMM", { locale: uz });
+                      const formatted = format(date, "d MMM", { locale: dateLocale });
                       availabilityInfo = {
                         text: formatted,
                         color: "text-gray-700",
@@ -479,7 +480,7 @@ const RoomCalendar = () => {
                     if (lastBooking) {
                       availabilityInfo = {
                         text: format(parseISO(lastBooking.end_at), "d MMM", {
-                          locale: uz,
+                          locale: dateLocale,
                         }),
                         color: "text-gray-700",
                       };
@@ -621,13 +622,13 @@ const RoomCalendar = () => {
                                         {format(
                                           parseISO(activeBooking.start_at),
                                           "d MMM",
-                                          { locale: uz }
+                                          { locale: dateLocale }
                                         )}{" "}
                                         -{" "}
                                         {format(
                                           parseISO(activeBooking.end_at),
                                           "d MMM",
-                                          { locale: uz }
+                                          { locale: dateLocale }
                                         )}{" "}
                                         |{" "}
                                         {getBookingLabel(activeBooking.is_real_patient || false)}

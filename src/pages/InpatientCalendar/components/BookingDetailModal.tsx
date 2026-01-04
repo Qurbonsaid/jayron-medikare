@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Booking } from "@/app/api/bookingApi/types";
 import { format } from "date-fns";
-import { uz } from "date-fns/locale";
+import { useDateLocale } from "@/hooks/useDateLocale";
 import { formatPhoneNumber, formatNumber } from "@/lib/utils";
 import {
   Calendar,
@@ -38,6 +38,7 @@ export const BookingDetailModal = ({
   onDelete,
 }: BookingDetailModalProps) => {
   const { t } = useTranslation("inpatient");
+  const dateLocale = useDateLocale();
   
   if (!booking) return null;
 
@@ -156,19 +157,19 @@ export const BookingDetailModal = ({
               <div>
                 <p className="text-xs text-purple-700 mb-1">{t("bookingDetail.startDate")}</p>
                 <p className="font-semibold text-sm sm:text-base text-purple-900">
-                  {format(startDate, "dd MMM yyyy", { locale: uz })}
+                  {format(startDate, "dd MMM yyyy", { locale: dateLocale })}
                 </p>
                 <p className="text-xs text-purple-600">
-                  {format(startDate, "EEEE", { locale: uz })}
+                  {format(startDate, "EEEE", { locale: dateLocale })}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-purple-700 mb-1">{t("bookingDetail.endDateLabel")}</p>
                 <p className="font-semibold text-sm sm:text-base text-purple-900">
-                  {format(endDate, "dd MMM yyyy", { locale: uz })}
+                  {format(endDate, "dd MMM yyyy", { locale: dateLocale })}
                 </p>
                 <p className="text-xs text-purple-600">
-                  {format(endDate, "EEEE", { locale: uz })}
+                  {format(endDate, "EEEE", { locale: dateLocale })}
                 </p>
               </div>
               <div>
@@ -202,7 +203,7 @@ export const BookingDetailModal = ({
                 <span>{t("bookingDetail.createdAt")}: </span>
                 <strong>
                   {format(new Date(booking.created_at), "dd.MM.yyyy HH:mm", {
-                    locale: uz,
+                    locale: dateLocale,
                   })}
                 </strong>
               </div>
@@ -210,7 +211,7 @@ export const BookingDetailModal = ({
                 <span>{t("bookingDetail.updatedAt")}: </span>
                 <strong>
                   {format(new Date(booking.updated_at), "dd.MM.yyyy HH:mm", {
-                    locale: uz,
+                    locale: dateLocale,
                   })}
                 </strong>
               </div>

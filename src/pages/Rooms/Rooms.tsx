@@ -150,7 +150,7 @@ const Rooms = () => {
                   </h3>
 
                   <p className="mt-1 text-lg font-semibold">
-                    {getCorpus?.data.total_rooms || 0} ta
+                    {getCorpus?.data.total_rooms || 0} {t('count')}
                   </p>
                 </div>
                 <div>
@@ -159,7 +159,7 @@ const Rooms = () => {
                   </h3>
 
                   <p className="mt-1 text-lg font-semibold">
-                    {getCorpus?.data?.room_statistics.total_capacity || 0} ta
+                    {getCorpus?.data?.room_statistics.total_capacity || 0} {t('count')}
                   </p>
                 </div>
                 <div>
@@ -178,12 +178,11 @@ const Rooms = () => {
                     }`}
                   >
                     {getCorpus?.data?.room_statistics.occupied === 0
-                      ? "Bo'sh"
+                      ? t('emptyText')
                       : getCorpus?.data?.room_statistics.occupied ===
                         getCorpus?.data?.room_statistics.total_capacity
-                      ? "To'liq"
-                      : (getCorpus?.data?.room_statistics.occupied || 0) +
-                        "ta"}{" "}
+                      ? t('fullText')
+                      : t('occupiedCount', { count: getCorpus?.data?.room_statistics.occupied || 0 })}{" "}
                   </p>
                 </div>
                 <div>
@@ -199,9 +198,9 @@ const Rooms = () => {
                     }`}
                   >
                     {getCorpus?.data?.room_statistics.available === 0
-                      ? "Yo'q"
+                      ? t('noText')
                       : (getCorpus?.data?.room_statistics.available || 0) +
-                        " ta"}
+                        " " + t('count')}
                   </p>
                 </div>
                 <div>
@@ -217,14 +216,14 @@ const Rooms = () => {
                     }`}
                   >
                     {getCorpus?.data?.room_statistics.leaving_today === 0
-                      ? "Yo'q"
+                      ? t('noText')
                       : (getCorpus?.data?.room_statistics.leaving_today || 0) +
-                        "ta"}
+                        " " + t('count')}
                   </p>
                 </div>
                 <div className="col-span-2 xl:col-span-1">
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Tavsif
+                    {t('descriptionLabel')}
                   </h3>
 
                   <p className="mt-1 text-md font-semibold">
@@ -235,11 +234,11 @@ const Rooms = () => {
                             ? getCorpus?.data.description.length > 20
                               ? getCorpus?.data.description.slice(0, 20) + "..."
                               : getCorpus?.data.description
-                            : "Berilmagan"}
+                            : t('notProvided')}
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {getCorpus?.data.description || "Berilmagan"}
+                        {getCorpus?.data.description || t('notProvided')}
                       </TooltipContent>
                     </Tooltip>
                   </p>
@@ -350,7 +349,7 @@ const Rooms = () => {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        {room.patient_capacity} {t('capacity')}
+                        {room.patient_capacity} {t('capacityUnit')}
                       </TableCell>
 
                       <TableCell
@@ -364,9 +363,9 @@ const Rooms = () => {
                       >
                         {room.patient_occupied
                           ? room.patient_occupied === room.patient_capacity
-                            ? "To'liq band"
-                            : `${room.patient_occupied} ta band`
-                          : "Bo'sh"}
+                            ? t('fullText')
+                            : t('occupiedCount', { count: room.patient_occupied })
+                          : t('emptyText')}
                       </TableCell>
 
                       <TableCell className="text-center">
@@ -381,11 +380,11 @@ const Rooms = () => {
                                 ? room.description.length > 20
                                   ? room.description.slice(0, 20) + "..."
                                   : room.description
-                                : "Berilmagan"}
+                                : t('notProvided')}
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {room.description || "Berilmagan"}
+                            {room.description || t('notProvided')}
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>

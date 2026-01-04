@@ -143,5 +143,15 @@
     "enterPaymentAmount": "Please enter payment amount",
     "paymentExceedsTotal": "Payment amount cannot exceed total",
     "paymentExceedsDebt": "Payment amount cannot exceed debt"
+  },
+  "invoicesList": "Invoices List",
+  "noInvoicesFound": "No invoices found",
+  "noMatchingInvoices": "No invoices matching filter criteria",
+  "noInvoicesYet": "No invoices have been created yet",
+  "debt": "Debt",
+  "levels": {
+    "normal": "Normal",
+    "urgent": "Urgent",
+    "veryUrgent": "Very Urgent"
   }
 }

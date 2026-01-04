@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useTranslation } from 'react-i18next';
 
 import { useCreateExamWithPrescriptionAndServiceMutation } from '@/app/api/examinationApi/examinationApi';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
@@ -47,6 +48,7 @@ import { toast } from 'sonner';
 import { calculateAge } from './components/calculateAge';
 
 const NewVisit = () => {
+  const { t } = useTranslation('examinations');
   const navigate = useNavigate();
   const location = useLocation();
   const [subjective, setSubjective] = useState('');
@@ -405,15 +407,15 @@ const NewVisit = () => {
     setShowErrors(true);
 
     if (!selectedPatientId) {
-      toast.error('Илтимос, беморни танланг');
+      toast.error(t('newVisit.selectPatientError'));
       return;
     }
     if (!selectedDoctorId) {
-      toast.error('Илтимос, шифокорни танланг');
+      toast.error(t('newVisit.selectDoctorError'));
       return;
     }
     if (!subjective.trim()) {
-      toast.error('Илтимос, бемор шикоятини киритинг');
+      toast.error(t('newVisit.enterComplaintError'));
       return;
     }
 
@@ -495,11 +497,11 @@ const NewVisit = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли яратилди');
+        toast.success(t('newVisit.examCreated'));
         navigate('/examinations');
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+        toast.error(error?.data?.error?.msg || t('errorOccurred'));
       },
     });
   };
@@ -514,14 +516,14 @@ const NewVisit = () => {
               <div className='flex items-center gap-3 mb-4'>
                 <User className='w-5 h-5 sm:w-6 sm:h-6 text-primary' />
                 <h3 className='text-base sm:text-lg font-bold'>
-                  Беморни танланг
+                  {t('newVisit.selectPatient')}
                 </h3>
               </div>
               <div className='space-y-4'>
                 <div className='relative'>
                   <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
                   <Input
-                    placeholder='Исм, ID ёки телефон орқали қидириш...'
+                    placeholder={t('newVisit.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className='pl-9 h-10 sm:h-12 text-sm sm:text-base'
@@ -534,22 +536,22 @@ const NewVisit = () => {
                   >
                     {isLoadingPatients && filteredPatients.length === 0 ? (
                       <div className='p-6 text-center text-sm text-muted-foreground'>
-                        Юкланмоқда...
+                        {t('newVisit.loading')}
                       </div>
                     ) : filteredPatients.length === 0 ? (
                       <div className='p-6 text-center text-sm text-muted-foreground'>
-                        Бемор топилмади
+                        {t('newVisit.patientNotFound')}
                       </div>
                     ) : (
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>ФИО</TableHead>
-                            <TableHead>ID</TableHead>
-                            <TableHead>Телефон</TableHead>
-                            <TableHead>Жинс</TableHead>
+                            <TableHead>{t('newVisit.fullname')}</TableHead>
+                            <TableHead>{t('newVisit.id')}</TableHead>
+                            <TableHead>{t('phone')}</TableHead>
+                            <TableHead>{t('newVisit.gender')}</TableHead>
                             <TableHead className='text-right'>
-                              Ҳаракат
+                              {t('newVisit.action')}
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -566,7 +568,7 @@ const NewVisit = () => {
                               <TableCell>{p.patient_id}</TableCell>
                               <TableCell>{p.phone}</TableCell>
                               <TableCell>
-                                {p.gender === 'male' ? 'Эркак' : 'Аёл'}
+                                {p.gender === 'male' ? t('newVisit.male') : t('newVisit.female')}
                               </TableCell>
                               <TableCell className='text-right'>
                                 <Button
@@ -577,7 +579,7 @@ const NewVisit = () => {
                                     selectPatient(p._id);
                                   }}
                                 >
-                                  Танлаш
+                                  {t('newVisit.select')}
                                 </Button>
                               </TableCell>
                             </TableRow>
@@ -587,12 +589,12 @@ const NewVisit = () => {
                     )}
                     {isLoadingMorePatients && (
                       <div className='p-4 text-center text-sm text-muted-foreground'>
-                        Юкланмоқда...
+                        {t('newVisit.loading')}
                       </div>
                     )}
                     {!hasMorePatients && filteredPatients.length > 0 && (
                       <div className='p-2 text-center text-xs text-muted-foreground'>
-                        Барча беморлар юкланди
+                        {t('newVisit.allPatientsLoaded')}
                       </div>
                     )}
                   </div>
@@ -612,20 +614,20 @@ const NewVisit = () => {
                       <h2 className='text-lg sm:text-xl md:text-2xl font-bold mb-1'>
                         {patient.fullname}{' '}
                         <span className='text-muted-foreground text-sm sm:text-base'>
-                          ({calculateAge(patient.date_of_birth)} ёш,{' '}
-                          {patient.gender === 'male' ? 'Эркак' : 'Аёл'})
+                          ({calculateAge(patient.date_of_birth)} {t('newVisit.age')},{' '}
+                          {patient.gender === 'male' ? t('newVisit.male') : t('newVisit.female')})
                         </span>
                       </h2>
                       <p className='text-xs sm:text-base text-muted-foreground'>
                         ID: {patient.patient_id}
                       </p>
                       <p className='text-xs sm:text-base text-muted-foreground'>
-                        Сана: {new Date().toLocaleDateString('uz-UZ')}
+                        {t('date')}: {new Date().toLocaleDateString('uz-UZ')}
                       </p>
                       {patient?.allergies && patient.allergies.length > 0 && (
                         <div className='px-3 py-2 bg-danger/20 border border-danger rounded-lg mt-2'>
                           <p className='text-xs sm:text-sm font-semibold text-danger'>
-                            ⚠ Аллергия: {patient.allergies.join(', ')}
+                            ⚠ {t('newVisit.allergy')}: {patient.allergies.join(', ')}
                           </p>
                         </div>
                       )}
@@ -637,7 +639,7 @@ const NewVisit = () => {
                         <div className='flex items-center gap-2 mb-2'>
                           <UserCog className='w-5 h-5 text-primary' />
                           <h3 className='font-semibold text-sm sm:text-base'>
-                            Шифокорни танланг
+                            {t('newVisit.selectDoctor')}
                           </h3>
                         </div>
                         <Select
@@ -659,13 +661,13 @@ const NewVisit = () => {
                                 : ''
                             }`}
                           >
-                            <SelectValue placeholder='Шифокорни танланг...' />
+                            <SelectValue placeholder={t('newVisit.selectDoctorPlaceholder')} />
                           </SelectTrigger>
                           <SelectContent onScroll={handleDoctorScroll}>
                             <div className='p-2'>
                               <Input
                                 ref={doctorSearchRef}
-                                placeholder='Қидириш...'
+                                placeholder={t('newVisit.searchDoctor')}
                                 value={doctorSearch}
                                 onChange={(e) =>
                                   setDoctorSearch(e.target.value)
@@ -692,12 +694,12 @@ const NewVisit = () => {
                             ))}
                             {isLoadingMoreDoctors && (
                               <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
-                                Юкланмоқда...
+                                {t('newVisit.loading')}
                               </div>
                             )}
                             {!hasMoreDoctors && doctors.length > 0 && (
                               <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
-                                Барча шифокорлар юкланди
+                                {t('newVisit.allDoctorsLoaded')}
                               </div>
                             )}
                           </SelectContent>
@@ -707,7 +709,7 @@ const NewVisit = () => {
                       {/* Treatment Type Switch */}
                       <div>
                         <h4 className='text-sm font-medium mb-2'>
-                          Даволаш тури
+                          {t('newVisit.treatmentType')}
                         </h4>
                         <div className='grid grid-cols-2 gap-1 border-2 border-blue-500 rounded-xl p-1'>
                           <button
@@ -719,7 +721,7 @@ const NewVisit = () => {
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
                             }`}
                           >
-                            Амбулатор
+                            {t('newVisit.ambulatory')}
                           </button>
                           <button
                             type='button'
@@ -730,7 +732,7 @@ const NewVisit = () => {
                                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
                             }`}
                           >
-                            Стационар
+                            {t('newVisit.stationary')}
                           </button>
                         </div>
                       </div>
@@ -751,15 +753,15 @@ const NewVisit = () => {
                     </div>
                     <div>
                       <h3 className='text-lg sm:text-xl font-bold'>
-                        S - Subjective
+                        {t('newVisit.subjective')}
                       </h3>
                       <p className='text-xs sm:text-sm text-muted-foreground'>
-                        Бемор шикояти
+                        {t('newVisit.patientComplaint')}
                       </p>
                     </div>
                   </div>
                   <Textarea
-                    placeholder='Беморнинг шикоятларини, симптомларини ва касаллик тарихини ёзинг...'
+                    placeholder={t('newVisit.subjectivePlaceholder')}
                     className={`min-h-24 sm:min-h-32 text-sm sm:text-base ${
                       showErrors && !subjective.trim() ? 'border-red-500' : ''
                     }`}
@@ -778,15 +780,15 @@ const NewVisit = () => {
                     </div>
                     <div>
                       <h3 className='text-lg sm:text-xl font-bold'>
-                        O - Objective
+                        {t('newVisit.objective')}
                       </h3>
                       <p className='text-xs sm:text-sm text-muted-foreground'>
-                        Изоҳ
+                        {t('newVisit.description')}
                       </p>
                     </div>
                   </div>
                   <Textarea
-                    placeholder='Изоҳни ёзинг...'
+                    placeholder={t('newVisit.descriptionPlaceholder')}
                     className='min-h-24 sm:min-h-32 text-sm sm:text-base'
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -804,10 +806,10 @@ const NewVisit = () => {
                       </div>
                       <div>
                         <h3 className='text-lg sm:text-xl font-bold'>
-                          Рецептлар (Дорилар)
+                          {t('newVisit.prescriptions')}
                         </h3>
                         <p className='text-xs sm:text-sm text-muted-foreground'>
-                          Бемор учун дорилар
+                          {t('newVisit.medicationsForPatient')}
                         </p>
                       </div>
                     </div>
@@ -819,13 +821,13 @@ const NewVisit = () => {
                       className='gap-1'
                     >
                       <Plus className='w-4 h-4' />
-                      Дори қўшиш
+                      {t('newVisit.addMedication')}
                     </Button>
                   </div>
 
                   {medications.length === 0 ? (
                     <p className='text-sm text-muted-foreground text-center py-4'>
-                      Дорилар қўшилмаган
+                      {t('newVisit.noMedications')}
                     </p>
                   ) : (
                     <div className='space-y-3'>
@@ -838,7 +840,7 @@ const NewVisit = () => {
                           <div className='flex items-center gap-2'>
                             <div className='flex-1 min-w-0'>
                               <label className='text-xs mb-1 block font-medium'>
-                                Дори
+                                {t('newVisit.medication')}
                               </label>
                               <Select
                                 value={med.medication_id}
@@ -860,13 +862,13 @@ const NewVisit = () => {
                                 }}
                               >
                                 <SelectTrigger className='h-9'>
-                                  <SelectValue placeholder='Дорини танланг...' />
+                                  <SelectValue placeholder={t('newVisit.selectMedication')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <div className='p-2'>
                                     <Input
                                       ref={medicationSearchRef}
-                                      placeholder='Қидириш...'
+                                      placeholder={t('newVisit.searchMedication')}
                                       value={medicationSearch}
                                       onChange={(e) =>
                                         setMedicationSearch(e.target.value)
@@ -893,10 +895,10 @@ const NewVisit = () => {
                             </div>
                             <div className='flex-1 min-w-0'>
                               <label className='text-xs mb-1 block font-medium'>
-                                Қўшимчалар
+                                {t('newVisit.additionalInfo')}
                               </label>
                               <Input
-                                placeholder='Қўшимча маълумот...'
+                                placeholder={t('newVisit.additionalInfoPlaceholder')}
                                 className='h-9'
                                 value={med.additionalInfo}
                                 onChange={(e) =>
@@ -924,7 +926,7 @@ const NewVisit = () => {
                           <div className='flex items-center gap-2'>
                             <div className='w-20 shrink-0'>
                               <label className='text-xs mb-1 block font-medium'>
-                                Кун
+                                {t('newVisit.day')}
                               </label>
                               <Input
                                 type='number'
@@ -943,7 +945,7 @@ const NewVisit = () => {
                             </div>
                             <div className='w-20 shrink-0'>
                               <label className='text-xs mb-1 block font-medium'>
-                                Марта/кун
+                                {t('newVisit.timesPerDay')}
                               </label>
                               <Input
                                 type='number'
@@ -962,10 +964,10 @@ const NewVisit = () => {
                             </div>
                             <div className='flex-1 min-w-0'>
                               <label className='text-xs mb-1 block font-medium'>
-                                Қўлланиш
+                                {t('newVisit.usage')}
                               </label>
                               <Input
-                                placeholder='Овқатдан кейин...'
+                                placeholder={t('newVisit.usagePlaceholder')}
                                 className='h-9'
                                 value={med.instructions}
                                 onChange={(e) =>
@@ -990,7 +992,7 @@ const NewVisit = () => {
                 <div className='flex items-center justify-between'>
                   <Label className='flex items-center gap-2'>
                     <Activity className='w-4 h-4 text-primary' />
-                    Хизматлар
+                    {t('newVisit.services')}
                   </Label>
                   <Button
                     type='button'
@@ -1000,13 +1002,13 @@ const NewVisit = () => {
                     className='gap-1'
                   >
                     <Plus className='w-4 h-4' />
-                    Хизмат қўшиш
+                    {t('newVisit.addService')}
                   </Button>
                 </div>
 
                 {services.length === 0 ? (
                   <p className='text-sm text-muted-foreground text-center py-4'>
-                    Хизматлар қўшилмаган
+                    {t('newVisit.noServices')}
                   </p>
                 ) : (
                   <div className='space-y-3'>
@@ -1014,7 +1016,7 @@ const NewVisit = () => {
                     <div className='flex items-end gap-2 p-2 bg-muted/30 rounded-lg border'>
                       <div className='w-28'>
                         <Label className='text-xs font-medium'>
-                          Муддат (кун)
+                          {t('newVisit.durationDays')}
                         </Label>
                         <Input
                           type='number'
@@ -1089,7 +1091,7 @@ const NewVisit = () => {
                       </div>
                       <div className='flex-1'>
                         <Label className='text-xs font-medium'>
-                          Бошланиш санаси
+                          {t('newVisit.startDate')}
                         </Label>
                         <Input
                           type='date'
@@ -1121,7 +1123,7 @@ const NewVisit = () => {
                             className='h-8 text-sm mt-1'
                             disabled={services.length === 0}
                           >
-                            Ҳар куни
+                            {t('newVisit.everyDay')}
                           </Button>
                         </div>
                         <div>
@@ -1136,7 +1138,7 @@ const NewVisit = () => {
                             className='h-8 text-sm mt-1'
                             disabled={services.length === 0}
                           >
-                            2 кунда бир
+                            {t('newVisit.everyOtherDay')}
                           </Button>
                         </div>
                       </div>
@@ -1148,7 +1150,7 @@ const NewVisit = () => {
                         <thead className='sticky top-0 bg-background z-10'>
                           <tr className='bg-muted/50'>
                             <th className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'>
-                              Хизмат
+                              {t('newVisit.service')}
                             </th>
                             {Array.from({ length: 8 }, (_, i) => (
                               <th
@@ -1222,7 +1224,7 @@ const NewVisit = () => {
                                           }}
                                         >
                                           <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
-                                            <SelectValue placeholder='Танланг...' />
+                                            <SelectValue placeholder={t('newVisit.selectService')} />
                                           </SelectTrigger>
                                           <SelectContent
                                             onCloseAutoFocus={(e) => {
@@ -1244,7 +1246,7 @@ const NewVisit = () => {
                                                       .current[srv.id];
                                                   }
                                                 }}
-                                                placeholder='Қидириш...'
+                                                placeholder={t('newVisit.searchService')}
                                                 value={
                                                   serviceSearch[srv.id] || ''
                                                 }
@@ -1324,13 +1326,13 @@ const NewVisit = () => {
                                                       {new Intl.NumberFormat(
                                                         'uz-UZ'
                                                       ).format(s.price)}{' '}
-                                                      сўм
+                                                      {t('newVisit.sum')}
                                                     </SelectItem>
                                                   )
                                                 )
                                               ) : (
                                                 <div className='p-4 text-center text-sm text-muted-foreground'>
-                                                  Хизмат топилмади
+                                                  {t('newVisit.serviceNotFound')}
                                                 </div>
                                               );
                                             })()}
@@ -1353,7 +1355,7 @@ const NewVisit = () => {
                                           {day.date ? (
                                             <div className='flex flex-col items-center justify-center'>
                                               <span className='text-[10px] text-muted-foreground font-bold'>
-                                                {day.day}-кун
+                                                {t('newVisit.dayN', { n: day.day })}
                                               </span>
                                               <span
                                                 className={`px-1.5 py-0.5 rounded ${
@@ -1365,7 +1367,7 @@ const NewVisit = () => {
                                                 {format(day.date, 'dd/MM')}
                                               </span>
                                               <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none text-xs'>
-                                                {day.day}-кун:{' '}
+                                                {t('newVisit.dayN', { n: day.day })}:{' '}
                                                 {new Date(
                                                   day.date
                                                 ).toLocaleDateString('uz-UZ')}
@@ -1375,7 +1377,7 @@ const NewVisit = () => {
                                           ) : (
                                             <div className='flex flex-col items-center justify-center'>
                                               <span className='text-[10px] text-muted-foreground font-bold'>
-                                                {day.day}-кун
+                                                {t('newVisit.dayN', { n: day.day })}
                                               </span>
                                               <span className='text-muted-foreground'>
                                                 —
@@ -1434,7 +1436,7 @@ const NewVisit = () => {
                   disabled={isCreating}
                 >
                   <X className='w-4 h-4 sm:w-5 sm:h-5 mr-2' />
-                  Бекор қилиш
+                  {t('newVisit.cancelBtn')}
                 </Button>
                 <Button
                   size='lg'
@@ -1443,7 +1445,7 @@ const NewVisit = () => {
                   disabled={isCreating}
                 >
                   <Save className='w-4 h-4 sm:w-5 sm:h-5 mr-2' />
-                  {isCreating ? 'Сақланмоқда...' : 'Сақлаш'}
+                  {isCreating ? t('newVisit.savingBtn') : t('newVisit.saveBtn')}
                 </Button>
               </div>
             </div>

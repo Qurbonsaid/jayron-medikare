@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
-import { uz } from 'date-fns/locale'
+import { useDateLocale } from '@/hooks/useDateLocale'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { useState } from 'react'
 import { DateRange } from 'react-day-picker'
@@ -23,6 +23,7 @@ export const DateRangePicker = ({
 	onDateRangeChange,
 }: DateRangePickerProps) => {
 	const { t } = useTranslation('reports')
+	const dateLocale = useDateLocale()
 	const [isOpen, setIsOpen] = useState(false)
 
 	return (
@@ -40,11 +41,11 @@ export const DateRangePicker = ({
 						{dateRange?.from ? (
 							dateRange.to ? (
 								<>
-									{format(dateRange.from, 'dd MMM yyyy', { locale: uz })} -{' '}
-									{format(dateRange.to, 'dd MMM yyyy', { locale: uz })}
+									{format(dateRange.from, 'dd MMM yyyy', { locale: dateLocale })} -{' '}
+									{format(dateRange.to, 'dd MMM yyyy', { locale: dateLocale })}
 								</>
 							) : (
-								format(dateRange.from, 'dd MMM yyyy', { locale: uz })
+								format(dateRange.from, 'dd MMM yyyy', { locale: dateLocale })
 							)
 						) : (
 							<span>{t('selectDateRange')}</span>

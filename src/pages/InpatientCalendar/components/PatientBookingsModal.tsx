@@ -27,7 +27,7 @@ import {
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format, parseISO, startOfWeek } from "date-fns";
-import { uz } from "date-fns/locale";
+import { useDateLocale } from "@/hooks/useDateLocale";
 import type { Booking } from "@/app/api/bookingApi";
 
 interface PatientBookingsModalProps {
@@ -44,6 +44,7 @@ export const PatientBookingsModal = ({
   onBack,
 }: PatientBookingsModalProps) => {
   const { t } = useTranslation("inpatient");
+  const dateLocale = useDateLocale();
   const navigate = useNavigate();
 
   // Fetch patient bookings
@@ -179,9 +180,9 @@ export const PatientBookingsModal = ({
                   <div className="flex-1 min-w-0">
                     <p className="text-xs sm:text-sm text-muted-foreground">{t("patientBookings.bookingPeriod")}</p>
                     <p className="font-semibold text-sm sm:text-base mt-0.5 sm:mt-1 break-words">
-                      {format(parseISO(latestBooking.start_at), "d MMM yyyy", { locale: uz })}
+                      {format(parseISO(latestBooking.start_at), "d MMM yyyy", { locale: dateLocale })}
                       {" — "}
-                      {format(parseISO(latestBooking.end_at), "d MMM yyyy", { locale: uz })}
+                      {format(parseISO(latestBooking.end_at), "d MMM yyyy", { locale: dateLocale })}
                     </p>
                   </div>
                 </div>
@@ -245,7 +246,7 @@ export const PatientBookingsModal = ({
                     <div className="flex-1 min-w-0">
                       <p className="text-xs sm:text-sm text-muted-foreground">{t("patientBookings.createdTime")}</p>
                       <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-muted-foreground break-words">
-                        {format(parseISO(latestBooking.created_at), "d MMM yyyy, HH:mm", { locale: uz })}
+                        {format(parseISO(latestBooking.created_at), "d MMM yyyy, HH:mm", { locale: dateLocale })}
                       </p>
                     </div>
                   </div>

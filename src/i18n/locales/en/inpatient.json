@@ -3,6 +3,15 @@
   "subtitle": "Inpatient Department Management",
   "calendarTitle": "Inpatient Calendar",
   "management": "Inpatient Management",
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "unknown": "Unknown",
+    "loading": "Loading..."
+  },
   "rooms": "Rooms",
   "beds": "Beds",
   "room": "Room",
@@ -92,6 +101,16 @@
   "filter": "Filter",
   "showAll": "Show all",
   "showOccupiedOnly": "Occupied only",
+
+  "count": "pcs",
+  "emptyText": "Empty",
+  "noText": "None",
+  "fullText": "Fully occupied",
+  "occupiedCount": "{{count}} occupied",
+  "descriptionLabel": "Description",
+  "notProvided": "Not provided",
+  "capacityUnit": "beds",
+
   "showEmptyOnly": "Empty only",
   "perPage": "/page",
   "page": "page",
@@ -148,12 +167,10 @@
   "persons": "persons",
   "occupancy": "Occupancy",
   "fullyOccupied": "Fully occupied",
-  "occupiedCount": "occupied",
   "empty": "Empty",
   "roomFloor": "Room floor",
   "floorSuffix": "floor",
   "description": "Description",
-  "notProvided": "Not provided",
 
   "change": "change",
   "bloodPressure": "blood pressure",
@@ -217,7 +234,6 @@
   "viewAndManageBuildings": "View and manage all buildings",
   "newBuilding": "New Building",
   "building": "Building",
-  "count": "",
   "leavingPatients": "Leaving patients",
   "none": "None",
   "nothingFound": "Nothing found",
@@ -241,11 +257,18 @@
   "buildingUpdatedSuccess": "Building updated successfully",
 
   "calendar": {
-    "patientPresent": "Patient present",
+    "patientPresent": "Patient",
     "booked": "Booked",
     "cannotBookPastDate": "Cannot book for past date",
     "roomNotFound": "Room not found",
-    "goBack": "Go back"
+    "goBack": "Go back",
+    "capacity": "Capacity",
+    "occupied": "Occupied",
+    "available": "Available",
+    "bed": "bed",
+    "free": "Free",
+    "newBooking": "New Booking",
+    "unknown": "Unknown"
   },
 
   "booking": {
@@ -423,5 +446,23 @@
     "patientCapacityMin": "Patient capacity must be at least 1",
     "floorNumberRequired": "Floor number is required",
     "descriptionMin": "Description must be at least 5 characters"
+  },
+
+  "roomsList": {
+    "title": "Inpatient Calendar",
+    "subtitle": "Select a building and room to book",
+    "searchPatient": "Search Patient",
+    "corpus": "Building",
+    "selectCorpus": "Select a building to view rooms",
+    "loadingRooms": "Loading rooms...",
+    "loadError": "Loading error",
+    "tryAgain": "Please try refreshing the page",
+    "beds": "Beds",
+    "bedsCount": "beds",
+    "bed": "bed",
+    "free": "Free",
+    "occupied": "Occupied",
+    "noRoomsInCorpus": "No rooms in this building",
+    "noAvailableRooms": "No rooms have been created for the selected building yet"
   }
 }

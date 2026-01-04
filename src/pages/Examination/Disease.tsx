@@ -27,6 +27,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { Edit, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 interface FormState {
@@ -52,6 +53,7 @@ const initialFormState: FormState = {
 };
 
 export default function AnalysisParamsModal() {
+  const { t } = useTranslation(['diagnostics', 'common']);
   const navigate = useNavigate();
   const handleRequest = useHandleRequest();
   const { canCreate, canUpdate, canDelete } = usePermission('disease');
@@ -84,7 +86,7 @@ export default function AnalysisParamsModal() {
   // Auto refetch when data changes
   useEffect(() => {
     refetch();
-  }, [page, limit]);
+  }, [page, limit, refetch]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -101,7 +103,7 @@ export default function AnalysisParamsModal() {
     if (!value.trim()) return;
 
     if (form[type].includes(value.trim())) {
-      toast.error('Bu element allaqachon mavjud');
+      toast.error(t('common:itemAlreadyExists'));
       return;
     }
 
@@ -129,9 +131,9 @@ export default function AnalysisParamsModal() {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!form.code.trim()) newErrors.code = 'Kasallik kodi majburiy';
-    if (!form.name.trim()) newErrors.name = 'Kasallik nomi majburiy';
-    if (!form.description.trim()) newErrors.description = 'Tavsif majburiy';
+    if (!form.code.trim()) newErrors.code = t('disease.codeRequired');
+    if (!form.name.trim()) newErrors.name = t('disease.nameRequired');
+    if (!form.description.trim()) newErrors.description = t('disease.descriptionRequired');
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -155,7 +157,7 @@ export default function AnalysisParamsModal() {
       await handleRequest({
         request: () => updateDisease({ id: editingDisease._id, data: payload }),
         onSuccess: () => {
-          toast.success('Kasallik muvaffaqiyatli yangilandi 🎉');
+          toast.success(t('common:updateSuccess'));
           handleClose();
           refetch();
         },
@@ -167,7 +169,7 @@ export default function AnalysisParamsModal() {
       await handleRequest({
         request: () => createDisease(payload),
         onSuccess: () => {
-          toast.success("Kasallik muvaffaqiyatli qo'shildi 🎉");
+          toast.success(t('common:addSuccess'));
           handleClose();
           refetch();
         },
@@ -178,7 +180,23 @@ export default function AnalysisParamsModal() {
     }
   };
 
-  const handleEdit = (disease: any) => {
+  // Type for API response disease object (uses snake_case)
+  interface ApiDisease {
+    _id: string;
+    name: string;
+    code: string;
+    description: string;
+    symptoms: string[];
+    causes: string[];
+    treatments: string[];
+    is_chronic: boolean;
+    is_contagious: boolean;
+    is_deleted: boolean;
+    created_at: Date;
+    updated_at: Date;
+  }
+
+  const handleEdit = (disease: ApiDisease) => {
     const mappedDisease: Disease = {
       _id: disease._id,
       code: disease.code,
@@ -189,8 +207,8 @@ export default function AnalysisParamsModal() {
       treatments: disease.treatments,
       is_chronic: disease.is_chronic,
       is_contagious: disease.is_contagious,
-      createdAt: disease.created_at,
-      updatedAt: disease.updated_at,
+      createdAt: String(disease.created_at),
+      updatedAt: String(disease.updated_at),
     };
     setEditingDisease(mappedDisease);
     setForm({
@@ -210,7 +228,7 @@ export default function AnalysisParamsModal() {
     await handleRequest({
       request: () => deleteDisease(id),
       onSuccess: () => {
-        toast.success("Kasallik muvaffaqiyatli o'chirildi");
+        toast.success(t('common:deleteSuccess'));
         setDeleteId(null);
         refetch();
       },
@@ -230,9 +248,9 @@ export default function AnalysisParamsModal() {
     setTreatmentInput('');
   };
 
-  if (isLoading) return <p className='p-4'>Yuklanmoqda...</p>;
+  if (isLoading) return <p className='p-4'>{t('loading')}</p>;
   if (isError || !data)
-    return <p className='p-4 text-red-500'>Xatolik yuz berdi!</p>;
+    return <p className='p-4 text-red-500'>{t('common:errorOccurred')}</p>;
 
   return (
     <div className='min-h-screen bg-background flex flex-col'>
@@ -240,7 +258,7 @@ export default function AnalysisParamsModal() {
         <div className='w-full px-4 sm:px-6 py-5 flex items-center justify-between gap-3'>
           <div className='flex-1 max-w-md'>
             <Input
-              placeholder='Kasallik qidirish...'
+              placeholder={t('disease.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className='w-full'
@@ -252,7 +270,7 @@ export default function AnalysisParamsModal() {
               className='bg-blue-600 hover:bg-blue-700 text-white'
               onClick={() => setOpen(true)}
             >
-              + Kasallik qo'shish
+              + {t('disease.addDisease')}
             </Button>
           )}
         </div>
@@ -273,7 +291,7 @@ export default function AnalysisParamsModal() {
                     {param.code}
                   </h3>
                   <p className='text-xs text-muted-foreground'>
-                    Nomi: <span className='font-bold'>{param.name}</span>
+                    {t('disease.name')}: <span className='font-bold'>{param.name}</span>
                   </p>
                 </div>
                 <span className='text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium'>
@@ -285,7 +303,7 @@ export default function AnalysisParamsModal() {
               <div className='space-y-1.5 text-xs sm:text-sm'>
                 <div className='flex flex-col gap-1'>
                   <span className='text-muted-foreground font-medium'>
-                    Alomatlari:
+                    {t('disease.symptoms')}:
                   </span>
                   <span className='font-medium'>
                     {param.symptoms.join(', ')}
@@ -293,13 +311,13 @@ export default function AnalysisParamsModal() {
                 </div>
                 <div className='flex flex-col gap-1'>
                   <span className='text-muted-foreground font-medium'>
-                    Sabablari:
+                    {t('disease.causes')}:
                   </span>
                   <span className='font-medium'>{param.causes.join(', ')}</span>
                 </div>
                 <div className='flex flex-col gap-1'>
                   <span className='text-muted-foreground font-medium'>
-                    Davolash:
+                    {t('disease.treatments')}:
                   </span>
                   <span className='font-medium'>
                     {param.treatments.join(', ')}
@@ -307,23 +325,23 @@ export default function AnalysisParamsModal() {
                 </div>
                 <div className='flex gap-4 mt-2'>
                   <div className='flex items-center gap-1.5'>
-                    <span className='text-muted-foreground'>Surunkali:</span>
+                    <span className='text-muted-foreground'>{t('disease.chronic')}:</span>
                     <span
                       className={`font-medium ${
                         param.is_chronic ? 'text-orange-600' : 'text-gray-600'
                       }`}
                     >
-                      {param.is_chronic ? 'Ha' : "Yo'q"}
+                      {param.is_chronic ? t('yes') : t('no')}
                     </span>
                   </div>
                   <div className='flex items-center gap-1.5'>
-                    <span className='text-muted-foreground'>Yuqumli:</span>
+                    <span className='text-muted-foreground'>{t('disease.contagious')}:</span>
                     <span
                       className={`font-medium ${
                         param.is_contagious ? 'text-red-600' : 'text-gray-600'
                       }`}
                     >
-                      {param.is_contagious ? 'Ha' : "Yo'q"}
+                      {param.is_contagious ? t('yes') : t('no')}
                     </span>
                   </div>
                 </div>
@@ -339,7 +357,7 @@ export default function AnalysisParamsModal() {
                     onClick={() => handleEdit(param)}
                   >
                     <Edit size={12} />
-                    Tahrirlash
+                    {t('common:edit')}
                   </Button>
                 )}
 
@@ -359,15 +377,15 @@ export default function AnalysisParamsModal() {
                         disabled={deleting}
                       >
                         <Trash2 size={12} />
-                        O'chirish
+                        {t('common:delete')}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className='max-w-xs rounded-xl'>
                       <DialogTitle className='text-sm'>
-                        Kasallikni o'chirish
+                        {t('disease.deleteDisease')}
                       </DialogTitle>
                       <p className='text-xs text-muted-foreground'>
-                        Rostan ham ushbu kasallikni o'chirmoqchimisiz?
+                        {t('disease.deleteConfirmation')}
                       </p>
                       <DialogFooter className='flex justify-end gap-2 pt-2'>
                         <Button
@@ -376,7 +394,7 @@ export default function AnalysisParamsModal() {
                           className='h-7 text-xs'
                           onClick={() => setDeleteId(null)}
                         >
-                          Yo'q
+                          {t('no')}
                         </Button>
                         <Button
                           size='sm'
@@ -384,7 +402,7 @@ export default function AnalysisParamsModal() {
                           onClick={() => handleDelete(param._id)}
                           disabled={deleting}
                         >
-                          {deleting ? "O'chirilmoqda..." : 'Ha'}
+                          {deleting ? t('deleting') : t('yes')}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -404,14 +422,14 @@ export default function AnalysisParamsModal() {
               <thead className='bg-muted/50'>
                 <tr>
                   {[
-                    'Kasallik kodi',
-                    'Kasallik nomi',
-                    'Alomatlari',
-                    'Sabablari',
-                    'Davolash usullari',
-                    'Surunkalilik holati',
-                    'Yuqumlilik holati',
-                    'Harakatlar',
+                    t('disease.code'),
+                    t('disease.name'),
+                    t('disease.symptoms'),
+                    t('disease.causes'),
+                    t('disease.treatments'),
+                    t('disease.chronic'),
+                    t('disease.contagious'),
+                    t('common:actions'),
                   ].map((i) => (
                     <th
                       key={i}
@@ -446,10 +464,10 @@ export default function AnalysisParamsModal() {
                       {param.treatments.join(', ')}
                     </td>
                     <td className='px-3 xl:px-5 py-3 xl:py-4 text-xs xl:text-sm'>
-                      {param.is_chronic ? 'Ha' : "Yo'q"}
+                      {param.is_chronic ? t('yes') : t('no')}
                     </td>
                     <td className='px-3 xl:px-5 py-3 xl:py-4 text-xs xl:text-sm'>
-                      {param.is_contagious ? 'Ha' : "Yo'q"}
+                      {param.is_contagious ? t('yes') : t('no')}
                     </td>
                     <td className='px-3 xl:px-5 py-3 xl:py-4'>
                       <div className='flex justify-center gap-3'>
@@ -483,23 +501,23 @@ export default function AnalysisParamsModal() {
                               </Button>
                             </DialogTrigger>
                             <DialogContent className='max-w-xs rounded-xl'>
-                              <DialogTitle>Kasallikni o'chirish</DialogTitle>
+                              <DialogTitle>{t('disease.deleteDisease')}</DialogTitle>
                               <p className='text-sm text-muted-foreground'>
-                                Rostan ham ushbu kasallikni o'chirmoqchimisiz?
+                                {t('disease.deleteConfirmation')}
                               </p>
                               <DialogFooter className='flex justify-end gap-2'>
                                 <Button
                                   variant='outline'
                                   onClick={() => setDeleteId(null)}
                                 >
-                                  Yo'q
+                                  {t('no')}
                                 </Button>
                                 <Button
                                   className='bg-red-600 text-white'
                                   onClick={() => handleDelete(param._id)}
                                   disabled={deleting}
                                 >
-                                  {deleting ? "O'chirilmoqda..." : 'Ha'}
+                                  {deleting ? t('deleting') : t('yes')}
                                 </Button>
                               </DialogFooter>
                             </DialogContent>
@@ -520,20 +538,20 @@ export default function AnalysisParamsModal() {
           <DialogHeader>
             <DialogTitle>
               {editingDisease
-                ? 'Kasallikni tahrirlash'
-                : "Yangi kasallik qo'shish"}
+                ? t('disease.editDisease')
+                : t('disease.addDisease')}
             </DialogTitle>
           </DialogHeader>
 
           <div className='space-y-4'>
             {/* Code */}
             <div>
-              <Label>Kasallik kodi *</Label>
+              <Label>{t('disease.code')} *</Label>
               <Input
                 name='code'
                 value={form.code}
                 onChange={handleChange}
-                placeholder='Masalan: D001'
+                placeholder='D001'
               />
               {errors.code && (
                 <p className='text-red-500 text-sm mt-1'>{errors.code}</p>
@@ -542,12 +560,12 @@ export default function AnalysisParamsModal() {
 
             {/* Name */}
             <div>
-              <Label>Kasallik nomi *</Label>
+              <Label>{t('disease.name')} *</Label>
               <Input
                 name='name'
                 value={form.name}
                 onChange={handleChange}
-                placeholder='Masalan: Diabetes Mellitus'
+                placeholder='Diabetes Mellitus'
               />
               {errors.name && (
                 <p className='text-red-500 text-sm mt-1'>{errors.name}</p>
@@ -556,12 +574,12 @@ export default function AnalysisParamsModal() {
 
             {/* Description */}
             <div>
-              <Label>Tavsif *</Label>
+              <Label>{t('disease.description')} *</Label>
               <Textarea
                 name='description'
                 value={form.description}
                 onChange={handleChange}
-                placeholder="Kasallik haqida qisqacha ma'lumot"
+                placeholder={t('disease.description')}
                 rows={3}
               />
               {errors.description && (
@@ -573,12 +591,12 @@ export default function AnalysisParamsModal() {
 
             {/* Symptoms */}
             <div>
-              <Label>Alomatlari *</Label>
+              <Label>{t('disease.symptoms')} *</Label>
               <div className='flex gap-2'>
                 <Input
                   value={symptomInput}
                   onChange={(e) => setSymptomInput(e.target.value)}
-                  placeholder='Alomat kiriting'
+                  placeholder={t('disease.enterSymptom')}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -591,7 +609,7 @@ export default function AnalysisParamsModal() {
                   onClick={() => handleAddItem('symptoms', symptomInput)}
                   size='sm'
                 >
-                  Qo'shish
+                  {t('common:add')}
                 </Button>
               </div>
               <div className='flex flex-wrap gap-2 mt-2'>
@@ -616,12 +634,12 @@ export default function AnalysisParamsModal() {
 
             {/* Causes */}
             <div>
-              <Label>Sabablari *</Label>
+              <Label>{t('disease.causes')} *</Label>
               <div className='flex gap-2'>
                 <Input
                   value={causeInput}
                   onChange={(e) => setCauseInput(e.target.value)}
-                  placeholder='Sabab kiriting'
+                  placeholder={t('disease.enterCause')}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -634,7 +652,7 @@ export default function AnalysisParamsModal() {
                   onClick={() => handleAddItem('causes', causeInput)}
                   size='sm'
                 >
-                  Qo'shish
+                  {t('common:add')}
                 </Button>
               </div>
               <div className='flex flex-wrap gap-2 mt-2'>
@@ -659,12 +677,12 @@ export default function AnalysisParamsModal() {
 
             {/* Treatments */}
             <div>
-              <Label>Davolash usullari *</Label>
+              <Label>{t('disease.treatments')} *</Label>
               <div className='flex gap-2'>
                 <Input
                   value={treatmentInput}
                   onChange={(e) => setTreatmentInput(e.target.value)}
-                  placeholder='Davolash usuli kiriting'
+                  placeholder={t('disease.enterTreatment')}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -677,7 +695,7 @@ export default function AnalysisParamsModal() {
                   onClick={() => handleAddItem('treatments', treatmentInput)}
                   size='sm'
                 >
-                  Qo'shish
+                  {t('common:add')}
                 </Button>
               </div>
               <div className='flex flex-wrap gap-2 mt-2'>
@@ -714,7 +732,7 @@ export default function AnalysisParamsModal() {
                   }
                 />
                 <Label htmlFor='is_chronic' className='cursor-pointer'>
-                  Surunkali kasallik
+                  {t('disease.chronic')}
                 </Label>
               </div>
 
@@ -730,7 +748,7 @@ export default function AnalysisParamsModal() {
                   }
                 />
                 <Label htmlFor='is_contagious' className='cursor-pointer'>
-                  Yuqumli kasallik
+                  {t('disease.contagious')}
                 </Label>
               </div>
             </div>
@@ -738,14 +756,14 @@ export default function AnalysisParamsModal() {
 
           <DialogFooter>
             <Button variant='outline' onClick={handleClose}>
-              Bekor qilish
+              {t('common:cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={creating || updating}
               className='bg-blue-600 text-white'
             >
-              {creating || updating ? 'Saqlanmoqda...' : 'Saqlash'}
+              {creating || updating ? t('saving') : t('common:save')}
             </Button>
           </DialogFooter>
         </DialogContent>

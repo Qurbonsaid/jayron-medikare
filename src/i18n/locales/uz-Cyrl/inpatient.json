@@ -3,6 +3,17 @@
   "subtitle": "Стационар бўлими бошқаруви",
   "calendarTitle": "Стационар календари",
   "management": "Стационар бошқаруви",
+
+  "common": {
+    "cancel": "Бекор қилиш",
+    "save": "Сақлаш",
+    "delete": "Ўчириш",
+    "edit": "Таҳрирлаш",
+    "close": "Ёпиш",
+    "unknown": "Номаълум",
+    "loading": "Юкланмоқда..."
+  },
+
   "rooms": "Хоналар",
   "beds": "Ўринлар",
   "room": "Хона",
@@ -92,6 +103,15 @@
   "filter": "Филтр",
   "showAll": "Барчасини кўрсатиш",
   "showOccupiedOnly": "Фақат банд",
+
+  "count": "та",
+  "emptyText": "Бўш",
+  "noText": "Йўқ",
+  "fullText": "Тўлиқ банд",
+  "occupiedCount": "{{count}} та банд",
+  "descriptionLabel": "Тавсиф",
+  "notProvided": "Берилмаган",
+  "capacityUnit": "жойлик",
   "showEmptyOnly": "Фақат бўш",
   "perPage": "та/саҳифа",
   "page": "саҳифа",
@@ -148,12 +168,10 @@
   "persons": "кишилик",
   "occupancy": "Бандлик",
   "fullyOccupied": "Тўлиқ банд",
-  "occupiedCount": "та банд",
   "empty": "Бўш",
   "roomFloor": "Хона қавати",
   "floorSuffix": "қават",
   "description": "Тавсиф",
-  "notProvided": "Берилмаган",
 
   "change": "ўзгартириш",
   "bloodPressure": "қон босими",
@@ -161,8 +179,8 @@
   "phone": "Тел:",
   "arrivedDate": "Келган:",
   "leavingDate": "Кетади:",
-  "pressureMeasured": "Давлена: ўлчанган",
-  "pressureNotMeasured": "Давлена: ўлчанмаган",
+  "pressureMeasured": "Босим: ўлчанган",
+  "pressureNotMeasured": "Босим: ўлчанмаган",
   "noPatientsFound": "Беморлар топилмади",
 
   "measureBloodPressure": "Қон босимини ўлчаш",
@@ -217,7 +235,6 @@
   "viewAndManageBuildings": "Барча корпусларни кўриш ва бошқариш",
   "newBuilding": "Янги корпус",
   "building": "Корпус",
-  "count": "та",
   "leavingPatients": "Чиқадиганлар",
   "none": "Йўқ",
   "nothingFound": "Ҳеч нарса топилмади",
@@ -241,11 +258,18 @@
   "buildingUpdatedSuccess": "Корпус муваффақиятли янгиланди",
 
   "calendar": {
-    "patientPresent": "Одам бор",
+    "patientPresent": "Бемор",
     "booked": "Бронь",
     "cannotBookPastDate": "Ўтган санага бронь қилиб бўлмайди",
     "roomNotFound": "Хона топилмади",
-    "goBack": "Орқага қайтиш"
+    "goBack": "Орқага қайтиш",
+    "capacity": "Сиғими",
+    "occupied": "Банд",
+    "available": "Бўш",
+    "bed": "жой",
+    "free": "Бўш",
+    "newBooking": "Янги бронь",
+    "unknown": "Номаълум"
   },
 
   "booking": {
@@ -423,5 +447,23 @@
     "patientCapacityMin": "Бемор сиғими камида 1 бўлиши керак",
     "floorNumberRequired": "Қават рақами киритилиши керак",
     "descriptionMin": "Изоҳ камида 5 та белгидан иборат бўлиши керак"
+  },
+
+  "roomsList": {
+    "title": "Стационар календари",
+    "subtitle": "Бронь қилиш учун корпус ва хонани танланг",
+    "searchPatient": "Бемор қидириш",
+    "corpus": "Корпус",
+    "selectCorpus": "Хоналарни кўриш учун корпусни танланг",
+    "loadingRooms": "Хоналар юкланмоқда...",
+    "loadError": "Юклашда хатолик",
+    "tryAgain": "Саҳифани янгилаб кўринг",
+    "beds": "Жойлар",
+    "bedsCount": "жойлик",
+    "bed": "жой",
+    "free": "Бўш",
+    "occupied": "Банд",
+    "noRoomsInCorpus": "Бу корпусда хоналар йўқ",
+    "noAvailableRooms": "Танланган корпус учун хоналар ҳали яратилмаган"
   }
 }
