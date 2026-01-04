@@ -11,8 +11,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
 import { profileSchema } from '@/validation/validationProfile'
-import { Mail, Phone, Shield, User } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Edit, Mail, Phone, Shield, Trash, User } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -30,10 +31,32 @@ const getRoleLabel = (role: string): string => {
 
 export default function ProfilePage() {
 	const navigate = useNavigate()
+	const { t } = useTranslation('settings')
 	const [searchParams, setSearchParams] = useSearchParams()
 	const [editOpen, setEditOpen] = useState(false)
 	const [logoutOpen, setLogoutOpen] = useState(false)
+	const [menuOpen, setMenuOpen] = useState(false)
 	const handleRequest = useHandleRequest()
+	const menuRef = useRef<HTMLDivElement | null>(null)
+
+	// 🔹 Tashqariga bosilganda menyuni yopish
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+				setMenuOpen(false)
+			}
+		}
+
+		if (menuOpen) {
+			document.addEventListener('mousedown', handleClickOutside)
+		} else {
+			document.removeEventListener('mousedown', handleClickOutside)
+		}
+
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside)
+		}
+	}, [menuOpen])
 
 	// 🔹 RTK Query: profilni olish
 	const { data: user, isLoading, isError } = useMeQuery()
@@ -84,7 +107,7 @@ export default function ProfilePage() {
 			request: () => updateMe(formData).unwrap(),
 			onSuccess: () => {
 				console.log('Muvaffaqqiyatli')
-				toast.success('Profil muvaffaqiyatli yangilandi!')
+				toast.success(t('profileUpdated'))
 				setEditOpen(false)
 				setErrors({})
 			},
@@ -107,12 +130,12 @@ export default function ProfilePage() {
 		handleSubmit()
 	}
 
-	if (isLoading) return <div className='p-4 text-center'>Yuklanmoqda...</div>
+if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 
 	if (isError || !user) {
 		return (
 			<div className='p-4 text-center text-red-500'>
-				Ma’lumotni olishda xatolik yuz berdi
+				{t('errorFetchingData')}
 			</div>
 		)
 	}
@@ -129,6 +152,62 @@ export default function ProfilePage() {
 
 	return (
 		<div className='min-h-screen bg-background flex flex-col'>
+			{/* Header */}
+			<header className='bg-card border-b sticky top-0 z-10'>
+				<div className='w-full px-4 sm:px-6 py-4 flex flex-row flex-wrap items-center justify-between gap-3'>
+					{/* Chap taraf */}
+					<div className='flex items-center gap-3 min-w-0'>
+						<div className='min-w-0'>
+							<h1 className='text-lg sm:text-xl font-bold truncate'>{t('profile')}</h1>
+							<p className='text-xs sm:text-sm text-muted-foreground truncate'>
+								{t('userProfile')}
+							</p>
+						</div>
+					</div>
+
+					{/* 3 chiziqli menyu */}
+					<div ref={menuRef} className='relative flex-shrink-0'>
+						<button
+							className='flex flex-col justify-center items-center gap-1 w-8 h-8 p-1 rounded hover:bg-gray-200 transition'
+							onClick={() => setMenuOpen(prev => !prev)}
+						>
+							<span className='w-5 h-0.5 bg-gray-600 block rounded' />
+							<span className='w-5 h-0.5 bg-gray-600 block rounded' />
+							<span className='w-5 h-0.5 bg-gray-600 block rounded' />
+						</button>
+
+						{menuOpen && (
+							<div className='absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-20'>
+								<button
+									className='flex gap-2 items-center w-full text-left px-3 py-2 hover:bg-gray-100'
+									onClick={() => {
+										setEditOpen(true)
+										setMenuOpen(false)
+									}}
+								>
+									<span>
+										<Edit size={12} />
+									</span>
+									<span>{t('edit')}</span>
+								</button>
+								<button
+									className='flex gap-2 items-center w-full text-left px-3 py-2 hover:bg-gray-100 text-red-600'
+									onClick={() => {
+										setLogoutOpen(true)
+										setMenuOpen(false)
+									}}
+								>
+									<span>
+										<Trash size={13} />
+									</span>
+									<span>{t('logout')}</span>
+								</button>
+							</div>
+						)}
+					</div>
+				</div>
+			</header>
+
 			{/* Asosiy kontent */}
 			<main className='flex-grow w-full flex flex-col items-center justify-start py-8 sm:py-12 px-3 sm:px-6'>
 				<div className='w-full max-w-4xl flex flex-col gap-10'>
@@ -153,7 +232,7 @@ export default function ProfilePage() {
 							<User className='w-6 h-6 text-indigo-600 shrink-0' />
 							<div>
 								<p className='text-xs text-muted-foreground uppercase'>
-									Username
+									{t('userName')}
 								</p>
 								<p className='text-base font-medium'>
 									{user.data.username || '-'}
@@ -164,7 +243,7 @@ export default function ProfilePage() {
 						{/* <div className='flex items-center gap-4 border-b pb-3'>
 							<Mail className='w-6 h-6 text-indigo-600 shrink-0' />
 							<div>
-								<p className='text-xs text-muted-foreground uppercase'>Email</p>
+								<p className='text-xs text-muted-foreground uppercase'>{t('email')}</p>
 								<p className='text-base font-medium break-all'>
 									{user.data.email || '-'}
 								</p>
@@ -175,7 +254,7 @@ export default function ProfilePage() {
 							<Phone className='w-6 h-6 text-indigo-600 shrink-0' />
 							<div>
 								<p className='text-xs text-muted-foreground uppercase'>
-									Telefon
+									{t('phone')}
 								</p>
 								<p className='text-base font-medium'>
 									{user.data.phone || '-'}
@@ -187,7 +266,7 @@ export default function ProfilePage() {
 							<Shield className='w-6 h-6 text-indigo-600 shrink-0' />
 							<div>
 								<p className='text-xs text-muted-foreground uppercase'>
-									Litsenziya raqami
+									{t('licenseNumber')}
 								</p>
 								<p className='text-base font-medium'>
 									{user.data.license_number || '-'}
@@ -211,7 +290,7 @@ export default function ProfilePage() {
 				<DialogContent className=' max-w-md md:max-w-xl scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh]'>
 					<DialogHeader>
 						<DialogTitle className='text-lg font-semibold text-gray-800'>
-							Profilni tahrirlash
+							{t('editProfile')}
 						</DialogTitle>
 					</DialogHeader>
 
@@ -221,14 +300,14 @@ export default function ProfilePage() {
 								htmlFor='fullname'
 								className='text-sm font-medium text-gray-700'
 							>
-								To‘liq ism
+								{t('fullName')}
 							</label>
 							<Input
 								id='fullname'
 								name='fullname'
 								value={formData.fullname}
 								onChange={handleChange}
-								placeholder='Ismingizni kiriting'
+								placeholder={t('enterFullName')}
 							/>
 							{errors.fullname && (
 								<p className='text-red-500 text-sm'>{errors.fullname}</p>
@@ -240,14 +319,14 @@ export default function ProfilePage() {
 								htmlFor='username'
 								className='text-sm font-medium text-gray-700'
 							>
-								Foydalanuvchi nomi
+								{t('userName')}
 							</label>
 							<Input
 								id='username'
 								name='username'
 								value={formData.username}
 								onChange={handleChange}
-								placeholder='Foydalanuvchi nomingizni kiriting'
+								placeholder={t('enterUsername')}
 							/>
 							{errors.username && (
 								<p className='text-red-500 text-sm'>{errors.username}</p>
@@ -259,7 +338,7 @@ export default function ProfilePage() {
 								htmlFor='email'
 								className='text-sm font-medium text-gray-700'
 							>
-								Email
+								{t('email')}
 							</label>
 							<Input
 								id='email'
@@ -279,7 +358,7 @@ export default function ProfilePage() {
 								htmlFor='phone'
 								className='text-sm font-medium text-gray-700'
 							>
-								Telefon raqam
+								{t('phone')}
 							</label>
 							<Input
 								id='phone'
@@ -298,7 +377,7 @@ export default function ProfilePage() {
 								htmlFor='license_number'
 								className='text-sm font-medium text-gray-700'
 							>
-								Litsenziya raqami
+								{t('licenseNumber')}
 							</label>
 							<Input
 								id='license_number'
@@ -322,14 +401,14 @@ export default function ProfilePage() {
 							}}
 							className='w-full sm:w-auto'
 						>
-							Bekor qilish
+							{t('cancel')}
 						</Button>
 						<Button
 							onClick={OnSaveUpdate}
 							disabled={isUpdating}
 							className='w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white'
 						>
-							{isUpdating ? 'Saqlanmoqda...' : 'Saqlash'}
+							{isUpdating ? t('saving') : t('save')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -340,17 +419,17 @@ export default function ProfilePage() {
 				<DialogContent className='w-full max-w-sm rounded-2xl'>
 					<DialogHeader>
 						<DialogTitle className='text-lg font-semibold text-gray-800'>
-							Chiqish
+							{t('logout')}
 						</DialogTitle>
 					</DialogHeader>
 
 					<div className='mt-4 text-gray-700'>
-						Siz rostan ham bu accountdan chiqmoqchimisiz?
+						{t('logoutConfirm')}
 					</div>
 
 					<DialogFooter className='mt-6 flex justify-end gap-3'>
 						<Button variant='outline' onClick={() => setLogoutOpen(false)}>
-							Bekor qilish
+							{t('cancel')}
 						</Button>
 						<Button
 							onClick={() => {
@@ -367,7 +446,7 @@ export default function ProfilePage() {
 							}}
 							className='bg-red-600 hover:bg-red-700 text-white'
 						>
-							Chiqish
+							{t('logout')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

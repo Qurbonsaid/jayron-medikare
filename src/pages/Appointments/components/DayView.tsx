@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Appointment {
   day: number;
@@ -25,16 +26,17 @@ const DayView = ({
   onDateChange,
   getStatusColor,
 }: DayViewProps) => {
+  const { t } = useTranslation('appointments');
   const timeSlots = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 to 20:00
 
   const dayNames = [
-    'Якшанба',
-    'Душанба',
-    'Сешанба',
-    'Чоршанба',
-    'Пайшанба',
-    'Жума',
-    'Шанба',
+    t('daySunday'),
+    t('dayMonday'),
+    t('dayTuesday'),
+    t('dayWednesday'),
+    t('dayThursday'),
+    t('dayFriday'),
+    t('daySaturday'),
   ];
 
   const formatDate = (date: Date) => {
@@ -108,7 +110,7 @@ const DayView = ({
               onClick={handleToday}
               className='h-8 sm:h-9 text-xs sm:text-sm'
             >
-              Бугун
+              {t('today')}
             </Button>
           </div>
         </div>
@@ -159,12 +161,12 @@ const DayView = ({
                                 </p>
                                 {apt.doctor && (
                                   <p className='text-xs sm:text-sm text-muted-foreground mt-1'>
-                                    Шифокор: {apt.doctor}
+                                    {t('doctor')}: {apt.doctor}
                                   </p>
                                 )}
                                 {apt.phone && (
                                   <p className='text-xs sm:text-sm text-muted-foreground'>
-                                    Телефон: {apt.phone}
+                                    {t('phone')}: {apt.phone}
                                   </p>
                                 )}
                               </div>
@@ -180,7 +182,7 @@ const DayView = ({
                       </div>
                     ) : (
                       <div className='h-full flex items-center justify-center text-xs sm:text-sm text-muted-foreground'>
-                        Навбат йўқ
+                        {t('noAppointments')}
                       </div>
                     )}
                   </div>
@@ -200,7 +202,7 @@ const DayView = ({
                 {todayAppointments.length}
               </div>
               <div className='text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1'>
-                Жами навбатлар
+                {t('totalAppointments')}
               </div>
             </div>
             <div className='text-center'>
@@ -211,7 +213,7 @@ const DayView = ({
                 }
               </div>
               <div className='text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1'>
-                Тасдиқланган
+                {t('statusConfirmed')}
               </div>
             </div>
             <div className='text-center'>
@@ -219,7 +221,7 @@ const DayView = ({
                 {todayAppointments.filter((apt) => apt.status === 'new').length}
               </div>
               <div className='text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1'>
-                Янги
+                {t('statusNew')}
               </div>
             </div>
             <div className='text-center'>
@@ -230,7 +232,7 @@ const DayView = ({
                 }
               </div>
               <div className='text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1'>
-                Бажарилган
+                {t('statusCompleted')}
               </div>
             </div>
           </div>

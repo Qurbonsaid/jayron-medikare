@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/select'
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface DailyCheckupPaginationProps {
 	currentPage: number
@@ -26,6 +27,7 @@ export const DailyCheckupPagination = ({
 	onPageChange,
 	onItemsPerPageChange,
 }: DailyCheckupPaginationProps) => {
+	const { t } = useTranslation('inpatient')
 	if (totalPages <= 1) return null
 
 	const startIndex = (currentPage - 1) * itemsPerPage
@@ -83,10 +85,10 @@ export const DailyCheckupPagination = ({
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="10">10 та</SelectItem>
-						<SelectItem value="20">20 та</SelectItem>
-						<SelectItem value="50">50 та</SelectItem>
-						<SelectItem value="100">100 та</SelectItem>
+						<SelectItem value="10">10 {t('dailyCheckup.items')}</SelectItem>
+						<SelectItem value="20">20 {t('dailyCheckup.items')}</SelectItem>
+						<SelectItem value="50">50 {t('dailyCheckup.items')}</SelectItem>
+						<SelectItem value="100">100 {t('dailyCheckup.items')}</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>
@@ -99,7 +101,7 @@ export const DailyCheckupPagination = ({
 					className="h-8 sm:h-9 px-2 sm:px-3"
 				>
 					<ChevronLeft className="w-4 h-4" />
-					<span className="hidden sm:inline ml-1">Олдинги</span>
+					<span className="hidden sm:inline ml-1">{t('dailyCheckup.previous')}</span>
 				</Button>
 				<div className="flex items-center gap-1">
 					{getPageNumbers().map((page, index) => {
@@ -130,7 +132,7 @@ export const DailyCheckupPagination = ({
 					disabled={currentPage === totalPages}
 					className="h-8 sm:h-9 px-2 sm:px-3"
 				>
-					<span className="hidden sm:inline mr-1">Кейинги</span>
+					<span className="hidden sm:inline mr-1">{t('dailyCheckup.next')}</span>
 					<ChevronRight className="w-4 h-4" />
 				</Button>
 			</div>

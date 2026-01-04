@@ -11,6 +11,7 @@ import { doctors, statusOptions } from '@/constants/doctors';
 import { usePermission } from '@/hooks/usePermission';
 import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import DayView from './components/DayView';
 import MonthView from './components/MonthView';
 import NewAppointment, {
@@ -29,6 +30,7 @@ interface Appointment {
 }
 
 const Appointments = () => {
+  const { t } = useTranslation('appointments');
   const { canCreate } = usePermission('appointments');
   const [view, setView] = useState<'day' | 'week' | 'month'>('week');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -175,7 +177,7 @@ const Appointments = () => {
                       : 'bg-background'
                   } flex-1 sm:flex-none text-[10px] sm:text-xs lg:text-sm px-2 sm:px-3 py-2 h-8 sm:h-9 lg:h-10 font-medium transition-all`}
                 >
-                  Кунлик
+                  {t('viewDay')}
                 </Button>
                 <Button
                   variant={view === 'week' ? 'default' : 'outline'}
@@ -186,7 +188,7 @@ const Appointments = () => {
                       : 'bg-background'
                   } flex-1 sm:flex-none text-[10px] sm:text-xs lg:text-sm px-2 sm:px-3 py-2 h-8 sm:h-9 lg:h-10 font-medium transition-all`}
                 >
-                  Ҳафталик
+                  {t('viewWeek')}
                 </Button>
                 <Button
                   variant={view === 'month' ? 'default' : 'outline'}
@@ -197,7 +199,7 @@ const Appointments = () => {
                       : 'bg-background'
                   } flex-1 sm:flex-none text-[10px] sm:text-xs lg:text-sm px-2 sm:px-3 py-2 h-8 sm:h-9 lg:h-10 font-medium transition-all`}
                 >
-                  Ойлик
+                  {t('viewMonth')}
                 </Button>
               </div>
 
@@ -208,14 +210,14 @@ const Appointments = () => {
                   onValueChange={setSelectedDoctor}
                 >
                   <SelectTrigger className='w-full sm:w-32 lg:w-40 text-[10px] sm:text-xs lg:text-sm h-8 sm:h-9 lg:h-10 bg-background'>
-                    <SelectValue placeholder='Шифокор' />
+                    <SelectValue placeholder={t('doctor')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem
                       value='all'
                       className='text-[11px] sm:text-xs lg:text-sm'
                     >
-                      Барча шифокорлар
+                      {t('allDoctors')}
                     </SelectItem>
                     {doctors.map((i) => (
                       <SelectItem
@@ -234,7 +236,7 @@ const Appointments = () => {
                   onValueChange={setSelectedStatus}
                 >
                   <SelectTrigger className='w-full sm:w-32 lg:w-40 text-[10px] sm:text-xs lg:text-sm h-8 sm:h-9 lg:h-10 bg-background'>
-                    <SelectValue placeholder='Ҳолат' />
+                    <SelectValue placeholder={t('status')} />
                   </SelectTrigger>
                   <SelectContent>
                     {statusOptions.map((i) => (
@@ -287,25 +289,25 @@ const Appointments = () => {
             <div className='flex items-center gap-1 sm:gap-1.5'>
               <div className='w-2 h-2 sm:w-3 sm:h-3 lg:w-3.5 lg:h-3.5 bg-primary rounded-sm flex-shrink-0'></div>
               <span className='text-[9px] sm:text-[10px] lg:text-xs font-medium whitespace-nowrap'>
-                Янги
+                {t('statusNew')}
               </span>
             </div>
             <div className='flex items-center gap-1 sm:gap-1.5'>
               <div className='w-2 h-2 sm:w-3 sm:h-3 lg:w-3.5 lg:h-3.5 bg-success rounded-sm flex-shrink-0'></div>
               <span className='text-[9px] sm:text-[10px] lg:text-xs font-medium whitespace-nowrap'>
-                Тасдиқланган
+                {t('statusConfirmed')}
               </span>
             </div>
             <div className='flex items-center gap-1 sm:gap-1.5'>
               <div className='w-2 h-2 sm:w-3 sm:h-3 lg:w-3.5 lg:h-3.5 bg-slate-400 rounded-sm flex-shrink-0'></div>
               <span className='text-[9px] sm:text-[10px] lg:text-xs font-medium whitespace-nowrap'>
-                Бажарилган
+                {t('statusCompleted')}
               </span>
             </div>
             <div className='flex items-center gap-1 sm:gap-1.5'>
               <div className='w-2 h-2 sm:w-3 sm:h-3 lg:w-3.5 lg:h-3.5 bg-danger rounded-sm flex-shrink-0'></div>
               <span className='text-[9px] sm:text-[10px] lg:text-xs font-medium whitespace-nowrap'>
-                Бекор қилинган
+                {t('statusCancelled')}
               </span>
             </div>
           </div>
@@ -317,7 +319,7 @@ const Appointments = () => {
             size='lg'
             onClick={() => setIsNewAppointmentOpen(true)}
             className='fixed bottom-4 right-4 sm:bottom-6 sm:right-6 lg:bottom-8 lg:right-8 rounded-full w-14 h-14 sm:w-15 sm:h-15 lg:w-16 lg:h-16 gradient-primary shadow-lg hover:shadow-xl active:scale-90 transition-all duration-150 z-50 touch-manipulation'
-            aria-label='Янги навбат қўшиш'
+            aria-label={t('addNewAppointment')}
           >
             <Plus className='w-6 h-6 sm:w-6 sm:h-6 lg:w-7 lg:h-7 stroke-[2.5]' />
           </Button>

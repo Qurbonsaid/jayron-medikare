@@ -24,15 +24,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Save } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import z from "zod";
-
-const ImagingTypeSchema = z.object({
-  name: z.string().min(2, "Номи камида 2 та белгидан иборат бўлиши керак"),
-  description: z.string().optional(),
-});
-
-type ImagingTypeFormData = z.infer<typeof ImagingTypeSchema>;
 
 interface UpdateImagingTypeProps {
   open: boolean;
@@ -45,8 +39,16 @@ export const UpdateImagingType = ({
   onOpenChange,
   imagingType,
 }: UpdateImagingTypeProps) => {
+  const { t } = useTranslation("radiology");
   const [updateImagingType, { isLoading }] = useUpdateImagingTypeMutation();
   const handleRequest = useHandleRequest();
+
+  const ImagingTypeSchema = z.object({
+    name: z.string().min(2, t("updateImagingType.nameValidation")),
+    description: z.string().optional(),
+  });
+
+  type ImagingTypeFormData = z.infer<typeof ImagingTypeSchema>;
 
   const form = useForm<ImagingTypeFormData>({
     resolver: zodResolver(ImagingTypeSchema),
@@ -77,12 +79,12 @@ export const UpdateImagingType = ({
           body: data,
         }).unwrap(),
       onSuccess: () => {
-        toast.success("Текшириш тури муваффақиятли янгиланди");
+        toast.success(t("updateImagingType.updatedSuccess"));
         form.reset();
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Янгилашда хатолик");
+        toast.error(data?.error?.msg || t("updateImagingType.updateError"));
       },
     });
   };
@@ -92,7 +94,7 @@ export const UpdateImagingType = ({
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-2xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
-            Текшириш турини таҳрирлаш
+            {t("updateImagingType.title")}
           </DialogTitle>
         </DialogHeader>
 
@@ -108,11 +110,11 @@ export const UpdateImagingType = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Номи <span className="text-red-500">*</span>
+                      {t("updateImagingType.name")} <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="МРТ, КТ, Рентген..."
+                        placeholder={t("updateImagingType.namePlaceholder")}
                         className="border-slate-400 border-2 w-full"
                         {...field}
                       />
@@ -127,10 +129,10 @@ export const UpdateImagingType = ({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Тавсиф</FormLabel>
+                    <FormLabel>{t("updateImagingType.description")}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Текшириш тури ҳақида қисқача маълумот..."
+                        placeholder={t("updateImagingType.descriptionPlaceholder")}
                         className="border-slate-400 border-2 w-full min-h-[100px]"
                         {...field}
                       />
@@ -150,15 +152,15 @@ export const UpdateImagingType = ({
                   }}
                   disabled={isLoading}
                 >
-                  Бекор қилиш
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? (
-                    "Сақланмоқда..."
+                    t("updateImagingType.saving")
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Сақлаш
+                      {t("updateImagingType.save")}
                     </>
                   )}
                 </Button>

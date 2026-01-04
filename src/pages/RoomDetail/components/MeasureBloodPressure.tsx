@@ -3,6 +3,7 @@ import {
 } from '@/app/api/dailyCheckup/dailyCheckupApi'
 import { useMeQuery } from '@/app/api/authApi/authApi'
 import { Button } from '@/components/ui/button'
+import { useTranslation } from 'react-i18next'
 import {
 	Dialog,
 	DialogContent,
@@ -31,6 +32,7 @@ export const MeasureBloodPressure = ({
 	room_id,
 	refetch,
 }: MeasureBloodPressureProps) => {
+	const { t } = useTranslation('inpatient')
 	const [systolic, setSystolic] = useState('')
 	const [diastolic, setDiastolic] = useState('')
 	const [notes, setNotes] = useState('')
@@ -52,22 +54,22 @@ export const MeasureBloodPressure = ({
 	const handleSubmit = async () => {
 		// Validation
 		if (!systolic || !diastolic) {
-			toast.error('Систолик ва диастолик қийматларни киритинг')
+			toast.error(t('enterSystolicDiastolic'))
 			return
 		}
 
 		if (!patient_id) {
-			toast.error('Бемор маълумотлари топилмади')
+			toast.error(t('patientDataNotFound'))
 			return
 		}
 
 		if (!room_id) {
-			toast.error('Хона маълумотлари топилмади')
+			toast.error(t('roomDataNotFound'))
 			return
 		}
 
 		if (!currentUser?.data?._id) {
-			toast.error('Фойдаланувчи маълумотлари топилмади')
+			toast.error(t('userDataNotFound'))
 			return
 		}
 
@@ -80,7 +82,7 @@ export const MeasureBloodPressure = ({
 			systolicNum <= 0 ||
 			diastolicNum <= 0
 		) {
-			toast.error('Қон босими қийматлари нотўғри')
+			toast.error(t('bloodPressureValuesInvalid'))
 			return
 		}
 
@@ -99,7 +101,7 @@ export const MeasureBloodPressure = ({
 
 			await createDailyCheckup(requestBody).unwrap()
 
-			toast.success('Қон босими муваффақиятли сақланди')
+			toast.success(t('bloodPressureSavedSuccess'))
 			refetch() // Room ma'lumotlarini yangilash
 			onOpenChange(false)
 		} catch (error: unknown) {
@@ -115,7 +117,7 @@ export const MeasureBloodPressure = ({
 				typeof error.data.error === 'object' &&
 				'msg' in error.data.error
 					? String(error.data.error.msg)
-					: 'Хатолик юз берди. Қайта уриниб кўринг'
+					: t('errorOccurredTryAgain')
 			toast.error(errorMessage)
 		}
 	}
@@ -125,14 +127,14 @@ export const MeasureBloodPressure = ({
 			<DialogContent className='sm:max-w-[500px]'>
 				<DialogHeader className='p-4 sm:p-6 pb-0'>
 					<DialogTitle className='text-xl sm:text-2xl'>
-						Қон босимини ўлчаш
+						{t('measureBloodPressure')}
 					</DialogTitle>
 				</DialogHeader>
 
 				<div className='p-4 sm:p-6 space-y-4'>
 					<div className='grid grid-cols-2 gap-4'>
 						<div className='space-y-2'>
-							<Label htmlFor='systolic'>Систолик (мм рт.ст.)</Label>
+							<Label htmlFor='systolic'>{t('systolicMmHg')}</Label>
 							<Input
 								id='systolic'
 								type='number'
@@ -144,7 +146,7 @@ export const MeasureBloodPressure = ({
 						</div>
 
 						<div className='space-y-2'>
-							<Label htmlFor='diastolic'>Диастолик (мм рт.ст.)</Label>
+							<Label htmlFor='diastolic'>{t('diastolicMmHg')}</Label>
 							<Input
 								id='diastolic'
 								type='number'
@@ -157,10 +159,10 @@ export const MeasureBloodPressure = ({
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='notes'>Изоҳ (ихтиёрий)</Label>
+					<Label htmlFor='notes'>{t('notesOptional')}</Label>
 						<Textarea
 							id='notes'
-							placeholder='Қўшимча маълумот киритинг...'
+							placeholder={t('enterAdditionalInfo')}
 							value={notes}
 							onChange={e => setNotes(e.target.value)}
 							rows={3}
@@ -176,7 +178,7 @@ export const MeasureBloodPressure = ({
 						className='w-full sm:w-auto order-2 sm:order-1'
 						disabled={isCreating}
 					>
-						Бекор қилиш
+						{t('cancel')}
 					</Button>
 					<Button
 						type='submit'
@@ -184,7 +186,7 @@ export const MeasureBloodPressure = ({
 						disabled={isCreating}
 						className='gradient-primary w-full sm:w-auto order-1 sm:order-2'
 					>
-						{isCreating ? 'Сақланмоқда...' : 'Сақлаш'}
+						{isCreating ? t('saving') : t('save')}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

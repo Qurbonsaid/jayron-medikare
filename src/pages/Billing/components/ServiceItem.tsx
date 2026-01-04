@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface ServiceData {
   service_type_id:
     | {
@@ -27,8 +29,10 @@ interface Props {
 }
 
 export const ServiceItem = ({ service, isMobile = false }: Props) => {
+  const { t } = useTranslation('billing');
+  
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(amount) + ' сўм';
+    return new Intl.NumberFormat('uz-UZ').format(amount) + ' ' + t('currency');
   };
 
   // Get service type data
@@ -72,7 +76,7 @@ export const ServiceItem = ({ service, isMobile = false }: Props) => {
             </span>
           </div>
           <div className='pt-2 border-t flex justify-between items-center'>
-            <span className='text-xs text-muted-foreground'>Нархи:</span>
+            <span className='text-xs text-muted-foreground'>{t('price')}:</span>
             <span className='font-semibold text-sm'>
               {formatCurrency(totalPrice)}
             </span>

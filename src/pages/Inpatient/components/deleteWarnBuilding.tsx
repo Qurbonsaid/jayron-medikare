@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useHandleRequest } from "@/hooks/Handle_Request/useHandleRequest";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 interface DeleteWarnBuildingProps {
@@ -22,6 +23,7 @@ export const DeleteWarnBuilding = ({
   onOpenChange,
   oneCorpus,
 }: DeleteWarnBuildingProps) => {
+  const { t } = useTranslation("inpatient");
   const [deleteCorpuses, { isLoading: isDeletedLoading }] =
     useDeleteCorpusMutation();
   const handleRequest = useHandleRequest();
@@ -31,11 +33,11 @@ export const DeleteWarnBuilding = ({
       request: async () =>
         await deleteCorpuses({ id: oneCorpus?._id }).unwrap(),
       onSuccess: () => {
-        toast.success("Korpus муваффақиятли Ochirildi");
+        toast.success(t("buildingDeletedSuccess"));
         onOpenChange(false);
       },
       onError: ({ data }) => {
-        toast.error(data?.error?.msg || "Ochirishda хатолик");
+        toast.error(data?.error?.msg || t("deleteError"));
       },
     });
   };
@@ -43,22 +45,22 @@ export const DeleteWarnBuilding = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogTitle>Korpusni o'chirish</DialogTitle>
+        <DialogTitle>{t("deleteBuilding")}</DialogTitle>
         <DialogDescription>
-          Rostan ham{" "}
+          {t("deleteConfirmation")}{" "}
           <span className="font-semibold">{oneCorpus.corpus_number}</span> -
-          Korpusni o'chirmoqchimisiz?
+          {t("buildingQuestion")}
         </DialogDescription>
         <DialogFooter className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Bekor qilish
+            {t("cancel")}
           </Button>
           <Button
             variant="destructive"
             disabled={isDeletedLoading}
             onClick={handleDeleteCorpus}
           >
-            {isDeletedLoading ? "O'chirilmoqda..." : "Ha, oʻchirilsin"}
+            {isDeletedLoading ? t("deleting") : t("yesDelete")}
           </Button>
         </DialogFooter>
       </DialogContent>

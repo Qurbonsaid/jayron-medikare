@@ -31,6 +31,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { getStatusBadge } from '../../../components/common/StatusBadge';
@@ -48,6 +49,7 @@ const ExamDetailDialog = ({
   exam,
   onSuccess,
 }: ExamDetailDialogProps) => {
+  const { t } = useTranslation(['examinations', 'common']);
   const navigate = useNavigate();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
@@ -95,7 +97,7 @@ const ExamDetailDialog = ({
 
   const handleUpdate = async () => {
     if (!editForm.complaints.trim()) {
-      toast.error('Илтимос, шикоятни киритинг');
+      toast.error(t('detail.enterComplaint'));
       return;
     }
 
@@ -113,12 +115,12 @@ const ExamDetailDialog = ({
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли янгиланди');
+        toast.success(t('detail.examUpdated'));
         setIsEditMode(false);
         onSuccess?.();
       },
       onError: (err) => {
-        toast.error(err?.error?.msg || 'Хатолик юз берди');
+        toast.error(err?.error?.msg || t('detail.errorOccurred'));
       },
     });
   };
@@ -130,12 +132,12 @@ const ExamDetailDialog = ({
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли ўчирилди');
+        toast.success(t('detail.examDeleted'));
         onOpenChange(false);
         onSuccess?.();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+        toast.error(error?.data?.error?.msg || t('detail.errorOccurred'));
       },
     });
   };
@@ -147,11 +149,11 @@ const ExamDetailDialog = ({
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли якунланди');
+        toast.success(t('detail.examCompleted'));
         onSuccess?.();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+        toast.error(error?.data?.error?.msg || t('detail.errorOccurred'));
       },
     });
   };
@@ -166,26 +168,25 @@ const ExamDetailDialog = ({
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
               <AlertTriangle className='w-5 h-5 text-red-600' />
-              Кўрикни ўчириш
+              {t('detail.deleteExamination')}
             </DialogTitle>
             <DialogDescription>
-              Сиз ҳақиқатан ҳам бу кўрикни ўчирмоқчимисиз? Бу амални қайтариб
-              бўлмайди.
+              {t('detail.deleteConfirmation')}
             </DialogDescription>
           </DialogHeader>
 
           <div className='py-4'>
             <div className='p-4 bg-muted rounded-lg space-y-2'>
               <p className='text-sm'>
-                <span className='font-semibold'>Бемор:</span>{' '}
+                <span className='font-semibold'>{t('detail.patient')}:</span>{' '}
                 {exam.patient_id?.fullname}
               </p>
               <p className='text-sm'>
-                <span className='font-semibold'>Шифокор:</span>{' '}
+                <span className='font-semibold'>{t('detail.doctor')}:</span>{' '}
                 {exam.doctor_id?.fullname}
               </p>
               <p className='text-sm'>
-                <span className='font-semibold'>Сана:</span>{' '}
+                <span className='font-semibold'>{t('detail.date')}:</span>{' '}
                 {new Date(exam.created_at).toLocaleDateString('uz-UZ')}
               </p>
             </div>
@@ -197,14 +198,14 @@ const ExamDetailDialog = ({
               onClick={() => setIsDeleteConfirm(false)}
               disabled={isDeleting}
             >
-              Бекор қилиш
+              {t('common:cancel')}
             </Button>
             <Button
               variant='destructive'
               onClick={handleDelete}
               disabled={isDeleting}
             >
-              {isDeleting ? 'Ўчирилмоқда...' : 'Ўчириш'}
+              {isDeleting ? t('detail.deleting') : t('common:delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -218,18 +219,18 @@ const ExamDetailDialog = ({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className='max-w-2xl'>
           <DialogHeader>
-            <DialogTitle>Кўрикни таҳрирлаш</DialogTitle>
+            <DialogTitle>{t('detail.editExamination')}</DialogTitle>
             <DialogDescription>
-              Кўрик маълумотларини ўзгартиринг
+              {t('detail.editDescription')}
             </DialogDescription>
           </DialogHeader>
 
           <div className='space-y-4 py-4'>
             {/* Complaints */}
             <div className='space-y-2'>
-              <Label>Шикоят</Label>
+              <Label>{t('detail.complaint')}</Label>
               <Textarea
-                placeholder='Бемор шикоятини киритинг...'
+                placeholder={t('detail.enterComplaintPlaceholder')}
                 value={editForm.complaints}
                 onChange={(e) =>
                   setEditForm({ ...editForm, complaints: e.target.value })
@@ -240,7 +241,7 @@ const ExamDetailDialog = ({
 
             {/* Diagnosis */}
             <div className='space-y-2'>
-              <Label>Ташхис</Label>
+              <Label>{t('detail.diagnosis')}</Label>
               <Select
                 value={editForm.diagnosis}
                 onValueChange={(value) =>
@@ -248,7 +249,7 @@ const ExamDetailDialog = ({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder='Ташхисни танланг...' />
+                  <SelectValue placeholder={t('detail.selectDiagnosis')} />
                 </SelectTrigger>
                 <SelectContent>
                   {diagnoses.map((diagnosis: any) => (
@@ -262,9 +263,9 @@ const ExamDetailDialog = ({
 
             {/* Description */}
             <div className='space-y-2'>
-              <Label>Тавсия</Label>
+              <Label>{t('detail.recommendation')}</Label>
               <Textarea
-                placeholder='Кўрик натижаси ва тавсияларни киритинг...'
+                placeholder={t('detail.enterRecommendationPlaceholder')}
                 value={editForm.description}
                 onChange={(e) =>
                   setEditForm({ ...editForm, description: e.target.value })
@@ -280,10 +281,10 @@ const ExamDetailDialog = ({
               onClick={handleCancelEdit}
               disabled={isUpdating}
             >
-              Бекор қилиш
+              {t('common:cancel')}
             </Button>
             <Button onClick={handleUpdate} disabled={isUpdating}>
-              {isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
+              {isUpdating ? t('common:saving') : t('common:save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -296,9 +297,9 @@ const ExamDetailDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>Кўрик Тафсилотлари</DialogTitle>
+          <DialogTitle className='text-xl'>{t('detail.examinationDetails')}</DialogTitle>
           <DialogDescription>
-            Кўрик ва бемор ҳақида тўлиқ маълумот
+            {t('detail.fullPatientInfo')}
           </DialogDescription>
         </DialogHeader>
 
@@ -306,23 +307,23 @@ const ExamDetailDialog = ({
           {/* Patient Information */}
           <div className='space-y-3'>
             <h3 className='text-lg font-semibold border-b pb-2'>
-              Бемор Маълумотлари
+              {t('detail.patientInfo')}
             </h3>
             <div className='grid grid-cols-2 gap-4 text-sm'>
               <div>
-                <span className='text-muted-foreground'>Исм:</span>
+                <span className='text-muted-foreground'>{t('detail.name')}:</span>
                 <p className='font-medium'>{exam.patient_id?.fullname}</p>
               </div>
               <div>
-                <span className='text-muted-foreground'>Телефон:</span>
+                <span className='text-muted-foreground'>{t('detail.phone')}:</span>
                 <p className='font-medium'>{exam.patient_id?.phone}</p>
               </div>
               <div>
-                <span className='text-muted-foreground'>Шифокор:</span>
+                <span className='text-muted-foreground'>{t('detail.doctor')}:</span>
                 <p className='font-medium'>{exam.doctor_id?.fullname}</p>
               </div>
               <div>
-                <span className='text-muted-foreground'>Статус:</span>
+                <span className='text-muted-foreground'>{t('detail.status')}:</span>
                 <div className='mt-1'>{getStatusBadge(exam.status)}</div>
               </div>
             </div>
@@ -331,35 +332,35 @@ const ExamDetailDialog = ({
           {/* Examination Details */}
           <div className='space-y-3'>
             <h3 className='text-lg font-semibold border-b pb-2'>
-              Кўрик Маълумотлари
+              {t('detail.examInfo')}
             </h3>
             <div className='space-y-3 text-sm'>
               <div>
                 <span className='text-muted-foreground block mb-1'>
-                  Шикоят:
+                  {t('detail.complaint')}:
                 </span>
                 <p className='font-medium bg-muted p-3 rounded-md'>
-                  {exam.complaints || 'Киритилмаган'}
+                  {exam.complaints || t('detail.notEntered')}
                 </p>
               </div>
               <div>
                 <span className='text-muted-foreground block mb-1'>
-                  Ташхис:
+                  {t('detail.diagnosis')}:
                 </span>
                 <p className='font-medium bg-muted p-3 rounded-md'>
-                  {exam.diagnosis?.name || exam.diagnosis || 'Киритилмаган'}
+                  {exam.diagnosis?.name || exam.diagnosis || t('detail.notEntered')}
                 </p>
               </div>
               <div>
                 <span className='text-muted-foreground block mb-1'>
-                  Тавсия:
+                  {t('detail.recommendation')}:
                 </span>
                 <p className='font-medium bg-muted p-3 rounded-md'>
-                  {exam.description || 'Киритилмаган'}
+                  {exam.description || t('detail.notEntered')}}
                 </p>
               </div>
               <div>
-                <span className='text-muted-foreground block mb-1'>Сана:</span>
+                <span className='text-muted-foreground block mb-1'>{t('detail.date')}:</span>
                 <p className='font-medium'>
                   {new Date(exam.created_at).toLocaleString('ru-RU')}
                 </p>
@@ -371,9 +372,9 @@ const ExamDetailDialog = ({
           {exam.prescriptions && exam.prescriptions.length > 0 && (
             <div className='space-y-3'>
               <h3 className='text-lg font-semibold border-b pb-2 flex items-center justify-between'>
-                <span>Рецептлар</span>
+                <span>{t('detail.prescriptions')}</span>
                 <span className='text-sm font-normal text-muted-foreground'>
-                  ({exam.prescriptions.length} та)
+                  ({exam.prescriptions.length} {t('detail.items')})
                 </span>
               </h3>
               <div className='space-y-3'>
@@ -384,13 +385,13 @@ const ExamDetailDialog = ({
                   >
                     <div className='flex items-center justify-between'>
                       <span className='text-xs font-medium text-primary'>
-                        Рецепт #{index + 1}
+                        {t('detail.prescriptionNumber', { number: index + 1 })}
                       </span>
                     </div>
                     <div className='grid grid-cols-2 gap-3 text-sm'>
                       <div>
                         <span className='text-muted-foreground block mb-1'>
-                          Дори Номи:
+                          {t('detail.medicationName')}:
                         </span>
                         <p className='font-semibold'>
                           {prescription.medication}
@@ -398,33 +399,33 @@ const ExamDetailDialog = ({
                       </div>
                       <div>
                         <span className='text-muted-foreground block mb-1'>
-                          Дозаси:
+                          {t('detail.dosage')}:
                         </span>
                         <p className='font-semibold'>
-                          {prescription.dosage} мг
+                          {prescription.dosage} {t('detail.mg')}
                         </p>
                       </div>
                       <div>
                         <span className='text-muted-foreground block mb-1'>
-                          Қабул Қилиш:
+                          {t('detail.intake')}:
                         </span>
                         <p className='font-semibold'>
-                          Кунига {prescription.frequency} марта
+                          {t('detail.timesPerDay', { count: prescription.frequency })}
                         </p>
                       </div>
                       <div>
                         <span className='text-muted-foreground block mb-1'>
-                          Муддати:
+                          {t('detail.duration')}:
                         </span>
                         <p className='font-semibold'>
-                          {prescription.duration} кун
+                          {prescription.duration} {t('detail.days')}
                         </p>
                       </div>
                     </div>
                     {prescription.instructions && (
                       <div className='pt-2 border-t border-primary/10'>
                         <span className='text-muted-foreground text-xs block mb-1'>
-                          Қўшимча Кўрсатмалар:
+                          {t('detail.additionalInstructions')}:
                         </span>
                         <p className='text-sm font-medium'>
                           {prescription.instructions}
@@ -439,7 +440,7 @@ const ExamDetailDialog = ({
 
           {/* Action Buttons */}
           <div className='space-y-2 pt-4 border-t'>
-            <h3 className='text-lg font-semibold mb-3'>Ҳаракатлар</h3>
+            <h3 className='text-lg font-semibold mb-3'>{t('detail.actions')}</h3>
             <div className='grid grid-cols-2 gap-3'>
               <Button
                 variant='outline'
@@ -452,11 +453,11 @@ const ExamDetailDialog = ({
                 }}
               >
                 <FilePlus className='w-4 h-4 mr-2' />
-                Рецепт Ёзиш
+                {t('detail.writePrescription')}
               </Button>
               <Button variant='outline' className='w-full' onClick={handleEdit}>
                 <Edit className='w-4 h-4 mr-2' />
-                Таҳрирлаш
+                {t('common:edit')}
               </Button>
               <Button
                 variant='outline'
@@ -464,7 +465,7 @@ const ExamDetailDialog = ({
                 onClick={() => setIsDeleteConfirm(true)}
               >
                 <Trash2 className='w-4 h-4 mr-2' />
-                Ўчириш
+                {t('common:delete')}
               </Button>
               <Button
                 variant='default'
@@ -474,10 +475,10 @@ const ExamDetailDialog = ({
               >
                 <CheckCircle2 className='w-4 h-4 mr-2' />
                 {isCompleting
-                  ? 'Якунланмоқда...'
+                  ? t('detail.completing')
                   : exam.status === 'completed'
-                  ? 'Якунланган'
-                  : 'Кўрикни Якунлаш'}
+                  ? t('detail.completed')
+                  : t('detail.completeExamination')}
               </Button>
             </div>
           </div>

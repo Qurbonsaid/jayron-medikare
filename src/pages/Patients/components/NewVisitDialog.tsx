@@ -52,6 +52,7 @@ import {
   UserCog,
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { calculateAge } from '../../Examination/components/calculateAge';
 
@@ -68,6 +69,7 @@ const NewVisitDialog = ({
   onSuccess,
   preSelectedPatientId,
 }: NewVisitDialogProps) => {
+  const { t } = useTranslation('patients');
   const [subjective, setSubjective] = useState('');
   const [description, setDescription] = useState('');
   const [patient, setPatient] = useState<any>(null);
@@ -349,15 +351,15 @@ const NewVisitDialog = ({
     setShowErrors(true);
 
     if (!selectedPatientId) {
-      toast.error('Илтимос, беморни танланг');
+      toast.error(t('newVisitDialog.errors.selectPatient'));
       return;
     }
     if (!selectedDoctorId) {
-      toast.error('Илтимос, шифокорни танланг');
+      toast.error(t('newVisitDialog.errors.selectDoctor'));
       return;
     }
     if (!subjective.trim()) {
-      toast.error('Илтимос, бемор шикоятини киритинг');
+      toast.error(t('newVisitDialog.errors.enterComplaint'));
       return;
     }
 
@@ -434,12 +436,12 @@ const NewVisitDialog = ({
         return res;
       },
       onSuccess: () => {
-        toast.success('Кўрик муваффақиятли яратилди');
+        toast.success(t('newVisitDialog.success.examCreated'));
         onOpenChange(false);
         onSuccess?.();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Хатолик юз берди');
+        toast.error(error?.data?.error?.msg || t('newVisitDialog.errorOccurred'));
       },
     });
   };
@@ -448,9 +450,9 @@ const NewVisitDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-5xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>Янги Кўрик Яратиш</DialogTitle>
+          <DialogTitle className='text-xl'>{t('newVisitDialog.title')}</DialogTitle>
           <DialogDescription>
-            Бемор ва шифокорни танлаб, кўрик маълумотларини киритинг
+            {t('newVisitDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -460,7 +462,7 @@ const NewVisitDialog = ({
             <div className='space-y-2'>
               <Label className='flex items-center gap-2'>
                 <User className='w-4 h-4 text-primary' />
-                Беморни танланг
+                {t('newVisitDialog.selectPatient')}
               </Label>
               <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                 <PopoverTrigger asChild>
@@ -472,20 +474,20 @@ const NewVisitDialog = ({
                   >
                     <span className='flex items-center gap-2'>
                       <Search className='w-4 h-4' />
-                      <span className='truncate'>Беморни қидириш...</span>
+                      <span className='truncate'>{t('newVisitDialog.searchPatient')}</span>
                     </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className='w-full p-0' align='start'>
                   <Command shouldFilter={false}>
                     <CommandInput
-                      placeholder='Исм, ID ёки телефон орқали қидириш...'
+                      placeholder={t('newVisitDialog.searchByNameIdPhone')}
                       value={searchQuery}
                       onValueChange={setSearchQuery}
                       onKeyDown={(e) => e.stopPropagation()}
                     />
                     <CommandList>
-                      <CommandEmpty>Бемор топилмади</CommandEmpty>
+                      <CommandEmpty>{t('newVisitDialog.patientNotFound')}</CommandEmpty>
                       <CommandGroup>
                         {filteredPatients.map((p) => (
                           <CommandItem
@@ -517,8 +519,8 @@ const NewVisitDialog = ({
                     <h3 className='font-bold text-lg mb-1'>
                       {patient.fullname}
                       <span className='text-muted-foreground text-sm ml-2'>
-                        ({calculateAge(patient.date_of_birth)} ёш,{' '}
-                        {patient.gender === 'male' ? 'Эркак' : 'Аёл'})
+                        ({calculateAge(patient.date_of_birth)} {t('newVisitDialog.yearsOld')},{' '}
+                        {patient.gender === 'male' ? t('male') : t('female')})
                       </span>
                     </h3>
                     <p className='text-sm text-muted-foreground'>
@@ -527,7 +529,7 @@ const NewVisitDialog = ({
                     {patient?.allergies && patient.allergies.length > 0 && (
                       <div className='px-3 py-2 bg-red-50 border border-red-200 rounded-lg mt-2'>
                         <p className='text-sm font-semibold text-red-600'>
-                          ⚠ Аллергия: {patient.allergies.join(', ')}
+                          ⚠ {t('newVisitDialog.allergy')}: {patient.allergies.join(', ')}
                         </p>
                       </div>
                     )}
@@ -540,7 +542,7 @@ const NewVisitDialog = ({
                 <div className='flex-1 space-y-2'>
                   <Label className='flex items-center gap-2'>
                     <UserCog className='w-4 h-4 text-primary' />
-                    Шифокорни танланг
+                    {t('newVisitDialog.selectDoctor')}
                   </Label>
                   <Select
                     value={selectedDoctorId}
@@ -556,13 +558,13 @@ const NewVisitDialog = ({
                         showErrors && !selectedDoctorId ? 'border-red-500' : ''
                       }`}
                     >
-                      <SelectValue placeholder='Шифокорни танланг...' />
+                      <SelectValue placeholder={t('newVisitDialog.selectDoctorPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       <div className='p-2'>
                         <Input
                           ref={doctorSearchRef}
-                          placeholder='Қидириш...'
+                          placeholder={t('newVisitDialog.search')}
                           value={doctorSearch}
                           onChange={(e) => setDoctorSearch(e.target.value)}
                           onKeyDown={(e) => e.stopPropagation()}
@@ -579,7 +581,7 @@ const NewVisitDialog = ({
                               {doctor.fullname}
                             </span>
                             <span className='text-xs text-muted-foreground'>
-                              {doctor.section || 'Мутахассислик кўрсатилмаган'}
+                              {doctor.section || t('newVisitDialog.specialtyNotSpecified')}
                             </span>
                           </div>
                         </SelectItem>
@@ -590,7 +592,7 @@ const NewVisitDialog = ({
                 <div className='space-y-2'>
                   <Label className='flex items-center gap-2'>
                     <Stethoscope className='w-4 h-4 text-primary' />
-                    Даволаш тури
+                    {t('newVisitDialog.treatmentType')}
                   </Label>
                   <div className='grid grid-cols-2 gap-1 border-2 border-blue-500 rounded-xl p-1'>
                     <button
@@ -602,7 +604,7 @@ const NewVisitDialog = ({
                           : 'bg-muted text-muted-foreground hover:bg-muted/80'
                       }`}
                     >
-                      Амбулатор
+                      {t('newVisitDialog.ambulatory')}
                     </button>
                     <button
                       type='button'
@@ -613,7 +615,7 @@ const NewVisitDialog = ({
                           : 'bg-muted text-muted-foreground hover:bg-muted/80'
                       }`}
                     >
-                      Стационар
+                      {t('newVisitDialog.inpatient')}
                     </button>
                   </div>
                 </div>
@@ -623,10 +625,10 @@ const NewVisitDialog = ({
               <div className='space-y-2 shadow-sm border p-2 rounded-lg'>
                 <Label className='flex items-center gap-2'>
                   <FileText className='w-4 h-4 text-primary' />
-                  Бемор шикояти (Subjective)
+                  {t('newVisitDialog.complaint')}
                 </Label>
                 <Textarea
-                  placeholder='Беморнинг шикоятларини, симптомларини ва касаллик тарихини ёзинг...'
+                  placeholder={t('newVisitDialog.complaintPlaceholder')}
                   className={`min-h-24 ${
                     showErrors && !subjective.trim() ? 'border-red-500' : ''
                   }`}
@@ -639,10 +641,10 @@ const NewVisitDialog = ({
               <div className='space-y-2 shadow-sm border p-2 rounded-lg'>
                 <Label className='flex items-center gap-2'>
                   <Activity className='w-4 h-4 text-primary' />
-                  Изоҳ (Objective)
+                  {t('newVisitDialog.descriptionLabel')}
                 </Label>
                 <Textarea
-                  placeholder='Изоҳни ёзинг...'
+                  placeholder={t('newVisitDialog.descriptionPlaceholder')}
                   className='min-h-24'
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -654,7 +656,7 @@ const NewVisitDialog = ({
                 <div className='flex items-center justify-between'>
                   <Label className='flex items-center gap-2'>
                     <Pill className='w-4 h-4 text-primary' />
-                    Рецептлар (Дорилар)
+                    {t('newVisitDialog.prescriptions')}
                   </Label>
                   <Button
                     type='button'
@@ -664,13 +666,13 @@ const NewVisitDialog = ({
                     className='gap-1'
                   >
                     <Plus className='w-4 h-4' />
-                    Дори қўшиш
+                    {t('newVisitDialog.addMedication')}
                   </Button>
                 </div>
 
                 {medications.length === 0 ? (
                   <p className='text-sm text-muted-foreground text-center py-4'>
-                    Дорилар қўшилмаган
+                    {t('newVisitDialog.noMedicationsAdded')}
                   </p>
                 ) : (
                   <div className='space-y-3'>
@@ -682,7 +684,7 @@ const NewVisitDialog = ({
                         {/* First row: Dori, Qo'shimchalar, Trash */}
                         <div className='flex items-center gap-2'>
                           <div className='flex-1 min-w-0'>
-                            <Label className='text-xs mb-1 block'>Дори</Label>
+                            <Label className='text-xs mb-1 block'>{t('newVisitDialog.medication')}</Label>
                             <Select
                               value={med.medication_id}
                               onValueChange={(value) =>
@@ -698,13 +700,13 @@ const NewVisitDialog = ({
                               }}
                             >
                               <SelectTrigger className='h-9'>
-                                <SelectValue placeholder='Дорини танланг...' />
+                                <SelectValue placeholder={t('newVisitDialog.selectMedication')} />
                               </SelectTrigger>
                               <SelectContent>
                                 <div className='p-2'>
                                   <Input
                                     ref={medicationSearchRef}
-                                    placeholder='Дори қидириш...'
+                                    placeholder={t('newVisitDialog.searchMedication')}
                                     value={medicationSearch}
                                     onChange={(e) =>
                                       setMedicationSearch(e.target.value)
@@ -731,7 +733,7 @@ const NewVisitDialog = ({
                                   ))
                                 ) : (
                                   <div className='p-4 text-center text-sm text-muted-foreground'>
-                                    Дори топилмади
+                                    {t('newVisitDialog.medicationNotFound')}
                                   </div>
                                 )}
                               </SelectContent>
@@ -739,10 +741,10 @@ const NewVisitDialog = ({
                           </div>
                           <div className='flex-1 min-w-0'>
                             <Label className='text-xs mb-1 block'>
-                              Қўшимчалар
+                              {t('newVisitDialog.additionalInfo')}
                             </Label>
                             <Input
-                              placeholder='Қўшимча маълумот...'
+                              placeholder={t('newVisitDialog.additionalInfoPlaceholder')}
                               className='h-9'
                               value={med.addons}
                               onChange={(e) =>
@@ -769,7 +771,7 @@ const NewVisitDialog = ({
                         {/* Second row: Marta, Kun, Qo'llanish */}
                         <div className='flex items-center gap-2'>
                           <div className='w-20 shrink-0'>
-                            <Label className='text-xs mb-1 block'>Кун</Label>
+                            <Label className='text-xs mb-1 block'>{t('newVisitDialog.day')}</Label>
                             <Input
                               type='number'
                               placeholder='7'
@@ -787,7 +789,7 @@ const NewVisitDialog = ({
                           </div>
                           <div className='w-20 shrink-0'>
                             <Label className='text-xs mb-1 block'>
-                              Марта/кун
+                              {t('newVisitDialog.timesPerDay')}
                             </Label>
                             <Input
                               type='number'
@@ -806,10 +808,10 @@ const NewVisitDialog = ({
                           </div>
                           <div className='flex-1 min-w-0'>
                             <Label className='text-xs mb-1 block'>
-                              Қўлланиш
+                              {t('newVisitDialog.usage')}
                             </Label>
                             <Input
-                              placeholder='Овқатдан кейин...'
+                              placeholder={t('newVisitDialog.usagePlaceholder')}
                               className='h-9'
                               value={med.instructions}
                               onChange={(e) =>
@@ -833,7 +835,7 @@ const NewVisitDialog = ({
                 <div className='flex items-center justify-between'>
                   <Label className='flex items-center gap-2'>
                     <Activity className='w-4 h-4 text-primary' />
-                    Хизматлар
+                    {t('newVisitDialog.services')}
                   </Label>
                   <Button
                     type='button'
@@ -843,13 +845,13 @@ const NewVisitDialog = ({
                     className='gap-1'
                   >
                     <Plus className='w-4 h-4' />
-                    Хизмат қўшиш
+                    {t('newVisitDialog.addService')}
                   </Button>
                 </div>
 
                 {services.length === 0 ? (
                   <p className='text-sm text-muted-foreground text-center py-4'>
-                    Хизматлар қўшилмаган
+                    {t('newVisitDialog.noServicesAdded')}
                   </p>
                 ) : (
                   <div className='space-y-3'>
@@ -857,7 +859,7 @@ const NewVisitDialog = ({
                     <div className='flex items-end gap-2 p-2 bg-muted/30 rounded-lg border'>
                       <div className='w-28'>
                         <Label className='text-xs font-medium'>
-                          Муддат (кун)
+                          {t('newVisitDialog.duration')}
                         </Label>
                         <Input
                           type='number'
@@ -932,7 +934,7 @@ const NewVisitDialog = ({
                       </div>
                       <div className='flex-1'>
                         <Label className='text-xs font-medium'>
-                          Бошланиш санаси
+                          {t('newVisitDialog.startDate')}
                         </Label>
                         <Input
                           type='date'
@@ -964,7 +966,7 @@ const NewVisitDialog = ({
                             className='h-8 text-sm mt-1'
                             disabled={services.length === 0}
                           >
-                            Ҳар куни
+                            {t('newVisitDialog.everyDay')}
                           </Button>
                         </div>
                         <div>
@@ -979,7 +981,7 @@ const NewVisitDialog = ({
                             className='h-8 text-sm mt-1'
                             disabled={services.length === 0}
                           >
-                            2 кунда бир
+                            {t('newVisitDialog.everyTwoDays')}
                           </Button>
                         </div>
                       </div>
@@ -991,7 +993,7 @@ const NewVisitDialog = ({
                         <thead className='sticky top-0 bg-background z-10'>
                           <tr className='bg-muted/50'>
                             <th className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'>
-                              Хизмат
+                              {t('newVisitDialog.service')}
                             </th>
                             {Array.from({ length: 8 }, (_, i) => (
                               <th
@@ -1049,13 +1051,13 @@ const NewVisitDialog = ({
                                           }}
                                         >
                                           <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
-                                            <SelectValue placeholder='Танланг...' />
+                                            <SelectValue placeholder={t('newVisitDialog.select')} />
                                           </SelectTrigger>
                                           <SelectContent>
                                             <div className='p-2'>
                                               <Input
                                                 ref={serviceSearchRef}
-                                                placeholder='Қидириш...'
+                                                placeholder={t('newVisitDialog.search')}
                                                 value={serviceSearch}
                                                 onChange={(e) =>
                                                   setServiceSearch(
@@ -1083,7 +1085,7 @@ const NewVisitDialog = ({
                                                 {new Intl.NumberFormat(
                                                   'uz-UZ'
                                                 ).format(s.price)}{' '}
-                                                сўм
+                                                {t('newVisitDialog.sum')}
                                               </SelectItem>
                                             ))}
                                           </SelectContent>
@@ -1105,7 +1107,7 @@ const NewVisitDialog = ({
                                           {day.date ? (
                                             <div className='flex flex-col items-center justify-center'>
                                               <span className='text-[10px] text-muted-foreground font-bold'>
-                                                {day.day}-кун
+                                                {t('newVisitDialog.dayN', { n: day.day })}
                                               </span>
                                               <span
                                                 className={`px-1.5 py-0.5 rounded ${
@@ -1117,7 +1119,7 @@ const NewVisitDialog = ({
                                                 {format(day.date, 'dd/MM')}
                                               </span>
                                               <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none text-xs'>
-                                                {day.day}-кун:{' '}
+                                                {t('newVisitDialog.dayN', { n: day.day })}:{' '}
                                                 {new Date(
                                                   day.date
                                                 ).toLocaleDateString('uz-UZ')}
@@ -1127,7 +1129,7 @@ const NewVisitDialog = ({
                                           ) : (
                                             <div className='flex flex-col items-center justify-center'>
                                               <span className='text-[10px] text-muted-foreground font-bold'>
-                                                {day.day}-кун
+                                                {t('newVisitDialog.dayN', { n: day.day })}
                                               </span>
                                               <span className='text-muted-foreground'>
                                                 —
@@ -1185,14 +1187,14 @@ const NewVisitDialog = ({
             onClick={() => onOpenChange(false)}
             disabled={isCreating}
           >
-            Бекор қилиш
+            {t('newVisitDialog.cancel')}
           </Button>
           <Button
             onClick={handleSave}
             disabled={isCreating || !patient}
             className='bg-green-600 hover:bg-green-700'
           >
-            {isCreating ? 'Сақланмоқда...' : 'Сақлаш'}
+            {isCreating ? t('newVisitDialog.saving') : t('newVisitDialog.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ export const UpdateBookingModal = ({
   onOpenChange,
   booking,
 }: UpdateBookingModalProps) => {
+  const { t } = useTranslation("inpatient");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [note, setNote] = useState<string>("");
@@ -52,7 +54,7 @@ export const UpdateBookingModal = ({
     if (!booking) return;
 
     if (!startDate || !endDate) {
-      toast.error("Саналарни киритинг");
+      toast.error(t("booking.enterDates"));
       return;
     }
 
@@ -63,13 +65,13 @@ export const UpdateBookingModal = ({
 
     // Boshlanish sanasi bugundan oldin bo'lmasligi kerak
     if (startDate < todayStr) {
-      toast.error("Ўтган санага ўзгартириб бўлмайди");
+      toast.error(t("updateBooking.cannotChangeToPastDate"));
       return;
     }
 
     // Tugash sanasi boshlanish sanasidan oldin bo'lmasligi kerak
     if (endDate < startDate) {
-      toast.error("Тугаш санаси бошланиш санасидан олдин бўлмаслиги керак");
+      toast.error(t("booking.endDateBeforeStartDate"));
       return;
     }
 
@@ -91,12 +93,12 @@ export const UpdateBookingModal = ({
         }).unwrap();
       },
       onSuccess: () => {
-        toast.success("Бронь муваффақиятли янгиланди");
+        toast.success(t("updateBooking.updateSuccess"));
         onOpenChange(false);
       },
       onError: ({ data }) => {
         toast.error(
-          data?.error?.msg || "Бронь янгилашда хатолик юз берди"
+          data?.error?.msg || t("updateBooking.updateError")
         );
       },
     });
@@ -114,10 +116,10 @@ export const UpdateBookingModal = ({
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
             <Edit2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-            Броньни Таҳрирлаш
+            {t("updateBooking.title")}
           </DialogTitle>
           <DialogDescription className="text-sm sm:text-base">
-            Бронь маълумотларини янгиланг
+            {t("updateBooking.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -125,12 +127,12 @@ export const UpdateBookingModal = ({
         <div className="p-3 sm:p-4 bg-gray-50 rounded-lg space-y-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
             <div className="break-words">
-              <span className="text-gray-600">Бемор:</span>{" "}
-              <strong>{patient?.fullname || "Номаълум"}</strong>
+              <span className="text-gray-600">{t("updateBooking.patient")}:</span>{" "}
+              <strong>{patient?.fullname || t("common.unknown")}</strong>
             </div>
             <div className="break-words">
-              <span className="text-gray-600">Хона:</span>{" "}
-              <strong>{room?.room_name || "Номаълум"}</strong>
+              <span className="text-gray-600">{t("updateBooking.room")}:</span>{" "}
+              <strong>{room?.room_name || t("common.unknown")}</strong>
             </div>
           </div>
         </div>
@@ -140,7 +142,7 @@ export const UpdateBookingModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label htmlFor="start_date" className="text-sm sm:text-base">
-                Бошланиш санаси <span className="text-red-500">*</span>
+                {t("booking.startDate")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="start_date"
@@ -153,7 +155,7 @@ export const UpdateBookingModal = ({
             </div>
             <div className="space-y-2">
               <Label htmlFor="end_date" className="text-sm sm:text-base">
-                Тугаш санаси <span className="text-red-500">*</span>
+                {t("booking.endDate")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="end_date"
@@ -169,12 +171,12 @@ export const UpdateBookingModal = ({
 
           {/* Note */}
           <div className="space-y-2">
-            <Label htmlFor="note" className="text-sm sm:text-base">Изоҳ (ихтиёрий)</Label>
+            <Label htmlFor="note" className="text-sm sm:text-base">{t("booking.noteOptional")}</Label>
             <Textarea
               id="note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Махсус диета, аллергия ва бошқа маълумотлар..."
+              placeholder={t("booking.notePlaceholder")}
               rows={3}
               className="text-sm sm:text-base resize-none"
             />
@@ -189,7 +191,7 @@ export const UpdateBookingModal = ({
               disabled={isLoading}
               className="w-full sm:w-auto text-sm sm:text-base"
             >
-              Бекор қилиш
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
@@ -201,7 +203,7 @@ export const UpdateBookingModal = ({
               ) : (
                 <>
                   <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                  Сақлаш
+                  {t("common.save")}
                 </>
               )}
             </Button>

@@ -11,6 +11,7 @@ import {
 import { downloadFile } from '@/lib/fileTypeUtils';
 import { Download, Loader2 } from 'lucide-react';
 import { memo, useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as XLSX from 'xlsx';
 
 interface ExcelViewerProps {
@@ -22,6 +23,7 @@ type CellValue = string | number | boolean | null | undefined;
 type SheetRow = CellValue[];
 
 export const ExcelViewer: React.FC<ExcelViewerProps> = memo(({ url, filename }) => {
+  const { t } = useTranslation('radiology');
   const [sheets, setSheets] = useState<{ name: string; data: SheetRow[] }[]>(
     []
   );
@@ -53,14 +55,14 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = memo(({ url, filename }) 
 
         setSheets(sheetsData);
       } catch (err) {
-        setError('Файлни юклаб бўлмади. Пастдаги тугмадан юклаб олинг.');
+        setError(t('viewers.excel.loadError'));
       } finally {
         setLoading(false);
       }
     };
 
     loadExcelFile();
-  }, [url]);
+  }, [url, t]);
 
   const handleDownload = useCallback(() => {
     downloadFile(url, filename);
@@ -72,7 +74,7 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = memo(({ url, filename }) 
         <div className='text-center space-y-2'>
           <Loader2 className='w-8 h-8 animate-spin mx-auto text-primary' />
           <p className='text-sm text-muted-foreground'>
-            Excel ҳужжати юкланмоқда...
+            {t('viewers.excel.loading')}
           </p>
         </div>
       </div>
@@ -86,7 +88,7 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = memo(({ url, filename }) 
           <p className='text-destructive mb-4'>{error}</p>
           <Button onClick={handleDownload} variant='outline'>
             <Download className='w-4 h-4 mr-2' />
-            Ҳужжатни юклаб олиш
+            {t('viewers.excel.downloadDocument')}
           </Button>
         </CardContent>
       </Card>
@@ -112,7 +114,7 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = memo(({ url, filename }) 
         </div>
         <Button onClick={handleDownload} size='sm' variant='outline'>
           <Download className='w-4 h-4 mr-2' />
-          Excel юклаб олиш
+          {t('viewers.excel.downloadExcel')}
         </Button>
       </div>
 
@@ -125,7 +127,7 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = memo(({ url, filename }) 
                   {currentSheet.data[0].map(
                     (cell: CellValue, index: number) => (
                       <TableHead key={index} className='font-bold'>
-                        {cell || `Column ${index + 1}`}
+                        {cell || `${t('viewers.excel.column')} ${index + 1}`}
                       </TableHead>
                     )
                   )}
@@ -149,7 +151,7 @@ export const ExcelViewer: React.FC<ExcelViewerProps> = memo(({ url, filename }) 
             </Table>
           ) : (
             <div className='p-6 text-center text-muted-foreground'>
-              No data in this sheet
+              {t('viewers.excel.noData')}
             </div>
           )}
         </CardContent>

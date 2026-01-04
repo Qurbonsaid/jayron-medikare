@@ -2,6 +2,7 @@ import { REPORT_DATE_FILTER } from '@/app/api/report/types'
 import { Card } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Activity } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
 	Area,
 	AreaChart,
@@ -31,6 +32,7 @@ export const ExaminationChart = ({
 	interval,
 	onIntervalChange,
 }: ExaminationChartProps) => {
+	const { t } = useTranslation('reports')
 	const formatDate = (item: ExaminationChartProps['data'][0]) => {
 		const { year, month, day } = item._id
 		if (day) return `${day}.${month}.${year}`
@@ -39,7 +41,7 @@ export const ExaminationChart = ({
 	}
 
 	const formatCurrency = (value: number) => {
-		return new Intl.NumberFormat('uz-UZ').format(value) + ' сўм'
+		return new Intl.NumberFormat('uz-UZ').format(value) + ' ' + t('currency')
 	}
 
 	// Sort data by date (oldest to newest)
@@ -58,8 +60,8 @@ export const ExaminationChart = ({
 
 	const chartData = sortedData.map(item => ({
 		name: formatDate(item),
-		Кўриклар: item.totalExaminations,
-		Сумма: item.totalAmount,
+		[t('examinations')]: item.totalExaminations,
+		[t('amount')]: item.totalAmount,
 	}))
 
 	if (isLoading) {
@@ -75,7 +77,7 @@ export const ExaminationChart = ({
 			<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4'>
 				<h3 className='text-base sm:text-lg font-semibold flex items-center gap-2'>
 					<Activity className='w-5 h-5 text-purple-600' />
-					Кўриклар статистикаси
+					{t('examinationStatistics')}
 				</h3>
 				<div className='w-full sm:w-48'>
 					<DateRangeFilter value={interval} onChange={onIntervalChange} />
@@ -98,7 +100,7 @@ export const ExaminationChart = ({
 					<YAxis />
 					<Tooltip
 						formatter={(value, name) => {
-							if (name === 'Сумма') {
+							if (name === t('amount')) {
 								return formatCurrency(value as number)
 							}
 							return value
@@ -107,14 +109,14 @@ export const ExaminationChart = ({
 					<Legend />
 					<Area
 						type='monotone'
-						dataKey='Кўриклар'
+						dataKey={t('examinations')}
 						stroke='#8b5cf6'
 						fillOpacity={1}
 						fill='url(#colorExaminations)'
 					/>
 					<Area
 						type='monotone'
-						dataKey='Сумма'
+						dataKey={t('amount')}
 						stroke='#10b981'
 						fillOpacity={1}
 						fill='url(#colorAmount)'

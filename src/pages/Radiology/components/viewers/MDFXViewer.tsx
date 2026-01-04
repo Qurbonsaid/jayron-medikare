@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Download, Loader2, Activity } from 'lucide-react';
 import { downloadFile } from '@/lib/fileTypeUtils';
 import { memo, useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface MDFXViewerProps {
   url: string;
@@ -60,6 +61,7 @@ const parseMDFX = (content: string): MDFXData => {
 };
 
 export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) => {
+  const { t } = useTranslation('radiology');
   const [data, setData] = useState<MDFXData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -79,14 +81,14 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
         setData(parsedData);
       } catch (err) {
         console.error('MDFX yuklashda xatolik:', err);
-        setError('MDFX файлни юклаб бўлмади');
+        setError(t('viewers.mdfx.loadError'));
       } finally {
         setLoading(false);
       }
     };
 
     loadMDFXFile();
-  }, [url]);
+  }, [url, t]);
 
   const handleDownload = useCallback(() => {
     downloadFile(url, filename);
@@ -98,7 +100,7 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
         <div className='text-center space-y-2'>
           <Loader2 className='w-8 h-8 animate-spin mx-auto text-primary' />
           <p className='text-sm text-muted-foreground'>
-            MDFX файл юкланмоқда...
+            {t('viewers.mdfx.loading')}
           </p>
         </div>
       </div>
@@ -111,7 +113,7 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
         <p className='text-destructive'>{error}</p>
         <Button onClick={handleDownload} variant='outline'>
           <Download className='w-4 h-4 mr-2' />
-          Юклаб олиш
+          {t('viewers.mdfx.download')}
         </Button>
       </div>
     );
@@ -123,11 +125,11 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
       <div className='flex flex-wrap justify-between items-center gap-2 bg-muted/50 p-2 rounded-lg'>
         <div className='flex items-center gap-2'>
           <Activity className='w-5 h-5 text-primary' />
-          <span className='text-sm font-medium'>EEG маълумотлар</span>
+          <span className='text-sm font-medium'>{t('viewers.mdfx.eegData')}</span>
         </div>
         <Button onClick={handleDownload} size='sm' variant='outline'>
           <Download className='w-4 h-4 mr-2' />
-          <span className='hidden sm:inline'>Юклаб олиш</span>
+          <span className='hidden sm:inline'>{t('viewers.mdfx.download')}</span>
         </Button>
       </div>
 
@@ -136,11 +138,11 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
         <CardContent className='p-4 sm:p-6 h-[60vh] overflow-auto'>
           {data?.patientInfo && (
             <div className='mb-6'>
-              <h3 className='font-semibold mb-2 text-primary'>Бемор маълумотлари</h3>
+              <h3 className='font-semibold mb-2 text-primary'>{t('viewers.mdfx.patientInfo')}</h3>
               <div className='grid grid-cols-2 gap-2 text-sm'>
                 {data.patientInfo.name && (
                   <>
-                    <span className='text-muted-foreground'>Исм:</span>
+                    <span className='text-muted-foreground'>{t('viewers.mdfx.name')}:</span>
                     <span>{data.patientInfo.name}</span>
                   </>
                 )}
@@ -152,7 +154,7 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
                 )}
                 {data.patientInfo.birthDate && (
                   <>
-                    <span className='text-muted-foreground'>Туғилган сана:</span>
+                    <span className='text-muted-foreground'>{t('viewers.mdfx.birthDate')}:</span>
                     <span>{data.patientInfo.birthDate}</span>
                   </>
                 )}
@@ -162,23 +164,23 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
 
           {data?.recordingInfo && (
             <div className='mb-6'>
-              <h3 className='font-semibold mb-2 text-primary'>Ёзув маълумотлари</h3>
+              <h3 className='font-semibold mb-2 text-primary'>{t('viewers.mdfx.recordingInfo')}</h3>
               <div className='grid grid-cols-2 gap-2 text-sm'>
                 {data.recordingInfo.date && (
                   <>
-                    <span className='text-muted-foreground'>Сана:</span>
+                    <span className='text-muted-foreground'>{t('viewers.mdfx.date')}:</span>
                     <span>{data.recordingInfo.date}</span>
                   </>
                 )}
                 {data.recordingInfo.duration && (
                   <>
-                    <span className='text-muted-foreground'>Давомийлиги:</span>
+                    <span className='text-muted-foreground'>{t('viewers.mdfx.duration')}:</span>
                     <span>{data.recordingInfo.duration}</span>
                   </>
                 )}
                 {data.recordingInfo.channels && (
                   <>
-                    <span className='text-muted-foreground'>Каналлар:</span>
+                    <span className='text-muted-foreground'>{t('viewers.mdfx.channels')}:</span>
                     <span>{data.recordingInfo.channels}</span>
                   </>
                 )}
@@ -188,7 +190,7 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
 
           {data?.rawContent && (
             <div>
-              <h3 className='font-semibold mb-2 text-primary'>Файл контенти</h3>
+              <h3 className='font-semibold mb-2 text-primary'>{t('viewers.mdfx.fileContent')}</h3>
               <pre className='text-xs bg-muted p-3 rounded-lg overflow-auto max-h-[300px] whitespace-pre-wrap'>
                 {data.rawContent}
               </pre>
@@ -199,8 +201,7 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
             <div className='flex flex-col items-center justify-center h-full text-center'>
               <Activity className='w-16 h-16 text-muted-foreground mb-4' />
               <p className='text-muted-foreground'>
-                MDFX файл юклаб олиниб, махсус дастур (EDFbrowser, BrainVision) 
-                билан тўлиқ таҳлил қилинг.
+                {t('viewers.mdfx.downloadHint')}
               </p>
             </div>
           )}

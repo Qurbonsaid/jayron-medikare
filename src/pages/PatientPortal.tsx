@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const PatientPortal = () => {
+  const { t } = useTranslation('patientPortal');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -16,19 +18,19 @@ const PatientPortal = () => {
 
   const handleSendOtp = () => {
     if (!phoneNumber) {
-      toast.error("Телефон рақамини киритинг");
+      toast.error(t('enterPhone'));
       return;
     }
     setShowOtp(true);
-    toast.success("Тасдиқлаш коди юборилди");
+    toast.success(t('codeSent'));
   };
 
   const handleVerifyOtp = () => {
     if (otpCode.length === 6) {
       setIsLoggedIn(true);
-      toast.success("Муваффақиятли кирдингиз!");
+      toast.success(t('loginSuccess'));
     } else {
-      toast.error("6 рақамли кодни киритинг");
+      toast.error(t('enterCode'));
     }
   };
 
@@ -37,30 +39,30 @@ const PatientPortal = () => {
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center p-4">
         <Card className="w-full max-w-md p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Бемор портали</h1>
+            <h1 className="text-3xl font-bold mb-2">{t('title')}</h1>
             <p className="text-muted-foreground">JAYRON MEDSERVIS</p>
           </div>
 
           {!showOtp ? (
             <div className="space-y-4">
               <div>
-                <Label>Телефон рақам ёки ID</Label>
+                <Label>{t('phoneOrId')}</Label>
                 <Input
                   type="tel"
-                  placeholder="+998 XX XXX XX XX"
+                  placeholder={t('phonePlaceholder')}
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   className="mt-1"
                 />
               </div>
               <Button className="w-full" size="lg" onClick={handleSendOtp}>
-                Код олиш
+                {t('getCode')}
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
               <div>
-                <Label>Тасдиқлаш коди</Label>
+                <Label>{t('verificationCode')}</Label>
                 <Input
                   type="text"
                   placeholder="000000"
@@ -70,14 +72,14 @@ const PatientPortal = () => {
                   className="mt-1 text-center text-2xl tracking-widest"
                 />
                 <p className="text-sm text-muted-foreground mt-2 text-center">
-                  {phoneNumber} рақамига юборилди
+                  {t('codeSentTo', { phone: phoneNumber })}
                 </p>
               </div>
               <Button className="w-full" size="lg" onClick={handleVerifyOtp}>
-                Тасдиқлаш
+                {t('verify')}
               </Button>
               <Button variant="ghost" className="w-full" onClick={() => setShowOtp(false)}>
-                Орқага
+                {t('back')}
               </Button>
             </div>
           )}
@@ -102,7 +104,7 @@ const PatientPortal = () => {
               </div>
             </div>
             <Button variant="outline" onClick={() => setIsLoggedIn(false)}>
-              Чиқиш
+              {t('logout')}
             </Button>
           </div>
         </div>
@@ -112,8 +114,8 @@ const PatientPortal = () => {
       <main className="container mx-auto px-4 py-6">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Хуш келибсиз, Нилуфар!</h1>
-          <p className="text-muted-foreground">Тиббий ёзувларингизни бу ерда кўришингиз мумкин</p>
+          <h1 className="text-2xl font-bold mb-2">{t('welcome', { name: 'Нилуфар' })}</h1>
+          <p className="text-muted-foreground">{t('welcomeSubtitle')}</p>
         </div>
 
         {/* Quick Stats */}
@@ -124,7 +126,7 @@ const PatientPortal = () => {
                 <Calendar className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Келгуси навбат</p>
+                <p className="text-sm text-muted-foreground">{t('nextAppointment')}</p>
                 <p className="text-xl font-bold">08.10.2025</p>
                 <p className="text-sm text-muted-foreground">10:30 - Др. Алиев</p>
               </div>
@@ -137,9 +139,9 @@ const PatientPortal = () => {
                 <FileText className="w-6 h-6 text-success" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Янги натижалар</p>
-                <p className="text-xl font-bold">2 та</p>
-                <p className="text-sm text-success cursor-pointer">Кўриш →</p>
+                <p className="text-sm text-muted-foreground">{t('newResults')}</p>
+                <p className="text-xl font-bold">2 {t('count')}</p>
+                <p className="text-sm text-success cursor-pointer">{t('view')}</p>
               </div>
             </div>
           </Card>
@@ -150,9 +152,9 @@ const PatientPortal = () => {
                 <Clock className="w-6 h-6 text-warning" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Фаол рецептлар</p>
-                <p className="text-xl font-bold">3 та</p>
-                <p className="text-sm text-muted-foreground">Дорилар рўйхати</p>
+                <p className="text-sm text-muted-foreground">{t('activePrescriptions')}</p>
+                <p className="text-xl font-bold">3 {t('count')}</p>
+                <p className="text-sm text-muted-foreground">{t('medicationsList')}</p>
               </div>
             </div>
           </Card>
@@ -161,19 +163,19 @@ const PatientPortal = () => {
         {/* Main Tabs */}
         <Tabs defaultValue="appointments" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="appointments">Навбатлар</TabsTrigger>
-            <TabsTrigger value="visits">Ташрифлар</TabsTrigger>
-            <TabsTrigger value="tests">Таҳлиллар</TabsTrigger>
-            <TabsTrigger value="prescriptions">Рецептлар</TabsTrigger>
+            <TabsTrigger value="appointments">{t('tabs.appointments')}</TabsTrigger>
+            <TabsTrigger value="visits">{t('tabs.visits')}</TabsTrigger>
+            <TabsTrigger value="tests">{t('tabs.tests')}</TabsTrigger>
+            <TabsTrigger value="prescriptions">{t('tabs.prescriptions')}</TabsTrigger>
           </TabsList>
 
           {/* Appointments */}
           <TabsContent value="appointments" className="space-y-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Менинг навбатларим</h2>
+              <h2 className="text-xl font-semibold">{t('myAppointments')}</h2>
               <Button>
                 <Calendar className="w-4 h-4 mr-2" />
-                Навбат олиш
+                {t('bookAppointment')}
               </Button>
             </div>
 
@@ -189,13 +191,13 @@ const PatientPortal = () => {
                       <p className="text-sm text-muted-foreground">Терапевт</p>
                     </div>
                     <Badge className="bg-success/10 text-success border-success/20 border">
-                      Тасдиқланган
+                      {t('confirmed')}
                     </Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-4 mt-4">
                     <div className="flex items-center gap-2 text-sm">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span>08.10.2025 (Эртага)</span>
+                      <span>08.10.2025 ({t('tomorrow')})</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="w-4 h-4 text-muted-foreground" />
@@ -204,10 +206,10 @@ const PatientPortal = () => {
                   </div>
                   <div className="flex gap-2 mt-4">
                     <Button size="sm" variant="outline" className="text-danger">
-                      Бекор қилиш
+                      {t('cancel')}
                     </Button>
                     <Button size="sm" variant="outline">
-                      Ўзгартириш
+                      {t('change')}
                     </Button>
                   </div>
                 </div>
@@ -217,7 +219,7 @@ const PatientPortal = () => {
 
           {/* Visits */}
           <TabsContent value="visits" className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Ташрифлар тарихи</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('visitsHistory')}</h2>
             
             {[1, 2].map((_, index) => (
               <Card key={index} className="p-6">
@@ -230,11 +232,11 @@ const PatientPortal = () => {
                     </div>
                   </div>
                   <Button size="sm" variant="outline">
-                    Батафсил
+                    {t('details')}
                   </Button>
                 </div>
                 <div className="bg-muted/30 p-3 rounded-lg">
-                  <p className="text-sm font-medium mb-1">Ташхис:</p>
+                  <p className="text-sm font-medium mb-1">{t('diagnosis')}</p>
                   <p className="text-sm text-muted-foreground">ОРВИ (J06.9) - Ўткир юқори nafas йўллари инфекцияси</p>
                 </div>
               </Card>
@@ -243,7 +245,7 @@ const PatientPortal = () => {
 
           {/* Tests */}
           <TabsContent value="tests" className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Лаборатория натижалари</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('labResults')}</h2>
 
             {[
               { name: "Умумий қон таҳлили", date: "06.10.2025", new: true },
@@ -258,7 +260,7 @@ const PatientPortal = () => {
                         <h3 className="font-semibold">{test.name}</h3>
                         {test.new && (
                           <Badge className="bg-success/10 text-success border-success/20 border text-xs">
-                            Янги
+                            {t('new')}
                           </Badge>
                         )}
                       </div>
@@ -270,7 +272,7 @@ const PatientPortal = () => {
                       <Download className="w-4 h-4 mr-2" />
                       PDF
                     </Button>
-                    <Button size="sm">Кўриш</Button>
+                    <Button size="sm">{t('view').replace(' →', '')}</Button>
                   </div>
                 </div>
               </Card>
@@ -279,12 +281,12 @@ const PatientPortal = () => {
 
           {/* Prescriptions */}
           <TabsContent value="prescriptions" className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Рецептлар</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('prescriptionsTitle')}</h2>
 
             {[
-              { drug: "Амоксициллин 500мг", dosage: "1 таблетка х 3 марта", status: "Фаол", date: "05.10.2025" },
-              { drug: "Парацетамол 500мг", dosage: "1 таблетка х 3 марта", status: "Фаол", date: "05.10.2025" },
-              { drug: "Витамин C", dosage: "1 таблетка х 1 марта", status: "Тугатилган", date: "25.09.2025" }
+              { drug: "Амоксициллин 500мг", dosage: "1 таблетка х 3 марта", status: "active", date: "05.10.2025" },
+              { drug: "Парацетамол 500мг", dosage: "1 таблетка х 3 марта", status: "active", date: "05.10.2025" },
+              { drug: "Витамин C", dosage: "1 таблетка х 1 марта", status: "completed", date: "25.09.2025" }
             ].map((rx, index) => (
               <Card key={index} className="p-6">
                 <div className="flex items-center justify-between">
@@ -295,11 +297,11 @@ const PatientPortal = () => {
                     <div>
                       <h3 className="font-semibold">{rx.drug}</h3>
                       <p className="text-sm text-muted-foreground">{rx.dosage}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Белгиланган: {rx.date}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('prescribedOn')} {rx.date}</p>
                     </div>
                   </div>
-                  <Badge className={rx.status === "Фаол" ? "bg-success/10 text-success border-success/20 border" : ""}>
-                    {rx.status}
+                  <Badge className={rx.status === "active" ? "bg-success/10 text-success border-success/20 border" : ""}>
+                    {rx.status === "active" ? t('active') : t('completed')}
                   </Badge>
                 </div>
               </Card>
@@ -314,8 +316,8 @@ const PatientPortal = () => {
               <Phone className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold mb-1">Ёрдамга муҳтожмисиз?</h3>
-              <p className="text-sm text-muted-foreground">Бизнинг жамоамиз сизга ёрдам беришга тайёр</p>
+              <h3 className="font-semibold mb-1">{t('needHelp')}</h3>
+              <p className="text-sm text-muted-foreground">{t('teamReady')}</p>
               <p className="text-sm font-medium text-primary mt-1">+998 71 123 45 67</p>
             </div>
           </div>

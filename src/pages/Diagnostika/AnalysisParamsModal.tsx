@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -39,6 +40,7 @@ interface FormState {
 }
 
 export default function AnalysisParamsModal() {
+	const { t } = useTranslation('diagnostics')
 	const navigate = useNavigate()
 	const { id } = useParams<{ id: string }>()
 	const { data, isLoading, isError } = useGetDiagnosticByIdQuery(id!)
@@ -75,7 +77,7 @@ export default function AnalysisParamsModal() {
 
 	const handleDelete = (id: string) => {
 		setParams(prev => prev.filter(p => p._id !== id))
-		toast.success('Parametr o‘chirildi')
+		toast.success(t('parameterDeleted'))
 		setDeleteId(null)
 	}
 
@@ -121,7 +123,7 @@ export default function AnalysisParamsModal() {
 				form.female.value.trim() !== ''
 
 			if (!maleFilled && !femaleFilled) {
-				return 'Erkak yoki Ayol qiymatidan kamida bittasi to‘ldirilishi kerak'
+				return t('maleFemaleRequiredError')
 			}
 		}
 
@@ -132,7 +134,7 @@ export default function AnalysisParamsModal() {
 				form.general.value.trim() !== ''
 
 			if (!generalFilled) {
-				return 'Umumiy qiymatdan kamida bittasi to‘ldirilishi kerak'
+				return t('generalRequiredError')
 			}
 		}
 
@@ -154,7 +156,7 @@ export default function AnalysisParamsModal() {
 			) {
 				setErrors(prev => ({
 					...prev,
-					normal_range: 'Iltimos, barcha Min va Max maydonlarini to‘ldiring!',
+					normal_range: t('fillAllMinMaxFields'),
 				}))
 				return false
 			}
@@ -162,7 +164,7 @@ export default function AnalysisParamsModal() {
 			if (!form.male.value || !form.female.value) {
 				setErrors(prev => ({
 					...prev,
-					normal_range: 'Iltimos, barcha qiymat  maydonlarini to‘ldiring!',
+					normal_range: t('fillAllValueFields'),
 				}))
 				return false
 			}
@@ -258,7 +260,7 @@ export default function AnalysisParamsModal() {
 		if (form.general.min && !form.general.max) {
 			setErrors(prev => ({
 				...prev,
-				normal_range: 'Iltimos, Max qiymatni ham to‘ldiring!',
+				normal_range: t('fillMaxValue'),
 			}))
 			return // ❗ So'rov ketmaydi
 		}
@@ -266,7 +268,7 @@ export default function AnalysisParamsModal() {
 		if (form.general.max && !form.general.min) {
 			setErrors(prev => ({
 				...prev,
-				normal_range: 'Iltimos, Min qiymatni ham to‘ldiring!',
+				normal_range: t('fillMinValue'),
 			}))
 			return // ❗ So'rov ketmaydi
 		}
@@ -313,7 +315,7 @@ export default function AnalysisParamsModal() {
 								: p
 						)
 					)
-					toast.success('Parametr muvaffaqiyatli yangilandi 🎉')
+					toast.success(t('parameterUpdatedSuccess'))
 				} else {
 					// Backend'dan kelgan to'liq data
 					if (newParam && newParam._id) {
@@ -325,7 +327,7 @@ export default function AnalysisParamsModal() {
 							{ ...payload, _id: Date.now().toString() } as AnalysisParameter,
 						])
 					}
-					toast.success("Parametr muvaffaqiyatli qo'shildi 🎉")
+					toast.success(t('parameterAddedSuccess'))
 				}
 
 				setOpen(false)
@@ -400,7 +402,7 @@ export default function AnalysisParamsModal() {
 				form.female.value.trim() !== ''
 
 			if (!maleFilled && !femaleFilled) {
-				return 'Erkak yoki Ayol qiymatidan kamida bittasi to‘ldirilishi kerak'
+				return t('maleFemaleRequiredError')
 			}
 		}
 
@@ -411,7 +413,7 @@ export default function AnalysisParamsModal() {
 				form.general.value.trim() !== ''
 
 			if (!generalFilled) {
-				return 'Umumiy qiymatdan kamida bittasi to‘ldirilishi kerak'
+				return t('generalRequiredError')
 			}
 		}
 
@@ -425,9 +427,9 @@ export default function AnalysisParamsModal() {
 		}
 	}, [data])
 
-	if (isLoading) return <p className='p-4'>Yuklanmoqda...</p>
+	if (isLoading) return <p className='p-4'>{t('loading')}</p>
 	if (isError || !data)
-		return <p className='p-4 text-red-500'>Xatolik yuz berdi!</p>
+		return <p className='p-4 text-red-500'>{t('errorOccurred')}</p>
 
 	return (
 		<div className='min-h-screen bg-background flex flex-col'>
@@ -464,7 +466,7 @@ export default function AnalysisParamsModal() {
 							setOpen(true)
 						}}
 					>
-						+ Parametr qo‘shish
+						{t('addParameter')}
 					</Button>
 				</div>
 			</header>
@@ -496,7 +498,7 @@ export default function AnalysisParamsModal() {
 											{param.parameter_code}
 										</h3>
 										<p className='text-xs text-muted-foreground'>
-											Nomi:{' '}
+											{t('name')}:{' '}
 											<span className='font-medium'>
 												{param.parameter_name}
 											</span>
@@ -510,17 +512,17 @@ export default function AnalysisParamsModal() {
 								{/* Body info */}
 								<div className='space-y-2 text-sm'>
 									<div className='flex  gap-3'>
-										<span className='text-muted-foreground'>Jinsi:</span>
+										<span className='text-muted-foreground'>{t('genderLabel')}:</span>
 										<span className='font-medium'>
-											{isGeneral ? 'Umumiy' : 'Erkak / Ayol'}
+											{isGeneral ? t('general') : t('maleFemale')}
 										</span>
 									</div>
 									<div className='flex  gap-3'>
-										<span className='text-muted-foreground'>Qiymat:</span>
+										<span className='text-muted-foreground'>{t('valueLabel')}:</span>
 										<span className='font-medium text-blue-600'>{display}</span>
 									</div>
 									<div className='flex  gap-3'>
-										<span className='text-muted-foreground'>Birligi:</span>
+										<span className='text-muted-foreground'>{t('unitLabel')}:</span>
 										<span className='font-medium'>{param.unit}</span>
 									</div>
 								</div>
@@ -534,7 +536,7 @@ export default function AnalysisParamsModal() {
 										onClick={() => openEdit(param)}
 									>
 										<Edit size={12} />
-										Tahrirlash
+										{t('edit')}
 									</Button>
 
 									<Dialog
@@ -551,16 +553,16 @@ export default function AnalysisParamsModal() {
 												onClick={() => setDeleteId(param._id)}
 											>
 												<Trash2 size={12} />
-												O‘chirish
+												{t('delete')}
 											</Button>
 										</DialogTrigger>
 
 										<DialogContent className='max-w-xs rounded-xl'>
 											<DialogTitle className='text-sm'>
-												Parametr o‘chirish
+												{t('deleteParameter')}
 											</DialogTitle>
 											<p className='text-xs text-muted-foreground'>
-												Rostan ham ushbu parameterni o‘chirmoqchimisiz?
+												{t('deleteParameterConfirm')}
 											</p>
 											<DialogFooter className='flex justify-end gap-2 pt-2'>
 												<Button
@@ -568,7 +570,7 @@ export default function AnalysisParamsModal() {
 													size='sm'
 													className='h-7 text-xs'
 												>
-													Yo‘q
+													{t('no')}
 												</Button>
 												<Button
 													size='sm'
@@ -595,13 +597,13 @@ export default function AnalysisParamsModal() {
 							<thead className='bg-muted/50'>
 								<tr>
 									{[
-										'ID',
-										'Parametr kodi',
-										'Parametr nomi',
-										'Jinsi',
-										'Qiymatlari',
-										'Birligi',
-										'Harakatlar',
+										t('id'),
+										t('parameterCode'),
+										t('parameterName'),
+										t('genderLabel'),
+										t('values'),
+										t('unitLabel'),
+										t('actions'),
 									].map(i => (
 										<th
 											key={i}
@@ -643,7 +645,7 @@ export default function AnalysisParamsModal() {
 												{param.parameter_name}
 											</td>
 											<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-												{isGeneral ? 'Umumiy' : 'Erkak / Ayol'}
+												{isGeneral ? t('general') : t('maleFemale')}
 											</td>
 											<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
 												{display}
@@ -680,16 +682,16 @@ export default function AnalysisParamsModal() {
 															</Button>
 														</DialogTrigger>
 														<DialogContent className='max-w-xs rounded-xl'>
-															<DialogTitle>Parametr o‘chirish</DialogTitle>
+															<DialogTitle>{t('deleteParameter')}</DialogTitle>
 															<p className='text-sm text-muted-foreground'>
-																Rostan ham ushbu parameterni o‘chirmoqchimisiz?
+																{t('deleteParameterConfirm')}
 															</p>
 															<DialogFooter className='flex justify-end gap-2'>
 																<Button
 																	variant='outline'
 																	onClick={() => setDeleteId(null)}
 																>
-																	Yo‘q
+																	{t('no')}
 																</Button>
 																<Button
 																	className='bg-red-600 text-white'
@@ -725,48 +727,48 @@ export default function AnalysisParamsModal() {
 					<DialogHeader>
 						<DialogTitle>
 							{editingParam
-								? 'Parametrni tahrirlash'
-								: 'Yangi parametr qo‘shish'}
+								? t('editParameter')
+								: t('addNewParameter')}
 						</DialogTitle>
 					</DialogHeader>
 
 					<div className='space-y-3'>
-						<Label>Parametr kodi</Label>
+						<Label>{t('parameterCode')}</Label>
 						<Input
 							name='parameter_code'
 							value={form.parameter_code}
 							onChange={handleChange}
-							placeholder='Cod kiriting'
+							placeholder={t('enterCode')}
 						/>
 						{errors.parameter_code && (
 							<p className='text-red-500 text-sm'>{errors.parameter_code}</p>
 						)}
-						<Label>Parametr nomi</Label>
+						<Label>{t('parameterName')}</Label>
 						<Input
 							name='parameter_name'
 							value={form.parameter_name}
 							onChange={handleChange}
-							placeholder='Nomini kiriting'
+							placeholder={t('enterName')}
 						/>
 						{errors.parameter_name && (
 							<p className='text-red-500 text-sm'>{errors.parameter_name}</p>
 						)}
-						<Label>Parametr birligi</Label>
+						<Label>{t('parameterUnit')}</Label>
 						<Input
 							name='unit'
 							value={form.unit}
 							onChange={handleChange}
-							placeholder='Birlikni kiriting'
+							placeholder={t('enterUnit')}
 						/>
 						{errors.unit && (
 							<p className='text-red-500 text-sm'>{errors.unit}</p>
 						)}
-						<Label>Parametrga tavsif bering</Label>
+						<Label>{t('parameterDescription')}</Label>
 						<Input
 							name='description'
 							value={form.description}
 							onChange={handleChange}
-							placeholder='Izoh qoldiring'
+							placeholder={t('enterDescription')}
 						/>
 						{errors.description && (
 							<p className='text-red-500 text-sm'>{errors.description}</p>
@@ -782,7 +784,7 @@ export default function AnalysisParamsModal() {
 										onChange={() => handleGenderTypeChange('MALE_FEMALE')}
 										disabled={isMaleFemaleDisabled}
 									/>
-									Erkak/Ayol
+									{t('maleFemale')}
 								</label>
 								<label className='flex items-center gap-1'>
 									<input
@@ -791,7 +793,7 @@ export default function AnalysisParamsModal() {
 										onChange={() => handleGenderTypeChange('GENERAL')}
 										disabled={isGeneralDisabled}
 									/>
-									Umumiy
+									{t('general')}
 								</label>
 							</div>
 						)}
@@ -799,12 +801,12 @@ export default function AnalysisParamsModal() {
 						{/* Inputs */}
 						{form.gender_type === 'MALE_FEMALE' && (
 							<>
-								<Label>Erkak</Label>
+								<Label>{t('male')}</Label>
 								<div className='grid grid-cols-3 gap-2'>
 									<Input
 										disabled={disableMinMaxForBoth}
 										value={form.male.min}
-										placeholder='Min'
+										placeholder={t('min')}
 										type='number'
 										onKeyDown={e => {
 											if (
@@ -825,7 +827,7 @@ export default function AnalysisParamsModal() {
 									<Input
 										disabled={disableMinMaxForBoth}
 										value={form.male.max}
-										placeholder='Max'
+										placeholder={t('max')}
 										type='number'
 										onKeyDown={e => {
 											if (
@@ -846,19 +848,19 @@ export default function AnalysisParamsModal() {
 									<Input
 										disabled={disableValueForBoth}
 										value={form.male.value}
-										placeholder='Qiymat'
+										placeholder={t('value')}
 										type='string'
 										onChange={e =>
 											handleNormalChange('male', 'value', e.target.value)
 										}
 									/>
 								</div>
-								<Label>Ayol</Label>
+								<Label>{t('female')}</Label>
 								<div className='grid grid-cols-3 gap-2'>
 									<Input
 										disabled={disableMinMaxForBoth}
 										value={form.female.min}
-										placeholder='Min'
+										placeholder={t('min')}
 										type='number'
 										onKeyDown={e => {
 											if (
@@ -879,7 +881,7 @@ export default function AnalysisParamsModal() {
 									<Input
 										disabled={disableMinMaxForBoth}
 										value={form.female.max}
-										placeholder='Max'
+										placeholder={t('max')}
 										type='number'
 										onKeyDown={e => {
 											if (
@@ -900,7 +902,7 @@ export default function AnalysisParamsModal() {
 									<Input
 										disabled={disableValueForBoth}
 										value={form.female.value}
-										placeholder='Qiymat'
+										placeholder={t('value')}
 										type='string'
 										onChange={e =>
 											handleNormalChange('female', 'value', e.target.value)
@@ -917,7 +919,7 @@ export default function AnalysisParamsModal() {
 
 						{form.gender_type === 'GENERAL' && (
 							<>
-								<Label>Umumiy</Label>
+								<Label>{t('general')}</Label>
 								<div className='grid grid-cols-3 gap-2'>
 									<Input
 										type='number'
@@ -926,7 +928,7 @@ export default function AnalysisParamsModal() {
 										onChange={e =>
 											handleNormalChange('general', 'min', e.target.value)
 										}
-										placeholder='Min'
+										placeholder={t('min')}
 										onKeyDown={e => {
 											if (
 												e.key === ',' ||
@@ -947,7 +949,7 @@ export default function AnalysisParamsModal() {
 										onChange={e =>
 											handleNormalChange('general', 'max', e.target.value)
 										}
-										placeholder='Max'
+										placeholder={t('max')}
 										onKeyDown={e => {
 											if (
 												e.key === ',' ||
@@ -968,7 +970,7 @@ export default function AnalysisParamsModal() {
 											handleNormalChange('general', 'value', e.target.value)
 										}
 										disabled={disableValueForBothGeneral}
-										placeholder='Qiymat'
+										placeholder={t('value')}
 									/>
 								</div>
 								{errors.normal_range && (
@@ -988,14 +990,14 @@ export default function AnalysisParamsModal() {
 								setErrors({})
 							}}
 						>
-							Bekor qilish
+							{t('cancel')}
 						</Button>
 						<Button
 							onClick={onSaveParameter}
 							disabled={creating || updating}
 							className='bg-blue-600 text-white'
 						>
-							{creating || updating ? 'Saqlanmoqda...' : 'Saqlash'}
+							{creating || updating ? t('saving') : t('save')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

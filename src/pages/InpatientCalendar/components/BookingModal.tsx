@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -57,6 +58,7 @@ export const BookingModal = ({
   roomId,
   defaultStartDate,
 }: BookingModalProps) => {
+  const { t } = useTranslation("inpatient");
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [selectedRoomId, setSelectedRoomId] = useState<string>(roomId || "");
   const [startDate, setStartDate] = useState<string>("");
@@ -113,17 +115,17 @@ export const BookingModal = ({
     e.preventDefault();
 
     if (!selectedPatientId) {
-      toast.error("Беморни танланг");
+      toast.error(t("booking.selectPatient"));
       return;
     }
 
     if (!selectedRoomId) {
-      toast.error("Хонани танланг");
+      toast.error(t("booking.selectRoom"));
       return;
     }
 
     if (!startDate || !endDate) {
-      toast.error("Саналарни киритинг");
+      toast.error(t("booking.enterDates"));
       return;
     }
 
@@ -134,13 +136,13 @@ export const BookingModal = ({
 
     // Boshlanish sanasi bugundan oldin bo'lmasligi kerak
     if (startDate < todayStr) {
-      toast.error("Ўтган санага бронь қилиб бўлмайди");
+      toast.error(t("booking.cannotBookPastDate"));
       return;
     }
 
     // Tugash sanasi boshlanish sanasidan oldin bo'lmasligi kerak
     if (endDate < startDate) {
-      toast.error("Тугаш санаси бошланиш санасидан олдин бўлмаслиги керак");
+      toast.error(t("booking.endDateBeforeStartDate"));
       return;
     }
 
@@ -162,13 +164,13 @@ export const BookingModal = ({
           note: note || undefined,
         }).unwrap(),
       onSuccess: () => {
-        toast.success("Бронь муваффақиятли яратилди");
+        toast.success(t("booking.createSuccess"));
         resetForm();
         onOpenChange(false);
       },
       onError: ({ data }) => {
         toast.error(
-          data?.error?.msg || "Бронь яратишда хатолик юз берди"
+          data?.error?.msg || t("booking.createError")
         );
       },
     });
@@ -200,7 +202,7 @@ export const BookingModal = ({
       setSelectedPatientId(patientId);
       // Patient popover ni yopish
       setOpenPatientPopover(false);
-      toast.success("Бемор автоматик танланди, энди броньни давом эттиринг!");
+      toast.success(t("booking.patientAutoSelected"));
     }
   };
 
@@ -212,7 +214,7 @@ export const BookingModal = ({
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader className="space-y-2 sm:space-y-3">
             <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
-              Янги Бронь Яратиш
+              {t("booking.createNewBooking")}
             </DialogTitle>
           </DialogHeader>
 
@@ -236,7 +238,7 @@ export const BookingModal = ({
                       }
                       className="text-xs"
                     >
-                      {availableRoomsData ? availableRoomsData.data[0]?.available_beds : "noma'lum"} бўш
+                      {availableRoomsData ? availableRoomsData.data[0]?.available_beds : t("common.unknown")} {t("booking.available")}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       {formatNumber(availableRoomsData ? availableRoomsData.data[0]?.room_price : 0)} сўм
@@ -255,13 +257,13 @@ export const BookingModal = ({
                 className="text-xs w-full sm:w-auto"
               >
                 <UserPlus className="w-2 h-2 mr-1" />
-                Бемор қўшиш
+                {t("booking.addPatient")}
               </Button>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="patient" className="flex items-center gap-2 text-sm">
-                Бемор <span className="text-red-500">*</span>
+                {t("booking.patient")} <span className="text-red-500">*</span>
               </Label>
 
               <div className="w-full">
@@ -284,7 +286,7 @@ export const BookingModal = ({
                   ) : (
                     <span className="flex items-center gap-2 text-sm">
                       <Search className="w-3 h-3 sm:w-4 sm:h-4  " />
-                      Беморни қидириш...
+                      {t("booking.searchPatient")}
                     </span>
                   )}
                 </Button>
@@ -293,7 +295,7 @@ export const BookingModal = ({
                   {openPatientPopover && <Card className="absolute top-0 left-0 w-full z-30 bg-white ">
                     <Command shouldFilter={false}>
                       <CommandInput
-                        placeholder="Исм, телефон орқали қидириш..."
+                        placeholder={t("booking.searchByNamePhone")}
                         value={searchPatient}
                         onValueChange={setSearchPatient}
                         className="text-sm"
@@ -302,11 +304,11 @@ export const BookingModal = ({
                         <CommandEmpty className="text-sm py-6">
                           {patientsLoading ? (
                             <div className="flex flex-col items-center gap-2">
-                              <span>Юкланмоқда...</span>
+                              <span>{t("common.loading")}</span>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                              <span>Бемор топилмади</span>
+                              <span>{t("booking.patientNotFound")}</span>
                             </div>
                           )}
                         </CommandEmpty>
@@ -345,7 +347,7 @@ export const BookingModal = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start_date" className="text-sm">
-                  Бошланиш санаси <span className="text-red-500">*</span>
+                  {t("booking.startDate")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="start_date"
@@ -359,7 +361,7 @@ export const BookingModal = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="end_date" className="text-sm">
-                  Тугаш санаси <span className="text-red-500">*</span>
+                  {t("booking.endDate")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="end_date"
@@ -427,12 +429,12 @@ export const BookingModal = ({
 
             {/* Note */}
             <div className="space-y-2">
-              <Label htmlFor="note" className="text-sm sm:text-base">Изоҳ (ихтиёрий)</Label>
+              <Label htmlFor="note" className="text-sm sm:text-base">{t("booking.noteOptional")}</Label>
               <Textarea
                 id="note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Махсус диета, аллергия ва бошқа маълумотлар..."
+                placeholder={t("booking.notePlaceholder")}
                 rows={3}
                 className="text-sm sm:text-base resize-none"
               />
@@ -447,7 +449,7 @@ export const BookingModal = ({
                 disabled={isCreating}
                 className="w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
               >
-                Бекор қилиш
+                {t("common.cancel")}
               </Button>
               <Button
                 type="submit"
@@ -465,7 +467,7 @@ export const BookingModal = ({
                 ) : (
                   <>
                     <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                    Сақлаш
+                    {t("common.save")}
                   </>
                 )}
               </Button>

@@ -37,54 +37,55 @@ import { format } from 'date-fns';
 import { CalendarIcon, Plus, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
-const phoneRegex = /^\+998\s?\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/;
-const passportSeriesRegex = /^[A-Z]{2}$/;
-const passportNumberRegex = /^\d{7}$/;
+type PatientFormData = z.infer<ReturnType<typeof createPatientSchema>>;
 
-const patientSchema = z.object({
-  lastName: z
-    .string()
-    .min(2, 'Фамилия камида 2 та ҳарфдан иборат бўлиши керак')
-    .max(50, 'Фамилия жуда узун'),
-  firstName: z
-    .string()
-    .min(2, 'Исм камида 2 та ҳарфдан иборат бўлиши керак')
-    .max(50, 'Исм жуда узун'),
-  middleName: z.string().max(50, 'Отасининг исми жуда узун').optional(),
-  date_of_birth: z.date({ required_error: 'Туғилган санани танланг' }),
-  gender: z.enum(['male', 'female'], { required_error: 'Жинсни танланг' }),
-  phone: z
-    .string()
-    .regex(phoneRegex, 'Телефон рақами нотўғри форматда (+998 XX XXX XX XX)'),
-  address: z.string().min(5, 'Манзил камида 5 та белгидан иборат бўлиши керак'),
-  allergies: z.array(z.string()).optional().default([]),
+const createPatientSchema = (t: (key: string) => string) => {
+  const phoneRegex = /^\+998\s?\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/;
+  const passportSeriesRegex = /^[A-Z]{2}$/;
+  const passportNumberRegex = /^\d{7}$/;
 
-  regular_medications: z
-    .array(
-      z.object({
-        medicine: z.string().min(1, 'Дори номи киритилиши керак'),
-        schedule: z.string().min(1, 'Қабул вақти киритилиши керак'),
-      })
-    )
-    .optional()
-    .default([]),
-
-  passportSeries: z
-    .string()
-    .regex(passportSeriesRegex, 'Серия 2 та катта ҳарфдан иборат (AA)')
-    .optional()
-    .or(z.literal('')),
-  passportNumber: z
-    .string()
-    .regex(passportNumberRegex, 'Рақам 7 та рақамдан иборат')
-    .optional()
-    .or(z.literal('')),
-});
-
-type PatientFormData = z.infer<typeof patientSchema>;
+  return z.object({
+    lastName: z
+      .string()
+      .min(2, t('validation.lastNameMin'))
+      .max(50, t('validation.lastNameMax')),
+    firstName: z
+      .string()
+      .min(2, t('validation.firstNameMin'))
+      .max(50, t('validation.firstNameMax')),
+    middleName: z.string().max(50, t('validation.middleNameMax')).optional(),
+    date_of_birth: z.date({ required_error: t('validation.selectBirthDate') }),
+    gender: z.enum(['male', 'female'], { required_error: t('validation.selectGender') }),
+    phone: z
+      .string()
+      .regex(phoneRegex, t('validation.phoneFormat')),
+    address: z.string().min(5, t('validation.addressMin')),
+    allergies: z.array(z.string()).optional().default([]),
+    regular_medications: z
+      .array(
+        z.object({
+          medicine: z.string().min(1, t('validation.medicineName')),
+          schedule: z.string().min(1, t('validation.medicineSchedule')),
+        })
+      )
+      .optional()
+      .default([]),
+    passportSeries: z
+      .string()
+      .regex(passportSeriesRegex, t('validation.passportSeriesFormat'))
+      .optional()
+      .or(z.literal('')),
+    passportNumber: z
+      .string()
+      .regex(passportNumberRegex, t('validation.passportNumberFormat'))
+      .optional()
+      .or(z.literal('')),
+  });
+};
 
 interface NewPatientProps {
   open: boolean;
@@ -92,10 +93,14 @@ interface NewPatientProps {
 }
 
 const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
+  const { t } = useTranslation('patients');
+  const { t: tCommon } = useTranslation('common');
   const [medicineInput, setMedicineInput] = useState('');
   const [scheduleInput, setScheduleInput] = useState('');
   const [dateInput, setDateInput] = useState('');
   const [allergyInput, setAllergyInput] = useState('');
+
+  const patientSchema = createPatientSchema(t);
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
@@ -148,7 +153,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
     await handleRequest({
       request: async () => await createPatient(submitData),
       onSuccess: (data) => {
-        toast.success(`Бемор маълумотлари муваффақиятли сақланди!`);
+        toast.success(t('messages.patientSaved'));
       },
       onError: (err) => {
         toast.error(err.error.msg);
@@ -163,7 +168,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
       <DialogContent className='max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl max-h-[75vh] p-0 border-2 border-primary/30'>
         <DialogHeader className='p-4 sm:p-6 pb-0'>
           <DialogTitle className='text-xl sm:text-2xl'>
-            Янги Бемор Қўшиш
+            {t('addNewPatient')}
           </DialogTitle>
         </DialogHeader>
 
@@ -176,7 +181,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
               {/* Personal Information */}
               <div className='space-y-4'>
                 <h3 className='text-base sm:text-lg font-semibold'>
-                  Шахсий маълумотлар
+                  {t('personalInfo')}
                 </h3>
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
                   <FormField
@@ -185,11 +190,11 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Фамилия <span className='text-red-500'>*</span>
+                          {t('form.lastName')} <span className='text-red-500'>*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder='Алиев'
+                            placeholder={t('form.lastName')}
                             className='border-slate-400 border-2'
                             value={field.value}
                             onChange={(e) => {
@@ -213,12 +218,12 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Исм <span className='text-red-500'>*</span>
+                          {t('form.firstName')} <span className='text-red-500'>*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
                             className='border-slate-400 border-2'
-                            placeholder='Жасур'
+                            placeholder={t('form.firstName')}
                             value={field.value}
                             onChange={(e) => {
                               // Faqat harflarni qoldirish (lotin, kirill va probel)
@@ -240,11 +245,11 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                     name='middleName'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Отасининг исми</FormLabel>
+                        <FormLabel>{t('form.middleName')}</FormLabel>
                         <FormControl>
                           <Input
                             className='border-slate-400 border-2'
-                            placeholder='Абдуллаевич'
+                            placeholder={t('form.middleName')}
                             value={field.value}
                             onChange={(e) => {
                               // Faqat harflarni qoldirish (lotin, kirill va probel)
@@ -267,13 +272,13 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                     render={({ field }) => (
                       <FormItem className='space-y-2'>
                         <FormLabel>
-                          Туғилган сана <span className='text-red-500'>*</span>
+                          {t('form.birthDate')} <span className='text-red-500'>*</span>
                         </FormLabel>
                         <div className='flex gap-2'>
                           <FormControl>
                             <Input
                               className='border-slate-400 border-2 flex-1'
-                              placeholder='КК.ОО.ЙЙЙЙ (01.01.1990)'
+                              placeholder={t('form.dateFormat')}
                               value={
                                 dateInput !== null && dateInput !== undefined
                                   ? dateInput
@@ -415,7 +420,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Жинси <span className='text-red-500'>*</span>
+                          {t('gender')} <span className='text-red-500'>*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -423,12 +428,12 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                         >
                           <FormControl>
                             <SelectTrigger className='border-2 border-slate-400'>
-                              <SelectValue placeholder='Жинсни танланг' />
+                              <SelectValue placeholder={t('form.selectGender')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value='male'>Эркак</SelectItem>
-                            <SelectItem value='female'>Аёл</SelectItem>
+                            <SelectItem value='male'>{t('male')}</SelectItem>
+                            <SelectItem value='female'>{t('female')}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -442,7 +447,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                         name='passportSeries'
                         render={({ field }) => (
                           <FormItem className='col-span-2'>
-                            <FormLabel>Серияси</FormLabel>
+                            <FormLabel>{t('form.passportSeries')}</FormLabel>
                             <FormControl>
                               <Input
                                 className='border-slate-400 border-2'
@@ -468,7 +473,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                         name='passportNumber'
                         render={({ field }) => (
                           <FormItem className='col-span-3'>
-                            <FormLabel>Паспорт рақами</FormLabel>
+                            <FormLabel>{t('form.passportNumber')}</FormLabel>
                             <FormControl>
                               <Input
                                 className='border-slate-400 border-2'
@@ -497,7 +502,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
               {/* Contact Information */}
               <div className='space-y-4'>
                 <h3 className='text-base sm:text-lg font-semibold'>
-                  Алоқа маълумотлари
+                  {t('contactInfo')}
                 </h3>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                   <FormField
@@ -506,7 +511,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Телефон <span className='text-red-500'>*</span>
+                          {t('form.phone')} <span className='text-red-500'>*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -556,12 +561,12 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Манзил <span className='text-red-500'>*</span>
+                          {t('form.address')} <span className='text-red-500'>*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
                             className='border-slate-400 border-2'
-                            placeholder='Кўча номи, уй рақами'
+                            placeholder={t('form.streetAddress')}
                             {...field}
                           />
                         </FormControl>
@@ -577,7 +582,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
               {/* Medical Information */}
               <div className='space-y-4'>
                 <h3 className='text-base sm:text-lg font-semibold'>
-                  Тиббий маълумотлар
+                  {t('form.medicalInfo')}
                 </h3>
                 <div className='space-y-4'>
                   <FormField
@@ -585,7 +590,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                     name='allergies'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Аллергия</FormLabel>
+                        <FormLabel>{t('allergies')}</FormLabel>
                         <FormControl>
                           <div className='space-y-3'>
                             {field.value && field.value.length > 0 && (
@@ -617,7 +622,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                             <div className='flex gap-2'>
                               <Input
                                 className='border-slate-400 border-2'
-                                placeholder='Аллергия номи (масалан: Пенициллин)'
+                                placeholder={t('form.allergyPlaceholder')}
                                 value={allergyInput}
                                 onChange={(e) => {
                                   // Faqat harflarni qoldirish (lotin, kirill va probel)
@@ -673,7 +678,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                     name='regular_medications'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Ҳозирги дорилар</FormLabel>
+                        <FormLabel>{t('currentMedications')}</FormLabel>
                         <FormControl>
                           <div className='space-y-3'>
                             {field.value && field.value.length > 0 && (
@@ -717,7 +722,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                             <div className='grid grid-cols-1 sm:grid-cols-[1fr,1fr,auto] gap-2'>
                               <Input
                                 className='border-slate-400 border-2'
-                                placeholder='Дори номи (масалан: Аспирин)'
+                                placeholder={t('form.medicineName')}
                                 value={medicineInput}
                                 onChange={(e) => {
                                   const value = e.target.value.replace(
@@ -729,7 +734,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
                               />
                               <Input
                                 className='border-slate-400 border-2'
-                                placeholder='Қабул вақти (масалан: Кунига 2 марта)'
+                                placeholder={t('form.medicineSchedule')}
                                 value={scheduleInput}
                                 onChange={(e) =>
                                   setScheduleInput(e.target.value)
@@ -800,7 +805,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
             onClick={() => onOpenChange(false)}
             className='w-full sm:w-auto order-2 sm:order-1'
           >
-            Бекор қилиш
+            {tCommon('cancel')}
           </Button>
           <Button
             type='submit'
@@ -808,7 +813,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
             className='gradient-primary w-full sm:w-auto order-1 sm:order-2'
           >
             <Save className='w-4 h-4 mr-2' />
-            Сақлаш
+            {tCommon('save')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -40,12 +40,15 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import PatientPDFModal from '../../components/PDF/PatientPDFModal';
 import EditPatientModal from './components/EditPatientModal';
 import NewVisitDialog from './components/NewVisitDialog';
 
 const PatientProfile = () => {
+  const { t } = useTranslation('patients');
+  const { t: tCommon } = useTranslation('common');
   const navigate = useNavigate();
   const { id } = useParams();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -121,7 +124,7 @@ const PatientProfile = () => {
       <div className='min-h-screen bg-background flex items-center justify-center'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
-          <p className='text-muted-foreground'>Юкланмоқда...</p>
+          <p className='text-muted-foreground'>{t('profile.loading')}</p>
         </div>
       </div>
     );
@@ -150,7 +153,7 @@ const PatientProfile = () => {
                   {new Date(patient.date_of_birth).toLocaleDateString('uz-UZ')}
                 </span>
                 <span>•</span>
-                <span>{patient.gender === 'male' ? 'Эркак' : 'Аёл'}</span>
+                <span>{patient.gender === 'male' ? t('male') : t('female')}</span>
               </div>
               <div className='py-2 space-y-2'>
                 <div className='flex items-center gap-2'>
@@ -176,7 +179,7 @@ const PatientProfile = () => {
                 onClick={() => setIsEditModalOpen(true)}
               >
                 <Edit className='w-4 h-4 sm:mr-2' />
-                <span className='hidden sm:inline'>Таҳрирлаш</span>
+                <span className='hidden sm:inline'>{t('profile.edit')}</span>
               </Button>
             )}
             <Button
@@ -186,7 +189,7 @@ const PatientProfile = () => {
               onClick={() => setIsPDFModalOpen(true)}
             >
               <FileText className='w-4 h-4 sm:mr-2' />
-              <span className='hidden sm:inline'>PDF кўриш</span>
+              <span className='hidden sm:inline'>{t('profile.viewPDF')}</span>
             </Button>
             {canCreateExam && (
               <Button
@@ -195,7 +198,7 @@ const PatientProfile = () => {
                 onClick={() => setIsNewVisitOpen(true)}
               >
                 <Plus className='w-4 h-4 sm:mr-2' />
-                <span className='hidden sm:inline'>Янги Кўрик Яратиш</span>
+                <span className='hidden sm:inline'>{t('profile.newExam')}</span>
               </Button>
             )}
             {canDeletePatient && (
@@ -206,7 +209,7 @@ const PatientProfile = () => {
                 onClick={() => setIsDeleteModalOpen(true)}
               >
                 <FileX className='w-4 h-4 sm:mr-2' />
-                <span className='hidden sm:inline'>Ўчириш</span>
+                <span className='hidden sm:inline'>{t('profile.delete')}</span>
               </Button>
             )}
           </div>
@@ -217,7 +220,7 @@ const PatientProfile = () => {
           <Card className='bg-gradient-to-r from-danger/10 to-warning/10 border-danger mb-4 sm:mb-6 flex items-center gap-2 p-2'>
             <AlertTriangle className='w-6 h-6 sm:w-8 sm:h-8 text-danger flex-shrink-0' />
             <h3 className='font-bold text-base sm:text-lg mb-1'>
-              АЛЛЕРГИЯЛАР:
+              {t('profile.allergiesWarning')}
             </h3>
             <p className='text-danger font-semibold text-sm sm:text-base'>
               {patient.allergies.join(', ')}
@@ -232,13 +235,13 @@ const PatientProfile = () => {
               value='general'
               className='py-2 sm:py-3 text-xs sm:text-sm'
             >
-              Умумий
+              {t('profile.general')}
             </TabsTrigger>
             <TabsTrigger
               value='visits'
               className='py-2 sm:py-3 text-xs sm:text-sm'
             >
-              Кўриклар
+              {t('profile.visits')}
             </TabsTrigger>
           </TabsList>
 
@@ -248,14 +251,14 @@ const PatientProfile = () => {
               <Card className='card-shadow'>
                 <div className='p-4 sm:p-6'>
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
-                    Бемор маълумотлари
+                    {t('profile.patientInfo')}
                   </h3>
                   <div className='space-y-3'>
                     {canViewPatientDetails && (
                       <React.Fragment>
                         <div className='flex justify-between py-2 border-b'>
                           <span className='text-sm text-muted-foreground'>
-                            Паспорт серияси:
+                            {t('profile.passportSeries')}
                           </span>
                           <span className='font-semibold'>
                             {patient.passport.series}
@@ -263,7 +266,7 @@ const PatientProfile = () => {
                         </div>
                         <div className='flex justify-between py-2 border-b'>
                           <span className='text-sm text-muted-foreground'>
-                            Паспорт рақами:
+                            {t('profile.passportNumber')}
                           </span>
                           <span className='font-semibold'>
                             {patient.passport.number}
@@ -273,7 +276,7 @@ const PatientProfile = () => {
                     )}
                     <div className='flex justify-between py-2 border-b'>
                       <span className='text-sm text-muted-foreground'>
-                        Рўйхатдан ўтган сана:
+                        {t('profile.registrationDate')}
                       </span>
                       <span className='font-semibold'>
                         {new Date(patient.created_at).toLocaleDateString(
@@ -289,7 +292,7 @@ const PatientProfile = () => {
               <Card className='card-shadow'>
                 <div className='p-4 sm:p-6'>
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
-                    Доимий Дорилар
+                    {t('profile.regularMedications')}
                   </h3>
                   {patient.regular_medications &&
                   patient.regular_medications.length > 0 ? (
@@ -310,7 +313,7 @@ const PatientProfile = () => {
                     </div>
                   ) : (
                     <p className='text-sm text-muted-foreground text-center py-4'>
-                      Доимий дорилар йўқ
+                      {t('profile.noMedications')}
                     </p>
                   )}
                 </div>
@@ -320,7 +323,7 @@ const PatientProfile = () => {
               <Card className='card-shadow'>
                 <div className='p-4 sm:p-6'>
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
-                    Диагноз
+                    {t('profile.diagnosis')}
                   </h3>
                   {patient.diagnosis?.diagnosis_id ? (
                     <p className='p-3 bg-accent rounded-lg border-l-4 border-primary'>
@@ -353,7 +356,7 @@ const PatientProfile = () => {
                     </p>
                   ) : (
                     <p className='text-sm text-muted-foreground text-center py-4'>
-                      Ҳали диагноз белгиланмаган
+                      {t('profile.noDiagnosis')}
                     </p>
                   )}
                 </div>
@@ -363,18 +366,18 @@ const PatientProfile = () => {
               <Card className='card-shadow'>
                 <div className='p-4 sm:p-6'>
                   <h3 className='text-lg sm:text-xl font-bold mb-3 sm:mb-4'>
-                    Қўшимча маълумот
+                    {t('profile.additionalInfo')}
                   </h3>
                   <div className='space-y-3'>
                     <div className='p-3 bg-accent rounded-lg'>
                       <p className='text-xs text-muted-foreground mb-1'>
-                        Манзил
+                        {t('profile.address')}
                       </p>
                       <p className='text-sm font-medium'>{patient.address}</p>
                     </div>
                     <div className='p-3 bg-accent rounded-lg'>
                       <p className='text-xs text-muted-foreground mb-1'>
-                        Охирги янгиланган сана
+                        {t('profile.lastUpdated')}
                       </p>
                       <p className='text-sm font-medium'>
                         {new Date(patient.updated_at).toLocaleString('uz-UZ')}
@@ -391,23 +394,23 @@ const PatientProfile = () => {
               {examsLoading ? (
                 <div className='p-8 text-center'>
                   <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
-                  <p className='text-muted-foreground'>Юкланмоқда...</p>
+                  <p className='text-muted-foreground'>{tCommon('loading')}</p>
                 </div>
               ) : exams.length === 0 ? (
                 <div className='p-8 text-center'>
                   <FileText className='w-12 h-12 text-muted-foreground mx-auto mb-4' />
                   <h3 className='text-lg font-semibold mb-2'>
-                    Ташрифлар топилмади
+                    {t('profile.noVisits')}
                   </h3>
                   <p className='text-sm text-muted-foreground mb-4'>
-                    Бу бемор учун ҳали ташрифлар қайд қилинмаган
+                    {t('profile.noVisitsDescription')}
                   </p>
                   <Button
                     onClick={() => setIsNewVisitOpen(true)}
                     className='gradient-primary'
                   >
                     <Plus className='w-4 h-4 mr-2' />
-                    Янги Кўрик Яратиш
+                    {t('profile.newExam')}
                   </Button>
                 </div>
               ) : (
@@ -417,13 +420,13 @@ const PatientProfile = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Шифокор</TableHead>
-                          <TableHead>Шикоят</TableHead>
-                          <TableHead>Диагноз</TableHead>
-                          <TableHead>Статус</TableHead>
-                          <TableHead>Сана</TableHead>
+                          <TableHead>{t('profile.doctor')}</TableHead>
+                          <TableHead>{t('profile.complaint')}</TableHead>
+                          <TableHead>{t('profile.diagnosis')}</TableHead>
+                          <TableHead>{t('profile.status')}</TableHead>
+                          <TableHead>{t('profile.date')}</TableHead>
                           <TableHead className='text-right'>
-                            Ҳаракатлар
+                            {t('profile.actions')}
                           </TableHead>
                         </TableRow>
                       </TableHeader>
@@ -465,19 +468,19 @@ const PatientProfile = () => {
                               {(() => {
                                 const statusConfig = {
                                   active: {
-                                    text: 'Фаол',
+                                    text: t('statuses.active'),
                                     variant: 'default' as const,
                                   },
                                   completed: {
-                                    text: 'Тугалланган',
+                                    text: t('statuses.completed'),
                                     variant: 'secondary' as const,
                                   },
                                   inactive: {
-                                    text: 'Фаол эмас',
+                                    text: t('statuses.inactive'),
                                     variant: 'outline' as const,
                                   },
                                   deleted: {
-                                    text: 'Ўчирилган',
+                                    text: t('statuses.deleted'),
                                     variant: 'destructive' as const,
                                   },
                                 };
@@ -510,7 +513,7 @@ const PatientProfile = () => {
                                   }}
                                 >
                                   <Eye className='w-4 h-4 mr-2' />
-                                  Батафсил
+                                  {t('profile.details')}
                                 </Button>
                               </div>
                             </TableCell>
@@ -539,19 +542,19 @@ const PatientProfile = () => {
                             {(() => {
                               const statusConfig = {
                                 active: {
-                                  text: 'Фаол',
+                                  text: t('statuses.active'),
                                   variant: 'default' as const,
                                 },
                                 completed: {
-                                  text: 'Тугалланган',
+                                  text: t('statuses.completed'),
                                   variant: 'secondary' as const,
                                 },
                                 inactive: {
-                                  text: 'Фаол эмас',
+                                  text: t('statuses.inactive'),
                                   variant: 'outline' as const,
                                 },
                                 deleted: {
-                                  text: 'Ўчирилган',
+                                  text: t('statuses.deleted'),
                                   variant: 'destructive' as const,
                                 },
                               };
@@ -573,7 +576,7 @@ const PatientProfile = () => {
                           {/* Complaint */}
                           <div>
                             <p className='text-xs text-muted-foreground mb-1'>
-                              Шикоят:
+                              {t('profile.complaint')}:
                             </p>
                             <p className='text-sm line-clamp-2'>
                               {exam.complaints}
@@ -584,7 +587,7 @@ const PatientProfile = () => {
                           {exam.diagnosis?.diagnosis_id?.name && (
                             <div>
                               <p className='text-xs text-muted-foreground mb-1'>
-                                Диагноз:
+                                {t('profile.diagnosis')}:
                               </p>
                               <p className='text-sm font-medium'>
                                 {exam.diagnosis.diagnosis_id.name}
@@ -615,7 +618,7 @@ const PatientProfile = () => {
                             }}
                           >
                             <Eye className='w-4 h-4 mr-2' />
-                            Батафсил
+                            {t('profile.details')}
                           </Button>
                         </div>
                       </Card>
@@ -646,26 +649,25 @@ const PatientProfile = () => {
                 <DialogHeader>
                   <DialogTitle className='flex items-center gap-2'>
                     <AlertTriangle className='w-5 h-5 text-red-600' />
-                    Беморни ўчириш
+                    {t('profile.deletePatient')}
                   </DialogTitle>
                   <DialogDescription>
-                    Сиз ҳақиқатан ҳам бу беморни ўчирмоқчимисиз? Бу амал
-                    қайтарилмайди ва барча маълумотлар ўчирилади.
+                    {t('profile.deleteConfirmation')}
                   </DialogDescription>
                 </DialogHeader>
 
                 <div className='py-4'>
                   <div className='p-4 bg-muted rounded-lg space-y-2'>
                     <p className='text-sm'>
-                      <span className='font-semibold'>Бемор:</span>{' '}
+                      <span className='font-semibold'>{t('profile.patient')}</span>{' '}
                       {patient.fullname}
                     </p>
                     <p className='text-sm'>
-                      <span className='font-semibold'>ID:</span>{' '}
+                      <span className='font-semibold'>{t('profile.id')}</span>{' '}
                       {patient.patient_id}
                     </p>
                     <p className='text-sm'>
-                      <span className='font-semibold'>Телефон:</span>{' '}
+                      <span className='font-semibold'>{t('profile.phone')}</span>{' '}
                       {patient.phone}
                     </p>
                   </div>
@@ -676,10 +678,10 @@ const PatientProfile = () => {
                     variant='outline'
                     onClick={() => setIsDeleteModalOpen(false)}
                   >
-                    Бекор қилиш
+                    {tCommon('cancel')}
                   </Button>
                   <Button variant='destructive' onClick={onDelete}>
-                    Ўчириш
+                    {tCommon('delete')}
                   </Button>
                 </DialogFooter>
               </DialogContent>

@@ -3,6 +3,7 @@ import {
 	useGetAllExamsQuery,
 	useTakeServiceMutation,
 } from '@/app/api/examinationApi'
+import { useTranslation } from 'react-i18next'
 import type {
 	getOnePrescriptionRes,
 	getOneServiceRes,
@@ -106,6 +107,7 @@ interface ExamRecord {
 }
 
 const Medicine = () => {
+	const { t } = useTranslation('medication')
 	const [currentPage, setCurrentPage] = useState(1)
 	const [itemsPerPage, setItemsPerPage] = useState(10)
 	const [roomSearch, setRoomSearch] = useState('')
@@ -234,7 +236,7 @@ const Medicine = () => {
 						},
 					}),
 				onSuccess: () => {
-					toast.success('Дори қабул қилинди ✓')
+					toast.success(t('medicineTaken'))
 					setConfirmModal({
 						open: false,
 						recordId: null,
@@ -249,7 +251,7 @@ const Medicine = () => {
 					if (err?.data) {
 						toast.error(err?.data?.error?.msg)
 					} else {
-						toast.error(err?.error?.msg || 'Хатолик юз берди')
+						toast.error(err?.error?.msg || t('errorOccurred'))
 					}
 				},
 			})
@@ -264,7 +266,7 @@ const Medicine = () => {
 						},
 					}),
 				onSuccess: () => {
-					toast.success('Хизмат бажарилди ✓')
+					toast.success(t('serviceCompleted'))
 					setConfirmModal({
 						open: false,
 						recordId: null,
@@ -279,7 +281,7 @@ const Medicine = () => {
 					if (err?.data) {
 						toast.error(err?.data?.error?.msg)
 					} else {
-						toast.error(err?.error?.msg || 'Хатолик юз берди')
+						toast.error(err?.error?.msg || t('errorOccurred'))
 					}
 				},
 			})
@@ -302,7 +304,7 @@ const Medicine = () => {
 	if (isError || !data) {
 		return (
 			<div className='min-h-screen bg-background flex items-center justify-center'>
-				<p className='text-red-500'>Маълумотларни юклашда хатолик!</p>
+				<p className='text-red-500'>{t('loadingError')}</p>
 			</div>
 		)
 	}
@@ -327,13 +329,13 @@ const Medicine = () => {
 					<CardHeader className='pb-3 sm:pb-6'>
 						<div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3'>
 							<CardTitle className='text-lg sm:text-xl md:text-2xl'>
-								Дори Бериш Жадвали (MAR)
+								{t('marTitle')}
 							</CardTitle>
 
 							{/* Room Search */}
 							<div className='flex gap-2 w-full sm:w-auto'>
 								<Input
-									placeholder='Xona raqami bilan qidiruv...'
+									placeholder={t('searchByRoom')}
 									value={roomSearch}
 									onChange={e => setRoomSearch(e.target.value)}
 									onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -362,7 +364,7 @@ const Medicine = () => {
 													{record.patient_id.fullname}
 												</p>
 												<p className='text-xs text-muted-foreground mt-0.5'>
-													Ётоқ:{' '}
+													{t('bed')}:{' '}
 													{record.rooms[record.rooms.length - 1]?.room_name ||
 														'N/A'}
 												</p>
@@ -373,13 +375,13 @@ const Medicine = () => {
 									<AccordionContent className='px-2 sm:px-4 pb-2 sm:pb-4'>
 										<Tabs defaultValue='medicines' className='w-full'>
 											<TabsList className='grid w-full grid-cols-2 mb-4'>
-												<TabsTrigger value='medicines'>Дорилар</TabsTrigger>
-												<TabsTrigger value='services'>Хизматлар</TabsTrigger>
+												<TabsTrigger value='medicines'>{t('medicinesTab')}</TabsTrigger>
+												<TabsTrigger value='services'>{t('servicesTab')}</TabsTrigger>
 											</TabsList>{' '}
 											<TabsContent value='medicines'>
 												{!record.prescription ? (
 													<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
-														Дорилар топилмади
+														{t('medicinesNotFound')}
 													</p>
 												) : (
 													<div className='space-y-2 sm:space-y-4 pt-2 sm:pt-3'>
@@ -405,10 +407,9 @@ const Medicine = () => {
 											</TabsContent>
 											<TabsContent value='services'>
 												{!record.service ||
-												!record.service.items ||
 												record.service.items.length === 0 ? (
 													<p className='text-xs sm:text-sm text-muted-foreground text-center py-4'>
-														Хизматлар топилмади
+														{t('servicesNotFound')}
 													</p>
 												) : (
 													<div className='space-y-2 sm:space-y-4 pt-2 sm:pt-3'>
@@ -435,13 +436,13 @@ const Medicine = () => {
 																				</h4>
 																				{(service as any).notes && (
 																					<p className='text-xs font-medium text-muted-foreground mt-1'>
-																						ИЗОҲ: {(service as any).notes}
+																						{t('note')}: {(service as any).notes}
 																					</p>
 																				)}
 																				<p className='text-xs text-muted-foreground mt-0.5'>
-																					Нарх:{' '}
+																					{t('price')}:{' '}
 																					{service.service_type_id.price?.toLocaleString()}{' '}
-																					сўм
+																					{t('sum')}
 																				</p>
 																			</div>
 																		</div>
@@ -452,7 +453,7 @@ const Medicine = () => {
 																			<div className='flex items-center justify-center py-6 sm:py-8'>
 																				<Loader2 className='w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary' />
 																				<span className='ml-2 text-xs sm:text-sm text-muted-foreground'>
-																					Кунлар яратилмоқда...
+																					{t('daysBeingCreated')}
 																				</span>
 																			</div>
 																		)}
@@ -485,12 +486,12 @@ const Medicine = () => {
 																								}
 																							>
 																								<p className='text-xs font-medium mb-1 text-center line-clamp-1'>
-																									Кун {day.day}
+																									{t('day')} {day.day}
 																								</p>
 																								{lastDate && (
 																									<p className='text-[10px] text-black mb-1.5 text-center'>
 																										{isToday(String(day.date))
-																											? 'Bugun'
+																											? t('today')
 																											: lastDate}
 																									</p>
 																								)}
@@ -508,7 +509,7 @@ const Medicine = () => {
 																										</div>
 																									) : (
 																										<span className='text-xs'>
-																											Бажарилмаган
+																											{t('notCompleted')}
 																										</span>
 																									)}
 																								</button>
@@ -542,12 +543,12 @@ const Medicine = () => {
 																								}
 																							>
 																								<p className='text-xs font-medium mb-0.5 text-center line-clamp-1'>
-																									Кун {day.day}
+																									{t('day')} {day.day}
 																								</p>
 																								{lastDate && (
 																									<p className='text-[10px] text-black mb-1 text-center'>
 																										{isToday(String(day.date))
-																											? 'Bugun'
+																											? t('today')
 																											: lastDate}
 																									</p>
 																								)}
@@ -565,7 +566,7 @@ const Medicine = () => {
 																										</div>
 																									) : (
 																										<span className='text-xs'>
-																											Бажарилмаган
+																											{t('notCompleted')}
 																										</span>
 																									)}
 																								</button>
@@ -600,7 +601,7 @@ const Medicine = () => {
 																							>
 																								<div className='flex items-center justify-between mb-1'>
 																									<span className='text-xs font-medium'>
-																										Кун {day.day}
+																										{t('day')} {day.day}
 																									</span>
 																									<button
 																										disabled={isCompleted}
@@ -622,7 +623,7 @@ const Medicine = () => {
 																								{lastDate && (
 																									<p className='text-[9px] text-black text-left'>
 																										{isToday(String(day.date))
-																											? 'Bugun'
+																											? t('today')
 																											: lastDate}
 																									</p>
 																								)}
@@ -636,7 +637,7 @@ const Medicine = () => {
 																		{/* Days yo'q va processing ham yo'q */}
 																		{!hasDays && !isProcessing && (
 																			<p className='text-xs sm:text-sm text-black text-center py-4'>
-																				Кунлар юкланмоқда...
+																				{t('daysLoading')}
 																			</p>
 																		)}
 																	</CardContent>
@@ -657,8 +658,8 @@ const Medicine = () => {
 							<div className='text-center py-8'>
 								<p className='text-sm text-muted-foreground'>
 									{roomSearch
-										? `"${roomSearch}" хонада беморлар топилмади`
-										: 'Беморлар топилмади'}
+										? t('noPatientsInRoom', { room: roomSearch })
+										: t('noPatientsFound')}
 								</p>
 							</div>
 						)}
@@ -668,7 +669,7 @@ const Medicine = () => {
 							<div className='mt-6 flex flex-col lg:flex-row items-center justify-between gap-4'>
 								<div className='flex items-center gap-2'>
 									<span className='text-sm text-muted-foreground'>
-										Саҳифада:
+										{t('perPage')}:
 									</span>
 									<Select
 										value={itemsPerPage.toString()}
@@ -821,13 +822,13 @@ const Medicine = () => {
 				<DialogContent className='max-w-[90vw] sm:max-w-sm'>
 					<DialogHeader>
 						<DialogTitle className='text-base sm:text-lg'>
-							Тасдиқлаш
+							{t('confirmation')}
 						</DialogTitle>
 					</DialogHeader>
 					<p className='text-sm sm:text-base text-muted-foreground py-3 sm:py-4'>
 						{confirmModal.type === 'medicine'
-							? 'Бемор дорини ичдими?'
-							: 'Хизмат бажарилдими?'}
+							? t('patientTookMedicine')
+							: t('serviceCompleted')}
 					</p>
 					<DialogFooter className='flex gap-2 sm:gap-3'>
 						<Button
@@ -845,13 +846,13 @@ const Medicine = () => {
 							}
 							className='flex-1 sm:flex-none text-sm'
 						>
-							Йўқ
+							{t('no')}
 						</Button>
 						<Button
 							onClick={handleConfirm}
 							className='flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-sm'
 						>
-							Ҳа
+							{t('yes')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

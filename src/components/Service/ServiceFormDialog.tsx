@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface FormState {
   code: string;
@@ -46,6 +47,7 @@ export default function ServiceFormDialog({
   onSubmit,
   isLoading,
 }: ServiceFormDialogProps) {
+  const { t } = useTranslation('service');
   const [requirementInput, setRequirementInput] = useState('');
 
   const handleChange = (
@@ -90,19 +92,19 @@ export default function ServiceFormDialog({
       <DialogContent className='w-[95%] sm:max-w-lg mx-auto p-6 sm:p-8 rounded-xl overflow-y-auto max-h-[90vh] max-w-xl'>
         <DialogHeader>
           <DialogTitle>
-            {editingService ? 'Хизматни таҳрирлаш' : 'Янги хизмат қўшиш'}
+            {editingService ? t('form.editService') : t('form.addNewService')}
           </DialogTitle>
         </DialogHeader>
 
         <div className='space-y-4'>
           {/* Code */}
           <div>
-            <Label>Хизмат коди *</Label>
+            <Label>{t('form.serviceCode')} *</Label>
             <Input
               name='code'
               value={form.code}
               onChange={handleChange}
-              placeholder='Масалан: S001'
+              placeholder={t('form.serviceCodePlaceholder')}
             />
             {errors.code && (
               <p className='text-red-500 text-sm mt-1'>{errors.code}</p>
@@ -111,12 +113,12 @@ export default function ServiceFormDialog({
 
           {/* Name */}
           <div>
-            <Label>Хизмат номи *</Label>
+            <Label>{t('form.serviceName')} *</Label>
             <Input
               name='name'
               value={form.name}
               onChange={handleChange}
-              placeholder='Масалан: Кўрик'
+              placeholder={t('form.serviceNamePlaceholder')}
             />
             {errors.name && (
               <p className='text-red-500 text-sm mt-1'>{errors.name}</p>
@@ -125,12 +127,12 @@ export default function ServiceFormDialog({
 
           {/* Description */}
           <div>
-            <Label>Тавсиф *</Label>
+            <Label>{t('form.description')} *</Label>
             <Textarea
               name='description'
               value={form.description}
               onChange={handleChange}
-              placeholder='Хизмат ҳақида қисқача маълумот'
+              placeholder={t('form.descriptionPlaceholder')}
               rows={3}
             />
             {errors.description && (
@@ -141,7 +143,7 @@ export default function ServiceFormDialog({
           {/* Price and Duration */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
-              <Label>Нархи (сўм) *</Label>
+              <Label>{t('form.priceLabel')} *</Label>
               <Input
                 name='price'
                 type='number'
@@ -156,7 +158,7 @@ export default function ServiceFormDialog({
             </div>
 
             <div>
-              <Label>Давомийлик (дақиқа) *</Label>
+              <Label>{t('form.durationLabel')} *</Label>
               <Input
                 name='duration_minutes'
                 type='number'
@@ -175,12 +177,12 @@ export default function ServiceFormDialog({
 
           {/* Requirements */}
           <div>
-            <Label>Талаблар</Label>
+            <Label>{t('form.requirements')}</Label>
             <div className='flex gap-2'>
               <Input
                 value={requirementInput}
                 onChange={(e) => setRequirementInput(e.target.value)}
-                placeholder='Талаб киритинг'
+                placeholder={t('form.enterRequirement')}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -193,7 +195,7 @@ export default function ServiceFormDialog({
                 onClick={() => handleAddRequirement(requirementInput)}
                 size='sm'
               >
-                Қўшиш
+                {t('form.addBtn')}
               </Button>
             </div>
             <div className='flex flex-wrap gap-2 mt-2'>
@@ -226,21 +228,21 @@ export default function ServiceFormDialog({
               }
             />
             <Label htmlFor='is_active' className='cursor-pointer'>
-              Актив хизмат
+              {t('form.activeService')}
             </Label>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant='outline' onClick={() => onOpenChange(false)}>
-            Бекор қилиш
+            {t('form.cancelBtn')}
           </Button>
           <Button
             onClick={onSubmit}
             disabled={isLoading}
             className='bg-blue-600 text-white'
           >
-            {isLoading ? 'Сақланмоқда...' : 'Сақлаш'}
+            {isLoading ? t('form.savingBtn') : t('form.saveBtn')}
           </Button>
         </DialogFooter>
       </DialogContent>

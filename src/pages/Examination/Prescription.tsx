@@ -49,6 +49,7 @@ import {
   X,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -96,6 +97,7 @@ interface FormValidationErrors {
 }
 
 const Prescription = () => {
+  const { t } = useTranslation(['prescription', 'common']);
   const navigate = useNavigate();
   const location = useLocation();
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -575,12 +577,12 @@ const Prescription = () => {
   // Dorilarni alohida saqlash
   const handleSaveMedications = async () => {
     if (!selectedExaminationId) {
-      toast.error('Илтимос, кўрикни танланг');
+      toast.error(t('prescription:selectExamError'));
       return;
     }
 
     if (medications.length === 0) {
-      toast.error('Илтимос, камида битта дори қўшинг');
+      toast.error(t('prescription:addMedicationError'));
       return;
     }
 
@@ -614,7 +616,7 @@ const Prescription = () => {
 
     if (hasErrors) {
       setFormErrors((prev) => ({ ...prev, medications: medErrors }));
-      toast.error('Илтимос, барча майдонларни тўлдиринг');
+      toast.error(t('prescription:fillAllFieldsError'));
       return;
     }
 
@@ -626,9 +628,7 @@ const Prescription = () => {
       (id, index) => medicationIds.indexOf(id) !== index
     );
     if (duplicates.length > 0) {
-      toast.error(
-        'Такрорланган дори. Ҳар бир дори фақат бир марта қўшилиши керак.'
-      );
+      toast.error(t('prescription:fillAllFieldsError'));
       return;
     }
 
@@ -689,11 +689,11 @@ const Prescription = () => {
         }
       },
       onSuccess: () => {
-        toast.success(`${medications.length} та дори муваффақиятли сақланди`);
+        toast.success(`${medications.length} ${t('prescription:medicationsSaved')}`);
         setMedications([]);
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || `Дориларни сақлашда хатолик`);
+        toast.error(error?.data?.error?.msg || t('prescription:medicationsSaveError'));
       },
     });
   };
@@ -701,12 +701,12 @@ const Prescription = () => {
   // Xizmatlarni alohida saqlash
   const handleSaveServices = async () => {
     if (!selectedExaminationId) {
-      toast.error('Илтимос, кўрикни танланг');
+      toast.error(t('prescription:selectExamError'));
       return;
     }
 
     if (services.length === 0) {
-      toast.error('Илтимос, камида битта хизмат қўшинг');
+      toast.error(t('prescription:addServiceError'));
       return;
     }
 
@@ -724,17 +724,17 @@ const Prescription = () => {
     }
 
     if (!serviceDuration || serviceDuration < 1) {
-      toast.error('Илтимос, хизмат муддатини киритинг');
+      toast.error(t('prescription:serviceDurationError'));
       return;
     }
     if (!serviceStartDate) {
-      toast.error('Илтимос, бошланиш санасини танланг');
+      toast.error(t('prescription:serviceStartDateError'));
       return;
     }
 
     if (hasErrors) {
       setFormErrors((prev) => ({ ...prev, services: srvErrors }));
-      toast.error('Илтимос, барча майдонларни тўлдиринг');
+      toast.error(t('prescription:fillAllFieldsError'));
       return;
     }
 
@@ -746,9 +746,7 @@ const Prescription = () => {
       (id, index) => serviceIds.indexOf(id) !== index
     );
     if (duplicates.length > 0) {
-      toast.error(
-        'Такрорланган хизмат. Ҳар бир хизмат фақат бир марта қўшилиши керак.'
-      );
+      toast.error(t('prescription:fillAllFieldsError'));
       return;
     }
 
@@ -849,11 +847,11 @@ const Prescription = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success(`${services.length} та хизмат муваффақиятли сақланди`);
+        toast.success(`${services.length} ${t('prescription:servicesSaved')}`);
         setServices([]);
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || `Хизматларни сақлашда хатолик`);
+        toast.error(error?.data?.error?.msg || t('prescription:servicesSaveError'));
       },
     });
   };
@@ -895,26 +893,26 @@ const Prescription = () => {
 
   const handleUpdatePrescription = async () => {
     if (!editingPrescriptionId || !editingPrescriptionDocId) {
-      toast.error('Рецепт маълумотлари топилмади');
+      toast.error(t('prescription:prescriptionDataNotFound'));
       return;
     }
 
     if (!editPrescriptionForm.medication_id.trim()) {
-      toast.error('Илтимос, дорини танланг');
+      toast.error(t('prescription:selectMedicationError'));
       return;
     }
     if (
       !editPrescriptionForm.frequency ||
       parseInt(editPrescriptionForm.frequency) <= 0
     ) {
-      toast.error('Илтимос, қабул қилиш частотасини киритинг');
+      toast.error(t('prescription:frequencyError'));
       return;
     }
     if (
       !editPrescriptionForm.duration ||
       parseInt(editPrescriptionForm.duration) <= 0
     ) {
-      toast.error('Илтимос, даволаш муддатини киритинг');
+      toast.error(t('prescription:durationError'));
       return;
     }
 
@@ -959,7 +957,7 @@ const Prescription = () => {
         return res;
       },
       onSuccess: () => {
-        toast.success('Рецепт муваффақиятли янгиланди');
+        toast.success(t('prescription:prescriptionUpdated'));
         setEditPrescriptionForm({
           medication_id: '',
           frequency: '',
@@ -972,7 +970,7 @@ const Prescription = () => {
         setEditingPrescriptionDocId(null);
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || 'Рецептни янгилашда хатолик');
+        toast.error(error?.data?.error?.msg || t('prescription:prescriptionUpdateError'));
       },
     });
   };
@@ -986,7 +984,7 @@ const Prescription = () => {
             <div className='text-center'>
               <Loader2 className='h-8 w-8 sm:h-12 sm:w-12 animate-spin text-primary mx-auto mb-4' />
               <p className='text-sm sm:text-base text-muted-foreground'>
-                Маълумотлар юкланмоқда...
+                {t('prescription:loadingData')}
               </p>
             </div>
           </div>
@@ -996,14 +994,14 @@ const Prescription = () => {
         {!isLoading && !selectedExaminationId ? (
           <Card className='mb-4 sm:mb-6'>
             <CardHeader>
-              <CardTitle>Кўрикни танланг</CardTitle>
+              <CardTitle>{t('prescription:selectExamination')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='space-y-4'>
                 <div className='relative'>
                   <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
                   <Input
-                    placeholder='Бемор, шифокор ёки кўрик ID орқали қидириш...'
+                    placeholder={t('prescription:searchPlaceholder')}
                     value={examinationSearch}
                     onChange={(e) => setExaminationSearch(e.target.value)}
                     className='pl-9 h-10 sm:h-12 text-sm sm:text-base'
@@ -1017,22 +1015,22 @@ const Prescription = () => {
                     {isLoadingExaminations && examinations.length === 0 ? (
                       <div className='p-6 text-center text-sm text-muted-foreground'>
                         <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
-                        Юкланмоқда...
+                        {t('prescription:loading')}
                       </div>
                     ) : examinations.length === 0 ? (
                       <div className='p-6 text-center text-sm text-muted-foreground'>
-                        Актив кўриклар топилмади
+                        {t('prescription:noActiveExams')}
                       </div>
                     ) : (
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Бемор</TableHead>
-                            <TableHead>Шифокор</TableHead>
-                            <TableHead>Сана</TableHead>
-                            <TableHead>Шикоят</TableHead>
+                            <TableHead>{t('prescription:patient')}</TableHead>
+                            <TableHead>{t('prescription:doctor')}</TableHead>
+                            <TableHead>{t('prescription:date')}</TableHead>
+                            <TableHead>{t('prescription:complaint')}</TableHead>
                             <TableHead className='text-right'>
-                              Ҳаракат
+                              {t('prescription:action')}
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -1065,10 +1063,10 @@ const Prescription = () => {
                                 }
                               >
                                 <TableCell className='font-medium'>
-                                  {exam.patient_id?.fullname || 'Номаълум'}
+                                  {exam.patient_id?.fullname || t('prescription:unknown')}
                                 </TableCell>
                                 <TableCell>
-                                  {exam.doctor_id?.fullname || 'Номаълум'}
+                                  {exam.doctor_id?.fullname || t('prescription:unknown')}
                                 </TableCell>
                                 <TableCell>
                                   {exam.created_at
@@ -1079,7 +1077,7 @@ const Prescription = () => {
                                 </TableCell>
                                 <TableCell className='max-w-[200px] truncate text-xs'>
                                   {exam.complaints?.slice(0, 50) ||
-                                    'Шикоят йўқ'}
+                                    t('prescription:noComplaint')}
                                   {exam.complaints?.length > 50 ? '...' : ''}
                                 </TableCell>
                                 <TableCell className='text-right'>
@@ -1096,8 +1094,8 @@ const Prescription = () => {
                                     }}
                                   >
                                     {selectedExaminationId === exam._id
-                                      ? 'Танланган'
-                                      : 'Танлаш'}
+                                      ? t('prescription:selected')
+                                      : t('prescription:select')}
                                   </Button>
                                 </TableCell>
                               </TableRow>
@@ -1108,12 +1106,12 @@ const Prescription = () => {
                     {isLoadingMore && (
                       <div className='p-4 text-center text-sm text-muted-foreground'>
                         <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
-                        Юкланмоқда...
+                        {t('prescription:loading')}
                       </div>
                     )}
                     {!hasMore && examinations.length > 0 && (
                       <div className='p-2 text-center text-xs text-muted-foreground'>
-                        Барча кўриклар юкланди
+                        {t('prescription:allExamsLoaded')}
                       </div>
                     )}
                   </div>
@@ -1131,15 +1129,15 @@ const Prescription = () => {
                     <div className='flex flex-col sm:flex-row items-start justify-between gap-3'>
                       <div className='flex-1 space-y-1'>
                         <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Бемор Исми
+                          {t('patientName')}
                         </Label>
                         <p className='font-semibold text-sm sm:text-base break-words'>
-                          {patient?.fullname || 'Маълумот йўқ'}
+                          {patient?.fullname || t('noData')}
                         </p>
                       </div>
                       <div className='flex-1 space-y-1'>
                         <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Туғилган Сана
+                          {t('birthDate')}
                         </Label>
                         <p className='font-semibold text-sm sm:text-base'>
                           {patient?.date_of_birth ? (
@@ -1148,20 +1146,20 @@ const Prescription = () => {
                                 patient.date_of_birth
                               ).toLocaleDateString('uz-UZ')}{' '}
                               <span className='text-muted-foreground'>
-                                ({calculateAge(patient.date_of_birth)} ёш)
+                                ({calculateAge(patient.date_of_birth)} {t('yearsOld')})
                               </span>
                             </>
                           ) : (
-                            'Маълумот йўқ'
+                            t('noData')
                           )}
                         </p>
                       </div>
                       <div className='flex-1 space-y-1'>
                         <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Телефон
+                          {t('phone')}
                         </Label>
                         <p className='font-semibold text-sm sm:text-base'>
-                          {patient?.phone || 'Маълумот йўқ'}
+                          {patient?.phone || t('noData')}
                         </p>
                       </div>
                       <Button
@@ -1178,34 +1176,34 @@ const Prescription = () => {
                 <Card className='mb-3'>
                   <CardHeader className='p-5 max-sm:pb-2'>
                     <CardTitle className='text-base sm:text-lg'>
-                      Кўрик маълумоти
+                      {t('prescription:examInfo')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className='p-5 pt-0'>
                     <div className='flex sm:justify-between items-center flex-col sm:flex-row max-sm:items-start'>
                       <div className='space-y-1'>
                         <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Шифокор
+                          {t('prescription:doctor')}
                         </Label>
                         <p className='font-semibold text-sm sm:text-base break-words'>
                           {examinationData.data.doctor_id?.fullname ||
-                            'Номаълум'}
+                            t('prescription:unknown')}
                         </p>
                       </div>
                       <div className='space-y-1'>
                         <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Шикоят
+                          {t('prescription:complaint')}
                         </Label>
                         <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
-                          {examinationData.data.complaints || 'Маълумот йўқ'}
+                          {examinationData.data.complaints || t('prescription:noData')}
                         </p>
                       </div>
                       <div className='space-y-1'>
                         <Label className='text-xs sm:text-sm text-muted-foreground'>
-                          Тавсия
+                          {t('prescription:recommendation')}
                         </Label>
                         <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
-                          {examinationData.data?.description || 'Маълумот йўқ'}
+                          {examinationData.data?.description || t('prescription:noData')}
                         </p>
                       </div>
                     </div>
@@ -1225,8 +1223,7 @@ const Prescription = () => {
             <Alert className='mb-3 border-destructive bg-destructive/10'>
               <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-destructive' />
               <AlertDescription className='text-destructive font-semibold text-xs sm:text-sm'>
-                ОГОҲЛАНТИРИШ: Беморда {patient.allergies.join(', ')}
-                га аллергия бор!
+                {t('prescription:allergyWarning', { allergies: patient.allergies.join(', ') })}
               </AlertDescription>
             </Alert>
           )}
@@ -1240,7 +1237,7 @@ const Prescription = () => {
             <Card className='mb-4 sm:mb-6'>
               <CardHeader className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 space-y-2 sm:space-y-0'>
                 <CardTitle className='text-base sm:text-lg md:text-xl'>
-                  Дорилар Рўйхати
+                  {t('prescription:medicationsList')}
                 </CardTitle>
                 <Button
                   onClick={addMedication}
@@ -1248,7 +1245,7 @@ const Prescription = () => {
                   className='w-full sm:w-auto text-xs sm:text-sm'
                 >
                   <Plus className='mr-2 h-3 w-3 sm:h-4 sm:w-4' />
-                  Дори Қўшиш
+                  {t('prescription:addMedicationBtn')}
                 </Button>
               </CardHeader>
               <CardContent className='space-y-3 sm:space-y-4'>
@@ -1257,8 +1254,8 @@ const Prescription = () => {
                   examinationData.data.prescription.items.length > 0 && (
                     <>
                       <div className='text-xs font-medium text-muted-foreground mb-2'>
-                        Мавжуд рецептлар (
-                        {examinationData.data.prescription.items.length} та)
+                        {t('prescription:existingPrescriptions')} (
+                        {examinationData.data.prescription.items.length} {t('prescription:count')})
                       </div>
                       {examinationData.data.prescription.items.map(
                         (prescription: any, index: number) => (
@@ -1273,7 +1270,7 @@ const Prescription = () => {
                                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                                     <div className='space-y-2 sm:col-span-2'>
                                       <Label className='text-xs sm:text-sm'>
-                                        Дори Номи *
+                                        {t('prescription:medicationNameLabel')} *
                                       </Label>
                                       <Select
                                         value={
@@ -1287,12 +1284,12 @@ const Prescription = () => {
                                         }
                                       >
                                         <SelectTrigger>
-                                          <SelectValue placeholder='Дорини танланг' />
+                                          <SelectValue placeholder={t('selectMedication')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                           <div className='p-2'>
                                             <Input
-                                              placeholder='Қидириш...'
+                                              placeholder={t('prescription:search')}
                                               value={editMedicationSearch}
                                               onChange={(e) =>
                                                 setEditMedicationSearch(
@@ -1326,12 +1323,12 @@ const Prescription = () => {
                                     </div>
                                     <div className='space-y-2'>
                                       <Label className='text-xs sm:text-sm'>
-                                        Муддати (кун) *
+                                        {t('prescription:durationDays')} *
                                       </Label>
                                       <Input
                                         type='number'
                                         min='0'
-                                        placeholder='Даволаш муддати'
+                                        placeholder={t('prescription:treatmentDuration')}
                                         value={editPrescriptionForm.duration}
                                         onKeyDown={(e) => {
                                           if (
@@ -1354,12 +1351,12 @@ const Prescription = () => {
                                     </div>
                                     <div className='space-y-2'>
                                       <Label className='text-xs sm:text-sm'>
-                                        Кунига (марта) *
+                                        {t('prescription:timesPerDay')} *
                                       </Label>
                                       <Input
                                         type='number'
                                         min='0'
-                                        placeholder='Қабул қилиш'
+                                        placeholder={t('prescription:intake')}
                                         value={editPrescriptionForm.frequency}
                                         onKeyDown={(e) => {
                                           if (
@@ -1383,10 +1380,10 @@ const Prescription = () => {
                                   </div>
                                   <div className='space-y-2'>
                                     <Label className='text-xs sm:text-sm'>
-                                      Қўшимча Кўрсатмалар
+                                      {t('prescription:additionalInstructions')}
                                     </Label>
                                     <Textarea
-                                      placeholder='Қўшимча кўрсатмалар киритинг'
+                                      placeholder={t('prescription:enterAdditionalInstructions')}
                                       value={editPrescriptionForm.instructions}
                                       onChange={(e) =>
                                         setEditPrescriptionForm({
@@ -1399,10 +1396,10 @@ const Prescription = () => {
                                   </div>
                                   <div className='space-y-2'>
                                     <Label className='text-xs sm:text-sm'>
-                                      Қўшимча
+                                      {t('prescription:additional')}
                                     </Label>
                                     <Input
-                                      placeholder='Қўшимча маълумот...'
+                                      placeholder={t('prescription:additionalInfo')}
                                       value={editPrescriptionForm.addons}
                                       onChange={(e) =>
                                         setEditPrescriptionForm({
@@ -1420,14 +1417,14 @@ const Prescription = () => {
                                       disabled={isUpdating}
                                     >
                                       <X className='w-4 h-4 mr-2' />
-                                      Бекор
+                                      {t('prescription:cancelBtn')}
                                     </Button>
                                     <Button
                                       size='sm'
                                       onClick={handleUpdatePrescription}
                                       disabled={isUpdating}
                                     >
-                                      {isUpdating ? 'Сақланмоқда...' : 'Сақлаш'}
+                                      {isUpdating ? t('prescription:saving') : t('prescription:save')}
                                     </Button>
                                   </div>
                                 </div>
@@ -1436,11 +1433,11 @@ const Prescription = () => {
                                 <>
                                   <div className='flex items-center justify-between mb-2'>
                                     <span className='text-xs sm:text-sm font-medium text-primary'>
-                                      Дори #{index + 1}
+                                      {t('prescription:medicationNum')} #{index + 1}
                                     </span>
                                     <div className='flex items-center gap-2'>
                                       <span className='text-xs px-2 py-1 rounded-full bg-green-100 text-green-700'>
-                                        Сақланган
+                                        {t('prescription:saved')}
                                       </span>
                                       <Button
                                         variant='ghost'
@@ -1464,34 +1461,34 @@ const Prescription = () => {
                                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
                                     <div>
                                       <Label className='text-xs text-muted-foreground'>
-                                        Дори номи
+                                        {t('prescription:medicationNameViewLabel')}
                                       </Label>
                                       <p className='text-sm font-medium'>
                                         {typeof prescription.medication_id ===
                                         'object'
                                           ? prescription.medication_id?.name
-                                          : 'Номаълум'}
+                                          : t('prescription:unknownService')}
                                       </p>
                                     </div>
                                     <div>
                                       <Label className='text-xs text-muted-foreground'>
-                                        Қабул қилиш
+                                        {t('prescription:intakeLabel')}
                                       </Label>
                                       <p className='text-sm font-medium'>
-                                        {prescription.frequency} марта/кун
+                                        {prescription.frequency} {t('prescription:timesDay')}
                                       </p>
                                     </div>
                                     <div>
                                       <Label className='text-xs text-muted-foreground'>
-                                        Муддат
+                                        {t('prescription:durationLabel')}
                                       </Label>
                                       <p className='text-sm font-medium'>
-                                        {prescription.duration} кун
+                                        {prescription.duration} {t('prescription:day')}
                                       </p>
                                     </div>
                                     <div>
                                       <Label className='text-xs text-muted-foreground'>
-                                        Кўрсатмалар
+                                        {t('prescription:instructionsLabel')}
                                       </Label>
                                       <p className='text-sm'>
                                         {prescription.instructions || '-'}
@@ -1500,7 +1497,7 @@ const Prescription = () => {
                                     {prescription.addons && (
                                       <div>
                                         <Label className='text-xs text-muted-foreground'>
-                                          Қўшимча
+                                          {t('prescription:additionalLabel')}
                                         </Label>
                                         <p className='text-sm'>
                                           {prescription.addons}
@@ -1521,7 +1518,7 @@ const Prescription = () => {
                 {medications.length > 0 && (
                   <>
                     <div className='text-xs font-medium text-muted-foreground mb-2 mt-4'>
-                      Янги дорилар
+                      {t('prescription:newMedications')}
                     </div>
                     {medications.map((med, index) => (
                       <Card
@@ -1531,7 +1528,7 @@ const Prescription = () => {
                         <CardContent className='pt-3 sm:pt-4'>
                           <div className='flex items-center justify-between mb-3'>
                             <span className='text-xs sm:text-sm font-medium text-muted-foreground'>
-                              Дори #{index + 1}
+                              {t('prescription:medicationNum')} #{index + 1}
                             </span>
                             <Button
                               variant='ghost'
@@ -1547,7 +1544,7 @@ const Prescription = () => {
                             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
                               <div>
                                 <Label className='text-xs sm:text-sm'>
-                                  Дори <span className='text-red-500'>*</span>
+                                  {t('prescription:medication')} <span className='text-red-500'>*</span>
                                 </Label>
                                 <Select
                                   value={med.medication_id}
@@ -1567,12 +1564,12 @@ const Prescription = () => {
                                         : ''
                                     }`}
                                   >
-                                    <SelectValue placeholder='Дорини танланг' />
+                                    <SelectValue placeholder={t('prescription:selectMedicationPlaceholder')} />
                                   </SelectTrigger>
                                   <SelectContent>
                                     <div className='p-2'>
                                       <Input
-                                        placeholder='Дори қидириш...'
+                                        placeholder={t('prescription:searchMedicationPlaceholder')}
                                         value={medicationSearch}
                                         onChange={(e) =>
                                           setMedicationSearch(e.target.value)
@@ -1601,7 +1598,7 @@ const Prescription = () => {
                                       )
                                     ) : (
                                       <div className='p-4 text-center text-sm text-muted-foreground'>
-                                        Дори топилмади
+                                        {t('prescription:medicationNotFound')}
                                       </div>
                                     )}
                                   </SelectContent>
@@ -1609,10 +1606,10 @@ const Prescription = () => {
                               </div>
                               <div>
                                 <Label className='text-xs sm:text-sm'>
-                                  Қўшимча
+                                  {t('prescription:additional')}
                                 </Label>
                                 <Input
-                                  placeholder='Қўшимча маълумот...'
+                                  placeholder={t('prescription:additionalInfo')}
                                   value={med.addons}
                                   onChange={(e) =>
                                     updateMedication(
@@ -1629,13 +1626,13 @@ const Prescription = () => {
                             <div className='flex items-start gap-3'>
                               <div className='w-28 shrink-0'>
                                 <Label className='text-xs sm:text-sm'>
-                                  Муддат (кун){' '}
+                                  {t('prescription:durationDaysLabel')}{' '}
                                   <span className='text-red-500'>*</span>
                                 </Label>
                                 <Input
                                   type='number'
                                   min='0'
-                                  placeholder='7'
+                                  placeholder={t('prescription:durationPlaceholderShort')}
                                   value={med.duration}
                                   onKeyDown={(e) => {
                                     if (
@@ -1664,13 +1661,13 @@ const Prescription = () => {
                               </div>
                               <div className='w-24 shrink-0'>
                                 <Label className='text-xs sm:text-sm'>
-                                  Марта/кун{' '}
+                                  {t('prescription:timesPerDayLabel')}{' '}
                                   <span className='text-red-500'>*</span>
                                 </Label>
                                 <Input
                                   type='number'
                                   min='0'
-                                  placeholder='3'
+                                  placeholder={t('prescription:timesPlaceholder')}
                                   value={med.frequency}
                                   onKeyDown={(e) => {
                                     if (
@@ -1699,7 +1696,7 @@ const Prescription = () => {
                               </div>
                               <div className='flex-1 min-w-0'>
                                 <Label className='text-xs sm:text-sm'>
-                                  Қўшимча Кўрсатмалар{' '}
+                                  {t('prescription:additionalInstructionsLabel')}{' '}
                                   <span className='text-red-500'>*</span>
                                 </Label>
                                 <Input
@@ -1711,7 +1708,7 @@ const Prescription = () => {
                                       e.target.value
                                     )
                                   }
-                                  placeholder='Овқатдан кейин...'
+                                  placeholder={t('prescription:afterMeal')}
                                   className={`text-sm mt-1 ${
                                     formErrors.medications[med.id]?.instructions
                                       ? 'border-red-500 focus:ring-red-500'
@@ -1735,7 +1732,7 @@ const Prescription = () => {
                       disabled={isCreating || !selectedExaminationId}
                       className='text-sm'
                     >
-                      {isCreating ? 'Сақланмоқда...' : 'Дориларни сақлаш'}
+                      {isCreating ? t('prescription:saving') : t('prescription:saveMedicationsBtn')}
                     </Button>
                   </div>
                 )}
@@ -1747,7 +1744,7 @@ const Prescription = () => {
               <div className='flex items-center justify-between'>
                 <Label className='flex items-center gap-2'>
                   <Activity className='w-4 h-4 text-primary' />
-                  Хизматлар
+                  {t('prescription:servicesLabel')}
                 </Label>
                 <Button
                   type='button'
@@ -1796,7 +1793,7 @@ const Prescription = () => {
                   className='gap-1'
                 >
                   <Plus className='w-4 h-4' />
-                  Хизмат қўшиш
+                  {t('prescription:addServiceBtn')}
                 </Button>
               </div>
 
@@ -1807,7 +1804,7 @@ const Prescription = () => {
                   <div className='flex items-end gap-2 p-2 bg-muted/30 rounded-lg border'>
                     <div className='w-28'>
                       <Label className='text-xs font-medium'>
-                        Муддат (кун)
+                        {t('prescription:durationDaysCommon')}
                       </Label>
                       <Input
                         type='number'
@@ -1913,7 +1910,7 @@ const Prescription = () => {
                     </div>
                     <div className='flex-1'>
                       <Label className='text-xs font-medium'>
-                        Бошланиш санаси
+                        {t('prescription:startDateLabel')}
                       </Label>
                       <Input
                         type='date'
@@ -1945,7 +1942,7 @@ const Prescription = () => {
                           className='h-8 text-sm mt-1'
                           disabled={services.length === 0}
                         >
-                          Ҳар куни
+                          {t('prescription:everyDayBtn')}
                         </Button>
                       </div>
                       <div>
@@ -1960,7 +1957,7 @@ const Prescription = () => {
                           className='h-8 text-sm mt-1'
                           disabled={services.length === 0}
                         >
-                          2 кунда бир
+                          {t('prescription:everyOtherDayBtn')}
                         </Button>
                       </div>
                     </div>
@@ -2054,7 +2051,7 @@ const Prescription = () => {
                                   className='border px-2 py-1.5 text-left font-semibold min-w-[150px] sticky left-0 bg-muted/50 z-20'
                                   rowSpan={headerChunks.length}
                                 >
-                                  Хизмат
+                                  {t('prescription:serviceHeader')}
                                 </th>
                               )}
                               {chunk.map((dayNum) => (
@@ -2078,7 +2075,7 @@ const Prescription = () => {
                                   className='border px-1 py-1.5 text-center font-semibold w-12 sticky right-0 bg-muted/50 z-20'
                                   rowSpan={headerChunks.length}
                                 >
-                                  Харакатлар
+                                  {t('prescription:actionsHeader')}
                                 </th>
                               )}
                             </tr>
@@ -2133,7 +2130,7 @@ const Prescription = () => {
                                     rowSpan={dayChunks.length}
                                   >
                                     {service.service_type_id?.name ||
-                                      'Номаълум'}
+                                      t('prescription:unknownService')}
                                   </td>
                                 ) : null}
                                 {chunk.map((dayItem, idx) => (
@@ -2142,7 +2139,7 @@ const Prescription = () => {
                                     className='border px-1 py-1 text-center group relative min-w-[70px]'
                                   >
                                     <span className='font-bold text-xs block'>
-                                      {dayItem.dayNumber}-кун
+                                      {dayItem.dayNumber}-{t('prescription:dayNum')}
                                     </span>
                                     {dayItem.dayData?.date ? (
                                       <div className='flex items-center justify-center'>
@@ -2248,7 +2245,7 @@ const Prescription = () => {
                                         }}
                                       >
                                         <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
-                                          <SelectValue placeholder='Танланг...' />
+                                          <SelectValue placeholder={t('prescription:selectPlaceholder')} />
                                         </SelectTrigger>
                                         <SelectContent
                                           onCloseAutoFocus={(e) => {
@@ -2270,7 +2267,7 @@ const Prescription = () => {
                                                     .current[srv.id];
                                                 }
                                               }}
-                                              placeholder='Қидириш...'
+                                              placeholder={t('prescription:search')}
                                               value={
                                                 serviceSearch[srv.id] || ''
                                               }
@@ -2342,19 +2339,19 @@ const Prescription = () => {
                                                   {new Intl.NumberFormat(
                                                     'uz-UZ'
                                                   ).format(s.price)}{' '}
-                                                  сўм
+                                                  {t('prescription:sum')}
                                                 </SelectItem>
                                               ))
                                             ) : (
                                               <div className='px-2 py-4 text-xs text-muted-foreground text-center'>
-                                                Хизмат топилмади
+                                                {t('prescription:serviceNotFound')}
                                               </div>
                                             );
                                           })()}
                                           {isFetchingServices && (
                                             <div className='flex items-center justify-center py-2 text-xs text-muted-foreground'>
                                               <Loader2 className='h-4 w-4 animate-spin mr-2' />
-                                              Юкланмоқда...
+                                              {t('prescription:loading')}
                                             </div>
                                           )}
                                         </SelectContent>
@@ -2376,7 +2373,7 @@ const Prescription = () => {
                                         {day.date ? (
                                           <div className='flex flex-col items-center justify-center'>
                                             <span className='text-[10px] text-muted-foreground font-bold'>
-                                              {day.day}-кун
+                                              {day.day}-{t('prescription:dayNum')}
                                             </span>
                                             <span
                                               className={`px-1.5 py-0.5 rounded ${
@@ -2388,7 +2385,7 @@ const Prescription = () => {
                                               {format(day.date, 'dd/MM')}
                                             </span>
                                             <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none text-xs'>
-                                              {day.day}-кун:{' '}
+                                              {day.day}-{t('prescription:dayNum')}:{' '}
                                               {new Date(
                                                 day.date
                                               ).toLocaleDateString('uz-UZ')}
@@ -2398,7 +2395,7 @@ const Prescription = () => {
                                         ) : (
                                           <div className='flex flex-col items-center justify-center'>
                                             <span className='text-[10px] text-muted-foreground font-medium'>
-                                              {day.day}-кун
+                                              {day.day}-{t('prescription:dayNum')}
                                             </span>
                                             <span className='text-muted-foreground'>
                                               —
@@ -2435,7 +2432,7 @@ const Prescription = () => {
                                             }
                                             className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
                                             disabled={!srv.service_id}
-                                            title='Ҳар куни'
+                                            title={t('prescription:everyDayTitle')}
                                           >
                                             <CalendarDays className='w-3 h-3' />
                                           </Button>
@@ -2450,7 +2447,7 @@ const Prescription = () => {
                                             }
                                             className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
                                             disabled={!srv.service_id}
-                                            title='2 кунда бир'
+                                            title={t('prescription:everyOtherDayTitle')}
                                           >
                                             <Repeat className='w-3 h-3' />
                                           </Button>
@@ -2461,7 +2458,7 @@ const Prescription = () => {
                                           size='sm'
                                           onClick={() => removeService(srv.id)}
                                           className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-                                          title='Ўчириш'
+                                          title={t('prescription:deleteTitle')}
                                         >
                                           <Trash2 className='w-3 h-3' />
                                         </Button>
@@ -2487,7 +2484,7 @@ const Prescription = () => {
                     disabled={isAddingService || !selectedExaminationId}
                     className='text-sm'
                   >
-                    {isAddingService ? 'Сақланмоқда...' : 'Хизматларни сақлаш'}
+                    {isAddingService ? t('prescription:saving') : t('prescription:saveServicesBtn')}
                   </Button>
                 </div>
               )}

@@ -11,6 +11,7 @@ import {
   RotateCw,
 } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -24,6 +25,7 @@ interface PDFViewerProps {
 }
 
 export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename }) => {
+  const { t } = useTranslation('radiology');
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1);
@@ -39,9 +41,9 @@ export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename }) => {
 
   const onDocumentLoadError = useCallback((error: Error) => {
     console.error('PDF yuklashda xatolik:', error);
-    setError('PDF файлни юклаб бўлмади');
+    setError(t('viewer.pdfLoadError'));
     setLoading(false);
-  }, []);
+  }, [t]);
 
   const handleDownload = useCallback(() => {
     downloadFile(url, filename);
@@ -74,7 +76,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename }) => {
           <p className='text-destructive mb-4'>{error}</p>
           <Button onClick={handleDownload} variant='outline'>
             <Download className='w-4 h-4 mr-2' />
-            PDF юклаб олиш
+            {t('viewer.downloadPdf')}
           </Button>
         </CardContent>
       </Card>
@@ -127,7 +129,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename }) => {
         {/* Download */}
         <Button onClick={handleDownload} size='sm' variant='outline'>
           <Download className='w-4 h-4 mr-2' />
-          <span className='hidden sm:inline'>Юклаб олиш</span>
+          <span className='hidden sm:inline'>{t('viewer.download')}</span>
         </Button>
       </div>
 
@@ -139,7 +141,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename }) => {
               <div className='text-center space-y-2'>
                 <Loader2 className='w-8 h-8 animate-spin mx-auto text-primary' />
                 <p className='text-sm text-muted-foreground'>
-                  PDF юкланмоқда...
+                  {t('viewer.pdfLoading')}
                 </p>
               </div>
             </div>

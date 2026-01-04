@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Download, Loader2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { downloadFile } from '@/lib/fileTypeUtils';
 import { memo, useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import mammoth from 'mammoth';
 
 interface WordViewerProps {
@@ -11,6 +12,7 @@ interface WordViewerProps {
 }
 
 export const WordViewer: React.FC<WordViewerProps> = memo(({ url, filename }) => {
+  const { t } = useTranslation('radiology');
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -36,14 +38,14 @@ export const WordViewer: React.FC<WordViewerProps> = memo(({ url, filename }) =>
         }
       } catch (err) {
         console.error('Word yuklashda xatolik:', err);
-        setError('Word ҳужжатни юклаб бўлмади');
+        setError(t('viewer.wordLoadError'));
       } finally {
         setLoading(false);
       }
     };
 
     loadWordDocument();
-  }, [url]);
+  }, [url, t]);
 
   const handleDownload = useCallback(() => {
     downloadFile(url, filename);
@@ -67,7 +69,7 @@ export const WordViewer: React.FC<WordViewerProps> = memo(({ url, filename }) =>
         <div className='text-center space-y-2'>
           <Loader2 className='w-8 h-8 animate-spin mx-auto text-primary' />
           <p className='text-sm text-muted-foreground'>
-            Word ҳужжат юкланмоқда...
+            {t('viewer.wordLoading')}
           </p>
         </div>
       </div>
@@ -80,7 +82,7 @@ export const WordViewer: React.FC<WordViewerProps> = memo(({ url, filename }) =>
         <p className='text-destructive'>{error}</p>
         <Button onClick={handleDownload} variant='outline'>
           <Download className='w-4 h-4 mr-2' />
-          Юклаб олиш
+          {t('viewer.download')}
         </Button>
       </div>
     );
@@ -98,13 +100,13 @@ export const WordViewer: React.FC<WordViewerProps> = memo(({ url, filename }) =>
           <Button onClick={zoomIn} disabled={scale >= 200} size='sm' variant='outline'>
             <ZoomIn className='w-4 h-4' />
           </Button>
-          <Button onClick={resetZoom} size='sm' variant='outline' title='Qayta tiklash'>
+          <Button onClick={resetZoom} size='sm' variant='outline' title={t('viewer.resetZoom')}>
             <RotateCcw className='w-4 h-4' />
           </Button>
         </div>
         <Button onClick={handleDownload} size='sm' variant='outline'>
           <Download className='w-4 h-4 mr-2' />
-          <span className='hidden sm:inline'>Юклаб олиш</span>
+          <span className='hidden sm:inline'>{t('viewer.download')}</span>
         </Button>
       </div>
 

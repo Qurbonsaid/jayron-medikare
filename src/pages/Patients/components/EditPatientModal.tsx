@@ -30,6 +30,7 @@ import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { format } from 'date-fns';
 import { CalendarIcon, Plus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 interface Patient {
@@ -66,6 +67,7 @@ const EditPatientModal = ({
   patient,
   onSuccess,
 }: EditPatientModalProps) => {
+  const { t } = useTranslation('patients');
   const [updatePatient, { isLoading }] = useUpdatePatientMutation();
 
   const [formData, setFormData] = useState<{
@@ -228,10 +230,10 @@ const EditPatientModal = ({
       <DialogContent className='max-w-4xl max-h-[90vh] overflow-hidden flex flex-col'>
         <DialogHeader>
           <DialogTitle className='text-xl sm:text-2xl font-bold'>
-            Бемор маълумотларини таҳрирлаш
+            {t('editModal.title')}
           </DialogTitle>
           <DialogDescription>
-            Бемор маълумотларини янгиланг ва сақланг
+            {t('editModal.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -245,10 +247,10 @@ const EditPatientModal = ({
           >
             <TabsList className='grid w-full grid-cols-2 mb-4'>
               <TabsTrigger value='basic' className='text-xs sm:text-sm'>
-                Асосий маълумотлар
+                {t('editModal.basicInfo')}
               </TabsTrigger>
               <TabsTrigger value='medical' className='text-xs sm:text-sm'>
-                Доимий дорилар
+                {t('editModal.medications')}
               </TabsTrigger>
             </TabsList>
 
@@ -258,7 +260,7 @@ const EditPatientModal = ({
                 <div className='grid gap-4'>
                   <div className='grid gap-2'>
                     <Label htmlFor='fullname'>
-                      Исм фамилия <span className='text-danger'>*</span>
+                      {t('editModal.fullName')} <span className='text-danger'>*</span>
                     </Label>
                     <Input
                       id='fullname'
@@ -271,12 +273,12 @@ const EditPatientModal = ({
                   <div className='grid grid-cols-2 gap-4'>
                     <div className='grid gap-2'>
                       <Label htmlFor='date_of_birth'>
-                        Туғилган сана <span className='text-danger'>*</span>
+                        {t('editModal.birthDate')} <span className='text-danger'>*</span>
                       </Label>
                       <div className='flex gap-2'>
                         <Input
                           className='border-slate-400 border-2 flex-1'
-                          placeholder='КК.ОО.ЙЙЙЙ (01.01.1990)'
+                          placeholder={t('editModal.dateFormat')}
                           value={
                             dateInput ||
                             (formData.date_of_birth
@@ -365,7 +367,7 @@ const EditPatientModal = ({
 
                     <div className='grid gap-2'>
                       <Label htmlFor='gender'>
-                        Жинс <span className='text-danger'>*</span>
+                        {t('editModal.gender')} <span className='text-danger'>*</span>
                       </Label>
                       <Select
                         value={formData.gender}
@@ -377,8 +379,8 @@ const EditPatientModal = ({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value='male'>Эркак</SelectItem>
-                          <SelectItem value='female'>Аёл</SelectItem>
+                          <SelectItem value='male'>{t('male')}</SelectItem>
+                          <SelectItem value='female'>{t('female')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -387,7 +389,7 @@ const EditPatientModal = ({
                   <div className='grid grid-cols-2 gap-4'>
                     <div className='grid gap-2'>
                       <Label htmlFor='passport_series'>
-                        Паспорт серияси <span className='text-danger'>*</span>
+                        {t('editModal.passportSeries')} <span className='text-danger'>*</span>
                       </Label>
                       <Input
                         id='passport_series'
@@ -405,7 +407,7 @@ const EditPatientModal = ({
                     </div>
                     <div className='grid gap-2'>
                       <Label htmlFor='passport_number'>
-                        Паспорт рақами <span className='text-danger'>*</span>
+                        {t('editModal.passportNumber')} <span className='text-danger'>*</span>
                       </Label>
                       <Input
                         id='passport_number'
@@ -425,7 +427,7 @@ const EditPatientModal = ({
 
                   <div className='grid gap-2'>
                     <Label htmlFor='phone'>
-                      Телефон <span className='text-danger'>*</span>
+                      {t('editModal.phone')} <span className='text-danger'>*</span>
                     </Label>
                     <Input
                       id='phone'
@@ -437,7 +439,7 @@ const EditPatientModal = ({
                   </div>
 
                   <div className='grid gap-2'>
-                    <Label htmlFor='email'>Электрон почта</Label>
+                    <Label htmlFor='email'>{t('editModal.email')}</Label>
                     <Input
                       id='email'
                       type='email'
@@ -447,7 +449,7 @@ const EditPatientModal = ({
                   </div>
 
                   <div className='grid gap-2'>
-                    <Label htmlFor='address'>Манзил</Label>
+                    <Label htmlFor='address'>{t('editModal.address')}</Label>
                     <Textarea
                       id='address'
                       value={formData.address}
@@ -458,10 +460,10 @@ const EditPatientModal = ({
 
                   {/* Allergies */}
                   <div className='grid gap-2'>
-                    <Label>Аллергиялар</Label>
+                    <Label>{t('editModal.allergies')}</Label>
                     <div className='flex gap-2'>
                       <Input
-                        placeholder='Аллергия қўшиш'
+                        placeholder={t('editModal.addAllergy')}
                         value={newAllergy}
                         onChange={(e) => setNewAllergy(e.target.value)}
                         onKeyPress={(e) => {
@@ -472,7 +474,7 @@ const EditPatientModal = ({
                         }}
                       />
                       <Button type='button' onClick={handleAddAllergy}>
-                        Қўшиш
+                        {t('editModal.add')}
                       </Button>
                     </div>
                     {formData.allergies && formData.allergies.length > 0 && (
@@ -500,15 +502,15 @@ const EditPatientModal = ({
               <TabsContent value='medical' className='space-y-4 mt-0'>
                 <div className='space-y-4 px-2'>
                   <div className='grid gap-2'>
-                    <Label>Дори қўшиш</Label>
+                    <Label>{t('editModal.addMedicine')}</Label>
                     <div className='grid grid-cols-1 sm:grid-cols-[1fr,1fr,auto] gap-2'>
                       <Input
-                        placeholder='Дори номи'
+                        placeholder={t('editModal.medicineName')}
                         value={medicineInput}
                         onChange={(e) => setMedicineInput(e.target.value)}
                       />
                       <Input
-                        placeholder='Қабул вақти'
+                        placeholder={t('editModal.schedule')}
                         value={scheduleInput}
                         onChange={(e) => setScheduleInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -566,14 +568,14 @@ const EditPatientModal = ({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Бекор қилиш
+              {t('editModal.cancel')}
             </Button>
             <Button
               type='submit'
               className='gradient-primary'
               disabled={isLoading}
             >
-              {isLoading ? 'Сақланмоқда...' : 'Сақлаш'}
+              {isLoading ? t('editModal.saving') : t('editModal.save')}
             </Button>
           </DialogFooter>
         </form>

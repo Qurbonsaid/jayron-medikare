@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ export const PatientSearchModal = ({
   open,
   onOpenChange,
 }: PatientSearchModalProps) => {
+  const { t } = useTranslation("inpatient");
   const [searchExamsQuery, setSearchExamsQuery] = useState<string>("");
   const navigate = useNavigate();
 
@@ -58,7 +60,7 @@ export const PatientSearchModal = ({
         <DialogHeader className="space-y-2 sm:space-y-3 flex-shrink-0">
           <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
             <Search className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-            Бемор Қидириш
+            {t("searchPatient")}
           </DialogTitle>
         </DialogHeader>
 
@@ -67,7 +69,7 @@ export const PatientSearchModal = ({
 
             <Command shouldFilter={false} className="h-full w-full">
               <CommandInput
-                placeholder="Исм, телефон орқали қидириш..."
+                placeholder={t("searchByNameOrPhone")}
                 value={searchExamsQuery}
                 onValueChange={setSearchExamsQuery}
                 className="text-sm sm:text-base"
@@ -77,14 +79,14 @@ export const PatientSearchModal = ({
                   {isExaminationsLoading ? (
                     <div className="flex flex-col items-center gap-3">
                       <LoadingSpinner size="lg" />
-                      <span className="text-muted-foreground">Беморлар юкланмоқда...</span>
+                      <span className="text-muted-foreground">{t("patientsLoading")}</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-3 text-muted-foreground">
                       <User className="w-12 h-12 opacity-40" />
                       <div className="text-center">
-                        <p className="font-semibold">Бемор топилмади</p>
-                        <p className="text-xs mt-1">Бошқа исм ёки рақам билан қидириб кўринг</p>
+                        <p className="font-semibold">{t("patientNotFound")}</p>
+                        <p className="text-xs mt-1">{t("tryDifferentSearch")}</p>
                       </div>
                     </div>
                   )}
@@ -109,8 +111,8 @@ export const PatientSearchModal = ({
                             {formatPhoneNumber(exam.patient_id.phone)}
                           </span>
                           <span className="text-xs sm:text-sm font-medium">
-                            {exam.rooms[exam.rooms.length - 1]?.floor_number || 0}-қават,{" "}
-                            {exam.rooms[exam.rooms.length - 1]?.room_name || "Номаълум"}
+                            {exam.rooms[exam.rooms.length - 1]?.floor_number || 0}-{t("floor")},{" "}
+                            {exam.rooms[exam.rooms.length - 1]?.room_name || t("unknown")}
                           </span>
                         </div>
                         <Calendar className="w-4 h-4 text-muted-foreground" />

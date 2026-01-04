@@ -37,8 +37,6 @@ const updateCache = (url: string, data: any) => {
 
     if (token && typeof token === 'string') {
       localStorage.setItem(TOKEN_KEY,token)
-    } else {
-      console.warn('⚠️ No token found in response data');
     }
 
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
@@ -105,7 +103,6 @@ const customBaseQuery: BaseQueryFn<
     if (
       statusCode === 401 && !isBiometricEndpoint
     ) {
-      console.log('🚨 BaseAPI - 401 Unauthorized, redirecting to login');
       // Clear authentication tokens
       clearAuthTokens();
       localStorage.removeItem(CACHE_KEY);
@@ -114,8 +111,6 @@ const customBaseQuery: BaseQueryFn<
       window.location.href = '/login';
       
       return result;
-    } else if (statusCode === 401 && isBiometricEndpoint) {
-      console.log('⚠️ BaseAPI - 401 from biometric endpoint (not redirecting)');
     }
   }
 

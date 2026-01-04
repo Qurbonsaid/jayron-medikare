@@ -1,6 +1,7 @@
 import { useGetOneRoomQuery } from '@/app/api/roomApi';
 import type { Patient } from '@/app/api/roomApi/types';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -37,6 +38,7 @@ import UpdateBloodPressure from './components/UpdateBloodPressure.tsx';
 import { UpdateLeaveTime } from './components/UpdateLeaveTime';
 
 const RoomDetail = () => {
+  const { t } = useTranslation('inpatient');
   const [showRoomNewPatient, setShowRoomNewPatient] = useState(false);
   const [showRemovePatient, setShowRemovePatient] = useState(false);
   const [showUpdateLeaveTime, setShowUpdateLeaveTime] = useState(false);
@@ -94,10 +96,10 @@ const RoomDetail = () => {
         <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6'>
           <div>
             <h1 className='text-2xl sm:text-3xl font-bold'>
-              Xona Tafsilotlari
+              {t('roomDetails')}
             </h1>
             <p className='text-sm sm:text-base text-muted-foreground'>
-              Беморлар хонаси ҳақидаги маълумотларни кўриш ва бошқариш
+              {t('roomDetailsDescription')}
             </p>
           </div>
           {showActionButtons && (
@@ -106,7 +108,7 @@ const RoomDetail = () => {
               onClick={() => setShowRoomNewPatient(true)}
             >
               <Plus className='mr-2 h-4 w-4' />
-              Янги бемор қўшиш
+              {t('addNewPatient')}
             </Button>
           )}
         </div>
@@ -115,7 +117,7 @@ const RoomDetail = () => {
           <Card className='card-shadow p-8 sm:p-12'>
             <LoadingSpinner
               size='lg'
-              text='Юкланмоқда...'
+              text={t('loading')}
               className='justify-center'
             />
           </Card>
@@ -125,33 +127,33 @@ const RoomDetail = () => {
               <div className='grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 xl:gap-6'>
                 <div>
                   <h3 className='text-sm font-medium text-muted-foreground'>
-                    Xona nomi
+                    {t('roomName')}
                   </h3>
                   <p className='mt-1 text-lg font-semibold'>
-                    {room?.data.room_name || 'бeлгиланмаган'}
+                    {room?.data.room_name || t('notSpecified')}
                   </p>
                 </div>
                 <div>
                   <h3 className='text-sm font-medium text-muted-foreground'>
-                    Xona Narxi
-                  </h3>
-
-                  <p className='mt-1 text-lg font-semibold'>
-                    {formatNumber(room?.data.room_price)} so'm
-                  </p>
-                </div>
-                <div>
-                  <h3 className='text-sm font-medium text-muted-foreground'>
-                    Sig'im
+                    {t('roomPrice')}
                   </h3>
 
                   <p className='mt-1 text-lg font-semibold'>
-                    {room?.data.patient_capacity || 'бeлгиланмаган'} kishilik
+                    {formatNumber(room?.data.room_price)} {t('sum')}
                   </p>
                 </div>
                 <div>
                   <h3 className='text-sm font-medium text-muted-foreground'>
-                    Bandlik
+                    {t('capacityLabel')}
+                  </h3>
+
+                  <p className='mt-1 text-lg font-semibold'>
+                    {room?.data.patient_capacity || t('notSpecified')} {t('persons')}
+                  </p>
+                </div>
+                <div>
+                  <h3 className='text-sm font-medium text-muted-foreground'>
+                    {t('occupancy')}
                   </h3>
 
                   <p
@@ -167,25 +169,25 @@ const RoomDetail = () => {
                     {room?.data.patient_occupied
                       ? room.data.patient_occupied ===
                         room.data.patient_capacity
-                        ? "To'liq band"
-                        : `${room.data.patient_occupied} ta band`
-                      : "Bo'sh"}
+                        ? t('fullyOccupied')
+                        : `${room.data.patient_occupied} ${t('occupiedCount')}`
+                      : t('empty')}
                   </p>
                 </div>
                 <div>
                   <h3 className='text-sm font-medium text-muted-foreground'>
-                    Xona qavati
+                    {t('roomFloor')}
                   </h3>
 
                   <p className='mt-1 text-lg font-semibold'>
                     {room?.data.floor_number
-                      ? room.data.floor_number + ' - qavat'
-                      : 'бeлгиланмаган'}
+                      ? room.data.floor_number + ' - ' + t('floorSuffix')
+                      : t('notSpecified')}
                   </p>
                 </div>
                 <div>
                   <h3 className='text-sm font-medium text-muted-foreground'>
-                    Tavsif
+                    {t('description')}
                   </h3>
 
                   <p className='mt-1 text-md font-semibold'>
@@ -196,11 +198,11 @@ const RoomDetail = () => {
                             ? room?.data.description.length > 15
                               ? room?.data.description.slice(0, 15) + '...'
                               : room?.data.description
-                            : 'Berilmagan'}
+                            : t('notProvided')}
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {room?.data.description || 'Berilmagan'}
+                        {room?.data.description || t('notProvided')}
                       </TooltipContent>
                     </Tooltip>
                   </p>
@@ -267,8 +269,8 @@ const RoomDetail = () => {
                                     {patientBloodPressureMap[
                                       patientData?._id || ''
                                     ]?.hasData
-                                      ? "o'zgartirish"
-                                      : 'qon bosimi'}
+                                      ? t('change')
+                                      : t('bloodPressure')}
                                   </span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
@@ -281,7 +283,7 @@ const RoomDetail = () => {
                                   className='flex items-center gap-2 cursor-pointer hover:bg-yellow-100'
                                 >
                                   <Clock className='w-4 h-4' />
-                                  <span>o'zgartirish</span>
+                                  <span>{t('changeLeaveTime')}</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => {
@@ -293,7 +295,7 @@ const RoomDetail = () => {
                                   className='flex items-center gap-2 cursor-pointer hover:bg-red-100'
                                 >
                                   <Trash2 className='w-4 h-4' />
-                                  <span>Chiqarish</span>
+                                  <span>{t('discharge')}</span>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -307,14 +309,14 @@ const RoomDetail = () => {
                           </div>
 
                           <span className='text-sm font-semibold'>
-                            Tel:{' '}
+                            {t('phone')}{' '}
                             <strong>
                               {formatPhoneNumber(patientData?.phone)}
                             </strong>
                           </span>
 
                           <span className='text-sm font-semibold'>
-                            Kelgan:{' '}
+                            {t('arrivedDate')}{' '}
                             <strong>
                               {formatDate(
                                 new Date(patient?.start_date),
@@ -324,7 +326,7 @@ const RoomDetail = () => {
                           </span>
 
                           <p className='text-sm font-medium'>
-                            Ketadi:
+                            {t('leavingDate')}
                             <strong>
                               {formatDate(
                                 new Date(patient?.estimated_leave_time),
@@ -344,8 +346,8 @@ const RoomDetail = () => {
                           >
                             {patientBloodPressureMap[patientData?._id || '']
                               ?.hasData
-                              ? "Давлена: o'lchangan"
-                              : "Давлена: o'lchanmagan"}
+                              ? t('pressureMeasured')
+                              : t('pressureNotMeasured')}
                           </Badge>
                         </div>
                       </Card>
@@ -354,7 +356,7 @@ const RoomDetail = () => {
                 </div>
               ) : (
                 <div className='flex items-center justify-center'>
-                  <h3>Беморлар топилмади</h3>
+                  <h3>{t('noPatientsFound')}</h3>
                 </div>
               )}
             </Card>

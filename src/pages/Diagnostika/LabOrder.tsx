@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
 import { Printer, Save, Search, Send, User, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Label } from '@/components/ui/label'
@@ -45,6 +46,7 @@ enum ExamLevel {
 }
 
 const LabOrder = () => {
+	const { t } = useTranslation('diagnostics')
 	const navigate = useNavigate()
 	const location = useLocation()
 	const [clinicalIndications, setClinicalIndications] = useState('')
@@ -135,15 +137,15 @@ const LabOrder = () => {
 		setShowErrors(true)
 
 		if (!selectedPatientId) {
-			toast.error('Илтимос, беморни танланг')
+			toast.error(t('pleaseSelectPatient'))
 			return
 		}
 		if (!selectedTests.length) {
-			toast.error('Илтимос, камида битта таҳлилни танланг')
+			toast.error(t('pleaseSelectAtLeastOneTest'))
 			return
 		}
 		if (!clinicalIndications.trim()) {
-			toast.error('Илтимос, клиник кўрсатмани киритинг')
+			toast.error(t('pleaseEnterClinicalIndication'))
 			return
 		}
 
@@ -159,7 +161,7 @@ const LabOrder = () => {
 				return await createPatientAnalysis(reqBody).unwrap()
 			},
 			onSuccess: () => {
-				toast.success('Tаҳлил муваффақиятли яратилди')
+				toast.success(t('analysisCreatedSuccess'))
 				setTests(prev => prev.map(t => ({ ...t, selected: false })))
 				setClinicalIndications('')
 				setPriority(ExamLevel.ODDIY)
@@ -185,7 +187,7 @@ const LabOrder = () => {
 		if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
 			age--
 		}
-		return `${day}.${month}.${year} (${age} йош)`
+		return `${day}.${month}.${year} (${age} ${t('yearsOld')})`
 	}
 
 	return (
@@ -198,7 +200,7 @@ const LabOrder = () => {
 							<div className='flex items-center gap-3 mb-4'>
 								<User className='w-5 h-5 sm:w-6 sm:h-6 text-primary' />
 								<h3 className='text-base sm:text-lg font-bold'>
-									Беморни танланг
+									{t('selectPatient')}
 								</h3>
 							</div>
 							<Popover open={open} onOpenChange={setOpen}>
@@ -211,7 +213,7 @@ const LabOrder = () => {
 									>
 										<span className='flex items-center gap-2'>
 											<Search className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-											<span className='truncate'>Беморни қидириш...</span>
+											<span className='truncate'>{t('searchPatient')}</span>
 										</span>
 									</Button>
 								</PopoverTrigger>
@@ -222,14 +224,14 @@ const LabOrder = () => {
 								>
 									<Command shouldFilter={false}>
 										<CommandInput
-											placeholder='Исм, ID ёки телефон орқали қидириш...'
+											placeholder={t('searchByNameIdOrPhone')}
 											value={searchQuery}
 											onValueChange={setSearchQuery}
 											className='text-sm sm:text-base'
 										/>
 										<CommandList>
 											<CommandEmpty className='py-6 text-sm sm:text-base'>
-												Бемор топилмади
+												{t('patientNotFound')}
 											</CommandEmpty>
 											<CommandGroup>
 												{filteredPatients.map(p => (
@@ -263,20 +265,20 @@ const LabOrder = () => {
 						<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6'>
 							<div>
 								<h1 className='text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2'>
-									Таҳлил Буюртмаси
+									{t('labOrder')}
 								</h1>
 								<p className='text-xs sm:text-sm md:text-base text-muted-foreground mt-1'>
-									Янги лаборатория буюртмаси яратиш
+									{t('createNewLabOrder')}
 								</p>
 							</div>
 							<div className='flex flex-wrap gap-2'>
 								<Button variant='outline' className='w-full sm:w-auto'>
 									<Printer className='mr-2 h-4 w-4' />
-									Чоп Этиш
+									{t('print')}
 								</Button>
 								<Button className='w-full sm:w-auto'>
 									<Send className='mr-2 h-4 w-4' />
-									Юбориш
+									{t('send')}
 								</Button>
 							</div>
 						</div>
@@ -284,17 +286,17 @@ const LabOrder = () => {
 						<Card className='mb-6'>
 							<CardHeader>
 								<CardTitle className='text-xl md:text-2xl font-bold'>
-									Бемор Маълумоти
+									{t('patientInfo')}
 								</CardTitle>
 							</CardHeader>
 							<CardContent>
 								<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5'>
 									<div>
-										<Label className='font-normal'>Бемор Исми</Label>
+										<Label className='font-normal'>{t('patientName')}</Label>
 										<p className='font-medium'>{patient.fullname}</p>
 									</div>
 									<div>
-										<Label className='font-normal'>Туғилган Сана</Label>
+										<Label className='font-normal'>{t('birthDate')}</Label>
 										<p className='font-medium'>
 											{formatDateAndAge(patient.date_of_birth)}
 										</p>
@@ -304,7 +306,7 @@ const LabOrder = () => {
 										<p className='font-medium'>{patient.patient_id}</p>
 									</div>
 									<div>
-										<Label className='font-normal'>Телефон</Label>
+										<Label className='font-normal'>{t('phone')}</Label>
 										<p className='font-medium'>{patient.phone}</p>
 									</div>
 								</div>
@@ -321,7 +323,7 @@ const LabOrder = () => {
 							<Card className='mb-6'>
 								<CardHeader>
 									<CardTitle className='text-xl md:text-2xl font-bold'>
-										Таҳлил Турларини Танланг
+										{t('selectTestTypes')}
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
@@ -379,7 +381,7 @@ const LabOrder = () => {
 									{selectedTests.length > 0 && (
 										<div className='mt-4 p-3 bg-muted rounded-lg'>
 											<p className='font-semibold text-sm'>
-												Танланган таҳлиллар: {selectedTests.length}
+												{t('selectedTests')}: {selectedTests.length}
 											</p>
 											<div className='flex flex-wrap gap-2 mt-2'>
 												{selectedTests.map(test => (
@@ -401,7 +403,7 @@ const LabOrder = () => {
 							<Card className='mb-6'>
 								<CardHeader>
 									<CardTitle className='text-xl md:text-2xl font-bold'>
-										Устувор Даража
+										{t('priorityLevel')}
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
@@ -419,23 +421,23 @@ const LabOrder = () => {
 										{[
 											{
 												value: 'ODDIY',
-												label: 'Оддий',
-												desc: 'Натижа 24-48 соат ичида',
-												badge: 'Оддий',
+												label: t('normal'),
+												desc: t('result24to48hours'),
+												badge: t('normal'),
 												badgeClass: 'bg-gray-200 text-black',
 											},
 											{
 												value: 'SHOSHILINCH',
-												label: 'Шошилинч',
-												desc: 'Натижа 6-12 соат ичида',
-												badge: 'Шошилинч',
+												label: t('urgent'),
+												desc: t('result6to12hours'),
+												badge: t('urgent'),
 												badgeClass: 'bg-orange-500 text-white',
 											},
 											{
 												value: 'JUDA_SHOSHILINCH',
-												label: 'Жуда Шошилинч',
-												desc: 'Натижа 1-2 соат ичида',
-												badge: 'Жуда Шошилинч',
+												label: t('veryUrgent'),
+												desc: t('result1to2hours'),
+												badge: t('veryUrgent'),
 												badgeClass: 'bg-red-600 text-white',
 											},
 										].map(item => (
@@ -468,11 +470,11 @@ const LabOrder = () => {
 							<Card className='mb-6'>
 								<CardHeader>
 									<CardTitle className='text-xl md:text-2xl font-bold'>
-										Клиник Кўрсатма
+										{t('clinicalIndication')}
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<Label>Таҳлил сабаби ва клиник ахвол</Label>
+									<Label>{t('testReasonAndClinicalCondition')}</Label>
 									<Textarea
 										rows={5}
 										className={`mt-2 w-full ${
@@ -480,7 +482,7 @@ const LabOrder = () => {
 												? 'border-red-500'
 												: ''
 										}`}
-										placeholder='Мисол: Беморда қондаги қанд миқдори ошган...'
+											placeholder={t('exampleClinicalIndication')}
 										value={clinicalIndications}
 										onChange={e => setClinicalIndications(e.target.value)}
 									/>
@@ -498,7 +500,7 @@ const LabOrder = () => {
 								disabled={isCreating}
 							>
 								<X className='w-4 h-4 sm:w-5 sm:h-5 mr-2' />
-								Бекор қилиш
+								{t('cancel')}
 							</Button>
 							<Button
 								size='lg'
@@ -507,7 +509,7 @@ const LabOrder = () => {
 								disabled={isCreating}
 							>
 								<Save className='w-4 h-4 sm:w-5 sm:h-5 mr-2' />
-								{isCreating ? 'Сақланмоқда...' : 'Сақлаш'}
+								{isCreating ? t('saving') : t('save')}
 							</Button>
 						</div>
 					</>

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { AlertTriangle } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   isDeleteModalOpen: boolean;
@@ -25,17 +26,18 @@ const DeleteVisit = ({
   handleDelete,
   isDeleting,
 }: Props) => {
+  const { t } = useTranslation('examinations');
+  
   return (
     <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <AlertTriangle className='w-5 h-5 text-red-600' />
-            Кўрикни ўчириш
+            {t('deleteModal.title')}
           </DialogTitle>
           <DialogDescription>
-            Сиз ҳақиқатан ҳам бу кўрикни ўчирмоқчимисиз? Бу амални қайтариб
-            бўлмайди.
+            {t('deleteModal.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -43,15 +45,15 @@ const DeleteVisit = ({
           <div className='py-4'>
             <div className='p-4 bg-muted rounded-lg space-y-2'>
               <p className='text-sm'>
-                <span className='font-semibold'>Бемор:</span>{' '}
+                <span className='font-semibold'>{t('patient')}:</span>{' '}
                 {selectedExam.patient_id.fullname}
               </p>
               <p className='text-sm'>
-                <span className='font-semibold'>Шифокор:</span>{' '}
+                <span className='font-semibold'>{t('doctor')}:</span>{' '}
                 {selectedExam.doctor_id.fullname}
               </p>
               <p className='text-sm'>
-                <span className='font-semibold'>Сана:</span>{' '}
+                <span className='font-semibold'>{t('date')}:</span>{' '}
                 {new Date(selectedExam.created_at).toLocaleDateString('uz-UZ')}
               </p>
             </div>
@@ -64,14 +66,14 @@ const DeleteVisit = ({
             onClick={() => setIsDeleteModalOpen(false)}
             disabled={isDeleting}
           >
-            Бекор қилиш
+            {t('cancel')}
           </Button>
           <Button
             variant='destructive'
             onClick={handleDelete}
             disabled={isDeleting}
           >
-            {isDeleting ? 'Ўчирилмоқда...' : 'Ўчириш'}
+            {isDeleting ? t('deleteModal.deleting') : t('delete')}
           </Button>
         </DialogFooter>
       </DialogContent>
