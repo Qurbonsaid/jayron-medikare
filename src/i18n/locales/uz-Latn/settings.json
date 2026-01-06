@@ -104,10 +104,13 @@
   "usersFetchError": "Foydalanuvchilarni olib bo'lmadi",
   "loading": "Yuklanmoqda...",
   "errorFetchingData": "Ma'lumotni olishda xatolik yuz berdi",
+  "phoneRequired13Chars": "Telefon raqami 13 ta belgidan iborat bo'lishi kerak",
+  "phoneInvalidFormat": "Telefon raqami formati noto'g'ri",
   "saving": "Saqlanmoqda...",
   "logout": "Chiqish",
   "logoutConfirm": "Siz rostan ham bu accountdan chiqmoqchimisiz?",
   "roles": {
+    "ceo": "Rahbar",
     "admin": "Admin",
     "doctor": "Shifokor",
     "nurse": "Hamshira",

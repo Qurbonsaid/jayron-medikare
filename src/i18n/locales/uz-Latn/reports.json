@@ -60,6 +60,7 @@
   "bedsOccupied": "{{occupied}}/{{total}} joy band",
   "doctors": "Shifokorlar",
   "nurses": "Hamshiralar",
+  "receptionists": "Qabulxona xodimlari",
   "active": "Faol",
   "inactive": "Nofaol",
   "analyses": "Tahlillar",
@@ -92,5 +93,6 @@
   "phone": "Telefon",
   "noDataFound": "Ma'lumot topilmadi",
   "clear": "Tozalash",
-  "lastPeriod": "oxirgi davr"
+  "lastPeriod": "oxirgi davr",
+  "infoAlert": "Hisobotlar sana oralig'i yoki filtr parametrlarini o'zgartirganda avtomatik yangilanadi."
 }

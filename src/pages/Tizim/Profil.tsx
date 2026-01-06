@@ -17,18 +17,6 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
-// Role tarjimasini olish funksiyasi
-const getRoleLabel = (role: string): string => {
-	const roleMap: Record<string, string> = {
-		ceo: 'Rahbar',
-		admin: 'Admin',
-		doctor: 'Shifokor',
-		nurse: 'Hamshira',
-		receptionist: 'Qabulxona',
-	}
-	return roleMap[role.toLowerCase()] || role
-}
-
 export default function ProfilePage() {
 	const navigate = useNavigate()
 	const { t } = useTranslation('settings')
@@ -221,7 +209,7 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 								{user.data.fullname}
 							</h2>
 							<p className='text-muted-foreground text-sm sm:text-base'>
-								Рол: {getRoleLabel(user.data.role)}
+								{t('role')}: {t(`roles.${user.data.role.toLowerCase()}`)}
 							</p>
 						</div>
 					</div>

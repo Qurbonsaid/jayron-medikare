@@ -184,7 +184,7 @@ const NewAppointment = ({
                       selected={date}
                       onSelect={setDate}
                       initialFocus
-                      locale={uz}
+                      locale={dateLocale}
                     />
                   </PopoverContent>
                 </Popover>
