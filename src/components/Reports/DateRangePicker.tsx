@@ -60,7 +60,7 @@ export const DateRangePicker = ({
 						selected={dateRange}
 						onSelect={onDateRangeChange}
 						numberOfMonths={2}
-						locale={uz}
+						locale={dateLocale}
 					/>
 					<div className='flex gap-2 p-3 border-t'>
 						<Button

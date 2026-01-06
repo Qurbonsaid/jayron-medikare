@@ -1,4 +1,4 @@
-import { uz } from 'date-fns/locale';
+import { uz } from 'date-fns/locale/uz';
 
 /**
  * Hook to get the date-fns locale

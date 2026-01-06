@@ -60,6 +60,7 @@
   "bedsOccupied": "{{occupied}}/{{total}} beds occupied",
   "doctors": "Doctors",
   "nurses": "Nurses",
+  "receptionists": "Receptionists",
   "active": "Active",
   "inactive": "Inactive",
   "analyses": "Analyses",
@@ -92,5 +93,6 @@
   "phone": "Phone",
   "noDataFound": "No data found",
   "clear": "Clear",
-  "lastPeriod": "last period"
+  "lastPeriod": "last period",
+  "infoAlert": "The reports are automatically updated when you change the date range or filter parameters."
 }

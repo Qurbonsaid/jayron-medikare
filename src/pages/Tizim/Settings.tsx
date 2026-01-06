@@ -46,18 +46,6 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
-// Role tarjimasini olish funksiyasi
-const getRoleLabel = (role: string): string => {
-	const roleMap: Record<string, string> = {
-		ceo: 'Rahbar',
-		admin: 'Admin',
-		doctor: 'Shifokor',
-		nurse: 'Hamshira',
-		receptionist: 'Qabulxona',
-	}
-	return roleMap[role.toLowerCase()] || role
-}
-
 export type Settings = {
 	clinic_name: string
 	address: string
@@ -229,12 +217,12 @@ const Settings = () => {
 		if (cleaned.length > 0 && cleaned.length < 13) {
 			setErrorsUser(prev => ({
 				...prev,
-				phone: "Telefon raqami 13 ta belgidan iborat bo'lishi kerak",
+				phone: t('phoneRequired13Chars'),
 			}))
 		} else if (cleaned.length === 13 && !cleaned.match(/^\+998\d{9}$/)) {
 			setErrorsUser(prev => ({
 				...prev,
-				phone: "Telefon raqami formati noto'g'ri",
+				phone: t('phoneInvalidFormat'),
 			}))
 		} else if (errorsUser.phone) {
 			setErrorsUser(prev => ({ ...prev, phone: '' }))
@@ -314,7 +302,7 @@ const Settings = () => {
 			await handleRequest({
 				request: async () => await createUser(payload).unwrap(),
 				onSuccess: () => {
-					toast.success('Фойдаланувчи муваффақиятли қўшилди')
+					toast.success(t('userCreated'))
 					setIsUserModalOpen(false)
 					resetForm()
 				},
@@ -478,12 +466,12 @@ const Settings = () => {
 		if (cleaned.length > 0 && cleaned.length < 13) {
 			setErrors(prev => ({
 				...prev,
-				phone: "Telefon raqami 13 ta belgidan iborat bo'lishi kerak",
+				phone: t('phoneRequired13Chars'),
 			}))
 		} else if (cleaned.length === 13 && !cleaned.match(/^\+998\d{9}$/)) {
 			setErrors(prev => ({
 				...prev,
-				phone: "Telefon raqami formati noto'g'ri",
+				phone: t('phoneInvalidFormat'),
 			}))
 		} else if (errors.phone) {
 			setErrors(prev => ({ ...prev, phone: '' }))
@@ -669,7 +657,7 @@ const Settings = () => {
 														<p className='text-[10px] sm:text-xs text-muted-foreground'>
 															{t('role')}:{' '}
 															<span className='font-medium'>
-																{getRoleLabel(user.role)}
+																{t(`roles.${user.role.toLowerCase()}`)}
 															</span>
 														</p>
 														<p className='text-[10px] sm:text-xs text-muted-foreground'>
@@ -740,14 +728,10 @@ const Settings = () => {
 
 														<DialogContent className='max-w-[90vw] sm:max-w-xs rounded-xl mx-4'>
 															<DialogTitle className='text-sm sm:text-base'>
-																Foydalanuvchini o'chirish
+																{t('deleteUser')}
 															</DialogTitle>
 															<DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
-																Rostan ham{' '}
-																<span className='font-semibold'>
-																	{selectedUserName}
-																</span>{' '}
-																foydalanuvchisini o'chirmoqchimisiz?
+																{t('deleteUserConfirm', { name: selectedUserName })}
 															</DialogDescription>
 															<DialogFooter className='flex flex-row justify-end gap-2 pt-2'>
 																<Button
@@ -756,14 +740,14 @@ const Settings = () => {
 																	className='h-7 sm:h-8 text-xs'
 																	onClick={handleCancelDelete}
 																>
-																	Yo'q
+																	{t('no')}
 																</Button>
 																<Button
 																	size='sm'
 																	className='bg-red-600 text-white h-7 sm:h-8 text-xs'
 																	onClick={handleConfirmDelete}
 																>
-																	Ha
+																	{t('yes')}
 																</Button>
 															</DialogFooter>
 														</DialogContent>
@@ -816,7 +800,7 @@ const Settings = () => {
 															</td>
 															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
 																<Badge variant='outline'>
-																	{getRoleLabel(user.role)}
+																	{t(`roles.${user.role.toLowerCase()}`)}
 																</Badge>
 															</td>
 															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
@@ -833,7 +817,7 @@ const Settings = () => {
 																			: 'bg-destructive/10 text-destructive border-destructive/20 border'
 																	}
 																>
-																	{user.status === 'active' ? 'Фаол' : 'Нофаол'}
+																	{user.status === 'active' ? t('active') : t('inactive')}
 																</Badge>
 															</td>
 															<td className='px-4 xl:px-6 py-3 xl:py-4'>
@@ -872,26 +856,22 @@ const Settings = () => {
 																			</Button>
 																		</DialogTrigger>
 																		<DialogContent className='max-w-xs rounded-xl'>
-																			<DialogTitle>Foyda o'chirish</DialogTitle>
+																			<DialogTitle>{t('deleteUser')}</DialogTitle>
 																			<DialogDescription>
-																				Rostan ham{' '}
-																				<span className='font-semibold'>
-																					{selectedUserName}
-																				</span>{' '}
-																				foydalanuvchisini o'chirmoqchimisiz?
+																				{t('deleteUserConfirm', { name: selectedUserName })}
 																			</DialogDescription>
 																			<DialogFooter className='flex justify-end gap-2'>
 																				<Button
 																					variant='outline'
 																					onClick={handleCancelDelete}
 																				>
-																					Yo'q
+																					{t('no')}
 																				</Button>
 																				<Button
 																					className='bg-red-600 text-white'
 																					onClick={handleConfirmDelete}
 																				>
-																					Ha
+																					{t('yes')}
 																				</Button>
 																			</DialogFooter>
 																		</DialogContent>

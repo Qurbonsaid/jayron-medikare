@@ -104,10 +104,13 @@
   "usersFetchError": "Failed to fetch users",
   "loading": "Loading...",
   "errorFetchingData": "Error fetching data",
+  "phoneRequired13Chars": "Phone number must be 13 characters",
+  "phoneInvalidFormat": "Invalid phone number format",
   "saving": "Saving...",
   "logout": "Logout",
   "logoutConfirm": "Are you sure you want to logout from this account?",
   "roles": {
+    "ceo": "CEO",
     "admin": "Admin",
     "doctor": "Doctor",
     "nurse": "Nurse",
