@@ -87,7 +87,9 @@ import AllPrescriptionsDownloadButton, {
 import { ViewMedicalImage } from '../Radiology/components';
 
 // Body part labels will be loaded from translations
-const getBodyPartLabels = (t: (key: string) => string): Record<string, string> => ({
+const getBodyPartLabels = (
+  t: (key: string) => string
+): Record<string, string> => ({
   [BodyPartConstants.HEAD]: t('examinations:detail.bodyParts.head'),
   [BodyPartConstants.NECK]: t('examinations:detail.bodyParts.neck'),
   [BodyPartConstants.CHEST]: t('examinations:detail.bodyParts.chest'),
@@ -107,22 +109,33 @@ const getRoomType = (t: (key: string) => string) => ({
   ambulator: t('examinations:detail.roomTypes.ambulator'),
 });
 
-const getStatusMap = (t: (key: string) => string): Record<string, { label: string; bgColor: string }> => ({
-  pending: { label: t('examinations:detail.statuses.pending'), bgColor: 'bg-yellow-500' },
-  active: { label: t('examinations:detail.statuses.active'), bgColor: 'bg-blue-500' },
-  completed: { label: t('examinations:detail.statuses.completed'), bgColor: 'bg-green-500' },
+const getStatusMap = (
+  t: (key: string) => string
+): Record<string, { label: string; bgColor: string }> => ({
+  pending: {
+    label: t('examinations:detail.statuses.pending'),
+    bgColor: 'bg-yellow-500',
+  },
+  active: {
+    label: t('examinations:detail.statuses.active'),
+    bgColor: 'bg-blue-500',
+  },
+  completed: {
+    label: t('examinations:detail.statuses.completed'),
+    bgColor: 'bg-green-500',
+  },
 });
 
 const ExaminationDetail = () => {
   const { t } = useTranslation(['examinations', 'common']);
   const navigate = useNavigate();
   const { id } = useParams();
-  
+
   // Get translated labels
   const bodyPartLabels = getBodyPartLabels(t);
   const roomType = getRoomType(t);
   const statusMap = getStatusMap(t);
-  
+
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -199,6 +212,9 @@ const ExaminationDetail = () => {
   const serviceSearchRef = useRef<HTMLInputElement>(null);
   const medicationSearchRef = useRef<HTMLInputElement>(null);
 
+  // Refs to track initialization
+  const serviceInitializedRef = useRef(false);
+
   // Debounce service search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -262,8 +278,6 @@ const ExaminationDetail = () => {
 
   const exam = examData?.data;
 
-  console.log('Exam: ', exam);
-
   // Fetch all diagnosis
   const { data: diagnosisData } = useGetAllDiagnosisQuery({});
   const diagnoses = diagnosisData?.data || [];
@@ -289,15 +303,14 @@ const ExaminationDetail = () => {
 
   // Cache selected services for lookup
   useEffect(() => {
-    if (servicesData?.data) {
+    if (servicesData?.data && servicesData.data.length > 0) {
+      const newCacheItems: { [key: string]: any } = {};
       servicesData.data.forEach((service: any) => {
-        setSelectedServicesCache((prev) => ({
-          ...prev,
-          [service._id]: service,
-        }));
+        newCacheItems[service._id] = service;
       });
+      setSelectedServicesCache((prev) => ({ ...prev, ...newCacheItems }));
     }
-  }, [servicesData]);
+  }, [servicesData?.data]);
 
   // Reset pagination when search changes
   useEffect(() => {
@@ -375,8 +388,10 @@ const ExaminationDetail = () => {
 
   // Update serviceDuration and serviceStartDate based on existing services when adding new services
   useEffect(() => {
-    // Only update if services array is empty (not adding new services) and patientServices exist
-    if (services.length === 0 && patientServices.length > 0) {
+    // Only initialize once when component mounts or patientServices first loads
+    if (serviceInitializedRef.current || !patientServicesData) return;
+
+    if (patientServices.length > 0) {
       const durations = patientServices
         .flatMap(
           (doc: any) =>
@@ -405,12 +420,14 @@ const ExaminationDetail = () => {
       if (firstDate) {
         setServiceStartDate(new Date(firstDate));
       }
-    } else if (services.length === 0 && patientServices.length === 0) {
-      // Reset to default 7 if no existing services and no new services
+      serviceInitializedRef.current = true;
+    } else if (patientServices.length === 0) {
+      // Reset to default 7 if no existing services
       setServiceDuration(7);
       setServiceStartDate(new Date());
+      serviceInitializedRef.current = true;
     }
-  }, [patientServices, services.length]);
+  }, [patientServices, patientServicesData]);
 
   // Update form when exam changes
   useEffect(() => {
@@ -427,7 +444,7 @@ const ExaminationDetail = () => {
         diagnosis: diagnosisId,
       });
     }
-  }, [exam]);
+  }, [exam?._id]);
 
   const handleEdit = () => {
     setIsEditMode(true);
@@ -490,7 +507,9 @@ const ExaminationDetail = () => {
         navigate(-1);
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || t('examinations:detail.errorOccurred'));
+        toast.error(
+          error?.data?.error?.msg || t('examinations:detail.errorOccurred')
+        );
       },
     });
   };
@@ -506,7 +525,9 @@ const ExaminationDetail = () => {
         refetch();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || t('examinations:detail.errorOccurred'));
+        toast.error(
+          error?.data?.error?.msg || t('examinations:detail.errorOccurred')
+        );
       },
     });
   };
@@ -788,7 +809,18 @@ const ExaminationDetail = () => {
         // If existing services exist or editing, use update
         // Otherwise, use create
         if (hasExistingServices || isEdit) {
-          payload.examination_id = exam.service._id;
+          // Update service document
+          const serviceDocId = isEdit 
+            ? patientServices.find((doc: any) =>
+                doc.items?.some((item: any) => item._id === editingServiceId)
+              )?._id
+            : patientServices[0]?._id;
+          
+          if (!serviceDocId) {
+            throw new Error('Xizmat hujjati topilmadi');
+          }
+          
+          payload.examination_id = serviceDocId;
           const res = await updateService(payload).unwrap();
           return res;
         }
@@ -804,11 +836,12 @@ const ExaminationDetail = () => {
         setIsAddingService(false);
         setEditingServiceId(null);
         setServices([]);
-        setServiceDuration(7); // Reset to default 7
+        setServiceDuration(7);
         setServiceStartDate(new Date());
         refetchPatientServices();
       },
       onError: (error) => {
+        console.error('Service save error:', error);
         toast.error(
           error?.data?.error?.msg ||
             (isEdit
@@ -881,7 +914,9 @@ const ExaminationDetail = () => {
         refetchPatientServices();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || t('examinations:detail.serviceDeleteError'));
+        toast.error(
+          error?.data?.error?.msg || t('examinations:detail.serviceDeleteError')
+        );
         setDeletingServiceId(null);
       },
     });
@@ -1018,7 +1053,10 @@ const ExaminationDetail = () => {
         refetchPrescriptions();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || t('examinations:detail.prescriptionUpdateError'));
+        toast.error(
+          error?.data?.error?.msg ||
+            t('examinations:detail.prescriptionUpdateError')
+        );
       },
     });
   };
@@ -1033,17 +1071,27 @@ const ExaminationDetail = () => {
     v_para_n_trigeminus: t('examinations:detail.neurologic.paraN7'),
     vi_para_n_abducens: t('examinations:detail.neurologic.paraN8'),
     vii_para_n_fascialis: t('examinations:detail.neurologic.paraN9_10'),
-    viii_para_n_vestibulocochlearis: t('examinations:detail.neurologic.paraN11'),
+    viii_para_n_vestibulocochlearis: t(
+      'examinations:detail.neurologic.paraN11'
+    ),
     ix_para_n_glossopharyngeus: t('examinations:detail.neurologic.paraN12'),
     x_para_n_vagus: t('examinations:detail.neurologic.oralAutomatism'),
     xi_para_n_accessorius: t('examinations:detail.neurologic.motorSystem'),
     xii_para_n_hypoglossus: t('examinations:detail.neurologic.sensorySphere'),
     motor_system: t('examinations:detail.neurologic.coordinationSphere'),
     sensory_sphere: t('examinations:detail.neurologic.higherBrainFunctions'),
-    coordination_sphere: t('examinations:detail.neurologic.syndromicDiagnosisJustification'),
-    higher_brain_functions: t('examinations:detail.neurologic.topicalDiagnosisJustification'),
-    syndromic_diagnosis_justification: t('examinations:detail.neurologic.syndromicDiagnosis'),
-    topical_diagnosis_justification: t('examinations:detail.neurologic.topicalDiagnosis'),
+    coordination_sphere: t(
+      'examinations:detail.neurologic.syndromicDiagnosisJustification'
+    ),
+    higher_brain_functions: t(
+      'examinations:detail.neurologic.topicalDiagnosisJustification'
+    ),
+    syndromic_diagnosis_justification: t(
+      'examinations:detail.neurologic.syndromicDiagnosis'
+    ),
+    topical_diagnosis_justification: t(
+      'examinations:detail.neurologic.topicalDiagnosis'
+    ),
   };
 
   const handleAddNeurologic = async () => {
@@ -1086,7 +1134,8 @@ const ExaminationDetail = () => {
       },
       onError: (error) => {
         toast.error(
-          error?.data?.error?.msg || t('examinations:detail.neurologicUpdateError')
+          error?.data?.error?.msg ||
+            t('examinations:detail.neurologicUpdateError')
         );
       },
     });
@@ -1108,7 +1157,8 @@ const ExaminationDetail = () => {
       },
       onError: (error) => {
         toast.error(
-          error?.data?.error?.msg || t('examinations:detail.neurologicDeleteError')
+          error?.data?.error?.msg ||
+            t('examinations:detail.neurologicDeleteError')
         );
       },
     });
@@ -1152,7 +1202,9 @@ const ExaminationDetail = () => {
       <div className='min-h-screen bg-background flex items-center justify-center'>
         <div className='text-center'>
           <Loader2 className='h-12 w-12 animate-spin text-primary mx-auto mb-4' />
-          <p className='text-muted-foreground'>{t('examinations:detail.loading')}</p>
+          <p className='text-muted-foreground'>
+            {t('examinations:detail.loading')}
+          </p>
         </div>
       </div>
     );
@@ -1162,7 +1214,9 @@ const ExaminationDetail = () => {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
         <div className='text-center'>
-          <p className='text-muted-foreground mb-4'>{t('examinations:detail.notFound')}</p>
+          <p className='text-muted-foreground mb-4'>
+            {t('examinations:detail.notFound')}
+          </p>
           <Button onClick={() => navigate(-1)}>
             <ArrowLeft className='w-4 h-4 mr-2' />
             {t('examinations:detail.back')}
@@ -1184,25 +1238,35 @@ const ExaminationDetail = () => {
           <CardContent>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
               <div>
-                <Label className='text-muted-foreground'>{t('detail.name')}</Label>
+                <Label className='text-muted-foreground'>
+                  {t('detail.name')}
+                </Label>
                 <p className='font-medium mt-1'>{exam.patient_id?.fullname}</p>
               </div>
               <div>
-                <Label className='text-muted-foreground'>{t('detail.phone')}</Label>
+                <Label className='text-muted-foreground'>
+                  {t('detail.phone')}
+                </Label>
                 <p className='font-medium mt-1'>{exam.patient_id?.phone}</p>
               </div>
               <div>
-                <Label className='text-muted-foreground'>{t('detail.doctor')}</Label>
+                <Label className='text-muted-foreground'>
+                  {t('detail.doctor')}
+                </Label>
                 <p className='font-medium mt-1'>{exam.doctor_id?.fullname}</p>
               </div>
               <div>
-                <Label className='text-muted-foreground'>{t('detail.date')}</Label>
+                <Label className='text-muted-foreground'>
+                  {t('detail.date')}
+                </Label>
                 <p className='font-medium mt-1'>
                   {new Date(exam.created_at).toLocaleDateString('uz-UZ')}
                 </p>
               </div>
               <div>
-                <Label className='text-muted-foreground mr-5'>{t('type')} :</Label>
+                <Label className='text-muted-foreground mr-5'>
+                  {t('type')} :
+                </Label>
                 <p
                   className={`font-medium mt-1 inline-block px-2 py-0.5 rounded ${
                     exam.treatment_type === 'stasionar'
@@ -1214,7 +1278,9 @@ const ExaminationDetail = () => {
                 </p>
               </div>
               <div>
-                <Label className='text-muted-foreground mr-5'>{t('status')} :</Label>
+                <Label className='text-muted-foreground mr-5'>
+                  {t('status')} :
+                </Label>
                 <p
                   className={`font-medium mt-1 inline-block px-2 py-0.5 rounded text-white ${
                     statusMap[exam.status]?.bgColor || 'bg-gray-500'
@@ -1396,7 +1462,9 @@ const ExaminationDetail = () => {
                           }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder={t('detail.selectDiagnosis')} />
+                            <SelectValue
+                              placeholder={t('detail.selectDiagnosis')}
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {diagnoses.map((diagnosis: any) => (
@@ -1414,7 +1482,9 @@ const ExaminationDetail = () => {
                       <div className='space-y-2'>
                         <Label>{t('detail.recommendation')}</Label>
                         <Textarea
-                          placeholder={t('detail.enterRecommendationPlaceholder')}
+                          placeholder={t(
+                            'detail.enterRecommendationPlaceholder'
+                          )}
                           value={editForm.description}
                           onChange={(e) =>
                             setEditForm({
@@ -1442,13 +1512,18 @@ const ExaminationDetail = () => {
                   ) : (
                     <div className='space-y-4'>
                       <div>
-                        <Label className='text-muted-foreground'>{t('examinations:detail.complaint')}</Label>
+                        <Label className='text-muted-foreground'>
+                          {t('examinations:detail.complaint')}
+                        </Label>
                         <p className='font-medium bg-muted p-3 rounded-md mt-1'>
-                          {exam.complaints || t('examinations:detail.notEntered')}
+                          {exam.complaints ||
+                            t('examinations:detail.notEntered')}
                         </p>
                       </div>
                       <div>
-                        <Label className='text-muted-foreground'>{t('examinations:detail.diagnosis')}</Label>
+                        <Label className='text-muted-foreground'>
+                          {t('examinations:detail.diagnosis')}
+                        </Label>
                         <p className='font-medium bg-muted p-3 rounded-md mt-1'>
                           {typeof exam.diagnosis === 'object' &&
                           exam.diagnosis?.name
@@ -1459,7 +1534,9 @@ const ExaminationDetail = () => {
                         </p>
                       </div>
                       <div>
-                        <Label className='text-muted-foreground'>{t('detail.recommendation')}</Label>
+                        <Label className='text-muted-foreground'>
+                          {t('detail.recommendation')}
+                        </Label>
                         <p className='font-medium bg-muted p-3 rounded-md mt-1'>
                           {exam.description || t('detail.notEntered')}
                         </p>
@@ -1506,7 +1583,9 @@ const ExaminationDetail = () => {
                                 </Label>
                                 <p className='font-medium mt-1'>
                                   {room.room_price
-                                    ? `${room.room_price.toLocaleString()} ${t('detail.sum')}`
+                                    ? `${room.room_price.toLocaleString()} ${t(
+                                        'detail.sum'
+                                      )}`
                                     : t('detail.unknown')}
                                 </p>
                               </div>
@@ -1589,7 +1668,8 @@ const ExaminationDetail = () => {
                               <div className='mb-3'>
                                 <div className='flex items-center justify-between'>
                                   <span className='text-sm font-medium text-primary'>
-                                    {t('detail.prescriptionNum')} #{docIndex + 1} -{' '}
+                                    {t('detail.prescriptionNum')} #
+                                    {docIndex + 1} -{' '}
                                     {new Date(
                                       prescriptionDoc.created_at
                                     ).toLocaleDateString('uz-UZ')}
@@ -1612,7 +1692,8 @@ const ExaminationDetail = () => {
                                         <div className='space-y-4'>
                                           <div className='flex items-center justify-between mb-2'>
                                             <span className='text-sm font-semibold text-primary'>
-                                              {t('detail.editMedication')} #{itemIndex + 1}
+                                              {t('detail.editMedication')} #
+                                              {itemIndex + 1}
                                             </span>
                                           </div>
                                           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
@@ -1641,13 +1722,19 @@ const ExaminationDetail = () => {
                                                 }}
                                               >
                                                 <SelectTrigger className='mt-1'>
-                                                  <SelectValue placeholder={t('detail.selectMedication')} />
+                                                  <SelectValue
+                                                    placeholder={t(
+                                                      'detail.selectMedication'
+                                                    )}
+                                                  />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                   <div className='p-2'>
                                                     <Input
                                                       ref={medicationSearchRef}
-                                                      placeholder={t('detail.search')}
+                                                      placeholder={t(
+                                                        'detail.search'
+                                                      )}
                                                       value={medicationSearch}
                                                       onChange={(e) =>
                                                         setMedicationSearch(
@@ -1699,7 +1786,9 @@ const ExaminationDetail = () => {
                                                   })
                                                 }
                                                 className='mt-1'
-                                                placeholder={t('detail.timesPerDay')}
+                                                placeholder={t(
+                                                  'detail.timesPerDay'
+                                                )}
                                               />
                                             </div>
                                             <div>
@@ -1719,7 +1808,9 @@ const ExaminationDetail = () => {
                                                   })
                                                 }
                                                 className='mt-1'
-                                                placeholder={t('detail.howManyDays')}
+                                                placeholder={t(
+                                                  'detail.howManyDays'
+                                                )}
                                               />
                                             </div>
                                             <div>
@@ -1738,7 +1829,9 @@ const ExaminationDetail = () => {
                                                   })
                                                 }
                                                 className='mt-1'
-                                                placeholder={t('detail.instructionPlaceholder')}
+                                                placeholder={t(
+                                                  'detail.instructionPlaceholder'
+                                                )}
                                               />
                                             </div>
                                           </div>
@@ -1755,7 +1848,9 @@ const ExaminationDetail = () => {
                                                 })
                                               }
                                               className='mt-1'
-                                              placeholder={t('detail.additionalInfo')}
+                                              placeholder={t(
+                                                'detail.additionalInfo'
+                                              )}
                                               rows={2}
                                             />
                                           </div>
@@ -1786,7 +1881,8 @@ const ExaminationDetail = () => {
                                         <>
                                           <div className='flex items-center justify-between mb-2'>
                                             <span className='text-xs font-medium text-muted-foreground'>
-                                              {t('detail.medication')} #{itemIndex + 1}
+                                              {t('detail.medication')} #
+                                              {itemIndex + 1}
                                             </span>
                                             <div className='flex gap-1'>
                                               <Button
@@ -1824,7 +1920,8 @@ const ExaminationDetail = () => {
                                                 {t('detail.duration')}
                                               </Label>
                                               <p className='font-semibold text-sm'>
-                                                {item.duration} {t('detail.days')}
+                                                {item.duration}{' '}
+                                                {t('detail.days')}
                                               </p>
                                             </div>
                                             <div>
@@ -1832,7 +1929,9 @@ const ExaminationDetail = () => {
                                                 {t('detail.intake')}
                                               </Label>
                                               <p className='font-semibold text-sm'>
-                                                {t('detail.timesPerDayCount', { count: item.frequency })}
+                                                {t('detail.timesPerDayCount', {
+                                                  count: item.frequency,
+                                                })}
                                               </p>
                                             </div>
                                             {item.instructions && (
@@ -2477,7 +2576,9 @@ const ExaminationDetail = () => {
                                                     >
                                                       <CommandInput
                                                         ref={serviceSearchRef}
-                                                        placeholder={t('detail.searchService')}
+                                                        placeholder={t(
+                                                          'detail.searchService'
+                                                        )}
                                                         value={serviceSearch}
                                                         onValueChange={
                                                           setServiceSearch
@@ -2512,13 +2613,17 @@ const ExaminationDetail = () => {
                                                           <div className='flex items-center justify-center py-4'>
                                                             <Loader2 className='h-4 w-4 animate-spin mr-2' />
                                                             <span className='text-sm text-muted-foreground'>
-                                                              {t('detail.loading')}
+                                                              {t(
+                                                                'detail.loading'
+                                                              )}
                                                             </span>
                                                           </div>
                                                         ) : serviceTypes.length ===
                                                           0 ? (
                                                           <CommandEmpty>
-                                                            {t('detail.serviceNotFound')}
+                                                            {t(
+                                                              'detail.serviceNotFound'
+                                                            )}
                                                           </CommandEmpty>
                                                         ) : (
                                                           <CommandGroup>
@@ -2674,7 +2779,8 @@ const ExaminationDetail = () => {
                                               }}
                                             >
                                               <span className='font-bold text-xs block'>
-                                                {dayItem.dayNumber}-{t('detail.day')}
+                                                {dayItem.dayNumber}-
+                                                {t('detail.day')}
                                               </span>
                                               {dayItem.dayData?.date ? (
                                                 <div className='flex items-center justify-center'>
@@ -2732,7 +2838,9 @@ const ExaminationDetail = () => {
                                                         disabled={
                                                           !editingService?.service_type_id
                                                         }
-                                                        title={t('detail.everyDay')}
+                                                        title={t(
+                                                          'detail.everyDay'
+                                                        )}
                                                       >
                                                         <CalendarDays className='w-3 h-3' />
                                                       </Button>
@@ -2749,7 +2857,9 @@ const ExaminationDetail = () => {
                                                         disabled={
                                                           !editingService?.service_type_id
                                                         }
-                                                        title={t('detail.everyOtherDay')}
+                                                        title={t(
+                                                          'detail.everyOtherDay'
+                                                        )}
                                                       >
                                                         <Repeat className='w-3 h-3' />
                                                       </Button>
@@ -2786,7 +2896,9 @@ const ExaminationDetail = () => {
                                                         service._id ||
                                                       isAddingService
                                                     }
-                                                    title={t('detail.deleteExam')}
+                                                    title={t(
+                                                      'detail.deleteExam'
+                                                    )}
                                                   >
                                                     {deletingServiceId ===
                                                     service._id ? (
@@ -2879,7 +2991,9 @@ const ExaminationDetail = () => {
                                                     >
                                                       <CommandInput
                                                         ref={serviceSearchRef}
-                                                        placeholder={t('detail.searchService')}
+                                                        placeholder={t(
+                                                          'detail.searchService'
+                                                        )}
                                                         value={serviceSearch}
                                                         onValueChange={
                                                           setServiceSearch
@@ -2914,13 +3028,17 @@ const ExaminationDetail = () => {
                                                           <div className='flex items-center justify-center py-4'>
                                                             <Loader2 className='h-4 w-4 animate-spin mr-2' />
                                                             <span className='text-sm text-muted-foreground'>
-                                                              {t('common:loading')}
+                                                              {t(
+                                                                'common:loading'
+                                                              )}
                                                             </span>
                                                           </div>
                                                         ) : serviceTypes.length ===
                                                           0 ? (
                                                           <CommandEmpty>
-                                                            {t('services.serviceNotFound')}
+                                                            {t(
+                                                              'services.serviceNotFound'
+                                                            )}
                                                           </CommandEmpty>
                                                         ) : (
                                                           <CommandGroup>
@@ -3110,7 +3228,9 @@ const ExaminationDetail = () => {
                                                       disabled={
                                                         !service.service_type_id
                                                       }
-                                                      title={t('detail.everyDay')}
+                                                      title={t(
+                                                        'detail.everyDay'
+                                                      )}
                                                     >
                                                       <CalendarDays className='w-3 h-3' />
                                                     </Button>
@@ -3126,7 +3246,9 @@ const ExaminationDetail = () => {
                                                       disabled={
                                                         !service.service_type_id
                                                       }
-                                                      title={t('detail.everyOtherDay')}
+                                                      title={t(
+                                                        'detail.everyOtherDay'
+                                                      )}
                                                     >
                                                       <Repeat className='w-3 h-3' />
                                                     </Button>
@@ -3138,7 +3260,9 @@ const ExaminationDetail = () => {
                                                       removeService(service.id)
                                                     }
                                                     className='h-6 w-6 p-0 text-destructive hover:text-destructive'
-                                                    title={t('detail.deleteExam')}
+                                                    title={t(
+                                                      'detail.deleteExam'
+                                                    )}
                                                   >
                                                     <Trash2 className='w-3 h-3' />
                                                   </Button>
@@ -3776,7 +3900,8 @@ const ExaminationDetail = () => {
                                 <img
                                   src={thumbnailPath}
                                   alt={
-                                    image.description || `${t('detail.image')} ${index + 1}`
+                                    image.description ||
+                                    `${t('detail.image')} ${index + 1}`
                                   }
                                   className='w-full h-full object-cover hover:scale-105 transition-transform'
                                   onError={(e) => {
@@ -3800,7 +3925,8 @@ const ExaminationDetail = () => {
                                     className='font-semibold text-base line-clamp-2'
                                     title={image.description}
                                   >
-                                    {image.description || t('detail.noDescription')}
+                                    {image.description ||
+                                      t('detail.noDescription')}
                                   </h4>
                                   <div className='flex flex-wrap items-center gap-3 text-sm text-muted-foreground'>
                                     <div className='flex items-center gap-1'>
@@ -3815,7 +3941,8 @@ const ExaminationDetail = () => {
                                     <span>•</span>
                                     <div className='flex items-center gap-1'>
                                       <span>
-                                        {image.image_paths.length} {t('detail.imagesCount')}
+                                        {image.image_paths.length}{' '}
+                                        {t('detail.imagesCount')}
                                       </span>
                                     </div>
                                   </div>
@@ -3988,7 +4115,8 @@ const ExaminationDetail = () => {
                                       <div className='flex items-center gap-2'>
                                         <Brain className='w-5 h-5 text-primary' />
                                         <span className='text-sm font-medium text-primary'>
-                                          {t('detail.neurologicStatusNumber')} #{index + 1}
+                                          {t('detail.neurologicStatusNumber')} #
+                                          {index + 1}
                                         </span>
                                       </div>
                                       <div className='flex gap-2'>
