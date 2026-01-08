@@ -321,6 +321,11 @@ const Prescription = () => {
   }, [medicationsData, medicationPage, isFetchingMedications, isDropdownOpen]);
 
   // Reset medications pagination when search changes
+  useEffect(() => {
+    setMedicationPage(1);
+    setMedicationOptions([]);
+    setHasMoreMedications(true);
+  }, [editMedicationSearch]);
 
   // Update examinations list when new data arrives
   useEffect(() => {
