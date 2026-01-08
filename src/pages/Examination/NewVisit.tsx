@@ -33,6 +33,7 @@ import { format } from 'date-fns';
 import {
   Activity,
   FileText,
+  Loader2,
   Pill,
   Plus,
   Save,
@@ -76,6 +77,15 @@ const NewVisit = () => {
   const [medications, setMedications] = useState<MedicationItem[]>([]);
   const [medicationSearch, setMedicationSearch] = useState('');
 
+  // Medication infinite scroll states
+  const [medicationOptions, setMedicationOptions] = useState<any[]>([]);
+  const [medicationPage, setMedicationPage] = useState(1);
+  const [hasMoreMedications, setHasMoreMedications] = useState(true);
+  const [isLoadingMoreMedications, setIsLoadingMoreMedications] =
+    useState(false);
+  const [isMedicationDropdownOpen, setIsMedicationDropdownOpen] =
+    useState(false);
+
   // Service states
   interface ServiceDay {
     day: number;
@@ -96,6 +106,12 @@ const NewVisit = () => {
   const [serviceStartDate, setServiceStartDate] = useState<Date | null>(
     new Date()
   );
+
+  // Service infinite scroll states
+  const [serviceOptions, setServiceOptions] = useState<any[]>([]);
+  const [servicePage, setServicePage] = useState(1);
+  const [hasMoreServices, setHasMoreServices] = useState(true);
+  const [isLoadingMoreServices, setIsLoadingMoreServices] = useState(false);
 
   // Doctor search state
   const [doctorSearch, setDoctorSearch] = useState('');
@@ -144,24 +160,77 @@ const NewVisit = () => {
     useCreateExamWithPrescriptionAndServiceMutation();
   const handleRequest = useHandleRequest();
 
-  // Fetch medications
-  const { data: medicationsData } = useGetAllMedicationsQuery({
-    page: 1,
-    limit: 100,
-    search: medicationSearch || undefined,
-  });
+  // Fetch medications with pagination
+  const { data: medicationsData, isFetching: isFetchingMedications } =
+    useGetAllMedicationsQuery({
+      page: medicationPage,
+      limit: 20,
+      search: medicationSearch || undefined,
+    });
 
-  // Fetch services - use empty string to get all services, filtering will be done client-side
-  const { data: servicesData } = useGetAllServiceQuery({
-    page: 1,
-    limit: 100,
-  } as any);
-
-  const availableMedications = medicationsData?.data || [];
-  const allAvailableServices = servicesData?.data || [];
+  // Fetch services with pagination
+  const { data: servicesData, isFetching: isFetchingServices } =
+    useGetAllServiceQuery({
+      page: servicePage,
+      limit: 20,
+    } as any);
 
   const patients = allPatients;
   const doctors = allDoctors;
+
+  // Reset medication pagination when search changes
+  useEffect(() => {
+    setMedicationPage(1);
+    setMedicationOptions([]);
+    setHasMoreMedications(true);
+  }, [medicationSearch]);
+
+  // Build medicationOptions incrementally when new data arrives
+  useEffect(() => {
+    if (!isMedicationDropdownOpen) return; // Only update when dropdown is open
+
+    const data = medicationsData?.data || [];
+    const totalPages = medicationsData?.pagination?.total_pages || 1;
+    setHasMoreMedications(medicationPage < totalPages);
+
+    if (medicationPage === 1) {
+      setMedicationOptions(data);
+    } else if (Array.isArray(data) && data.length > 0) {
+      setMedicationOptions((prev) => {
+        const ids = new Set(prev.map((m: any) => m._id));
+        const appended = data.filter((m: any) => !ids.has(m._id));
+        return [...prev, ...appended];
+      });
+    }
+    if (!isFetchingMedications) {
+      setIsLoadingMoreMedications(false);
+    }
+  }, [
+    medicationsData,
+    medicationPage,
+    isFetchingMedications,
+    isMedicationDropdownOpen,
+  ]);
+
+  // Build serviceOptions incrementally when new data arrives
+  useEffect(() => {
+    const data = servicesData?.data || [];
+    const totalPages = servicesData?.pagination?.total_pages || 1;
+    setHasMoreServices(servicePage < totalPages);
+
+    if (servicePage === 1) {
+      setServiceOptions(data);
+    } else if (Array.isArray(data) && data.length > 0) {
+      setServiceOptions((prev) => {
+        const ids = new Set(prev.map((s: any) => s._id));
+        const appended = data.filter((s: any) => !ids.has(s._id));
+        return [...prev, ...appended];
+      });
+    }
+    if (!isFetchingServices) {
+      setIsLoadingMoreServices(false);
+    }
+  }, [servicesData, servicePage, isFetchingServices]);
 
   // Update patients list when new data arrives
   useEffect(() => {
@@ -568,7 +637,9 @@ const NewVisit = () => {
                               <TableCell>{p.patient_id}</TableCell>
                               <TableCell>{p.phone}</TableCell>
                               <TableCell>
-                                {p.gender === 'male' ? t('newVisit.male') : t('newVisit.female')}
+                                {p.gender === 'male'
+                                  ? t('newVisit.male')
+                                  : t('newVisit.female')}
                               </TableCell>
                               <TableCell className='text-right'>
                                 <Button
@@ -614,8 +685,12 @@ const NewVisit = () => {
                       <h2 className='text-lg sm:text-xl md:text-2xl font-bold mb-1'>
                         {patient.fullname}{' '}
                         <span className='text-muted-foreground text-sm sm:text-base'>
-                          ({calculateAge(patient.date_of_birth)} {t('newVisit.age')},{' '}
-                          {patient.gender === 'male' ? t('newVisit.male') : t('newVisit.female')})
+                          ({calculateAge(patient.date_of_birth)}{' '}
+                          {t('newVisit.age')},{' '}
+                          {patient.gender === 'male'
+                            ? t('newVisit.male')
+                            : t('newVisit.female')}
+                          )
                         </span>
                       </h2>
                       <p className='text-xs sm:text-base text-muted-foreground'>
@@ -627,7 +702,8 @@ const NewVisit = () => {
                       {patient?.allergies && patient.allergies.length > 0 && (
                         <div className='px-3 py-2 bg-danger/20 border border-danger rounded-lg mt-2'>
                           <p className='text-xs sm:text-sm font-semibold text-danger'>
-                            ⚠ {t('newVisit.allergy')}: {patient.allergies.join(', ')}
+                            ⚠ {t('newVisit.allergy')}:{' '}
+                            {patient.allergies.join(', ')}
                           </p>
                         </div>
                       )}
@@ -661,7 +737,11 @@ const NewVisit = () => {
                                 : ''
                             }`}
                           >
-                            <SelectValue placeholder={t('newVisit.selectDoctorPlaceholder')} />
+                            <SelectValue
+                              placeholder={t(
+                                'newVisit.selectDoctorPlaceholder'
+                              )}
+                            />
                           </SelectTrigger>
                           <SelectContent onScroll={handleDoctorScroll}>
                             <div className='p-2'>
@@ -852,7 +932,12 @@ const NewVisit = () => {
                                   )
                                 }
                                 onOpenChange={(open) => {
+                                  setIsMedicationDropdownOpen(open);
                                   if (open) {
+                                    setMedicationSearch('');
+                                    setMedicationPage(1);
+                                    setMedicationOptions([]);
+                                    setHasMoreMedications(true);
                                     setTimeout(
                                       () =>
                                         medicationSearchRef.current?.focus(),
@@ -862,13 +947,33 @@ const NewVisit = () => {
                                 }}
                               >
                                 <SelectTrigger className='h-9'>
-                                  <SelectValue placeholder={t('newVisit.selectMedication')} />
+                                  <SelectValue
+                                    placeholder={t('newVisit.selectMedication')}
+                                  />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  <div className='p-2'>
+                                <SelectContent
+                                  onScroll={(e) => {
+                                    const target = e.target as HTMLDivElement;
+                                    const atBottom =
+                                      target.scrollHeight - target.scrollTop <=
+                                      target.clientHeight + 10;
+                                    if (
+                                      atBottom &&
+                                      hasMoreMedications &&
+                                      !isLoadingMoreMedications &&
+                                      !isFetchingMedications
+                                    ) {
+                                      setIsLoadingMoreMedications(true);
+                                      setMedicationPage((prev) => prev + 1);
+                                    }
+                                  }}
+                                >
+                                  <div className='p-2 sticky top-0 bg-background z-20 border-b'>
                                     <Input
                                       ref={medicationSearchRef}
-                                      placeholder={t('newVisit.searchMedication')}
+                                      placeholder={t(
+                                        'newVisit.searchMedication'
+                                      )}
                                       value={medicationSearch}
                                       onChange={(e) =>
                                         setMedicationSearch(e.target.value)
@@ -880,16 +985,50 @@ const NewVisit = () => {
                                       className='h-8 mb-2'
                                     />
                                   </div>
-                                  {availableMedications.map(
-                                    (medication: any) => (
-                                      <SelectItem
-                                        key={medication._id}
-                                        value={medication._id}
-                                      >
-                                        {medication.name}
-                                      </SelectItem>
-                                    )
-                                  )}
+                                  <div className='max-h-64 overflow-auto'>
+                                    {isFetchingMedications &&
+                                    medicationOptions.length === 0 ? (
+                                      <div className='p-4 text-center text-sm text-muted-foreground'>
+                                        <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
+                                        {t('newVisit.loading')}
+                                      </div>
+                                    ) : medicationOptions.length > 0 ? (
+                                      medicationOptions.map(
+                                        (medication: any) => (
+                                          <SelectItem
+                                            key={medication._id}
+                                            value={medication._id}
+                                          >
+                                            <div className='flex flex-col'>
+                                              <span className='font-medium'>
+                                                {medication.name}
+                                              </span>
+                                              <span className='text-xs text-muted-foreground'>
+                                                {medication.dosage}
+                                              </span>
+                                            </div>
+                                          </SelectItem>
+                                        )
+                                      )
+                                    ) : (
+                                      <div className='p-4 text-center text-sm text-muted-foreground'>
+                                        {t('newVisit.medicationNotFound')}
+                                      </div>
+                                    )}
+                                    {isFetchingMedications &&
+                                      medicationOptions.length > 0 && (
+                                        <div className='p-2 text-center text-xs text-muted-foreground'>
+                                          <Loader2 className='h-3 w-3 animate-spin inline-block mr-2' />
+                                          {t('newVisit.loading')}
+                                        </div>
+                                      )}
+                                    {!hasMoreMedications &&
+                                      medicationOptions.length > 0 && (
+                                        <div className='p-2 text-center text-[11px] text-muted-foreground'>
+                                          {t('newVisit.allMedicationsLoaded')}
+                                        </div>
+                                      )}
+                                  </div>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -898,7 +1037,9 @@ const NewVisit = () => {
                                 {t('newVisit.additionalInfo')}
                               </label>
                               <Input
-                                placeholder={t('newVisit.additionalInfoPlaceholder')}
+                                placeholder={t(
+                                  'newVisit.additionalInfoPlaceholder'
+                                )}
                                 className='h-9'
                                 value={med.additionalInfo}
                                 onChange={(e) =>
@@ -1224,7 +1365,11 @@ const NewVisit = () => {
                                           }}
                                         >
                                           <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
-                                            <SelectValue placeholder={t('newVisit.selectService')} />
+                                            <SelectValue
+                                              placeholder={t(
+                                                'newVisit.selectService'
+                                              )}
+                                            />
                                           </SelectTrigger>
                                           <SelectContent
                                             onCloseAutoFocus={(e) => {
@@ -1233,8 +1378,27 @@ const NewVisit = () => {
                                             onEscapeKeyDown={(e) => {
                                               // Allow escape to close, but prevent default focus behavior
                                             }}
+                                            onScroll={(e) => {
+                                              const target =
+                                                e.target as HTMLDivElement;
+                                              const atBottom =
+                                                target.scrollHeight -
+                                                  target.scrollTop <=
+                                                target.clientHeight + 10;
+                                              if (
+                                                atBottom &&
+                                                hasMoreServices &&
+                                                !isLoadingMoreServices &&
+                                                !isFetchingServices
+                                              ) {
+                                                setIsLoadingMoreServices(true);
+                                                setServicePage(
+                                                  (prev) => prev + 1
+                                                );
+                                              }
+                                            }}
                                           >
-                                            <div className='p-2'>
+                                            <div className='p-2 sticky top-0 bg-background z-20 border-b'>
                                               <Input
                                                 ref={(el) => {
                                                   if (el) {
@@ -1246,7 +1410,9 @@ const NewVisit = () => {
                                                       .current[srv.id];
                                                   }
                                                 }}
-                                                placeholder={t('newVisit.searchService')}
+                                                placeholder={t(
+                                                  'newVisit.searchService'
+                                                )}
                                                 value={
                                                   serviceSearch[srv.id] || ''
                                                 }
@@ -1273,69 +1439,105 @@ const NewVisit = () => {
                                                 className='text-sm mb-2'
                                               />
                                             </div>
-                                            {(() => {
-                                              const searchQuery = (
-                                                serviceSearch[srv.id] || ''
-                                              )
-                                                .toLowerCase()
-                                                .trim();
-                                              // Get list of already selected service IDs (excluding current service)
-                                              const selectedServiceIds =
-                                                services
-                                                  .filter(
-                                                    (s) =>
-                                                      s.service_id &&
-                                                      s.id !== srv.id
-                                                  )
-                                                  .map((s) => s.service_id);
+                                            <div className='max-h-64 overflow-auto'>
+                                              {(() => {
+                                                const searchQuery = (
+                                                  serviceSearch[srv.id] || ''
+                                                )
+                                                  .toLowerCase()
+                                                  .trim();
+                                                // Get list of already selected service IDs (excluding current service)
+                                                const selectedServiceIds =
+                                                  services
+                                                    .filter(
+                                                      (s) =>
+                                                        s.service_id &&
+                                                        s.id !== srv.id
+                                                    )
+                                                    .map((s) => s.service_id);
 
-                                              const filteredServices =
-                                                searchQuery
-                                                  ? allAvailableServices.filter(
-                                                      (s: any) =>
-                                                        !selectedServiceIds.includes(
-                                                          s._id
-                                                        ) &&
-                                                        (s.name
-                                                          ?.toLowerCase()
-                                                          .includes(
-                                                            searchQuery
-                                                          ) ||
-                                                          s.code
+                                                const filteredServices =
+                                                  searchQuery
+                                                    ? serviceOptions.filter(
+                                                        (s: any) =>
+                                                          !selectedServiceIds.includes(
+                                                            s._id
+                                                          ) &&
+                                                          (s.name
                                                             ?.toLowerCase()
                                                             .includes(
                                                               searchQuery
-                                                            ))
-                                                    )
-                                                  : allAvailableServices.filter(
-                                                      (s: any) =>
-                                                        !selectedServiceIds.includes(
-                                                          s._id
-                                                        )
-                                                    );
+                                                            ) ||
+                                                            s.code
+                                                              ?.toLowerCase()
+                                                              .includes(
+                                                                searchQuery
+                                                              ))
+                                                      )
+                                                    : serviceOptions.filter(
+                                                        (s: any) =>
+                                                          !selectedServiceIds.includes(
+                                                            s._id
+                                                          )
+                                                      );
 
-                                              return filteredServices.length >
-                                                0 ? (
-                                                filteredServices.map(
-                                                  (s: any) => (
-                                                    <SelectItem
-                                                      key={s._id}
-                                                      value={s._id}
-                                                    >
-                                                      {s.name} -{' '}
-                                                      {new Intl.NumberFormat(
-                                                        'uz-UZ'
-                                                      ).format(s.price)}{' '}
-                                                      {t('newVisit.sum')}
-                                                    </SelectItem>
-                                                  )
-                                                )
-                                              ) : (
-                                                <div className='p-4 text-center text-sm text-muted-foreground'>
-                                                  {t('newVisit.serviceNotFound')}
-                                                </div>
-                                              );
-                                            })()}
+                                                return (
+                                                  <>
+                                                    {isFetchingServices &&
+                                                    serviceOptions.length ===
+                                                      0 ? (
+                                                      <div className='p-4 text-center text-sm text-muted-foreground'>
+                                                        <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
+                                                        {t('newVisit.loading')}
+                                                      </div>
+                                                    ) : filteredServices.length >
+                                                      0 ? (
+                                                      filteredServices.map(
+                                                        (s: any) => (
+                                                          <SelectItem
+                                                            key={s._id}
+                                                            value={s._id}
+                                                          >
+                                                            {s.name} -{' '}
+                                                            {new Intl.NumberFormat(
+                                                              'uz-UZ'
+                                                            ).format(
+                                                              s.price
+                                                            )}{' '}
+                                                            {t('newVisit.sum')}
+                                                          </SelectItem>
+                                                        )
+                                                      )
+                                                    ) : (
+                                                      <div className='p-4 text-center text-sm text-muted-foreground'>
+                                                        {t(
+                                                          'newVisit.serviceNotFound'
+                                                        )}
+                                                      </div>
+                                                    )}
+                                                    {isFetchingServices &&
+                                                      serviceOptions.length >
+                                                        0 && (
+                                                        <div className='p-2 text-center text-xs text-muted-foreground'>
+                                                          <Loader2 className='h-3 w-3 animate-spin inline-block mr-2' />
+                                                          {t(
+                                                            'newVisit.loading'
+                                                          )}
+                                                        </div>
+                                                      )}
+                                                    {!hasMoreServices &&
+                                                      serviceOptions.length >
+                                                        0 && (
+                                                        <div className='p-2 text-center text-[11px] text-muted-foreground'>
+                                                          {t(
+                                                            'newVisit.allServicesLoaded'
+                                                          )}
+                                                        </div>
+                                                      )}
+                                                  </>
+                                                );
+                                              })()}
+                                            </div>
                                           </SelectContent>
                                         </Select>
                                       </td>
@@ -1355,7 +1557,9 @@ const NewVisit = () => {
                                           {day.date ? (
                                             <div className='flex flex-col items-center justify-center'>
                                               <span className='text-[10px] text-muted-foreground font-bold'>
-                                                {t('newVisit.dayN', { n: day.day })}
+                                                {t('newVisit.dayN', {
+                                                  n: day.day,
+                                                })}
                                               </span>
                                               <span
                                                 className={`px-1.5 py-0.5 rounded ${
@@ -1367,7 +1571,10 @@ const NewVisit = () => {
                                                 {format(day.date, 'dd/MM')}
                                               </span>
                                               <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none text-xs'>
-                                                {t('newVisit.dayN', { n: day.day })}:{' '}
+                                                {t('newVisit.dayN', {
+                                                  n: day.day,
+                                                })}
+                                                :{' '}
                                                 {new Date(
                                                   day.date
                                                 ).toLocaleDateString('uz-UZ')}
@@ -1377,7 +1584,9 @@ const NewVisit = () => {
                                           ) : (
                                             <div className='flex flex-col items-center justify-center'>
                                               <span className='text-[10px] text-muted-foreground font-bold'>
-                                                {t('newVisit.dayN', { n: day.day })}
+                                                {t('newVisit.dayN', {
+                                                  n: day.day,
+                                                })}
                                               </span>
                                               <span className='text-muted-foreground'>
                                                 —

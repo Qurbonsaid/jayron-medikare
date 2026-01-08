@@ -44,13 +44,13 @@ const initialFormState: FormState = {
 }
 
 export default function Service() {
-	const { t } = useTranslation(['common', 'service'])
-	const handleRequest = useHandleRequest()
-	const { canCreate, canUpdate, canDelete } = usePermission('service')
+  const { t } = useTranslation(['common', 'service']);
+  const handleRequest = useHandleRequest();
+  const { canCreate, canUpdate, canDelete } = usePermission('service');
 
-	const [page, setPage] = useState(1)
-	const [limit] = useState(100)
-	const [searchQuery, setSearchQuery] = useState('')
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [searchQuery, setSearchQuery] = useState('');
 
 	const { data, isLoading, isError, refetch } = useGetAllServiceQuery({
 		page,
@@ -77,20 +77,23 @@ export default function Service() {
 		refetch()
 	}, [page, limit])
 
-	const validate = (): boolean => {
-		const newErrors: Record<string, string> = {}
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
 
-		if (!form.code.trim()) newErrors.code = t('service:validation.codeRequired')
-		if (!form.name.trim()) newErrors.name = t('service:validation.nameRequired')
-		if (!form.description.trim())
-			newErrors.description = t('service:validation.descriptionRequired')
-		if (form.price <= 0) newErrors.price = t('service:validation.priceRequired')
-		if (form.duration_minutes <= 0)
-			newErrors.duration_minutes = t('service:validation.durationRequired')
+    if (!form.code.trim())
+      newErrors.code = t('service:validation.codeRequired');
+    if (!form.name.trim())
+      newErrors.name = t('service:validation.nameRequired');
+    if (!form.description.trim())
+      newErrors.description = t('service:validation.descriptionRequired');
+    if (form.price <= 0)
+      newErrors.price = t('service:validation.priceRequired');
+    if (form.duration_minutes <= 0)
+      newErrors.duration_minutes = t('service:validation.durationRequired');
 
-		setErrors(newErrors)
-		return Object.keys(newErrors).length === 0
-	}
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
 	const handleSubmit = async () => {
 		if (!validate()) return
@@ -167,17 +170,17 @@ export default function Service() {
 		}
 	}
 
-	const formatCurrency = (amount: number) => {
-		return (
-			new Intl.NumberFormat('uz-UZ').format(amount) +
-			' ' +
-			t('service:currency')
-		)
-	}
+  const formatCurrency = (amount: number) => {
+    return (
+      new Intl.NumberFormat('uz-UZ').format(amount) +
+      ' ' +
+      t('service:currency')
+    );
+  };
 
-	if (isLoading) return <p className='p-4'>{t('service:loading')}</p>
-	if (isError || !data)
-		return <p className='p-4 text-red-500'>{t('service:error')}</p>
+  if (isLoading) return <p className='p-4'>{t('service:loading')}</p>;
+  if (isError || !data)
+    return <p className='p-4 text-red-500'>{t('service:error')}</p>;
 
 	return (
 		<div className='min-h-screen bg-background flex flex-col'>
@@ -219,6 +222,7 @@ export default function Service() {
 									</h3>
 									<p className='text-xs text-muted-foreground'>
 										{t('service:name')}:{' '}
+                   {' '}
 										<span className='font-bold'>{service.name}</span>
 									</p>
 								</div>
@@ -409,60 +413,56 @@ export default function Service() {
 													</Button>
 												)}
 
-												{canDelete && (
-													<Dialog
-														open={deleteId === service._id}
-														onOpenChange={isOpen => {
-															if (!isOpen) setDeleteId(null)
-														}}
-													>
-														<DialogTrigger asChild>
-															<Button
-																size='icon'
-																variant='outline'
-																className='h-7 w-7 text-red-500 border-red-300 hover:bg-red-50 hover:text-red-500'
-																onClick={() => setDeleteId(service._id)}
-																disabled={deleting}
-															>
-																<Trash2 size={16} />
-															</Button>
-														</DialogTrigger>
-														<DialogContent className='max-w-xs rounded-xl'>
-															<DialogTitle>
-																{t('service:deleteService')}
-															</DialogTitle>
-															<p className='text-sm text-muted-foreground'>
-																{t('service:deleteConfirm')}
-															</p>
-															<DialogFooter className='flex justify-end gap-2'>
-																<Button
-																	variant='outline'
-																	onClick={() => setDeleteId(null)}
-																>
-																	{t('service:no')}
-																</Button>
-																<Button
-																	className='bg-red-600 text-white'
-																	onClick={() => handleDelete(service._id)}
-																	disabled={deleting}
-																>
-																	{deleting
-																		? t('service:deleting')
-																		: t('service:yes')}
-																</Button>
-															</DialogFooter>
-														</DialogContent>
-													</Dialog>
-												)}
-											</div>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
-				</Card>
-			</div>
+                        {canDelete && (
+                          <Dialog
+                            open={deleteId === service._id}
+                            onOpenChange={(isOpen) => {
+                              if (!isOpen) setDeleteId(null);
+                            }}
+                          >
+                            <DialogTrigger asChild>
+                              <Button
+                                size='icon'
+                                variant='outline'
+                                className='h-7 w-7 text-red-500 border-red-300 hover:bg-red-50 hover:text-red-500'
+                                onClick={() => setDeleteId(service._id)}
+                                disabled={deleting}
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className='max-w-xs rounded-xl'>
+                              <DialogTitle>{t('service:deleteService')}</DialogTitle>
+                              <p className='text-sm text-muted-foreground'>
+                                {t('service:deleteConfirm')}
+                              </p>
+                              <DialogFooter className='flex justify-end gap-2'>
+                                <Button
+                                  variant='outline'
+                                  onClick={() => setDeleteId(null)}
+                                >
+                                  {t('service:no')}
+                                </Button>
+                                <Button
+                                  className='bg-red-600 text-white'
+                                  onClick={() => handleDelete(service._id)}
+                                  disabled={deleting}
+                                >
+                                  {deleting ? t('service:deleting') : t('service:yes')}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
 
 			<ServiceFormDialog
 				open={open}
