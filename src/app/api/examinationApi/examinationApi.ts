@@ -184,7 +184,7 @@ export const examinationApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: [API_TAGS.SERVICE],
 		}),
-		updateService: builder.mutation<MutationRes, CreateService>({
+		updateExaminationService: builder.mutation<MutationRes, CreateService>({
 			query: body => ({
 				url: '/service/update/' + body.examination_id,
 				method: 'PATCH',
@@ -268,6 +268,6 @@ export const {
 	useGetManyServiceQuery,
 	useGetOnePrescriptionQuery,
 	useGetOneServiceQuery,
-	useUpdateServiceMutation,
+	useUpdateExaminationServiceMutation,
 	useCreateExamWithPrescriptionAndServiceMutation,
 } = examinationApi

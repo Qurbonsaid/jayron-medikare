@@ -602,10 +602,10 @@ const Medicine = () => {
 																								onClick={() =>
 																									!isCompleted &&
 																									openConfirmModal(
-																										record.service._id,
-																										null,
 																										service._id,
 																										null,
+																										service.service_type_id._id,
+																										record.service._id,
 																										day.day,
 																										'service'
 																									)
@@ -679,10 +679,10 @@ const Medicine = () => {
 																								onClick={() =>
 																									!isCompleted &&
 																									openConfirmModal(
-																										record.service._id,
-																										null,
 																										service._id,
 																										null,
+																										service.service_type_id._id,
+																										record.service._id,
 																										day.day,
 																										'service'
 																									)
@@ -758,10 +758,10 @@ const Medicine = () => {
 																								onClick={() =>
 																									!isCompleted &&
 																									openConfirmModal(
-																										record.service._id,
-																										null,
 																										service._id,
 																										null,
+																										service.service_type_id._id,
+																										record.service._id,
 																										day.day,
 																										'service'
 																									)
