@@ -1,0 +1,35 @@
+{
+  "title": "History",
+  "subtitle": "Patient treatment history",
+  "search": "Search",
+  "searchPlaceholder": "Search by patient name or diagnosis...",
+  "startDate": "Start Date",
+  "endDate": "End Date",
+  "filter": "Filter",
+  "clearFilter": "Clear Filter",
+  "noResults": "No results found",
+  "noResultsDescription": "No results match your search query",
+  "loading": "Loading...",
+  "table": {
+    "number": "№",
+    "patientInfo": "Patient Info",
+    "diagnosis": "Diagnosis",
+    "prescriptions": "Treatment",
+    "completedDate": "Completed Date",
+    "actions": "Actions"
+  },
+  "pagination": {
+    "page": "Page",
+    "of": "of",
+    "perPage": "per page",
+    "prev": "Previous",
+    "next": "Next",
+    "total": "Total",
+    "items": "items"
+  },
+  "viewDetails": "View Details",
+  "print": "Print",
+  "export": "Export",
+  "dateRange": "Date Range",
+  "allTime": "All Time"
+}

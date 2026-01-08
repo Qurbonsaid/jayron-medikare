@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   FileEdit,
   HeartPulse,
+  History,
   List,
   LucideIcon,
   Microscope,
@@ -213,6 +214,13 @@ export const systemMenu: MenuCategory = {
   titleKey: 'categories.system',
   icon: Settings,
   items: [
+    {
+      title: 'Тарих',
+      titleKey: 'menu.history',
+      url: '/history',
+      icon: History,
+      permission: 'examinations',
+    },
     {
       title: 'Созламалар',
       titleKey: 'menu.settings',

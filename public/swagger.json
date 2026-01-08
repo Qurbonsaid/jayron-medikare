@@ -2932,6 +2932,152 @@
           }
         }
       },
+      "/examination/create-with-service-and-prescription": {
+        "post": {
+          "tags": ["Examination"],
+          "summary": "Create examination with service and prescription — Ko'rik, xizmat va retseptni birga yaratish - Allowed roles: ceo, receptionist",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "patient_id",
+                    "doctor_id",
+                    "complaints",
+                    "treatment_type"
+                  ],
+                  "properties": {
+                    "patient_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8b",
+                      "description": "Bemor IDsi"
+                    },
+                    "doctor_id": {
+                      "type": "string",
+                      "example": "653f1b2c1a2b3c4d5e6f7a8c",
+                      "description": "Doktor IDsi"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Patient has a mild fever.",
+                      "description": "Qo'shimcha tavsif"
+                    },
+                    "complaints": {
+                      "type": "string",
+                      "example": "Headache, fever",
+                      "description": "Bemorning shikoyatlari"
+                    },
+                    "treatment_type": {
+                      "type": "string",
+                      "enum": ["stasionar", "ambulator"],
+                      "example": "STASIONAR",
+                      "description": "Davolanish turi"
+                    },
+                    "service_data": {
+                      "type": "object",
+                      "description": "Xizmat ma'lumotlari (ixtiyoriy)",
+                      "properties": {
+                        "duration": {
+                          "type": "integer",
+                          "example": 7,
+                          "description": "Xizmat davomiyligi (kunlarda)"
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "service_type_id": {
+                                "type": "string",
+                                "example": "653f1b2c1a2b3c4d5e6f7a8d",
+                                "description": "Xizmat turi IDsi"
+                              },
+                              "notes": {
+                                "type": "string",
+                                "example": "Morning dose",
+                                "description": "Eslatma"
+                              },
+                              "days": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "day": {
+                                      "type": "integer",
+                                      "example": 1
+                                    },
+                                    "date": {
+                                      "type": "string",
+                                      "format": "date",
+                                      "example": "2024-01-15"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "prescription_data": {
+                      "type": "object",
+                      "description": "Retsept ma'lumotlari (ixtiyoriy)",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "medication_id": {
+                                "type": "string",
+                                "example": "653f1b2c1a2b3c4d5e6f7a8e",
+                                "description": "Dori IDsi"
+                              },
+                              "addons": {
+                                "type": "string",
+                                "example": "Take with food",
+                                "description": "Qo'shimcha ko'rsatmalar"
+                              },
+                              "frequency": {
+                                "type": "integer",
+                                "example": 3,
+                                "description": "Kunlik chastotasi"
+                              },
+                              "duration": {
+                                "type": "integer",
+                                "example": 7,
+                                "description": "Davomiyligi (kunlarda)"
+                              },
+                              "instructions": {
+                                "type": "string",
+                                "example": "1 tablet 3 times a day",
+                                "description": "Qabul qilish ko'rsatmalari"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Ko'rik, xizmat va retsept muvaffaqiyatli yaratildi"
+            },
+            "400": {
+              "description": "Invalid request data"
+            },
+            "404": {
+              "description": "Patient or Doctor not found"
+            }
+          }
+        }
+      },
       "/analysis/create": {
         "post": {
           "tags": ["Analysis"],
@@ -3994,7 +4140,7 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["name", "count", "price"],
+                        "required": ["name", "count", "price", "service_type"],
                         "properties": {
                           "name": {
                             "type": "string",
@@ -4007,13 +4153,24 @@
                           "price": {
                             "type": "integer",
                             "example": 50000
+                          },
+                          "service_type": {
+                            "type": "string",
+                            "enum": [
+                              "KORIK",
+                              "XIZMAT",
+                              "XONA",
+                              "TASVIR",
+                              "TAHLIL"
+                            ],
+                            "example": "KORIK"
                           }
                         }
                       }
                     },
                     "payment": {
                       "type": "object",
-                      "required": ["payment_method", "amount"],
+                      "required": ["payment_method", "amount", "payment_type"],
                       "properties": {
                         "payment_method": {
                           "type": "string",
@@ -4029,6 +4186,17 @@
                         "amount": {
                           "type": "integer",
                           "example": 50000
+                        },
+                        "payment_type": {
+                          "type": "string",
+                          "enum": [
+                            "KORIK",
+                            "XIZMAT",
+                            "XONA",
+                            "TASVIR",
+                            "TAHLIL"
+                          ],
+                          "example": "KORIK"
                         }
                       }
                     }
@@ -4211,6 +4379,17 @@
                           "price": {
                             "type": "integer",
                             "example": 50000
+                          },
+                          "service_type": {
+                            "type": "string",
+                            "enum": [
+                              "KORIK",
+                              "XIZMAT",
+                              "XONA",
+                              "TASVIR",
+                              "TAHLIL"
+                            ],
+                            "example": "KORIK"
                           }
                         }
                       }
@@ -4268,7 +4447,7 @@
                   "properties": {
                     "payment": {
                       "type": "object",
-                      "required": ["payment_method", "amount"],
+                      "required": ["payment_method", "amount", "payment_type"],
                       "properties": {
                         "payment_method": {
                           "type": "string",
@@ -4284,6 +4463,17 @@
                         "amount": {
                           "type": "integer",
                           "example": 50000
+                        },
+                        "payment_type": {
+                          "type": "string",
+                          "enum": [
+                            "KORIK",
+                            "XIZMAT",
+                            "XONA",
+                            "TASVIR",
+                            "TAHLIL"
+                          ],
+                          "example": "KORIK"
                         }
                       }
                     }
@@ -7258,397 +7448,6 @@
           }
         }
       },
-      "/permission/create": {
-        "post": {
-          "tags": ["Permission"],
-          "summary": "Create new permission for a role",
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "role": {
-                      "type": "string",
-                      "example": "admin",
-                      "description": "Role for which the permission is created",
-                      "enum": [
-                        "ceo",
-                        "admin",
-                        "doctor",
-                        "nurse",
-                        "receptionist",
-                        "pharmacist"
-                      ]
-                    }
-                  },
-                  "required": ["role"]
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "Permission created successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "success": {
-                        "type": "boolean",
-                        "example": true
-                      },
-                      "message": {
-                        "type": "string",
-                        "example": "Muvaffaqiyatli yaratildi"
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "409": {
-              "description": "Role already exists"
-            }
-          }
-        }
-      },
-      "/permission/update/{id}": {
-        "put": {
-          "tags": ["Permission"],
-          "summary": "Update permissions (except permission collection)",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              },
-              "description": "Permission ID"
-            }
-          ],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "permissions": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "_id": {
-                            "type": "string",
-                            "example": "507f1f77bcf86cd799439011",
-                            "description": "Permission ID"
-                          },
-                          "create": {
-                            "type": "boolean",
-                            "example": true,
-                            "description": "Create permission"
-                          },
-                          "read": {
-                            "type": "boolean",
-                            "example": true,
-                            "description": "Read permission"
-                          },
-                          "update": {
-                            "type": "boolean",
-                            "example": true,
-                            "description": "Update permission"
-                          },
-                          "delete": {
-                            "type": "boolean",
-                            "example": false,
-                            "description": "Delete permission"
-                          }
-                        },
-                        "required": [
-                          "_id",
-                          "create",
-                          "read",
-                          "update",
-                          "delete"
-                        ]
-                      },
-                      "example": [
-                        {
-                          "collection_name": "user",
-                          "create": true,
-                          "read": true,
-                          "update": true,
-                          "delete": false
-                        },
-                        {
-                          "collection_name": "patient",
-                          "create": true,
-                          "read": true,
-                          "update": true,
-                          "delete": true
-                        }
-                      ]
-                    }
-                  },
-                  "required": ["permissions"]
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Permission updated successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "success": {
-                        "type": "boolean",
-                        "example": true
-                      },
-                      "message": {
-                        "type": "string",
-                        "example": "Muvaffaqiyatli yangilandi"
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "400": {
-              "description": "Cannot modify permission collection"
-            },
-            "404": {
-              "description": "Permission not found"
-            }
-          }
-        }
-      },
-      "/permission/delete/{id}": {
-        "delete": {
-          "tags": ["Permission"],
-          "summary": "Delete permission",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string"
-              },
-              "description": "Permission ID"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Permission deleted successfully",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "success": {
-                        "type": "boolean",
-                        "example": true
-                      },
-                      "message": {
-                        "type": "string",
-                        "example": "Muvaffaqiyatli o'chirildi"
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "404": {
-              "description": "Permission not found"
-            }
-          }
-        }
-      },
-      "/permission/get-all": {
-        "get": {
-          "tags": ["Permission"],
-          "summary": "Get all permissions",
-          "responses": {
-            "200": {
-              "description": "List of all permissions",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "success": {
-                        "type": "boolean",
-                        "example": true
-                      },
-                      "data": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "_id": {
-                              "type": "string",
-                              "example": "507f1f77bcf86cd799439011"
-                            },
-                            "role": {
-                              "type": "string",
-                              "example": "admin"
-                            },
-                            "permissions": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "_id": {
-                                    "type": "string"
-                                  },
-                                  "collection_name": {
-                                    "type": "string",
-                                    "example": "user"
-                                  },
-                                  "create": {
-                                    "type": "boolean",
-                                    "example": true
-                                  },
-                                  "read": {
-                                    "type": "boolean",
-                                    "example": true
-                                  },
-                                  "update": {
-                                    "type": "boolean",
-                                    "example": true
-                                  },
-                                  "delete": {
-                                    "type": "boolean",
-                                    "example": false
-                                  }
-                                }
-                              }
-                            },
-                            "created_at": {
-                              "type": "string",
-                              "format": "date-time"
-                            },
-                            "updated_at": {
-                              "type": "string",
-                              "format": "date-time"
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/permission/get-one/{role}": {
-        "get": {
-          "tags": ["Permission"],
-          "summary": "Get permission by role",
-          "parameters": [
-            {
-              "name": "role",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string",
-                "enum": [
-                  "ceo",
-                  "admin",
-                  "doctor",
-                  "nurse",
-                  "receptionist",
-                  "pharmacist"
-                ]
-              },
-              "description": "Role name",
-              "example": "admin"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Permission found",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "success": {
-                        "type": "boolean",
-                        "example": true
-                      },
-                      "data": {
-                        "type": "object",
-                        "properties": {
-                          "_id": {
-                            "type": "string",
-                            "example": "507f1f77bcf86cd799439011"
-                          },
-                          "role": {
-                            "type": "string",
-                            "example": "admin"
-                          },
-                          "permissions": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "_id": {
-                                  "type": "string"
-                                },
-                                "collection_name": {
-                                  "type": "string",
-                                  "example": "user"
-                                },
-                                "create": {
-                                  "type": "boolean",
-                                  "example": true
-                                },
-                                "read": {
-                                  "type": "boolean",
-                                  "example": true
-                                },
-                                "update": {
-                                  "type": "boolean",
-                                  "example": true
-                                },
-                                "delete": {
-                                  "type": "boolean",
-                                  "example": false
-                                }
-                              }
-                            }
-                          },
-                          "created_at": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "updated_at": {
-                            "type": "string",
-                            "format": "date-time"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "404": {
-              "description": "Permission not found"
-            }
-          }
-        }
-      },
       "/prescription/get-all": {
         "get": {
           "tags": ["Prescription"],
@@ -7902,7 +7701,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["item_id", "day"],
+                  "required": ["item_id", "day", "image_url"],
                   "properties": {
                     "item_id": {
                       "type": "string",
@@ -7912,6 +7711,12 @@
                       "type": "integer",
                       "minimum": 1,
                       "example": 3
+                    },
+                    "image_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://example.com/uploads/medication-image.jpg",
+                      "description": "URL of the image showing medication intake"
                     }
                   }
                 }
@@ -7924,6 +7729,9 @@
             },
             "400": {
               "description": "Invalid day parameter | Maximum frequency reached for this day | Previous day not completed"
+            },
+            "401": {
+              "description": "Unauthorized - invalid or expired token"
             },
             "404": {
               "description": "Prescription or Item or Day not found"
@@ -8207,7 +8015,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["item_id", "day"],
+                  "required": ["item_id", "day", "image_url"],
                   "properties": {
                     "item_id": {
                       "type": "string",
@@ -8217,6 +8025,12 @@
                       "type": "integer",
                       "minimum": 1,
                       "example": 3
+                    },
+                    "image_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://example.com/uploads/service-image.jpg",
+                      "description": "URL of the image showing service completion"
                     }
                   }
                 }
@@ -8229,6 +8043,9 @@
             },
             "400": {
               "description": "Invalid day parameter | Service already completed for this day | Previous day not completed"
+            },
+            "401": {
+              "description": "Unauthorized - invalid or expired token"
             },
             "404": {
               "description": "Service or Item or Day not found"
@@ -8288,6 +8105,15 @@
               "description": "Filter by room ID"
             },
             {
+              "name": "examination_id",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false,
+              "description": "Filter by examination ID"
+            },
+            {
               "name": "current_date",
               "in": "query",
               "schema": {
@@ -8297,6 +8123,16 @@
               "required": false,
               "description": "Filter by specific date (all checkups created on this date)",
               "example": "2025-12-08T00:00:00.000Z"
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "required": false,
+              "description": "Search by patient name or notes",
+              "example": "John Doe"
             }
           ],
           "responses": {
@@ -8577,6 +8413,241 @@
             },
             "404": {
               "description": "Daily checkup not found"
+            }
+          }
+        }
+      },
+      "/history/get-all": {
+        "get": {
+          "tags": ["History"],
+          "summary": "Get paginated list of patient history — Allowed roles: ceo, doctor, nurse",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              },
+              "description": "Page number"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 10
+              },
+              "description": "Number of items per page"
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              },
+              "description": "Search by patient info or diagnosis"
+            },
+            {
+              "name": "start_date",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "description": "Filter by completed date start (YYYY-MM-DD)",
+              "example": "2026-01-01"
+            },
+            {
+              "name": "end_date",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "description": "Filter by completed date end (YYYY-MM-DD)",
+              "example": "2026-01-31"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "History list retrieved successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "507f1f77bcf86cd799439011"
+                            },
+                            "examination_id": {
+                              "type": "string",
+                              "example": "507f1f77bcf86cd799439012"
+                            },
+                            "patient_info": {
+                              "type": "string",
+                              "example": "Alimova Barno 1975"
+                            },
+                            "diagnosis": {
+                              "type": "string",
+                              "example": "Jigar kasalligi"
+                            },
+                            "prescriptions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "example": [
+                                "L-lizin essinat 10.0+nacl 0.9% 100.0 vena ichiga tomchilatib N5",
+                                "Aminokislota 250.0 vena ichiga tomchilab 2 kun kun ora"
+                              ]
+                            },
+                            "completed_date": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2026-01-07T10:30:00.000Z"
+                            },
+                            "created_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "updated_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        }
+                      },
+                      "pagination": {
+                        "type": "object",
+                        "properties": {
+                          "page": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "limit": {
+                            "type": "integer",
+                            "example": 10
+                          },
+                          "total_count": {
+                            "type": "integer",
+                            "example": 100
+                          },
+                          "total_pages": {
+                            "type": "integer",
+                            "example": 10
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation error"
+            }
+          }
+        }
+      },
+      "/history/get-one/{id}": {
+        "get": {
+          "tags": ["History"],
+          "summary": "Get a single history record by ID — Allowed roles: ceo, doctor, nurse",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "History ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "History retrieved successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "507f1f77bcf86cd799439011"
+                          },
+                          "examination_id": {
+                            "type": "string",
+                            "example": "507f1f77bcf86cd799439012"
+                          },
+                          "patient_info": {
+                            "type": "string",
+                            "example": "Alimova Barno 1975"
+                          },
+                          "diagnosis": {
+                            "type": "string",
+                            "example": "Jigar kasalligi"
+                          },
+                          "prescriptions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "example": [
+                              "L-lizin essinat 10.0+nacl 0.9% 100.0 vena ichiga tomchilatib N5",
+                              "Aminokislota 250.0 vena ichiga tomchilab 2 kun kun ora",
+                              "Gepta 400mg+nacl 0.9% 100.0 vena ichiga tomchilab 5 kun",
+                              "Zeprin 200mg ½ tab 1 mahal obedda 20 kun",
+                              "Essensiale (germaniya) 1tab 2 mahal 20 kun",
+                              "Glitsin 2tab 1 mahal kechqurun 20:00da 20 kun"
+                            ]
+                          },
+                          "completed_date": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-01-07T10:30:00.000Z"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid ID format"
+            },
+            "404": {
+              "description": "History not found"
             }
           }
         }

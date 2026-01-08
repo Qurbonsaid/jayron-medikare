@@ -1,0 +1,35 @@
+{
+  "title": "История",
+  "subtitle": "История лечения пациентов",
+  "search": "Поиск",
+  "searchPlaceholder": "Поиск по имени пациента или диагнозу...",
+  "startDate": "Дата начала",
+  "endDate": "Дата окончания",
+  "filter": "Фильтр",
+  "clearFilter": "Очистить фильтр",
+  "noResults": "Результаты не найдены",
+  "noResultsDescription": "По вашему запросу ничего не найдено",
+  "loading": "Загрузка...",
+  "table": {
+    "number": "№",
+    "patientInfo": "Информация о пациенте",
+    "diagnosis": "Диагноз",
+    "prescriptions": "Лечение",
+    "completedDate": "Дата завершения",
+    "actions": "Действия"
+  },
+  "pagination": {
+    "page": "Страница",
+    "of": "из",
+    "perPage": "на странице",
+    "prev": "Назад",
+    "next": "Вперед",
+    "total": "Всего",
+    "items": "записей"
+  },
+  "viewDetails": "Подробнее",
+  "print": "Печать",
+  "export": "Экспорт",
+  "dateRange": "Диапазон дат",
+  "allTime": "Все время"
+}
