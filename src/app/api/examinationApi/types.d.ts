@@ -323,6 +323,12 @@ export interface getOneServiceRes extends getOnePrescriptionRes {
 			is_completed: boolean
 			date: Date | null
 			_id: string
+			images: 
+				{
+					image_url: string
+					date: string | null
+					_id: string
+				}[]
 		}>
 		_id: string
 	}>
@@ -351,6 +357,7 @@ export interface takeService {
 	body: {
 		item_id: string
 		day: number
+		image_url: string
 	}
 }
 

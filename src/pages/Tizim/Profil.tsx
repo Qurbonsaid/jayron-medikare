@@ -141,9 +141,8 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 	return (
 		<div className='min-h-screen bg-background flex flex-col'>
 			{/* Header */}
-			<header className='bg-card border-b sticky top-0 z-10'>
+			{/* <header className='bg-card border-b sticky top-0 z-10'>
 				<div className='w-full px-4 sm:px-6 py-4 flex flex-row flex-wrap items-center justify-between gap-3'>
-					{/* Chap taraf */}
 					<div className='flex items-center gap-3 min-w-0'>
 						<div className='min-w-0'>
 							<h1 className='text-lg sm:text-xl font-bold truncate'>{t('profile')}</h1>
@@ -153,7 +152,6 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 						</div>
 					</div>
 
-					{/* 3 chiziqli menyu */}
 					<div ref={menuRef} className='relative flex-shrink-0'>
 						<button
 							className='flex flex-col justify-center items-center gap-1 w-8 h-8 p-1 rounded hover:bg-gray-200 transition'
@@ -194,7 +192,7 @@ if (isLoading) return <div className='p-4 text-center'>{t('loading')}</div>
 						)}
 					</div>
 				</div>
-			</header>
+			</header> */}
 
 			{/* Asosiy kontent */}
 			<main className='flex-grow w-full flex flex-col items-center justify-start py-8 sm:py-12 px-3 sm:px-6'>
