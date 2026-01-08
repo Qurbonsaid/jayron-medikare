@@ -147,14 +147,14 @@ const NewVisitDialog = ({
   // Fetch medications
   const { data: medicationsData } = useGetAllMedicationsQuery({
     page: 1,
-    limit: 100,
+    limit: 20,
     search: medicationSearch || undefined,
   });
 
   // Fetch services
   const { data: servicesData } = useGetAllServiceQuery({
     page: 1,
-    limit: 100,
+    limit: 20,
     search: serviceSearch || undefined,
   } as any);
 
@@ -441,7 +441,9 @@ const NewVisitDialog = ({
         onSuccess?.();
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || t('newVisitDialog.errorOccurred'));
+        toast.error(
+          error?.data?.error?.msg || t('newVisitDialog.errorOccurred')
+        );
       },
     });
   };
@@ -450,7 +452,9 @@ const NewVisitDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-5xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('newVisitDialog.title')}</DialogTitle>
+          <DialogTitle className='text-xl'>
+            {t('newVisitDialog.title')}
+          </DialogTitle>
           <DialogDescription>
             {t('newVisitDialog.description')}
           </DialogDescription>
@@ -474,7 +478,9 @@ const NewVisitDialog = ({
                   >
                     <span className='flex items-center gap-2'>
                       <Search className='w-4 h-4' />
-                      <span className='truncate'>{t('newVisitDialog.searchPatient')}</span>
+                      <span className='truncate'>
+                        {t('newVisitDialog.searchPatient')}
+                      </span>
                     </span>
                   </Button>
                 </PopoverTrigger>
@@ -487,7 +493,9 @@ const NewVisitDialog = ({
                       onKeyDown={(e) => e.stopPropagation()}
                     />
                     <CommandList>
-                      <CommandEmpty>{t('newVisitDialog.patientNotFound')}</CommandEmpty>
+                      <CommandEmpty>
+                        {t('newVisitDialog.patientNotFound')}
+                      </CommandEmpty>
                       <CommandGroup>
                         {filteredPatients.map((p) => (
                           <CommandItem
@@ -519,7 +527,8 @@ const NewVisitDialog = ({
                     <h3 className='font-bold text-lg mb-1'>
                       {patient.fullname}
                       <span className='text-muted-foreground text-sm ml-2'>
-                        ({calculateAge(patient.date_of_birth)} {t('newVisitDialog.yearsOld')},{' '}
+                        ({calculateAge(patient.date_of_birth)}{' '}
+                        {t('newVisitDialog.yearsOld')},{' '}
                         {patient.gender === 'male' ? t('male') : t('female')})
                       </span>
                     </h3>
@@ -529,7 +538,8 @@ const NewVisitDialog = ({
                     {patient?.allergies && patient.allergies.length > 0 && (
                       <div className='px-3 py-2 bg-red-50 border border-red-200 rounded-lg mt-2'>
                         <p className='text-sm font-semibold text-red-600'>
-                          ⚠ {t('newVisitDialog.allergy')}: {patient.allergies.join(', ')}
+                          ⚠ {t('newVisitDialog.allergy')}:{' '}
+                          {patient.allergies.join(', ')}
                         </p>
                       </div>
                     )}
@@ -558,7 +568,11 @@ const NewVisitDialog = ({
                         showErrors && !selectedDoctorId ? 'border-red-500' : ''
                       }`}
                     >
-                      <SelectValue placeholder={t('newVisitDialog.selectDoctorPlaceholder')} />
+                      <SelectValue
+                        placeholder={t(
+                          'newVisitDialog.selectDoctorPlaceholder'
+                        )}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       <div className='p-2'>
@@ -581,7 +595,8 @@ const NewVisitDialog = ({
                               {doctor.fullname}
                             </span>
                             <span className='text-xs text-muted-foreground'>
-                              {doctor.section || t('newVisitDialog.specialtyNotSpecified')}
+                              {doctor.section ||
+                                t('newVisitDialog.specialtyNotSpecified')}
                             </span>
                           </div>
                         </SelectItem>
@@ -684,7 +699,9 @@ const NewVisitDialog = ({
                         {/* First row: Dori, Qo'shimchalar, Trash */}
                         <div className='flex items-center gap-2'>
                           <div className='flex-1 min-w-0'>
-                            <Label className='text-xs mb-1 block'>{t('newVisitDialog.medication')}</Label>
+                            <Label className='text-xs mb-1 block'>
+                              {t('newVisitDialog.medication')}
+                            </Label>
                             <Select
                               value={med.medication_id}
                               onValueChange={(value) =>
@@ -700,13 +717,19 @@ const NewVisitDialog = ({
                               }}
                             >
                               <SelectTrigger className='h-9'>
-                                <SelectValue placeholder={t('newVisitDialog.selectMedication')} />
+                                <SelectValue
+                                  placeholder={t(
+                                    'newVisitDialog.selectMedication'
+                                  )}
+                                />
                               </SelectTrigger>
                               <SelectContent>
                                 <div className='p-2'>
                                   <Input
                                     ref={medicationSearchRef}
-                                    placeholder={t('newVisitDialog.searchMedication')}
+                                    placeholder={t(
+                                      'newVisitDialog.searchMedication'
+                                    )}
                                     value={medicationSearch}
                                     onChange={(e) =>
                                       setMedicationSearch(e.target.value)
@@ -744,7 +767,9 @@ const NewVisitDialog = ({
                               {t('newVisitDialog.additionalInfo')}
                             </Label>
                             <Input
-                              placeholder={t('newVisitDialog.additionalInfoPlaceholder')}
+                              placeholder={t(
+                                'newVisitDialog.additionalInfoPlaceholder'
+                              )}
                               className='h-9'
                               value={med.addons}
                               onChange={(e) =>
@@ -771,7 +796,9 @@ const NewVisitDialog = ({
                         {/* Second row: Marta, Kun, Qo'llanish */}
                         <div className='flex items-center gap-2'>
                           <div className='w-20 shrink-0'>
-                            <Label className='text-xs mb-1 block'>{t('newVisitDialog.day')}</Label>
+                            <Label className='text-xs mb-1 block'>
+                              {t('newVisitDialog.day')}
+                            </Label>
                             <Input
                               type='number'
                               placeholder='7'
@@ -1051,13 +1078,19 @@ const NewVisitDialog = ({
                                           }}
                                         >
                                           <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
-                                            <SelectValue placeholder={t('newVisitDialog.select')} />
+                                            <SelectValue
+                                              placeholder={t(
+                                                'newVisitDialog.select'
+                                              )}
+                                            />
                                           </SelectTrigger>
                                           <SelectContent>
                                             <div className='p-2'>
                                               <Input
                                                 ref={serviceSearchRef}
-                                                placeholder={t('newVisitDialog.search')}
+                                                placeholder={t(
+                                                  'newVisitDialog.search'
+                                                )}
                                                 value={serviceSearch}
                                                 onChange={(e) =>
                                                   setServiceSearch(
@@ -1107,7 +1140,9 @@ const NewVisitDialog = ({
                                           {day.date ? (
                                             <div className='flex flex-col items-center justify-center'>
                                               <span className='text-[10px] text-muted-foreground font-bold'>
-                                                {t('newVisitDialog.dayN', { n: day.day })}
+                                                {t('newVisitDialog.dayN', {
+                                                  n: day.day,
+                                                })}
                                               </span>
                                               <span
                                                 className={`px-1.5 py-0.5 rounded ${
@@ -1119,7 +1154,10 @@ const NewVisitDialog = ({
                                                 {format(day.date, 'dd/MM')}
                                               </span>
                                               <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none text-xs'>
-                                                {t('newVisitDialog.dayN', { n: day.day })}:{' '}
+                                                {t('newVisitDialog.dayN', {
+                                                  n: day.day,
+                                                })}
+                                                :{' '}
                                                 {new Date(
                                                   day.date
                                                 ).toLocaleDateString('uz-UZ')}
@@ -1129,7 +1167,9 @@ const NewVisitDialog = ({
                                           ) : (
                                             <div className='flex flex-col items-center justify-center'>
                                               <span className='text-[10px] text-muted-foreground font-bold'>
-                                                {t('newVisitDialog.dayN', { n: day.day })}
+                                                {t('newVisitDialog.dayN', {
+                                                  n: day.day,
+                                                })}
                                               </span>
                                               <span className='text-muted-foreground'>
                                                 —

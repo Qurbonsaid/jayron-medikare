@@ -176,7 +176,7 @@ const Prescription = () => {
       skip: !selectedExaminationId,
     });
 
-  console.log(examinationData);
+  // console.log(examinationData);
 
   // Fetch patient details when examination is selected
   const { data: patientData, isLoading: isLoadingPatient } =
@@ -184,18 +184,26 @@ const Prescription = () => {
       skip: !examinationData?.data.patient_id?._id,
     });
 
-  // Fetch medications for search
-  const { data: medicationsData } = useGetAllMedicationsQuery({
-    page: 1,
-    limit: 100,
-    search: medicationSearch || undefined,
-  });
+  // Medications search + infinite scroll state
+  const [medicationOptions, setMedicationOptions] = useState<any[]>([]);
+  const [medicationPage, setMedicationPage] = useState(1);
+  const [hasMoreMedications, setHasMoreMedications] = useState(true);
+  const [isLoadingMoreMedications, setIsLoadingMoreMedications] =
+    useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // Fetch medications for search (paged)
+  const { data: medicationsData, isFetching: isFetchingMedications } =
+    useGetAllMedicationsQuery({
+      page: medicationPage,
+      limit: 20,
+      search: medicationSearch || undefined,
+    });
 
   // Fetch all services - filtering will be done client-side
   const { data: servicesData, isFetching: isFetchingServices } =
     useGetAllServiceQuery({
       page: 1,
-      limit: 100,
+      limit: 20,
     } as any);
 
   // Store all available services
@@ -281,7 +289,38 @@ const Prescription = () => {
       setServiceDuration(7);
       setServiceStartDate(new Date());
     }
-  }, [patientServices, services.length]);
+  }, [patientServices.length, services.length]);
+
+  useEffect(() => {
+    setMedicationPage(1);
+    setMedicationOptions([]);
+    setHasMoreMedications(true);
+  }, [medicationSearch]);
+
+  // Build medicationOptions incrementally when new data arrives
+  useEffect(() => {
+    if (!isDropdownOpen) return; // Only update when dropdown is open
+
+    const data = medicationsData?.data || [];
+    const totalPages = medicationsData?.pagination?.total_pages || 1;
+    setHasMoreMedications(medicationPage < totalPages);
+
+    if (medicationPage === 1) {
+      setMedicationOptions(data);
+    } else if (Array.isArray(data) && data.length > 0) {
+      setMedicationOptions((prev) => {
+        const ids = new Set(prev.map((m: any) => m._id));
+        const appended = data.filter((m: any) => !ids.has(m._id));
+        return [...prev, ...appended];
+      });
+    }
+    // reset loading-more when fetch completes
+    if (!isFetchingMedications) {
+      setIsLoadingMoreMedications(false);
+    }
+  }, [medicationsData, medicationPage, isFetchingMedications, isDropdownOpen]);
+
+  // Reset medications pagination when search changes
 
   // Update examinations list when new data arrives
   useEffect(() => {
@@ -689,11 +728,15 @@ const Prescription = () => {
         }
       },
       onSuccess: () => {
-        toast.success(`${medications.length} ${t('prescription:medicationsSaved')}`);
+        toast.success(
+          `${medications.length} ${t('prescription:medicationsSaved')}`
+        );
         setMedications([]);
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || t('prescription:medicationsSaveError'));
+        toast.error(
+          error?.data?.error?.msg || t('prescription:medicationsSaveError')
+        );
       },
     });
   };
@@ -851,7 +894,9 @@ const Prescription = () => {
         setServices([]);
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || t('prescription:servicesSaveError'));
+        toast.error(
+          error?.data?.error?.msg || t('prescription:servicesSaveError')
+        );
       },
     });
   };
@@ -970,7 +1015,9 @@ const Prescription = () => {
         setEditingPrescriptionDocId(null);
       },
       onError: (error) => {
-        toast.error(error?.data?.error?.msg || t('prescription:prescriptionUpdateError'));
+        toast.error(
+          error?.data?.error?.msg || t('prescription:prescriptionUpdateError')
+        );
       },
     });
   };
@@ -1063,10 +1110,12 @@ const Prescription = () => {
                                 }
                               >
                                 <TableCell className='font-medium'>
-                                  {exam.patient_id?.fullname || t('prescription:unknown')}
+                                  {exam.patient_id?.fullname ||
+                                    t('prescription:unknown')}
                                 </TableCell>
                                 <TableCell>
-                                  {exam.doctor_id?.fullname || t('prescription:unknown')}
+                                  {exam.doctor_id?.fullname ||
+                                    t('prescription:unknown')}
                                 </TableCell>
                                 <TableCell>
                                   {exam.created_at
@@ -1146,7 +1195,8 @@ const Prescription = () => {
                                 patient.date_of_birth
                               ).toLocaleDateString('uz-UZ')}{' '}
                               <span className='text-muted-foreground'>
-                                ({calculateAge(patient.date_of_birth)} {t('yearsOld')})
+                                ({calculateAge(patient.date_of_birth)}{' '}
+                                {t('yearsOld')})
                               </span>
                             </>
                           ) : (
@@ -1195,7 +1245,8 @@ const Prescription = () => {
                           {t('prescription:complaint')}
                         </Label>
                         <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
-                          {examinationData.data.complaints || t('prescription:noData')}
+                          {examinationData.data.complaints ||
+                            t('prescription:noData')}
                         </p>
                       </div>
                       <div className='space-y-1'>
@@ -1203,7 +1254,8 @@ const Prescription = () => {
                           {t('prescription:recommendation')}
                         </Label>
                         <p className='text-sm sm:text-base whitespace-pre-wrap break-words'>
-                          {examinationData.data?.description || t('prescription:noData')}
+                          {examinationData.data?.description ||
+                            t('prescription:noData')}
                         </p>
                       </div>
                     </div>
@@ -1223,7 +1275,9 @@ const Prescription = () => {
             <Alert className='mb-3 border-destructive bg-destructive/10'>
               <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-destructive' />
               <AlertDescription className='text-destructive font-semibold text-xs sm:text-sm'>
-                {t('prescription:allergyWarning', { allergies: patient.allergies.join(', ') })}
+                {t('prescription:allergyWarning', {
+                  allergies: patient.allergies.join(', '),
+                })}
               </AlertDescription>
             </Alert>
           )}
@@ -1255,7 +1309,8 @@ const Prescription = () => {
                     <>
                       <div className='text-xs font-medium text-muted-foreground mb-2'>
                         {t('prescription:existingPrescriptions')} (
-                        {examinationData.data.prescription.items.length} {t('prescription:count')})
+                        {examinationData.data.prescription.items.length}{' '}
+                        {t('prescription:count')})
                       </div>
                       {examinationData.data.prescription.items.map(
                         (prescription: any, index: number) => (
@@ -1270,12 +1325,22 @@ const Prescription = () => {
                                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                                     <div className='space-y-2 sm:col-span-2'>
                                       <Label className='text-xs sm:text-sm'>
-                                        {t('prescription:medicationNameLabel')} *
+                                        {t('prescription:medicationNameLabel')}{' '}
+                                        *
                                       </Label>
                                       <Select
                                         value={
                                           editPrescriptionForm.medication_id
                                         }
+                                        onOpenChange={(open) => {
+                                          setIsDropdownOpen(open);
+                                          if (open) {
+                                            setEditMedicationSearch('');
+                                            setMedicationPage(1);
+                                            setMedicationOptions([]);
+                                            setHasMoreMedications(true);
+                                          }
+                                        }}
                                         onValueChange={(value) =>
                                           setEditPrescriptionForm({
                                             ...editPrescriptionForm,
@@ -1284,12 +1349,16 @@ const Prescription = () => {
                                         }
                                       >
                                         <SelectTrigger>
-                                          <SelectValue placeholder={t('selectMedication')} />
+                                          <SelectValue
+                                            placeholder={t('selectMedication')}
+                                          />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <div className='p-2'>
+                                          <div className='p-2 sticky top-0 bg-background z-20 border-b'>
                                             <Input
-                                              placeholder={t('prescription:search')}
+                                              placeholder={t(
+                                                'prescription:search'
+                                              )}
                                               value={editMedicationSearch}
                                               onChange={(e) =>
                                                 setEditMedicationSearch(
@@ -1299,25 +1368,77 @@ const Prescription = () => {
                                               className='mb-2'
                                             />
                                           </div>
-                                          {medicationsData?.data
-                                            ?.filter((med: any) =>
-                                              editMedicationSearch
-                                                ? med.name
-                                                    .toLowerCase()
-                                                    .includes(
-                                                      editMedicationSearch.toLowerCase()
-                                                    )
-                                                : true
-                                            )
-                                            .map((medication: any) => (
-                                              <SelectItem
-                                                key={medication._id}
-                                                value={medication._id}
-                                              >
-                                                {medication.name} -{' '}
-                                                {medication.dosage}
-                                              </SelectItem>
-                                            ))}
+                                          <div
+                                            className='max-h-64 overflow-auto'
+                                            onScroll={(e) => {
+                                              const target =
+                                                e.target as HTMLDivElement;
+                                              const atBottom =
+                                                target.scrollHeight -
+                                                  target.scrollTop <=
+                                                target.clientHeight + 10;
+                                              if (
+                                                atBottom &&
+                                                hasMoreMedications &&
+                                                !isLoadingMoreMedications &&
+                                                !isFetchingMedications
+                                              ) {
+                                                setIsLoadingMoreMedications(true);
+                                                setMedicationPage((prev) => prev + 1);
+                                              }
+                                            }}
+                                          >
+                                            {isFetchingMedications &&
+                                            medicationOptions.length === 0 ? (
+                                              <div className='p-4 text-center text-sm text-muted-foreground'>
+                                                <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
+                                                {t('prescription:loading')}
+                                              </div>
+                                            ) : medicationOptions.length > 0 ? (
+                                              medicationOptions
+                                                .filter((med: any) =>
+                                                  editMedicationSearch
+                                                    ? med.name
+                                                        .toLowerCase()
+                                                        .includes(
+                                                          editMedicationSearch.toLowerCase()
+                                                        )
+                                                    : true
+                                                )
+                                                .map((medication: any) => (
+                                                  <SelectItem
+                                                    key={medication._id}
+                                                    value={medication._id}
+                                                  >
+                                                    <div className='flex flex-col'>
+                                                      <span className='font-medium'>
+                                                        {medication.name}
+                                                      </span>
+                                                      <span className='text-xs text-muted-foreground'>
+                                                        {medication.dosage}
+                                                      </span>
+                                                    </div>
+                                                  </SelectItem>
+                                                ))
+                                            ) : (
+                                              <div className='p-4 text-center text-sm text-muted-foreground'>
+                                                {t('prescription:medicationNotFound')}
+                                              </div>
+                                            )}
+                                            {isFetchingMedications &&
+                                              medicationOptions.length > 0 && (
+                                                <div className='p-2 text-center text-xs text-muted-foreground'>
+                                                  <Loader2 className='h-3 w-3 animate-spin inline-block mr-2' />
+                                                  {t('prescription:loading')}
+                                                </div>
+                                              )}
+                                            {!hasMoreMedications &&
+                                              medicationOptions.length > 0 && (
+                                                <div className='p-2 text-center text-[11px] text-muted-foreground'>
+                                                  {t('prescription:allExamsLoaded')}
+                                                </div>
+                                              )}
+                                          </div>
                                         </SelectContent>
                                       </Select>
                                     </div>
@@ -1328,7 +1449,9 @@ const Prescription = () => {
                                       <Input
                                         type='number'
                                         min='0'
-                                        placeholder={t('prescription:treatmentDuration')}
+                                        placeholder={t(
+                                          'prescription:treatmentDuration'
+                                        )}
                                         value={editPrescriptionForm.duration}
                                         onKeyDown={(e) => {
                                           if (
@@ -1383,7 +1506,9 @@ const Prescription = () => {
                                       {t('prescription:additionalInstructions')}
                                     </Label>
                                     <Textarea
-                                      placeholder={t('prescription:enterAdditionalInstructions')}
+                                      placeholder={t(
+                                        'prescription:enterAdditionalInstructions'
+                                      )}
                                       value={editPrescriptionForm.instructions}
                                       onChange={(e) =>
                                         setEditPrescriptionForm({
@@ -1399,7 +1524,9 @@ const Prescription = () => {
                                       {t('prescription:additional')}
                                     </Label>
                                     <Input
-                                      placeholder={t('prescription:additionalInfo')}
+                                      placeholder={t(
+                                        'prescription:additionalInfo'
+                                      )}
                                       value={editPrescriptionForm.addons}
                                       onChange={(e) =>
                                         setEditPrescriptionForm({
@@ -1424,7 +1551,9 @@ const Prescription = () => {
                                       onClick={handleUpdatePrescription}
                                       disabled={isUpdating}
                                     >
-                                      {isUpdating ? t('prescription:saving') : t('prescription:save')}
+                                      {isUpdating
+                                        ? t('prescription:saving')
+                                        : t('prescription:save')}
                                     </Button>
                                   </div>
                                 </div>
@@ -1433,7 +1562,8 @@ const Prescription = () => {
                                 <>
                                   <div className='flex items-center justify-between mb-2'>
                                     <span className='text-xs sm:text-sm font-medium text-primary'>
-                                      {t('prescription:medicationNum')} #{index + 1}
+                                      {t('prescription:medicationNum')} #
+                                      {index + 1}
                                     </span>
                                     <div className='flex items-center gap-2'>
                                       <span className='text-xs px-2 py-1 rounded-full bg-green-100 text-green-700'>
@@ -1461,7 +1591,9 @@ const Prescription = () => {
                                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
                                     <div>
                                       <Label className='text-xs text-muted-foreground'>
-                                        {t('prescription:medicationNameViewLabel')}
+                                        {t(
+                                          'prescription:medicationNameViewLabel'
+                                        )}
                                       </Label>
                                       <p className='text-sm font-medium'>
                                         {typeof prescription.medication_id ===
@@ -1475,7 +1607,8 @@ const Prescription = () => {
                                         {t('prescription:intakeLabel')}
                                       </Label>
                                       <p className='text-sm font-medium'>
-                                        {prescription.frequency} {t('prescription:timesDay')}
+                                        {prescription.frequency}{' '}
+                                        {t('prescription:timesDay')}
                                       </p>
                                     </div>
                                     <div>
@@ -1483,7 +1616,8 @@ const Prescription = () => {
                                         {t('prescription:durationLabel')}
                                       </Label>
                                       <p className='text-sm font-medium'>
-                                        {prescription.duration} {t('prescription:day')}
+                                        {prescription.duration}{' '}
+                                        {t('prescription:day')}
                                       </p>
                                     </div>
                                     <div>
@@ -1544,10 +1678,23 @@ const Prescription = () => {
                             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
                               <div>
                                 <Label className='text-xs sm:text-sm'>
-                                  {t('prescription:medication')} <span className='text-red-500'>*</span>
+                                  {t('prescription:medication')}{' '}
+                                  <span className='text-red-500'>*</span>
                                 </Label>
                                 <Select
                                   value={med.medication_id}
+                                  onOpenChange={(open) => {
+                                    setIsDropdownOpen(open);
+                                    if (open) {
+                                      // reset paging when opening to ensure fresh list
+                                      setMedicationSearch('');
+                                      setMedicationPage(1);
+                                      setHasMoreMedications(true);
+                                      // Don't clear options immediately - let the effect handle it
+                                      setMedicationOptions([]);
+                                      setHasMoreMedications(true);
+                                    }
+                                  }}
                                   onValueChange={(value) =>
                                     updateMedication(
                                       med.id,
@@ -1564,43 +1711,88 @@ const Prescription = () => {
                                         : ''
                                     }`}
                                   >
-                                    <SelectValue placeholder={t('prescription:selectMedicationPlaceholder')} />
+                                    <SelectValue
+                                      placeholder={t(
+                                        'prescription:selectMedicationPlaceholder'
+                                      )}
+                                    />
                                   </SelectTrigger>
-                                  <SelectContent>
-                                    <div className='p-2'>
+                                  <SelectContent className='p-0'>
+                                    <div className='p-2 sticky top-0 bg-background z-20 border-b'>
                                       <Input
-                                        placeholder={t('prescription:searchMedicationPlaceholder')}
+                                        placeholder={t(
+                                          'prescription:searchMedicationPlaceholder'
+                                        )}
                                         value={medicationSearch}
-                                        onChange={(e) =>
-                                          setMedicationSearch(e.target.value)
-                                        }
-                                        className='text-sm mb-2'
+                                        onChange={(e) => {
+                                          setMedicationSearch(e.target.value);
+                                        }}
+                                        className='text-sm'
                                       />
                                     </div>
-                                    {medicationsData?.data &&
-                                    medicationsData.data.length > 0 ? (
-                                      medicationsData.data.map(
-                                        (medication: any) => (
-                                          <SelectItem
-                                            key={medication._id}
-                                            value={medication._id}
-                                          >
-                                            <div className='flex flex-col'>
-                                              <span className='font-medium'>
-                                                {medication.name}
-                                              </span>
-                                              <span className='text-xs text-muted-foreground'>
-                                                {medication.dosage}
-                                              </span>
-                                            </div>
-                                          </SelectItem>
+                                    <div
+                                      className='max-h-64 overflow-auto'
+                                      onScroll={(e) => {
+                                        const target =
+                                          e.target as HTMLDivElement;
+                                        const atBottom =
+                                          target.scrollHeight -
+                                            target.scrollTop <=
+                                          target.clientHeight + 10;
+                                        if (
+                                          atBottom &&
+                                          hasMoreMedications &&
+                                          !isLoadingMoreMedications &&
+                                          !isFetchingMedications
+                                        ) {
+                                          setIsLoadingMoreMedications(true);
+                                          setMedicationPage((prev) => prev + 1);
+                                        }
+                                      }}
+                                    >
+                                      {isFetchingMedications &&
+                                      medicationOptions.length === 0 ? (
+                                        <div className='p-4 text-center text-sm text-muted-foreground'>
+                                          <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
+                                          {t('prescription:loading')}
+                                        </div>
+                                      ) : medicationOptions.length > 0 ? (
+                                        medicationOptions.map(
+                                          (medication: any) => (
+                                            <SelectItem
+                                              key={medication._id}
+                                              value={medication._id}
+                                            >
+                                              <div className='flex flex-col'>
+                                                <span className='font-medium'>
+                                                  {medication.name}
+                                                </span>
+                                                <span className='text-xs text-muted-foreground'>
+                                                  {medication.dosage}
+                                                </span>
+                                              </div>
+                                            </SelectItem>
+                                          )
                                         )
-                                      )
-                                    ) : (
-                                      <div className='p-4 text-center text-sm text-muted-foreground'>
-                                        {t('prescription:medicationNotFound')}
-                                      </div>
-                                    )}
+                                      ) : (
+                                        <div className='p-4 text-center text-sm text-muted-foreground'>
+                                          {t('prescription:medicationNotFound')}
+                                        </div>
+                                      )}
+                                      {isFetchingMedications &&
+                                        medicationOptions.length > 0 && (
+                                          <div className='p-2 text-center text-xs text-muted-foreground'>
+                                            <Loader2 className='h-3 w-3 animate-spin inline-block mr-2' />
+                                            {t('prescription:loading')}
+                                          </div>
+                                        )}
+                                      {!hasMoreMedications &&
+                                        medicationOptions.length > 0 && (
+                                          <div className='p-2 text-center text-[11px] text-muted-foreground'>
+                                            {t('prescription:allExamsLoaded')}
+                                          </div>
+                                        )}
+                                    </div>
                                   </SelectContent>
                                 </Select>
                               </div>
@@ -1632,7 +1824,9 @@ const Prescription = () => {
                                 <Input
                                   type='number'
                                   min='0'
-                                  placeholder={t('prescription:durationPlaceholderShort')}
+                                  placeholder={t(
+                                    'prescription:durationPlaceholderShort'
+                                  )}
                                   value={med.duration}
                                   onKeyDown={(e) => {
                                     if (
@@ -1667,7 +1861,9 @@ const Prescription = () => {
                                 <Input
                                   type='number'
                                   min='0'
-                                  placeholder={t('prescription:timesPlaceholder')}
+                                  placeholder={t(
+                                    'prescription:timesPlaceholder'
+                                  )}
                                   value={med.frequency}
                                   onKeyDown={(e) => {
                                     if (
@@ -1696,7 +1892,9 @@ const Prescription = () => {
                               </div>
                               <div className='flex-1 min-w-0'>
                                 <Label className='text-xs sm:text-sm'>
-                                  {t('prescription:additionalInstructionsLabel')}{' '}
+                                  {t(
+                                    'prescription:additionalInstructionsLabel'
+                                  )}{' '}
                                   <span className='text-red-500'>*</span>
                                 </Label>
                                 <Input
@@ -1732,7 +1930,9 @@ const Prescription = () => {
                       disabled={isCreating || !selectedExaminationId}
                       className='text-sm'
                     >
-                      {isCreating ? t('prescription:saving') : t('prescription:saveMedicationsBtn')}
+                      {isCreating
+                        ? t('prescription:saving')
+                        : t('prescription:saveMedicationsBtn')}
                     </Button>
                   </div>
                 )}
@@ -2139,7 +2339,8 @@ const Prescription = () => {
                                     className='border px-1 py-1 text-center group relative min-w-[70px]'
                                   >
                                     <span className='font-bold text-xs block'>
-                                      {dayItem.dayNumber}-{t('prescription:dayNum')}
+                                      {dayItem.dayNumber}-
+                                      {t('prescription:dayNum')}
                                     </span>
                                     {dayItem.dayData?.date ? (
                                       <div className='flex items-center justify-center'>
@@ -2245,7 +2446,11 @@ const Prescription = () => {
                                         }}
                                       >
                                         <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
-                                          <SelectValue placeholder={t('prescription:selectPlaceholder')} />
+                                          <SelectValue
+                                            placeholder={t(
+                                              'prescription:selectPlaceholder'
+                                            )}
+                                          />
                                         </SelectTrigger>
                                         <SelectContent
                                           onCloseAutoFocus={(e) => {
@@ -2267,7 +2472,9 @@ const Prescription = () => {
                                                     .current[srv.id];
                                                 }
                                               }}
-                                              placeholder={t('prescription:search')}
+                                              placeholder={t(
+                                                'prescription:search'
+                                              )}
                                               value={
                                                 serviceSearch[srv.id] || ''
                                               }
@@ -2344,7 +2551,9 @@ const Prescription = () => {
                                               ))
                                             ) : (
                                               <div className='px-2 py-4 text-xs text-muted-foreground text-center'>
-                                                {t('prescription:serviceNotFound')}
+                                                {t(
+                                                  'prescription:serviceNotFound'
+                                                )}
                                               </div>
                                             );
                                           })()}
@@ -2373,7 +2582,8 @@ const Prescription = () => {
                                         {day.date ? (
                                           <div className='flex flex-col items-center justify-center'>
                                             <span className='text-[10px] text-muted-foreground font-bold'>
-                                              {day.day}-{t('prescription:dayNum')}
+                                              {day.day}-
+                                              {t('prescription:dayNum')}
                                             </span>
                                             <span
                                               className={`px-1.5 py-0.5 rounded ${
@@ -2385,7 +2595,8 @@ const Prescription = () => {
                                               {format(day.date, 'dd/MM')}
                                             </span>
                                             <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-foreground text-background rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none text-xs'>
-                                              {day.day}-{t('prescription:dayNum')}:{' '}
+                                              {day.day}-
+                                              {t('prescription:dayNum')}:{' '}
                                               {new Date(
                                                 day.date
                                               ).toLocaleDateString('uz-UZ')}
@@ -2395,7 +2606,8 @@ const Prescription = () => {
                                         ) : (
                                           <div className='flex flex-col items-center justify-center'>
                                             <span className='text-[10px] text-muted-foreground font-medium'>
-                                              {day.day}-{t('prescription:dayNum')}
+                                              {day.day}-
+                                              {t('prescription:dayNum')}
                                             </span>
                                             <span className='text-muted-foreground'>
                                               —
@@ -2432,7 +2644,9 @@ const Prescription = () => {
                                             }
                                             className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
                                             disabled={!srv.service_id}
-                                            title={t('prescription:everyDayTitle')}
+                                            title={t(
+                                              'prescription:everyDayTitle'
+                                            )}
                                           >
                                             <CalendarDays className='w-3 h-3' />
                                           </Button>
@@ -2447,7 +2661,9 @@ const Prescription = () => {
                                             }
                                             className='h-6 w-6 p-0 text-muted-foreground hover:text-primary'
                                             disabled={!srv.service_id}
-                                            title={t('prescription:everyOtherDayTitle')}
+                                            title={t(
+                                              'prescription:everyOtherDayTitle'
+                                            )}
                                           >
                                             <Repeat className='w-3 h-3' />
                                           </Button>
@@ -2484,7 +2700,9 @@ const Prescription = () => {
                     disabled={isAddingService || !selectedExaminationId}
                     className='text-sm'
                   >
-                    {isAddingService ? t('prescription:saving') : t('prescription:saveServicesBtn')}
+                    {isAddingService
+                      ? t('prescription:saving')
+                      : t('prescription:saveServicesBtn')}
                   </Button>
                 </div>
               )}

@@ -49,7 +49,7 @@ export default function Service() {
   const { canCreate, canUpdate, canDelete } = usePermission('service');
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(100);
+  const [limit] = useState(20);
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data, isLoading, isError, refetch } = useGetAllServiceQuery({
@@ -82,10 +82,14 @@ export default function Service() {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!form.code.trim()) newErrors.code = t('service:validation.codeRequired');
-    if (!form.name.trim()) newErrors.name = t('service:validation.nameRequired');
-    if (!form.description.trim()) newErrors.description = t('service:validation.descriptionRequired');
-    if (form.price <= 0) newErrors.price = t('service:validation.priceRequired');
+    if (!form.code.trim())
+      newErrors.code = t('service:validation.codeRequired');
+    if (!form.name.trim())
+      newErrors.name = t('service:validation.nameRequired');
+    if (!form.description.trim())
+      newErrors.description = t('service:validation.descriptionRequired');
+    if (form.price <= 0)
+      newErrors.price = t('service:validation.priceRequired');
     if (form.duration_minutes <= 0)
       newErrors.duration_minutes = t('service:validation.durationRequired');
 
@@ -160,7 +164,11 @@ export default function Service() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(amount) + ' ' + t('service:currency');
+    return (
+      new Intl.NumberFormat('uz-UZ').format(amount) +
+      ' ' +
+      t('service:currency')
+    );
   };
 
   if (isLoading) return <p className='p-4'>{t('service:loading')}</p>;
@@ -206,7 +214,8 @@ export default function Service() {
                     {service.code}
                   </h3>
                   <p className='text-xs text-muted-foreground'>
-                    {t('service:name')}: <span className='font-bold'>{service.name}</span>
+                    {t('service:name')}:{' '}
+                    <span className='font-bold'>{service.name}</span>
                   </p>
                 </div>
                 <div className='flex flex-col items-end gap-1'>
@@ -415,7 +424,9 @@ export default function Service() {
                               </Button>
                             </DialogTrigger>
                             <DialogContent className='max-w-xs rounded-xl'>
-                              <DialogTitle>{t('service:deleteService')}</DialogTitle>
+                              <DialogTitle>
+                                {t('service:deleteService')}
+                              </DialogTitle>
                               <p className='text-sm text-muted-foreground'>
                                 {t('service:deleteConfirm')}
                               </p>
@@ -431,7 +442,9 @@ export default function Service() {
                                   onClick={() => handleDelete(service._id)}
                                   disabled={deleting}
                                 >
-                                  {deleting ? t('service:deleting') : t('service:yes')}
+                                  {deleting
+                                    ? t('service:deleting')
+                                    : t('service:yes')}
                                 </Button>
                               </DialogFooter>
                             </DialogContent>

@@ -328,7 +328,7 @@ const ExaminationDetail = () => {
   // Fetch medications for prescription edit
   const { data: medicationsData } = useGetAllMedicationsQuery({
     page: 1,
-    limit: 100,
+    limit: 20,
     search: medicationSearch || undefined,
   });
 
@@ -810,16 +810,16 @@ const ExaminationDetail = () => {
         // Otherwise, use create
         if (hasExistingServices || isEdit) {
           // Update service document
-          const serviceDocId = isEdit 
+          const serviceDocId = isEdit
             ? patientServices.find((doc: any) =>
                 doc.items?.some((item: any) => item._id === editingServiceId)
               )?._id
             : patientServices[0]?._id;
-          
+
           if (!serviceDocId) {
             throw new Error('Xizmat hujjati topilmadi');
           }
-          
+
           payload.examination_id = serviceDocId;
           const res = await updateService(payload).unwrap();
           return res;
