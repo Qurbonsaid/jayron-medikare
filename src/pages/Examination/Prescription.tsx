@@ -1383,8 +1383,12 @@ const Prescription = () => {
                                                 !isLoadingMoreMedications &&
                                                 !isFetchingMedications
                                               ) {
-                                                setIsLoadingMoreMedications(true);
-                                                setMedicationPage((prev) => prev + 1);
+                                                setIsLoadingMoreMedications(
+                                                  true
+                                                );
+                                                setMedicationPage(
+                                                  (prev) => prev + 1
+                                                );
                                               }
                                             }}
                                           >
@@ -1422,7 +1426,9 @@ const Prescription = () => {
                                                 ))
                                             ) : (
                                               <div className='p-4 text-center text-sm text-muted-foreground'>
-                                                {t('prescription:medicationNotFound')}
+                                                {t(
+                                                  'prescription:medicationNotFound'
+                                                )}
                                               </div>
                                             )}
                                             {isFetchingMedications &&
@@ -1435,7 +1441,9 @@ const Prescription = () => {
                                             {!hasMoreMedications &&
                                               medicationOptions.length > 0 && (
                                                 <div className='p-2 text-center text-[11px] text-muted-foreground'>
-                                                  {t('prescription:allExamsLoaded')}
+                                                  {t(
+                                                    'prescription:allExamsLoaded'
+                                                  )}
                                                 </div>
                                               )}
                                           </div>
