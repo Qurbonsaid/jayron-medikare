@@ -376,7 +376,7 @@ const ExaminationDetail = () => {
   const [addServiceMutation, { isLoading: isAddingServiceMutation }] =
     useAddServiceMutation();
   const [updateService, { isLoading: isUpdatingService }] =
-    useUpdateServiceMutation();
+    useUpdateExaminationServiceMutation();
   const [updatePrescription, { isLoading: isUpdatingPrescription }] =
     useUpdatePrescriptionMutation();
   const [createNeurologic, { isLoading: isCreatingNeurologic }] =
