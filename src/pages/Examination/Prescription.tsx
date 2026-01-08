@@ -191,12 +191,16 @@ const Prescription = () => {
   const [isLoadingMoreMedications, setIsLoadingMoreMedications] =
     useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Combined search term for both medication selects
+  const [currentMedicationSearch, setCurrentMedicationSearch] = useState('');
+
   // Fetch medications for search (paged)
   const { data: medicationsData, isFetching: isFetchingMedications } =
     useGetAllMedicationsQuery({
       page: medicationPage,
       limit: 20,
-      search: medicationSearch || undefined,
+      search: currentMedicationSearch || undefined,
     });
 
   // Fetch all services - filtering will be done client-side
@@ -291,11 +295,21 @@ const Prescription = () => {
     }
   }, [patientServices.length, services.length]);
 
+  // Update currentMedicationSearch when medicationSearch changes
+  useEffect(() => {
+    setCurrentMedicationSearch(medicationSearch);
+  }, [medicationSearch]);
+
+  // Update currentMedicationSearch when editMedicationSearch changes
+  useEffect(() => {
+    setCurrentMedicationSearch(editMedicationSearch);
+  }, [editMedicationSearch]);
+
   useEffect(() => {
     setMedicationPage(1);
     setMedicationOptions([]);
     setHasMoreMedications(true);
-  }, [medicationSearch]);
+  }, [currentMedicationSearch]);
 
   // Build medicationOptions incrementally when new data arrives
   useEffect(() => {
@@ -319,13 +333,6 @@ const Prescription = () => {
       setIsLoadingMoreMedications(false);
     }
   }, [medicationsData, medicationPage, isFetchingMedications, isDropdownOpen]);
-
-  // Reset medications pagination when search changes
-  useEffect(() => {
-    setMedicationPage(1);
-    setMedicationOptions([]);
-    setHasMoreMedications(true);
-  }, [editMedicationSearch]);
 
   // Update examinations list when new data arrives
   useEffect(() => {
@@ -1404,17 +1411,8 @@ const Prescription = () => {
                                                 {t('prescription:loading')}
                                               </div>
                                             ) : medicationOptions.length > 0 ? (
-                                              medicationOptions
-                                                .filter((med: any) =>
-                                                  editMedicationSearch
-                                                    ? med.name
-                                                        .toLowerCase()
-                                                        .includes(
-                                                          editMedicationSearch.toLowerCase()
-                                                        )
-                                                    : true
-                                                )
-                                                .map((medication: any) => (
+                                              medicationOptions.map(
+                                                (medication: any) => (
                                                   <SelectItem
                                                     key={medication._id}
                                                     value={medication._id}
@@ -1428,7 +1426,8 @@ const Prescription = () => {
                                                       </span>
                                                     </div>
                                                   </SelectItem>
-                                                ))
+                                                )
+                                              )
                                             ) : (
                                               <div className='p-4 text-center text-sm text-muted-foreground'>
                                                 {t(
