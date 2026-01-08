@@ -170,7 +170,7 @@ const RoomDetail = () => {
                       ? room.data.patient_occupied ===
                         room.data.patient_capacity
                         ? t('fullyOccupied')
-                        : `${room.data.patient_occupied} ${t('occupiedCount')}`
+                        : t('occupiedCount', { count: room.data.patient_occupied })
                       : t('empty')}
                   </p>
                 </div>
