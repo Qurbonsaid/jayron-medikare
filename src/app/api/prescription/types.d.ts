@@ -10,6 +10,11 @@ export interface PrescDay {
 	times: number
 	date: null | string
 	_id: string
+	images: {
+		image_url: string
+		date: string | null
+		_id: string
+	}[]
 }
 
 export interface GetOnePresc {
@@ -112,6 +117,7 @@ export interface takePresc {
 	body: {
 		item_id: string
 		day: number
+		image_url: string
 	}
 }
 

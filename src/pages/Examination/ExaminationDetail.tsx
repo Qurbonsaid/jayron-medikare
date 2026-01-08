@@ -1,132 +1,133 @@
-import { useGetAllDiagnosisQuery } from '@/app/api/diagnosisApi/diagnosisApi';
+import { useGetAllDiagnosisQuery } from '@/app/api/diagnosisApi/diagnosisApi'
 import {
-  useAddServiceMutation,
-  useCompleteExamsMutation,
-  useDeleteExamMutation,
-  useGetManyPrescriptionQuery,
-  useGetManyServiceQuery,
-  useGetOneExamQuery,
-  useUpdateExamMutation,
-  useUpdateServiceMutation,
-} from '@/app/api/examinationApi/examinationApi';
-import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
+	useAddServiceMutation,
+	useCompleteExamsMutation,
+	useDeleteExamMutation,
+	useGetManyPrescriptionQuery,
+	useGetManyServiceQuery,
+	useGetOneExamQuery,
+	useUpdateExamMutation,
+	useUpdateExaminationServiceMutation,
+} from '@/app/api/examinationApi/examinationApi'
+import { useGetAllMedicationsQuery } from '@/app/api/medication/medication'
 import {
-  useCreateNeurologicStatusMutation,
-  useDeleteNeurologicStatusMutation,
-  useGetAllNeurologicStatusQuery,
-  useUpdateNeurologicStatusMutation,
-} from '@/app/api/neurologicApi/neurologicApi';
-import { useUpdatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi';
-import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+	useCreateNeurologicStatusMutation,
+	useDeleteNeurologicStatusMutation,
+	useGetAllNeurologicStatusQuery,
+	useUpdateNeurologicStatusMutation,
+} from '@/app/api/neurologicApi/neurologicApi'
+import { useUpdatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi'
+import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from '@/components/ui/command'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { BodyPartConstants } from '@/constants/BodyPart';
-import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
-import { useRouteActions } from '@/hooks/RBS/useRoutePermission';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
+import { BodyPartConstants } from '@/constants/BodyPart'
+import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
+import { useRouteActions } from '@/hooks/RBS/useRoutePermission'
+import { cn } from '@/lib/utils'
+import { format } from 'date-fns'
 import {
-  AlertTriangle,
-  ArrowLeft,
-  Brain,
-  CalendarDays,
-  Check,
-  CheckCircle2,
-  ChevronsUpDown,
-  Edit,
-  Eye,
-  FilePlus,
-  Loader2,
-  Plus,
-  Repeat,
-  Save,
-  Trash2,
-  X,
-} from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'sonner';
+	AlertTriangle,
+	ArrowLeft,
+	Brain,
+	CalendarDays,
+	Check,
+	CheckCircle2,
+	ChevronsUpDown,
+	Edit,
+	Eye,
+	FilePlus,
+	Loader2,
+	Plus,
+	Repeat,
+	Save,
+	Trash2,
+	X,
+} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import AllPrescriptionsDownloadButton, {
-  ExaminationInfoDownloadButton,
-  NeurologicStatusDownloadButton,
-  ServicesDownloadButton,
-} from '../../components/PDF/ExaminationPDF';
-import { ViewMedicalImage } from '../Radiology/components';
+	ExaminationInfoDownloadButton,
+	NeurologicStatusDownloadButton,
+	ServicesDownloadButton,
+} from '../../components/PDF/ExaminationPDF'
+import { ViewMedicalImage } from '../Radiology/components'
 
 // Body part labels will be loaded from translations
 const getBodyPartLabels = (
-  t: (key: string) => string
+	t: (key: string) => string
 ): Record<string, string> => ({
-  [BodyPartConstants.HEAD]: t('examinations:detail.bodyParts.head'),
-  [BodyPartConstants.NECK]: t('examinations:detail.bodyParts.neck'),
-  [BodyPartConstants.CHEST]: t('examinations:detail.bodyParts.chest'),
-  [BodyPartConstants.ABDOMEN]: t('examinations:detail.bodyParts.abdomen'),
-  [BodyPartConstants.PELVIS]: t('examinations:detail.bodyParts.pelvis'),
-  [BodyPartConstants.SPINE]: t('examinations:detail.bodyParts.spine'),
-  [BodyPartConstants.ARM]: t('examinations:detail.bodyParts.arm'),
-  [BodyPartConstants.LEG]: t('examinations:detail.bodyParts.leg'),
-  [BodyPartConstants.KNEE]: t('examinations:detail.bodyParts.knee'),
-  [BodyPartConstants.SHOULDER]: t('examinations:detail.bodyParts.shoulder'),
-  [BodyPartConstants.HAND]: t('examinations:detail.bodyParts.hand'),
-  [BodyPartConstants.FOOT]: t('examinations:detail.bodyParts.foot'),
-});
+	[BodyPartConstants.HEAD]: t('examinations:detail.bodyParts.head'),
+	[BodyPartConstants.NECK]: t('examinations:detail.bodyParts.neck'),
+	[BodyPartConstants.CHEST]: t('examinations:detail.bodyParts.chest'),
+	[BodyPartConstants.ABDOMEN]: t('examinations:detail.bodyParts.abdomen'),
+	[BodyPartConstants.PELVIS]: t('examinations:detail.bodyParts.pelvis'),
+	[BodyPartConstants.SPINE]: t('examinations:detail.bodyParts.spine'),
+	[BodyPartConstants.ARM]: t('examinations:detail.bodyParts.arm'),
+	[BodyPartConstants.LEG]: t('examinations:detail.bodyParts.leg'),
+	[BodyPartConstants.KNEE]: t('examinations:detail.bodyParts.knee'),
+	[BodyPartConstants.SHOULDER]: t('examinations:detail.bodyParts.shoulder'),
+	[BodyPartConstants.HAND]: t('examinations:detail.bodyParts.hand'),
+	[BodyPartConstants.FOOT]: t('examinations:detail.bodyParts.foot'),
+})
 
 const getRoomType = (t: (key: string) => string) => ({
-  stasionar: t('examinations:detail.roomTypes.stasionar'),
-  ambulator: t('examinations:detail.roomTypes.ambulator'),
-});
+	stasionar: t('examinations:detail.roomTypes.stasionar'),
+	ambulator: t('examinations:detail.roomTypes.ambulator'),
+})
 
 const getStatusMap = (
-  t: (key: string) => string
+	t: (key: string) => string
 ): Record<string, { label: string; bgColor: string }> => ({
-  pending: {
-    label: t('examinations:detail.statuses.pending'),
-    bgColor: 'bg-yellow-500',
-  },
-  active: {
-    label: t('examinations:detail.statuses.active'),
-    bgColor: 'bg-blue-500',
-  },
-  completed: {
-    label: t('examinations:detail.statuses.completed'),
-    bgColor: 'bg-green-500',
-  },
-});
+	pending: {
+		label: t('examinations:detail.statuses.pending'),
+		bgColor: 'bg-yellow-500',
+	},
+	active: {
+		label: t('examinations:detail.statuses.active'),
+		bgColor: 'bg-blue-500',
+	},
+	completed: {
+		label: t('examinations:detail.statuses.completed'),
+		bgColor: 'bg-green-500',
+	},
+})
 
 const ExaminationDetail = () => {
+
   const { t } = useTranslation(['examinations', 'common']);
   const navigate = useNavigate();
   const { id } = useParams();
@@ -375,7 +376,7 @@ const ExaminationDetail = () => {
   const [addServiceMutation, { isLoading: isAddingServiceMutation }] =
     useAddServiceMutation();
   const [updateService, { isLoading: isUpdatingService }] =
-    useUpdateServiceMutation();
+    useUpdateExaminationServiceMutation();
   const [updatePrescription, { isLoading: isUpdatingPrescription }] =
     useUpdatePrescriptionMutation();
   const [createNeurologic, { isLoading: isCreatingNeurologic }] =
@@ -3376,7 +3377,7 @@ const ExaminationDetail = () => {
                             }}
                           >
                             <Plus className='w-4 h-4 mr-2' />
-                            {t('services.addService')}
+                            {t('detail.addService')}
                           </Button>
                         )}
                       </div>

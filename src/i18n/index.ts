@@ -20,6 +20,7 @@ import uzCyrlPatientPortal from './locales/uz-Cyrl/patientPortal.json';
 import uzCyrlAppointments from './locales/uz-Cyrl/appointments.json';
 import uzCyrlPrescription from './locales/uz-Cyrl/prescription.json';
 import uzCyrlService from './locales/uz-Cyrl/service.json';
+import uzCyrlHistory from './locales/uz-Cyrl/history.json';
 
 import uzLatnCommon from './locales/uz-Latn/common.json';
 import uzLatnSidebar from './locales/uz-Latn/sidebar.json';
@@ -38,6 +39,7 @@ import uzLatnPatientPortal from './locales/uz-Latn/patientPortal.json';
 import uzLatnAppointments from './locales/uz-Latn/appointments.json';
 import uzLatnPrescription from './locales/uz-Latn/prescription.json';
 import uzLatnService from './locales/uz-Latn/service.json';
+import uzLatnHistory from './locales/uz-Latn/history.json';
 
 import enCommon from './locales/en/common.json';
 import enSidebar from './locales/en/sidebar.json';
@@ -56,6 +58,7 @@ import enPatientPortal from './locales/en/patientPortal.json';
 import enAppointments from './locales/en/appointments.json';
 import enPrescription from './locales/en/prescription.json';
 import enService from './locales/en/service.json';
+import enHistory from './locales/en/history.json';
 
 import ruCommon from './locales/ru/common.json';
 import ruSidebar from './locales/ru/sidebar.json';
@@ -74,6 +77,7 @@ import ruPatientPortal from './locales/ru/patientPortal.json';
 import ruAppointments from './locales/ru/appointments.json';
 import ruPrescription from './locales/ru/prescription.json';
 import ruService from './locales/ru/service.json';
+import ruHistory from './locales/ru/history.json';
 
 export const resources = {
   'uz-Cyrl': {
@@ -94,6 +98,7 @@ export const resources = {
     appointments: uzCyrlAppointments,
     prescription: uzCyrlPrescription,
     service: uzCyrlService,
+    history: uzCyrlHistory,
   },
   'uz-Latn': {
     common: uzLatnCommon,
@@ -113,6 +118,7 @@ export const resources = {
     appointments: uzLatnAppointments,
     prescription: uzLatnPrescription,
     service: uzLatnService,
+    history: uzLatnHistory,
   },
   en: {
     common: enCommon,
@@ -132,6 +138,7 @@ export const resources = {
     appointments: enAppointments,
     prescription: enPrescription,
     service: enService,
+    history: enHistory,
   },
   ru: {
     common: ruCommon,
@@ -151,6 +158,7 @@ export const resources = {
     appointments: ruAppointments,
     prescription: ruPrescription,
     service: ruService,
+    history: ruHistory,
   },
 };
 
@@ -185,6 +193,7 @@ i18n
       'patientPortal',
       'appointments',
       'service',
+      'history',
     ],
     interpolation: {
       escapeValue: false,

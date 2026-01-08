@@ -3,12 +3,12 @@ import {
 	useGetAllExamsQuery,
 	useTakeServiceMutation,
 } from '@/app/api/examinationApi'
-import { useTranslation } from 'react-i18next'
 import type {
 	getOnePrescriptionRes,
 	getOneServiceRes,
 } from '@/app/api/examinationApi/types'
 import { useTakePrescriptionMutation } from '@/app/api/prescription/prescriptionApi'
+import { useUploadCreateMutation } from '@/app/api/upload'
 import {
 	Accordion,
 	AccordionContent,
@@ -44,8 +44,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
 import PrescriptionCard from '@/pages/Medicine/components/PrescriptionCard'
-import { Check, Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { Camera, Check, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 interface Day {
@@ -53,6 +54,11 @@ interface Day {
 	date: string | null
 	day: number
 	times: number | string
+	images?: {
+		image_url: string
+		date: string | null
+		_id: string
+	}[]
 }
 
 interface Prescription {
@@ -128,6 +134,24 @@ const Medicine = () => {
 		day: null,
 		type: 'medicine',
 	})
+	const [cameraModal, setCameraModal] = useState(false)
+	const [capturedImage, setCapturedImage] = useState<string | null>(null)
+	const [isUploading, setIsUploading] = useState(false)
+	const [imagesModal, setImagesModal] = useState<{
+		open: boolean
+		day: any
+		frequency: number
+		type: 'medicine' | 'service'
+		medicationName?: string
+		serviceName?: string
+	}>({
+		open: false,
+		day: null,
+		frequency: 0,
+		type: 'medicine',
+	})
+	const videoRef = useRef<HTMLVideoElement>(null)
+	const streamRef = useRef<MediaStream | null>(null)
 	const [processedServices, setProcessedServices] = useState<Set<string>>(
 		new Set()
 	)
@@ -144,6 +168,7 @@ const Medicine = () => {
 	const [takePrescription, { isLoading: takingMedicine }] =
 		useTakePrescriptionMutation()
 	const [takeService, { isLoading: takingService }] = useTakeServiceMutation()
+	const [uploadImage] = useUploadCreateMutation()
 	const handleRequest = useHandleRequest()
 
 	// Format date helper
@@ -157,6 +182,76 @@ const Medicine = () => {
 			hour: '2-digit',
 			minute: '2-digit',
 		})
+	}
+
+	// Camera functions
+	const startCamera = async () => {
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({
+				video: { facingMode: 'user' },
+			})
+			if (videoRef.current) {
+				videoRef.current.srcObject = stream
+				streamRef.current = stream
+			}
+		} catch (error) {
+			console.error('Error accessing camera:', error)
+			toast.error(t('cameraAccessError'))
+		}
+	}
+
+	const stopCamera = () => {
+		if (streamRef.current) {
+			streamRef.current.getTracks().forEach(track => track.stop())
+			streamRef.current = null
+		}
+	}
+
+	const capturePhoto = () => {
+		if (videoRef.current) {
+			const canvas = document.createElement('canvas')
+			canvas.width = videoRef.current.videoWidth
+			canvas.height = videoRef.current.videoHeight
+			const ctx = canvas.getContext('2d')
+			if (ctx) {
+				ctx.drawImage(videoRef.current, 0, 0)
+				const imageDataUrl = canvas.toDataURL('image/jpeg')
+				setCapturedImage(imageDataUrl)
+				stopCamera()
+			}
+		}
+	}
+
+	const uploadCapturedImage = async (): Promise<string | null> => {
+		if (!capturedImage) return null
+
+		setIsUploading(true)
+		try {
+			// Convert base64 to blob
+			const blob = await fetch(capturedImage).then(res => res.blob())
+			const formData = new FormData()
+			formData.append('file', blob, 'patient-photo.jpg')
+
+			const response = await uploadImage(formData).unwrap()
+			setIsUploading(false)
+			return response.file_path
+		} catch (error) {
+			console.error('Upload error:', error)
+			toast.error(t('uploadError'))
+			setIsUploading(false)
+			return null
+		}
+	}
+
+	const retakePhoto = () => {
+		setCapturedImage(null)
+		startCamera()
+	}
+
+	const closeCameraModal = () => {
+		stopCamera()
+		setCameraModal(false)
+		setCapturedImage(null)
 	}
 
 	// Service accordion ochilganda days yaratish
@@ -208,9 +303,9 @@ const Medicine = () => {
 		day: number,
 		type: 'medicine' | 'service'
 	) => {
-		// Directly open confirmation modal without biometric
+		// Open camera modal first
 		setConfirmModal({
-			open: true,
+			open: false,
 			recordId,
 			prescriptionId,
 			itemId,
@@ -218,10 +313,20 @@ const Medicine = () => {
 			day,
 			type,
 		})
+		setCameraModal(true)
+		// Start camera when modal opens
+		setTimeout(() => startCamera(), 100)
 	}
 
 	const handleConfirm = async () => {
 		if (!confirmModal.recordId || !confirmModal.day) {
+			return
+		}
+
+		// Upload image first
+		const imageUrl = await uploadCapturedImage()
+		if (!imageUrl) {
+			toast.error(t('imageUploadRequired'))
 			return
 		}
 
@@ -233,6 +338,7 @@ const Medicine = () => {
 						body: {
 							item_id: confirmModal.itemId!,
 							day: confirmModal.day!,
+							image_url: imageUrl,
 						},
 					}),
 				onSuccess: () => {
@@ -246,6 +352,7 @@ const Medicine = () => {
 						day: null,
 						type: 'medicine',
 					})
+					closeCameraModal()
 				},
 				onError: err => {
 					if (err?.data) {
@@ -263,6 +370,7 @@ const Medicine = () => {
 						body: {
 							item_id: confirmModal.itemId!,
 							day: confirmModal.day!,
+							image_url: imageUrl,
 						},
 					}),
 				onSuccess: () => {
@@ -276,6 +384,7 @@ const Medicine = () => {
 						day: null,
 						type: 'medicine',
 					})
+					closeCameraModal()
 				},
 				onError: err => {
 					if (err?.data) {
@@ -375,8 +484,12 @@ const Medicine = () => {
 									<AccordionContent className='px-2 sm:px-4 pb-2 sm:pb-4'>
 										<Tabs defaultValue='medicines' className='w-full'>
 											<TabsList className='grid w-full grid-cols-2 mb-4'>
-												<TabsTrigger value='medicines'>{t('medicinesTab')}</TabsTrigger>
-												<TabsTrigger value='services'>{t('servicesTab')}</TabsTrigger>
+												<TabsTrigger value='medicines'>
+													{t('medicinesTab')}
+												</TabsTrigger>
+												<TabsTrigger value='services'>
+													{t('servicesTab')}
+												</TabsTrigger>
 											</TabsList>{' '}
 											<TabsContent value='medicines'>
 												{!record.prescription ? (
@@ -398,6 +511,15 @@ const Medicine = () => {
 																	day,
 																	'medicine'
 																)
+															}
+															onShowImages={(day, frequency, medicationName) =>
+																setImagesModal({
+																	open: true,
+																	day,
+																	frequency,
+																	type: 'medicine',
+																	medicationName,
+																})
 															}
 															formatDate={formatDate}
 															isToday={isToday}
@@ -436,7 +558,8 @@ const Medicine = () => {
 																				</h4>
 																				{(service as any).notes && (
 																					<p className='text-xs font-medium text-muted-foreground mt-1'>
-																						{t('note')}: {(service as any).notes}
+																						{t('note')}:{' '}
+																						{(service as any).notes}
 																					</p>
 																				)}
 																				<p className='text-xs text-muted-foreground mt-0.5'>
@@ -468,18 +591,21 @@ const Medicine = () => {
 																						const lastDate = formatDate(
 																							String(day.date)
 																						)
+																						const hasImages =
+																							day.images &&
+																							day.images.length > 0
 
 																						return (
 																							<div
 																								key={day._id}
-																								className='flex flex-col p-2 border rounded-lg active:bg-accent/50 transition-colors'
+																								className='flex flex-col p-2 border rounded-lg transition-colors relative'
 																								onClick={() =>
 																									!isCompleted &&
 																									openConfirmModal(
-																										record.service._id,
-																										null,
 																										service._id,
 																										null,
+																										service.service_type_id._id,
+																										record.service._id,
 																										day.day,
 																										'service'
 																									)
@@ -513,11 +639,28 @@ const Medicine = () => {
 																										</span>
 																									)}
 																								</button>
+																								{hasImages && (
+																									<Button
+																										size='sm'
+																										variant='ghost'
+																										className='mt-1 h-6 px-2'
+																										onClick={() =>
+																											setImagesModal({
+																												open: true,
+																												images:
+																													day.images || [],
+																												frequency: 1,
+																												type: 'service',
+																											})
+																										}
+																									>
+																										<ImageIcon className='w-3 h-3' />
+																									</Button>
+																								)}
 																							</div>
 																						)
 																					})}
 																				</div>
-
 																				{/* Tablet - 3 columns */}
 																				<div className='hidden sm:grid lg:hidden sm:grid-cols-3 md:grid-cols-4 gap-2'>
 																					{service.days.map(day => {
@@ -525,18 +668,21 @@ const Medicine = () => {
 																						const lastDate = formatDate(
 																							String(day.date)
 																						)
+																						const hasImages =
+																							day.images &&
+																							day.images.length > 0
 
 																						return (
 																							<div
 																								key={day._id}
-																								className='flex flex-col items-center p-2 border rounded-lg hover:bg-accent/50 transition-colors'
+																								className='flex flex-col items-center p-2 border rounded-lg transition-colors relative'
 																								onClick={() =>
 																									!isCompleted &&
 																									openConfirmModal(
-																										record.service._id,
-																										null,
 																										service._id,
 																										null,
+																										service.service_type_id._id,
+																										record.service._id,
 																										day.day,
 																										'service'
 																									)
@@ -570,11 +716,30 @@ const Medicine = () => {
 																										</span>
 																									)}
 																								</button>
+																								{hasImages && (
+																									<Button
+																										size='sm'
+																										variant='ghost'
+																										className='mt-1 h-6 px-2'
+																										onClick={() =>
+																											setImagesModal({
+																												open: true,
+																												day,
+																												frequency: 1,
+																												type: 'service',
+																												serviceName: (
+																													service.service_type_id as any
+																												).name,
+																											})
+																										}
+																									>
+																										<ImageIcon className='w-3 h-3' />
+																									</Button>
+																								)}
 																							</div>
 																						)
 																					})}
-																				</div>
-
+																				</div>{' '}
 																				{/* Mobile - 2 columns */}
 																				<div className='grid grid-cols-2 gap-2 sm:hidden'>
 																					{service.days.map(day => {
@@ -582,18 +747,21 @@ const Medicine = () => {
 																						const lastDate = formatDate(
 																							String(day.date)
 																						)
+																						const hasImages =
+																							day.images &&
+																							day.images.length > 0
 
 																						return (
 																							<div
 																								key={day._id}
-																								className='flex flex-col p-2 border rounded-lg active:bg-accent/50 transition-colors'
+																								className='flex flex-col p-2 border rounded-lg transition-colors'
 																								onClick={() =>
 																									!isCompleted &&
 																									openConfirmModal(
-																										record.service._id,
-																										null,
 																										service._id,
 																										null,
+																										service.service_type_id._id,
+																										record.service._id,
 																										day.day,
 																										'service'
 																									)
@@ -626,6 +794,26 @@ const Medicine = () => {
 																											? t('today')
 																											: lastDate}
 																									</p>
+																								)}
+																								{hasImages && (
+																									<Button
+																										size='sm'
+																										variant='ghost'
+																										className='mt-1 h-5 px-1 w-full'
+																										onClick={() =>
+																											setImagesModal({
+																												open: true,
+																												day,
+																												frequency: 1,
+																												type: 'service',
+																												serviceName: (
+																													service.service_type_id as any
+																												).name,
+																											})
+																										}
+																									>
+																										<ImageIcon className='w-3 h-3' />
+																									</Button>
 																								)}
 																							</div>
 																						)
@@ -853,6 +1041,180 @@ const Medicine = () => {
 							className='flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-sm'
 						>
 							{t('yes')}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Camera Modal */}
+			<Dialog open={cameraModal} onOpenChange={closeCameraModal}>
+				<DialogContent className='max-w-[90vw] sm:max-w-md'>
+					<DialogHeader>
+						<DialogTitle className='text-base sm:text-lg'>
+							{capturedImage ? t('Suratni tasdiqlash') : t('Suratga olish')}
+						</DialogTitle>
+					</DialogHeader>
+					<div className='flex flex-col items-center gap-4'>
+						{!capturedImage ? (
+							<>
+								<video
+									ref={videoRef}
+									autoPlay
+									playsInline
+									className='w-full h-auto rounded-lg border'
+								/>
+								<Button
+									onClick={capturePhoto}
+									className='w-full bg-blue-600 hover:bg-blue-700'
+								>
+									<Camera className='w-4 h-4 mr-2' />
+									{t('Suratga olish')}
+								</Button>
+							</>
+						) : (
+							<>
+								<img
+									src={capturedImage}
+									alt='Captured'
+									className='w-full h-auto rounded-lg border'
+								/>
+								<div className='flex gap-2 w-full'>
+									<Button
+										onClick={retakePhoto}
+										variant='outline'
+										className='flex-1'
+									>
+										{t('Qaytadan olish')}
+									</Button>
+									<Button
+										onClick={handleConfirm}
+										disabled={isUploading || takingMedicine || takingService}
+										className='flex-1 bg-green-600 hover:bg-green-700'
+									>
+										{isUploading || takingMedicine || takingService ? (
+											<>
+												<Loader2 className='w-4 h-4 mr-2 animate-spin' />
+												{t('Jarayon davom etmoqda')}
+											</>
+										) : (
+											t('Tasdiqlash')
+										)}
+									</Button>
+								</div>
+							</>
+						)}
+					</div>
+					<DialogFooter>
+						<Button
+							variant='outline'
+							onClick={closeCameraModal}
+							className='w-full text-sm'
+						>
+							{t('cancel')}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Images Display Modal */}
+			<Dialog
+				open={imagesModal.open}
+				onOpenChange={open =>
+					!open &&
+					setImagesModal({
+						open: false,
+						day: null,
+						frequency: 0,
+						type: 'medicine',
+					})
+				}
+			>
+				<DialogContent className='max-w-[90vw] sm:max-w-2xl'>
+					<DialogHeader>
+						<DialogTitle className='text-base sm:text-lg'>
+							{imagesModal.type === 'medicine'
+								? imagesModal.medicationName || t('medicationHistory')
+								: imagesModal.serviceName || t('serviceHistory')}
+						</DialogTitle>
+						<p className='text-sm text-muted-foreground mt-1'>
+							{/* {imagesModal.day?.date &&
+								new Date(imagesModal.day.date).toLocaleDateString('uz-UZ')} */}
+
+							{isToday(String(imagesModal.day?.date))
+								? t('today')
+								: imagesModal.day?.date}
+						</p>
+					</DialogHeader>
+					<div className='space-y-3 max-h-[60vh] overflow-y-auto'>
+						{Array.from({ length: imagesModal.frequency }).map((_, index) => {
+							const imageData = imagesModal.day?.images?.[index]
+							const imageUrl = imageData?.image_url
+							const imageDate = imageData?.date
+							const isTaken = !!imageUrl
+
+							return (
+								<div
+									key={index}
+									className={`border rounded-lg p-4 flex flex-col sm:flex-row gap-4 items-start ${
+										isTaken ? 'bg-green-50 border-green-200' : 'bg-gray-50'
+									}`}
+								>
+									{isTaken ? (
+										<>
+											<img
+												src={imageUrl}
+												alt={`${imagesModal.type} ${index + 1}`}
+												className='w-full sm:w-32 h-auto rounded-lg object-cover'
+											/>
+											<div className='flex-1'>
+												<p className='text-sm font-medium text-green-700'>
+													{imagesModal.type === 'medicine'
+														? `${index + 1}-doza`
+														: `${index + 1}-xizmat`}
+												</p>
+												<p className='text-xs text-green-600 mt-1'>
+													✓ Qabul qilindi
+												</p>
+												{imageDate && (
+													<p className='text-xs text-muted-foreground mt-1'>
+														{new Date(imageDate).toLocaleTimeString('uz-UZ', {
+															hour: '2-digit',
+															minute: '2-digit',
+														})}
+													</p>
+												)}
+											</div>
+										</>
+									) : (
+										<div className='flex-1'>
+											<p className='text-sm font-medium text-gray-600'>
+												{imagesModal.type === 'medicine'
+													? `${index + 1}-doza`
+													: `${index + 1}-xizmat`}
+											</p>
+											<p className='text-xs text-gray-500 mt-1'>
+												⏳ Hali qabul qilinmadi
+											</p>
+										</div>
+									)}
+								</div>
+							)
+						})}
+					</div>
+					<DialogFooter>
+						<Button
+							variant='outline'
+							onClick={() =>
+								setImagesModal({
+									open: false,
+									day: null,
+									frequency: 0,
+									type: 'medicine',
+								})
+							}
+							className='w-full text-sm'
+						>
+							{t('close')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

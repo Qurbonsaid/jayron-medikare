@@ -26,6 +26,7 @@ import Medicine from './pages/Medicine/Medicine';
 import RoomDetail from './pages/RoomDetail/RoomDetail';
 import Rooms from './pages/Rooms/Rooms';
 import Profil from './pages/Tizim/Profil';
+import History from './pages/History';
 
 export interface RouteConfig {
   path: string;
@@ -103,6 +104,7 @@ export const routers: RouteConfig[] = [
   },
   { path: '/billing', element: <Billing />, permission: 'billing' },
   { path: '/reports', element: <Reports />, permission: 'reports' },
+  { path: '/history', element: <History />, permission: 'examinations' },
   { path: '/settings', element: <Settings />, permission: 'ceo_only' },
   { path: '/profile', element: <Profil />, permission: null },
   { path: '/patient-portal', element: <PatientPortal />, permission: null },
@@ -246,6 +248,12 @@ export const navigator = [
     to: null,
     title: 'Ҳисоботлар',
     titleKey: 'menu.reports',
+  },
+  {
+    path: '/history',
+    to: null,
+    title: 'Тарих',
+    titleKey: 'menu.history',
   },
   {
     path: '/radiology',
