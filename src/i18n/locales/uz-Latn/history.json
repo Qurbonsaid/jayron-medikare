@@ -1,0 +1,35 @@
+{
+  "title": "Tarix",
+  "subtitle": "Bemorlar davolash tarixi",
+  "search": "Qidirish",
+  "searchPlaceholder": "Bemor ismi yoki diagnoz bo'yicha qidiring...",
+  "startDate": "Boshlanish sanasi",
+  "endDate": "Tugash sanasi",
+  "filter": "Filtr",
+  "clearFilter": "Filtrni tozalash",
+  "noResults": "Natija topilmadi",
+  "noResultsDescription": "Sizning qidiruv so'rovingizga mos natija topilmadi",
+  "loading": "Yuklanmoqda...",
+  "table": {
+    "number": "№",
+    "patientInfo": "Bemor ma'lumotlari",
+    "diagnosis": "Diagnoz",
+    "prescriptions": "Davolash",
+    "completedDate": "Yakunlangan sana",
+    "actions": "Amallar"
+  },
+  "pagination": {
+    "page": "Sahifa",
+    "of": "dan",
+    "perPage": "ta/sahifa",
+    "prev": "Oldingi",
+    "next": "Keyingi",
+    "total": "Jami",
+    "items": "ta yozuv"
+  },
+  "viewDetails": "Batafsil ko'rish",
+  "print": "Chop etish",
+  "export": "Eksport",
+  "dateRange": "Sana oralig'i",
+  "allTime": "Barcha vaqt"
+}

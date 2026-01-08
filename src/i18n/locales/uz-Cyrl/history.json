@@ -1,0 +1,35 @@
+{
+  "title": "Тарих",
+  "subtitle": "Беморлар даволаш тарихи",
+  "search": "Қидириш",
+  "searchPlaceholder": "Бемор исми ёки диагноз бўйича қидиринг...",
+  "startDate": "Бошланиш санаси",
+  "endDate": "Тугаш санаси",
+  "filter": "Филтр",
+  "clearFilter": "Филтрни тозалаш",
+  "noResults": "Натижа топилмади",
+  "noResultsDescription": "Сизнинг қидирув сўровингизга мос натижа топилмади",
+  "loading": "Юкланмоқда...",
+  "table": {
+    "number": "№",
+    "patientInfo": "Бемор маълумотлари",
+    "diagnosis": "Диагноз",
+    "prescriptions": "Даволаш",
+    "completedDate": "Якунланган сана",
+    "actions": "Амаллар"
+  },
+  "pagination": {
+    "page": "Саҳифа",
+    "of": "дан",
+    "perPage": "та/саҳифа",
+    "prev": "Олдинги",
+    "next": "Кейинги",
+    "total": "Жами",
+    "items": "та ёзув"
+  },
+  "viewDetails": "Батафсил кўриш",
+  "print": "Чоп этиш",
+  "export": "Экспорт",
+  "dateRange": "Сана оралиғи",
+  "allTime": "Барча вақт"
+}
