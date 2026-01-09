@@ -172,28 +172,43 @@ All colors MUST be HSL.
   }
 
   .scrollbar-thin::-webkit-scrollbar {
-    height: 12px;
-    width: 12px;
+    height: 10px;
+    width: 10px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
-    @apply bg-gray-200 dark:bg-gray-800;
-    border-radius: 6px;
+    @apply bg-gray-100 dark:bg-gray-800;
+    border-radius: 5px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-blue-400 dark:bg-blue-600;
-    border-radius: 6px;
-    border: 3px solid transparent;
+    @apply bg-gray-400 dark:bg-gray-600;
+    border-radius: 5px;
+    border: 2px solid transparent;
     background-clip: padding-box;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    @apply bg-blue-500 dark:bg-blue-500;
+    @apply bg-gray-500 dark:bg-gray-500;
   }
 
   /* Show scrollbar on hover for better UX */
   .scrollbar-thin::-webkit-scrollbar-corner {
     @apply bg-transparent;
+  }
+
+  /* Mobile touch scroll indicator */
+  @media (max-width: 1024px) {
+    .scrollbar-thin {
+      scrollbar-width: auto;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar {
+      height: 8px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      @apply bg-blue-400;
+    }
   }
 }
