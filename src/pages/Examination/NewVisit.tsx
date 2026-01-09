@@ -18,22 +18,17 @@ import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
 import { useGetUsersQuery } from '@/app/api/userApi/userApi';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ComboBox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsTablet } from '@/hooks/use-tablet';
 import { format } from 'date-fns';
 import {
   Activity,
   FileText,
-  Loader2,
   Pill,
   Plus,
   Save,
@@ -43,7 +38,7 @@ import {
   UserCog,
   X,
 } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { calculateAge } from './components/calculateAge';
@@ -52,6 +47,10 @@ const NewVisit = () => {
   const { t } = useTranslation('examinations');
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  const isSmallDevice = isMobile || isTablet;
+
   const [subjective, setSubjective] = useState('');
   const [description, setDescription] = useState('');
   const [patient, setPatient] = useState<any>(null);
@@ -83,8 +82,6 @@ const NewVisit = () => {
   const [hasMoreMedications, setHasMoreMedications] = useState(true);
   const [isLoadingMoreMedications, setIsLoadingMoreMedications] =
     useState(false);
-  const [isMedicationDropdownOpen, setIsMedicationDropdownOpen] =
-    useState(false);
 
   // Service states
   interface ServiceDay {
@@ -115,11 +112,6 @@ const NewVisit = () => {
 
   // Doctor search state
   const [doctorSearch, setDoctorSearch] = useState('');
-
-  // Refs for autofocus
-  const doctorSearchRef = useRef<HTMLInputElement>(null);
-  const medicationSearchRef = useRef<HTMLInputElement>(null);
-  const serviceSearchRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Infinite scroll states for patients
   const [patientPage, setPatientPage] = useState(1);
@@ -187,8 +179,6 @@ const NewVisit = () => {
 
   // Build medicationOptions incrementally when new data arrives
   useEffect(() => {
-    if (!isMedicationDropdownOpen) return; // Only update when dropdown is open
-
     const data = medicationsData?.data || [];
     const totalPages = medicationsData?.pagination?.total_pages || 1;
     setHasMoreMedications(medicationPage < totalPages);
@@ -205,12 +195,7 @@ const NewVisit = () => {
     if (!isFetchingMedications) {
       setIsLoadingMoreMedications(false);
     }
-  }, [
-    medicationsData,
-    medicationPage,
-    isFetchingMedications,
-    isMedicationDropdownOpen,
-  ]);
+  }, [medicationsData, medicationPage, isFetchingMedications]);
 
   // Build serviceOptions incrementally when new data arrives
   useEffect(() => {
@@ -718,72 +703,28 @@ const NewVisit = () => {
                             {t('newVisit.selectDoctor')}
                           </h3>
                         </div>
-                        <Select
+                        <ComboBox
                           value={selectedDoctorId}
                           onValueChange={setSelectedDoctorId}
-                          onOpenChange={(open) => {
-                            if (open) {
-                              setTimeout(
-                                () => doctorSearchRef.current?.focus(),
-                                0
-                              );
-                            }
-                          }}
-                        >
-                          <SelectTrigger
-                            className={`h-10 sm:h-12 ${
-                              showErrors && !selectedDoctorId
-                                ? 'border-red-500'
-                                : ''
-                            }`}
-                          >
-                            <SelectValue
-                              placeholder={t(
-                                'newVisit.selectDoctorPlaceholder'
-                              )}
-                            />
-                          </SelectTrigger>
-                          <SelectContent onScroll={handleDoctorScroll}>
-                            <div className='p-2'>
-                              <Input
-                                ref={doctorSearchRef}
-                                placeholder={t('newVisit.searchDoctor')}
-                                value={doctorSearch}
-                                onChange={(e) =>
-                                  setDoctorSearch(e.target.value)
-                                }
-                                onKeyDown={(e) => e.stopPropagation()}
-                                onFocus={(e) => {
-                                  // Ensure focus is set after a brief delay
-                                  setTimeout(() => e.target.focus(), 0);
-                                }}
-                                className='h-8 mb-2'
-                              />
-                            </div>
-                            {filteredDoctors.map((doctor: any) => (
-                              <SelectItem key={doctor._id} value={doctor._id}>
-                                <div className='flex flex-col items-start'>
-                                  <span className='font-medium'>
-                                    {doctor.fullname}
-                                  </span>
-                                  <span className='text-xs text-muted-foreground'>
-                                    {doctor.email}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                            {isLoadingMoreDoctors && (
-                              <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
-                                {t('newVisit.loading')}
-                              </div>
-                            )}
-                            {!hasMoreDoctors && doctors.length > 0 && (
-                              <div className='px-2 py-2 text-center text-xs text-muted-foreground'>
-                                {t('newVisit.allDoctorsLoaded')}
-                              </div>
-                            )}
-                          </SelectContent>
-                        </Select>
+                          options={filteredDoctors.map((doctor: any) => ({
+                            value: doctor._id,
+                            label: doctor.fullname,
+                            sublabel: doctor.email,
+                          }))}
+                          placeholder={t('newVisit.selectDoctorPlaceholder')}
+                          searchPlaceholder={t('newVisit.searchDoctor')}
+                          searchValue={doctorSearch}
+                          onSearchChange={setDoctorSearch}
+                          onScroll={handleDoctorScroll}
+                          isLoading={isLoadingMoreDoctors}
+                          hasMore={hasMoreDoctors}
+                          autoFocus={!isSmallDevice}
+                          className={`h-10 sm:h-12 ${
+                            showErrors && !selectedDoctorId
+                              ? 'border-red-500'
+                              : ''
+                          }`}
+                        />
                       </div>
 
                       {/* Treatment Type Switch */}
@@ -922,7 +863,7 @@ const NewVisit = () => {
                               <label className='text-xs mb-1 block font-medium'>
                                 {t('newVisit.medication')}
                               </label>
-                              <Select
+                              <ComboBox
                                 value={med.medication_id}
                                 onValueChange={(value) =>
                                   updateMedication(
@@ -931,106 +872,46 @@ const NewVisit = () => {
                                     value
                                   )
                                 }
-                                onOpenChange={(open) => {
-                                  setIsMedicationDropdownOpen(open);
-                                  if (open) {
-                                    setMedicationSearch('');
-                                    setMedicationPage(1);
-                                    setMedicationOptions([]);
-                                    setHasMoreMedications(true);
-                                    setTimeout(
-                                      () =>
-                                        medicationSearchRef.current?.focus(),
-                                      0
-                                    );
+                                options={medicationOptions.map(
+                                  (medication: any) => ({
+                                    value: medication._id,
+                                    label: medication.name,
+                                    sublabel: medication.dosage,
+                                  })
+                                )}
+                                placeholder={t('newVisit.selectMedication')}
+                                searchPlaceholder={t(
+                                  'newVisit.searchMedication'
+                                )}
+                                emptyText={t('newVisit.medicationNotFound')}
+                                loadingText={t('newVisit.loading')}
+                                searchValue={medicationSearch}
+                                onSearchChange={(value) => {
+                                  setMedicationSearch(value);
+                                  setMedicationPage(1);
+                                  setMedicationOptions([]);
+                                  setHasMoreMedications(true);
+                                }}
+                                onScroll={(e) => {
+                                  const target = e.target as HTMLDivElement;
+                                  const atBottom =
+                                    target.scrollHeight - target.scrollTop <=
+                                    target.clientHeight + 10;
+                                  if (
+                                    atBottom &&
+                                    hasMoreMedications &&
+                                    !isLoadingMoreMedications &&
+                                    !isFetchingMedications
+                                  ) {
+                                    setIsLoadingMoreMedications(true);
+                                    setMedicationPage((prev) => prev + 1);
                                   }
                                 }}
-                              >
-                                <SelectTrigger className='h-9'>
-                                  <SelectValue
-                                    placeholder={t('newVisit.selectMedication')}
-                                  />
-                                </SelectTrigger>
-                                <SelectContent
-                                  onScroll={(e) => {
-                                    const target = e.target as HTMLDivElement;
-                                    const atBottom =
-                                      target.scrollHeight - target.scrollTop <=
-                                      target.clientHeight + 10;
-                                    if (
-                                      atBottom &&
-                                      hasMoreMedications &&
-                                      !isLoadingMoreMedications &&
-                                      !isFetchingMedications
-                                    ) {
-                                      setIsLoadingMoreMedications(true);
-                                      setMedicationPage((prev) => prev + 1);
-                                    }
-                                  }}
-                                >
-                                  <div className='p-2 sticky top-0 bg-background z-20 border-b'>
-                                    <Input
-                                      ref={medicationSearchRef}
-                                      placeholder={t(
-                                        'newVisit.searchMedication'
-                                      )}
-                                      value={medicationSearch}
-                                      onChange={(e) =>
-                                        setMedicationSearch(e.target.value)
-                                      }
-                                      onKeyDown={(e) => e.stopPropagation()}
-                                      onFocus={(e) => {
-                                        setTimeout(() => e.target.focus(), 0);
-                                      }}
-                                      className='h-8 mb-2'
-                                    />
-                                  </div>
-                                  <div className='max-h-64 overflow-auto'>
-                                    {isFetchingMedications &&
-                                    medicationOptions.length === 0 ? (
-                                      <div className='p-4 text-center text-sm text-muted-foreground'>
-                                        <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
-                                        {t('newVisit.loading')}
-                                      </div>
-                                    ) : medicationOptions.length > 0 ? (
-                                      medicationOptions.map(
-                                        (medication: any) => (
-                                          <SelectItem
-                                            key={medication._id}
-                                            value={medication._id}
-                                          >
-                                            <div className='flex flex-col'>
-                                              <span className='font-medium'>
-                                                {medication.name}
-                                              </span>
-                                              <span className='text-xs text-muted-foreground'>
-                                                {medication.dosage}
-                                              </span>
-                                            </div>
-                                          </SelectItem>
-                                        )
-                                      )
-                                    ) : (
-                                      <div className='p-4 text-center text-sm text-muted-foreground'>
-                                        {t('newVisit.medicationNotFound')}
-                                      </div>
-                                    )}
-                                    {isFetchingMedications &&
-                                      medicationOptions.length > 0 && (
-                                        <div className='p-2 text-center text-xs text-muted-foreground'>
-                                          <Loader2 className='h-3 w-3 animate-spin inline-block mr-2' />
-                                          {t('newVisit.loading')}
-                                        </div>
-                                      )}
-                                    {!hasMoreMedications &&
-                                      medicationOptions.length > 0 && (
-                                        <div className='p-2 text-center text-[11px] text-muted-foreground'>
-                                          {t('newVisit.allMedicationsLoaded')}
-                                        </div>
-                                      )}
-                                  </div>
-                                </SelectContent>
-                              </Select>
+                                isLoading={isFetchingMedications}
+                                hasMore={hasMoreMedications}
+                                autoFocus={!isSmallDevice}
+                                className='h-9'
+                              />
                             </div>
                             <div className='flex-1 min-w-0'>
                               <label className='text-xs mb-1 block font-medium'>
@@ -1329,7 +1210,7 @@ const NewVisit = () => {
                                         className='border px-1 py-1 sticky left-0 bg-background z-10'
                                         rowSpan={dayChunks.length}
                                       >
-                                        <Select
+                                        <ComboBox
                                           value={srv.service_id}
                                           onValueChange={(value) =>
                                             updateService(
@@ -1338,208 +1219,92 @@ const NewVisit = () => {
                                               value
                                             )
                                           }
-                                          onOpenChange={(open) => {
-                                            if (open) {
-                                              // Clear search when opening this specific select
-                                              setServiceSearch((prev) => ({
-                                                ...prev,
-                                                [srv.id]: '',
-                                              }));
-                                              setTimeout(() => {
-                                                const inputRef =
-                                                  serviceSearchRefs.current[
-                                                    srv.id
-                                                  ];
-                                                if (inputRef) {
-                                                  inputRef.focus();
-                                                }
-                                              }, 0);
-                                            } else {
-                                              // Clear search when closing
-                                              setServiceSearch((prev) => {
-                                                const newState = { ...prev };
-                                                delete newState[srv.id];
-                                                return newState;
-                                              });
+                                          options={(() => {
+                                            const searchQuery = (
+                                              serviceSearch[srv.id] || ''
+                                            )
+                                              .toLowerCase()
+                                              .trim();
+                                            const selectedServiceIds = services
+                                              .filter(
+                                                (s) =>
+                                                  s.service_id &&
+                                                  s.id !== srv.id
+                                              )
+                                              .map((s) => s.service_id);
+                                            const filtered = searchQuery
+                                              ? serviceOptions.filter(
+                                                  (s: any) =>
+                                                    !selectedServiceIds.includes(
+                                                      s._id
+                                                    ) &&
+                                                    (s.name
+                                                      ?.toLowerCase()
+                                                      .includes(searchQuery) ||
+                                                      s.code
+                                                        ?.toLowerCase()
+                                                        .includes(searchQuery))
+                                                )
+                                              : serviceOptions.filter(
+                                                  (s: any) =>
+                                                    !selectedServiceIds.includes(
+                                                      s._id
+                                                    )
+                                                );
+                                            return filtered.map((s: any) => ({
+                                              value: s._id,
+                                              label: `${
+                                                s.name
+                                              } - ${new Intl.NumberFormat(
+                                                'uz-UZ'
+                                              ).format(s.price)} ${t(
+                                                'newVisit.sum'
+                                              )}`,
+                                            }));
+                                          })()}
+                                          placeholder={t(
+                                            'newVisit.selectService'
+                                          )}
+                                          searchPlaceholder={t(
+                                            'newVisit.searchService'
+                                          )}
+                                          emptyText={t(
+                                            'newVisit.serviceNotFound'
+                                          )}
+                                          loadingText={t('newVisit.loading')}
+                                          searchValue={
+                                            serviceSearch[srv.id] || ''
+                                          }
+                                          onSearchChange={(value) =>
+                                            setServiceSearch((prev) => ({
+                                              ...prev,
+                                              [srv.id]: value,
+                                            }))
+                                          }
+                                          onScroll={(e) => {
+                                            const target =
+                                              e.target as HTMLDivElement;
+                                            const atBottom =
+                                              target.scrollHeight -
+                                                target.scrollTop <=
+                                              target.clientHeight + 10;
+                                            if (
+                                              atBottom &&
+                                              hasMoreServices &&
+                                              !isLoadingMoreServices &&
+                                              !isFetchingServices
+                                            ) {
+                                              setIsLoadingMoreServices(true);
+                                              setServicePage(
+                                                (prev) => prev + 1
+                                              );
                                             }
                                           }}
-                                        >
-                                          <SelectTrigger className='h-7 text-xs border-0 shadow-none min-w-[140px]'>
-                                            <SelectValue
-                                              placeholder={t(
-                                                'newVisit.selectService'
-                                              )}
-                                            />
-                                          </SelectTrigger>
-                                          <SelectContent
-                                            onCloseAutoFocus={(e) => {
-                                              e.preventDefault();
-                                            }}
-                                            onEscapeKeyDown={(e) => {
-                                              // Allow escape to close, but prevent default focus behavior
-                                            }}
-                                            onScroll={(e) => {
-                                              const target =
-                                                e.target as HTMLDivElement;
-                                              const atBottom =
-                                                target.scrollHeight -
-                                                  target.scrollTop <=
-                                                target.clientHeight + 10;
-                                              if (
-                                                atBottom &&
-                                                hasMoreServices &&
-                                                !isLoadingMoreServices &&
-                                                !isFetchingServices
-                                              ) {
-                                                setIsLoadingMoreServices(true);
-                                                setServicePage(
-                                                  (prev) => prev + 1
-                                                );
-                                              }
-                                            }}
-                                          >
-                                            <div className='p-2 sticky top-0 bg-background z-20 border-b'>
-                                              <Input
-                                                ref={(el) => {
-                                                  if (el) {
-                                                    serviceSearchRefs.current[
-                                                      srv.id
-                                                    ] = el;
-                                                  } else {
-                                                    delete serviceSearchRefs
-                                                      .current[srv.id];
-                                                  }
-                                                }}
-                                                placeholder={t(
-                                                  'newVisit.searchService'
-                                                )}
-                                                value={
-                                                  serviceSearch[srv.id] || ''
-                                                }
-                                                onChange={(e) => {
-                                                  const newValue =
-                                                    e.target.value;
-                                                  setServiceSearch((prev) => ({
-                                                    ...prev,
-                                                    [srv.id]: newValue,
-                                                  }));
-                                                  // Maintain focus after state update
-                                                  requestAnimationFrame(() => {
-                                                    e.target.focus();
-                                                  });
-                                                }}
-                                                onKeyDown={(e) => {
-                                                  e.stopPropagation();
-                                                  // Prevent Enter from closing select
-                                                  if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                  }
-                                                }}
-                                                autoFocus
-                                                className='text-sm mb-2'
-                                              />
-                                            </div>
-                                            <div className='max-h-64 overflow-auto'>
-                                              {(() => {
-                                                const searchQuery = (
-                                                  serviceSearch[srv.id] || ''
-                                                )
-                                                  .toLowerCase()
-                                                  .trim();
-                                                // Get list of already selected service IDs (excluding current service)
-                                                const selectedServiceIds =
-                                                  services
-                                                    .filter(
-                                                      (s) =>
-                                                        s.service_id &&
-                                                        s.id !== srv.id
-                                                    )
-                                                    .map((s) => s.service_id);
-
-                                                const filteredServices =
-                                                  searchQuery
-                                                    ? serviceOptions.filter(
-                                                        (s: any) =>
-                                                          !selectedServiceIds.includes(
-                                                            s._id
-                                                          ) &&
-                                                          (s.name
-                                                            ?.toLowerCase()
-                                                            .includes(
-                                                              searchQuery
-                                                            ) ||
-                                                            s.code
-                                                              ?.toLowerCase()
-                                                              .includes(
-                                                                searchQuery
-                                                              ))
-                                                      )
-                                                    : serviceOptions.filter(
-                                                        (s: any) =>
-                                                          !selectedServiceIds.includes(
-                                                            s._id
-                                                          )
-                                                      );
-
-                                                return (
-                                                  <>
-                                                    {isFetchingServices &&
-                                                    serviceOptions.length ===
-                                                      0 ? (
-                                                      <div className='p-4 text-center text-sm text-muted-foreground'>
-                                                        <Loader2 className='h-4 w-4 animate-spin mx-auto mb-2' />
-                                                        {t('newVisit.loading')}
-                                                      </div>
-                                                    ) : filteredServices.length >
-                                                      0 ? (
-                                                      filteredServices.map(
-                                                        (s: any) => (
-                                                          <SelectItem
-                                                            key={s._id}
-                                                            value={s._id}
-                                                          >
-                                                            {s.name} -{' '}
-                                                            {new Intl.NumberFormat(
-                                                              'uz-UZ'
-                                                            ).format(
-                                                              s.price
-                                                            )}{' '}
-                                                            {t('newVisit.sum')}
-                                                          </SelectItem>
-                                                        )
-                                                      )
-                                                    ) : (
-                                                      <div className='p-4 text-center text-sm text-muted-foreground'>
-                                                        {t(
-                                                          'newVisit.serviceNotFound'
-                                                        )}
-                                                      </div>
-                                                    )}
-                                                    {isFetchingServices &&
-                                                      serviceOptions.length >
-                                                        0 && (
-                                                        <div className='p-2 text-center text-xs text-muted-foreground'>
-                                                          <Loader2 className='h-3 w-3 animate-spin inline-block mr-2' />
-                                                          {t(
-                                                            'newVisit.loading'
-                                                          )}
-                                                        </div>
-                                                      )}
-                                                    {!hasMoreServices &&
-                                                      serviceOptions.length >
-                                                        0 && (
-                                                        <div className='p-2 text-center text-[11px] text-muted-foreground'>
-                                                          {t(
-                                                            'newVisit.allServicesLoaded'
-                                                          )}
-                                                        </div>
-                                                      )}
-                                                  </>
-                                                );
-                                              })()}
-                                            </div>
-                                          </SelectContent>
-                                        </Select>
+                                          isLoading={isFetchingServices}
+                                          hasMore={hasMoreServices}
+                                          autoFocus={!isSmallDevice}
+                                          className='h-7 text-xs border-0 shadow-none min-w-[140px]'
+                                        />
                                       </td>
                                     )}
                                     {chunk.map((day, i) => {
