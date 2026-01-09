@@ -8,25 +8,33 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog'
 import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
 	SidebarInset,
 	SidebarProvider,
 	SidebarTrigger,
 } from '@/components/ui/sidebar'
 import getUser from '@/hooks/getUser/getUser'
 import { navigator } from '@/router'
-import { ArrowLeft, Edit, Trash } from 'lucide-react'
+import { ArrowLeft, Edit, Globe, LogOut, MoreVertical, Trash, User } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AppSidebar } from './AppSidebar'
 import LanguageSelector from './LanguageSelector'
+import { languages } from '@/i18n'
 
 interface AppLayoutProps {
 	children: React.ReactNode
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-	const { t } = useTranslation('sidebar')
+	const { t, i18n } = useTranslation('sidebar')
 	const navigate = useNavigate()
 	const [menuOpen, setMenuOpen] = useState(false)
 	const [logoutOpen, setLogoutOpen] = useState(false)
@@ -98,18 +106,19 @@ export function AppLayout({ children }: AppLayoutProps) {
 				<AppSidebar />
 				<SidebarInset className='flex-1'>
 					{/* Top Header */}
-					<header className='sticky top-0 z-10 bg-card border-b card-shadow flex items-center justify-between px-6 py-3 lg:px-2 max-sm:pr-0'>
-						<div className='flex items-center gap-4 md:px-4'>
-							<SidebarTrigger className='md:hidden' />
+					<header className='sticky top-0 z-10 bg-card border-b card-shadow flex items-center justify-between px-2 sm:px-4 lg:px-6 py-2 sm:py-3'>
+						<div className='flex items-center gap-2 sm:gap-4 min-w-0 flex-1'>
+							<SidebarTrigger className='md:hidden flex-shrink-0' />
 							{currentLocation?.to && (
-								<Link to={currentLocation?.to}>
-									<ArrowLeft className='w-5 h-5' />
+								<Link to={currentLocation?.to} className='flex-shrink-0'>
+									<ArrowLeft className='w-4 h-4 sm:w-5 sm:h-5' />
 								</Link>
 							)}
-							<h1 className='text-xl font-bold'>{getTranslatedTitle()}</h1>
+							<h1 className='text-sm sm:text-base md:text-lg lg:text-xl font-bold truncate'>{getTranslatedTitle()}</h1>
 						</div>
-						<div className='flex items-center gap-4 px-4'>
-							<div className='flex items-center gap-3'>
+						<div className='flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0'>
+							{/* Desktop: Normal buttons */}
+							<div className='hidden sm:flex items-center gap-2 md:gap-3'>
 								{/* 3 chiziqli menyu - faqat profile sahifasida ko'rsatiladi */}
 								{location.pathname === '/profile' && (
 									<div ref={menuRef} className='relative flex-shrink-0'>
@@ -163,9 +172,9 @@ export function AppLayout({ children }: AppLayoutProps) {
 								>
 									<Button
 										variant='ghost'
-										className='flex items-center gap-3 hover:bg-accent  border-slate-400'
+										className='flex items-center gap-2 md:gap-3 hover:bg-accent border-slate-400 px-2 md:px-3'
 									>
-										<div className='w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold'>
+										<div className='w-8 h-8 md:w-10 md:h-10 gradient-primary rounded-full flex items-center justify-center text-white font-semibold text-xs md:text-sm'>
 											{nickName}
 										</div>
 										<div className='hidden md:block text-right'>
@@ -177,11 +186,75 @@ export function AppLayout({ children }: AppLayoutProps) {
 									</Button>
 								</Link>
 							</div>
+
+							{/* Mobile: Dropdown menu for language + profile */}
+							<div className='flex sm:hidden items-center gap-1'>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button variant='ghost' size='icon' className='h-8 w-8'>
+											<MoreVertical className='h-4 w-4' />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align='end' className='w-48'>
+										{/* Profile link */}
+										<DropdownMenuItem asChild>
+											<Link to='/profile' className='flex items-center gap-2'>
+												<div className='w-6 h-6 gradient-primary rounded-full flex items-center justify-center text-white font-semibold text-[10px]'>
+													{nickName}
+												</div>
+												<div className='flex-1 min-w-0'>
+													<p className='text-xs font-medium truncate'>{me.fullname}</p>
+													<p className='text-[10px] text-muted-foreground'>{getRoleLabel(me.role)}</p>
+												</div>
+											</Link>
+										</DropdownMenuItem>
+										
+										<DropdownMenuSeparator />
+										
+										{/* Language selector */}
+										<div className='px-2 py-1.5'>
+											<p className='text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1'>
+												<Globe className='h-3 w-3' />
+												Til
+											</p>
+											{languages.map((language) => (
+												<DropdownMenuItem
+													key={language.code}
+													onClick={() => i18n.changeLanguage(language.code)}
+													className={`text-xs ${i18n.language === language.code ? 'bg-accent' : ''}`}
+												>
+													<span className='flex items-center gap-2'>
+														<span>{language.flag}</span>
+														<span>{language.name}</span>
+													</span>
+												</DropdownMenuItem>
+											))}
+										</div>
+
+										{location.pathname === '/profile' && (
+											<>
+												<DropdownMenuSeparator />
+												<DropdownMenuItem onClick={() => navigate('/profile?edit=true')}>
+													<Edit className='h-3 w-3 mr-2' />
+													<span className='text-xs'>Tahrirlash</span>
+												</DropdownMenuItem>
+												<DropdownMenuItem 
+													onClick={() => setLogoutOpen(true)}
+													className='text-red-600'
+												>
+													<LogOut className='h-3 w-3 mr-2' />
+													<span className='text-xs'>Chiqish</span>
+												</DropdownMenuItem>
+											</>
+										)}
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</div>
 						</div>
 					</header>
 
 					{/* Main Content */}
-					<main className='flex-1'>{children}</main>
+					<main className='flex-1 min-w-0 overflow-x-hidden'>{children}</main>
 				</SidebarInset>
 			</div>
 

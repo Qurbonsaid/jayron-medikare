@@ -41,15 +41,15 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
   CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   FileText,
   Search,
   X,
 } from 'lucide-react';
+import { IconLeft, IconRight } from 'react-day-picker';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useDateLocale } from '@/hooks/useDateLocale';
 
 // Truncate text helper
@@ -61,6 +61,7 @@ const truncateText = (text: string | undefined, maxLength: number): string => {
 const History = () => {
   const { t } = useTranslation('history');
   const dateLocale = useDateLocale();
+  const navigate = useNavigate();
 
   // States
   const [searchQuery, setSearchQuery] = useState('');
@@ -262,14 +263,13 @@ const History = () => {
             <>
               {/* Desktop Table */}
               <div className='hidden md:block overflow-x-auto'>
-                <Table>
+                <Table className='[&_th]:border-r [&_th:last-child]:border-r-0 [&_td]:border-r [&_td:last-child]:border-r-0'>
                   <TableHeader>
                     <TableRow>
                       <TableHead className='w-[50px] text-center'>{t('table.number')}</TableHead>
                       <TableHead className='min-w-[150px]'>{t('table.patientInfo')}</TableHead>
                       <TableHead className='min-w-[150px]'>{t('table.diagnosis')}</TableHead>
-                      <TableHead className='min-w-[200px]'>{t('table.prescriptions')}</TableHead>
-                      <TableHead className='w-[120px]'>{t('table.completedDate')}</TableHead>
+                      <TableHead className='min-w-[250px]'>{t('table.prescriptions')}</TableHead>
                       <TableHead className='w-[80px] text-center'>{t('table.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -280,46 +280,71 @@ const History = () => {
                           {(currentPage - 1) * itemsPerPage + index + 1}
                         </TableCell>
                         <TableCell>
+                          {/* XL da to'liq ko'rsatish, kichik ekranlarda tooltip */}
+                          <span className='hidden xl:block font-medium'>
+                            {item.patient_info || '-'}
+                          </span>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className='font-medium cursor-default block'>
+                              <span className='xl:hidden font-medium cursor-default block'>
                                 {truncateText(item.patient_info, 20)}
                               </span>
                             </TooltipTrigger>
                             {item.patient_info && item.patient_info.length > 20 && (
-                              <TooltipContent side='top' className='max-w-[300px]'>
+                              <TooltipContent side='top' className='max-w-[300px] xl:hidden'>
                                 <p>{item.patient_info}</p>
                               </TooltipContent>
                             )}
                           </Tooltip>
                         </TableCell>
                         <TableCell>
+                          {/* XL da to'liq ko'rsatish, kichik ekranlarda tooltip */}
+                          <span className='hidden xl:block text-sm'>
+                            {item.diagnosis || '-'}
+                          </span>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className='text-sm cursor-default block'>
+                              <span className='xl:hidden text-sm cursor-default block'>
                                 {truncateText(item.diagnosis, 25)}
                               </span>
                             </TooltipTrigger>
                             {item.diagnosis && item.diagnosis.length > 25 && (
-                              <TooltipContent side='top' className='max-w-[400px]'>
+                              <TooltipContent side='top' className='max-w-[400px] xl:hidden'>
                                 <p>{item.diagnosis}</p>
                               </TooltipContent>
                             )}
                           </Tooltip>
                         </TableCell>
                         <TableCell>
+                          {/* XL da to'liq ko'rsatish, kichik ekranlarda tooltip */}
+                          <div className='hidden xl:block text-sm space-y-0.5'>
+                            {item.prescriptions && item.prescriptions.length > 0 ? (
+                              item.prescriptions.slice(0, 3).map((p, idx) => (
+                                <p key={idx} className='text-sm'>
+                                  <span className='font-bold'>{idx + 1}.</span> {p}
+                                </p>
+                              ))
+                            ) : (
+                              '-'
+                            )}
+                            {item.prescriptions && item.prescriptions.length > 3 && (
+                              <p className='text-sm text-muted-foreground'>
+                                +{item.prescriptions.length - 3} {t('pagination.items')}...
+                              </p>
+                            )}
+                          </div>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className='text-sm cursor-default block'>
+                              <span className='xl:hidden text-sm cursor-default block'>
                                 {formatPrescriptions(item.prescriptions, 40)}
                               </span>
                             </TooltipTrigger>
                             {item.prescriptions && item.prescriptions.length > 0 && (
-                              <TooltipContent side='top' className='max-w-[500px]'>
+                              <TooltipContent side='top' className='max-w-[500px] xl:hidden'>
                                 <div className='space-y-1'>
                                   {item.prescriptions.slice(0, 5).map((p, idx) => (
                                     <p key={idx} className='text-xs'>
-                                      {idx + 1}. {p}
+                                      <span className='font-bold'>{idx + 1}.</span> {p}
                                     </p>
                                   ))}
                                   {item.prescriptions.length > 5 && (
@@ -331,13 +356,6 @@ const History = () => {
                               </TooltipContent>
                             )}
                           </Tooltip>
-                        </TableCell>
-                        <TableCell className='text-sm'>
-                          {item.completed_date
-                            ? format(new Date(item.completed_date), 'dd.MM.yyyy', {
-                                locale: dateLocale,
-                              })
-                            : '-'}
                         </TableCell>
                         <TableCell>
                           <div className='flex items-center justify-center'>
@@ -417,102 +435,99 @@ const History = () => {
 
               {/* Pagination */}
               {pagination && pagination.total_pages > 0 && (
-                <div className='border-t px-3 sm:px-4 lg:px-6 py-3 sm:py-4'>
-                  <div className='flex flex-col sm:flex-row items-center justify-between gap-3'>
-                    {/* Total info */}
-                    <div className='text-xs sm:text-sm text-muted-foreground order-2 sm:order-1'>
-                      {t('pagination.total')}: {pagination.total_count} {t('pagination.items')}
+                <div className='px-3 xl:px-6 py-2 xl:py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3'>
+                  <div className='flex items-center justify-between gap-2'>
+                    <div className='text-xs xl:text-sm text-muted-foreground min-w-max'>
+                      {t('pagination.page')} {currentPage} {t('pagination.of')}{' '}
+                      {pagination.total_pages} ({t('pagination.total')}:{' '}
+                      {pagination.total_count})
                     </div>
+                  </div>
 
-                    {/* Pagination controls */}
-                    <div className='flex flex-col sm:flex-row items-center gap-2 sm:gap-3 order-1 sm:order-2 w-full sm:w-auto'>
-                      {/* Items per page */}
-                      <div className='flex items-center gap-2'>
-                        <span className='text-xs sm:text-sm text-muted-foreground whitespace-nowrap'>
-                          {t('pagination.perPage')}:
-                        </span>
-                        <Select
-                          value={String(itemsPerPage)}
-                          onValueChange={(value) => {
-                            setItemsPerPage(Number(value));
-                            setCurrentPage(1);
-                          }}
-                        >
-                          <SelectTrigger className='w-[70px] h-8 text-sm'>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value='10'>10</SelectItem>
-                            <SelectItem value='25'>25</SelectItem>
-                            <SelectItem value='50'>50</SelectItem>
-                            <SelectItem value='100'>100</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                  <div className='flex gap-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      disabled={currentPage === 1 || isFetching}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      className='text-xs xl:text-sm'
+                    >
+                      <IconLeft className='w-4 h-4' />
+                      <span className='hidden sm:inline'>{t('pagination.prev')}</span>
+                    </Button>
+                    {(() => {
+                      const pages = [];
+                      const showPages = new Set<number>();
 
-                      {/* Page navigation */}
-                      {pagination.total_pages > 1 && (
-                        <div className='flex items-center gap-1'>
-                          <Button
-                            variant='outline'
-                            size='icon'
-                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                            disabled={currentPage === 1 || isFetching}
-                            className='h-8 w-8'
-                          >
-                            <ChevronLeft className='w-4 h-4' />
-                          </Button>
+                      // Har doim 1-sahifani ko'rsat
+                      showPages.add(1);
 
-                          <div className='flex items-center gap-1'>
-                            {/* Show page numbers for desktop */}
-                            <div className='hidden sm:flex items-center gap-1'>
-                              {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
-                                let pageNum: number;
-                                if (pagination.total_pages <= 5) {
-                                  pageNum = i + 1;
-                                } else if (currentPage <= 3) {
-                                  pageNum = i + 1;
-                                } else if (currentPage >= pagination.total_pages - 2) {
-                                  pageNum = pagination.total_pages - 4 + i;
-                                } else {
-                                  pageNum = currentPage - 2 + i;
-                                }
+                      // Har doim oxirgi sahifani ko'rsat
+                      if (pagination.total_pages > 1) {
+                        showPages.add(pagination.total_pages);
+                      }
 
-                                return (
-                                  <Button
-                                    key={pageNum}
-                                    variant={currentPage === pageNum ? 'default' : 'outline'}
-                                    size='icon'
-                                    onClick={() => setCurrentPage(pageNum)}
-                                    disabled={isFetching}
-                                    className='h-8 w-8 text-xs'
-                                  >
-                                    {pageNum}
-                                  </Button>
-                                );
-                              })}
-                            </div>
+                      // Joriy sahifa va uning atrofidagi sahifalarni ko'rsat
+                      for (
+                        let i = Math.max(2, currentPage - 1);
+                        i <=
+                        Math.min(
+                          pagination.total_pages - 1,
+                          currentPage + 1
+                        );
+                        i++
+                      ) {
+                        showPages.add(i);
+                      }
 
-                            {/* Show simple text for mobile */}
-                            <span className='sm:hidden px-2 text-sm whitespace-nowrap'>
-                              {currentPage} / {pagination.total_pages}
+                      const sortedPages = Array.from(showPages).sort(
+                        (a, b) => a - b
+                      );
+
+                      sortedPages.forEach((page, index) => {
+                        // Ellipsis qo'shish agar sahifalar orasida bo'sh joy bo'lsa
+                        if (index > 0 && sortedPages[index - 1] !== page - 1) {
+                          pages.push(
+                            <span
+                              key={`ellipsis-${page}`}
+                              className='px-1 flex items-center text-xs xl:text-sm'
+                            >
+                              ...
                             </span>
-                          </div>
+                          );
+                        }
 
+                        // Sahifa tugmasi
+                        pages.push(
                           <Button
+                            key={page}
                             variant='outline'
-                            size='icon'
-                            onClick={() =>
-                              setCurrentPage((p) => Math.min(pagination.total_pages, p + 1))
-                            }
-                            disabled={currentPage === pagination.total_pages || isFetching}
-                            className='h-8 w-8'
+                            size='sm'
+                            onClick={() => setCurrentPage(page)}
+                            disabled={isFetching}
+                            className={`text-xs xl:text-sm ${
+                              page === currentPage
+                                ? 'bg-primary text-white hover:bg-primary/60 hover:text-white'
+                                : ''
+                            }`}
                           >
-                            <ChevronRight className='w-4 h-4' />
+                            {page}
                           </Button>
-                        </div>
-                      )}
-                    </div>
+                        );
+                      });
+
+                      return pages;
+                    })()}
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      disabled={currentPage === pagination.total_pages || isFetching}
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      className='text-xs xl:text-sm'
+                    >
+                      <span className='hidden sm:inline'>{t('pagination.next')}</span>
+                      <IconRight className='w-4 h-4' />
+                    </Button>
                   </div>
                 </div>
               )}
@@ -567,7 +582,7 @@ const History = () => {
                     {selectedHistory.prescriptions && selectedHistory.prescriptions.length > 0 ? (
                       selectedHistory.prescriptions.map((prescription, idx) => (
                         <div key={idx} className='text-xs sm:text-sm'>
-                          {idx + 1}. {prescription}
+                          <span className='font-bold'>{idx + 1}.</span> {prescription}
                         </div>
                       ))
                     ) : (
@@ -575,6 +590,22 @@ const History = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Batafsil button */}
+                {selectedHistory.examination_id && (
+                  <div className='pt-2'>
+                    <Button
+                      onClick={() => {
+                        setIsDetailModalOpen(false);
+                        navigate(`/examination/${selectedHistory.examination_id}`);
+                      }}
+                      className='w-full sm:w-auto'
+                    >
+                      <Eye className='w-4 h-4 mr-2' />
+                      {t('viewDetails')}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </DialogContent>

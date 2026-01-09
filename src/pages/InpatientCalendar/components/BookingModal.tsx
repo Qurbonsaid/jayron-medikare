@@ -206,8 +206,6 @@ export const BookingModal = ({
     }
   };
 
-  console.log(availableRoomsData)
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>

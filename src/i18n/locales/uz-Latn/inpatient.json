@@ -259,8 +259,8 @@
 
   "calendar": {
     "patientPresent": "Bemor",
-    "booked": "Bron'",
-    "cannotBookPastDate": "O'tgan sanaga bron' qilib bo'lmaydi",
+    "booked": "Bron",
+    "cannotBookPastDate": "O'tgan sanaga bron qilib bo'lmaydi",
     "roomNotFound": "Xona topilmadi",
     "goBack": "Orqaga qaytish",
     "capacity": "Sig'imi",
@@ -268,7 +268,7 @@
     "available": "Bo'sh",
     "bed": "joy",
     "free": "Bo'sh",
-    "newBooking": "Yangi bron'",
+    "newBooking": "Yangi bron",
     "unknown": "Noma'lum"
   },
 
@@ -276,12 +276,12 @@
     "selectPatient": "Bemorni tanlang",
     "selectRoom": "Xonani tanlang",
     "enterDates": "Sanalarni kiriting",
-    "cannotBookPastDate": "O'tgan sanaga bron' qilib bo'lmaydi",
+    "cannotBookPastDate": "O'tgan sanaga bron qilib bo'lmaydi",
     "endDateBeforeStartDate": "Tugash sanasi boshlanish sanasidan oldin bo'lmasligi kerak",
-    "createSuccess": "Bron' muvaffaqiyatli yaratildi",
-    "createError": "Bron' yaratishda xatolik yuz berdi",
-    "patientAutoSelected": "Bemor avtomatik tanlandi, endi bron'ni davom ettiring!",
-    "createNewBooking": "Yangi bron' yaratish",
+    "createSuccess": "Bron muvaffaqiyatli yaratildi",
+    "createError": "Bron yaratishda xatolik yuz berdi",
+    "patientAutoSelected": "Bemor avtomatik tanlandi, endi bronni davom ettiring!",
+    "createNewBooking": "Yangi bron yaratish",
     "available": "bo'sh",
     "addPatient": "Bemor qo'shish",
     "patient": "Bemor",
@@ -296,11 +296,11 @@
 
   "bookingDetail": {
     "patientInfo": "Bemor ma'lumotlari",
-    "bookingDetails": "Bron' tafsilotlari",
+    "bookingDetails": "Bron tafsilotlari",
     "occupied": "Odam bor",
-    "booked": "Bron'",
+    "booked": "Bron",
     "patientFullInfo": "Statsionardagi bemor haqida to'liq ma'lumot",
-    "bookingFullInfo": "Bron' haqida to'liq ma'lumot",
+    "bookingFullInfo": "Bron haqida to'liq ma'lumot",
     "patientData": "Bemor ma'lumotlari",
     "fullName": "Ism-familiya",
     "phone": "Telefon",
@@ -312,7 +312,7 @@
     "beds": "joylik",
     "price": "Narx",
     "pricePerDay": "so'm/kun",
-    "bookingPeriod": "Bron' davri",
+    "bookingPeriod": "Bron davri",
     "startDate": "Boshlanishi",
     "endDateLabel": "Tugashi",
     "duration": "Davomiyligi",
@@ -324,27 +324,27 @@
   },
 
   "deleteBooking": {
-    "title": "Bron'ni o'chirish",
+    "title": "Bronni o'chirish",
     "description": "Ushbu amalni bekor qilib bo'lmaydi",
-    "confirmMessage": "Siz haqiqatan ham ushbu bron'ni o'chirmoqchimisiz?",
+    "confirmMessage": "Siz haqiqatan ham ushbu bronni o'chirmoqchimisiz?",
     "patient": "Bemor",
     "phone": "Telefon",
     "room": "Xona",
     "period": "Davri",
     "note": "Izoh",
-    "deleteSuccess": "Bron' muvaffaqiyatli o'chirildi",
-    "deleteError": "Bron' o'chirishda xatolik yuz berdi"
+    "deleteSuccess": "Bron muvaffaqiyatli o'chirildi",
+    "deleteError": "Bron o'chirishda xatolik yuz berdi"
   },
 
   "patientBookings": {
     "loading": "Ma'lumotlar yuklanmoqda...",
     "loadError": "Ma'lumotlarni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
     "bookings": "Bronlar",
-    "noBookingFound": "Bron' topilmadi",
+    "noBookingFound": "Bron topilmadi",
     "noBookingMessage": "Bu bemorning hozircha birorta ham broni yo'q",
     "occupied": "Odam bor",
     "booked": "Bronlangan",
-    "bookingPeriod": "Bron' muddati",
+    "bookingPeriod": "Bron muddati",
     "corpus": "Korpus",
     "corpusSuffix": "korpus",
     "room": "Xona",
@@ -393,13 +393,13 @@
   },
 
   "updateBooking": {
-    "title": "Bron'ni tahrirlash",
-    "description": "Bron' ma'lumotlarini yangilang",
+    "title": "Bronni tahrirlash",
+    "description": "Bron ma'lumotlarini yangilang",
     "patient": "Bemor",
     "room": "Xona",
     "cannotChangeToPastDate": "O'tgan sanaga o'zgartirib bo'lmaydi",
-    "updateSuccess": "Bron' muvaffaqiyatli yangilandi",
-    "updateError": "Bron' yangilashda xatolik yuz berdi"
+    "updateSuccess": "Bron muvaffaqiyatli yangilandi",
+    "updateError": "Bron yangilashda xatolik yuz berdi"
   },
 
   "dailyCheckup": {
