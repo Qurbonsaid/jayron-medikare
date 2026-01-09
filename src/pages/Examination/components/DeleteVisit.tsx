@@ -1,3 +1,4 @@
+import { ExamDataItem } from '@/app/api/examinationApi/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 interface Props {
   isDeleteModalOpen: boolean;
   setIsDeleteModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedExam: any;
+  selectedExam: ExamDataItem | null;
   handleDelete: () => void;
   isDeleting: boolean;
 }
@@ -27,7 +28,7 @@ const DeleteVisit = ({
   isDeleting,
 }: Props) => {
   const { t } = useTranslation('examinations');
-  
+
   return (
     <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
       <DialogContent>
@@ -36,9 +37,7 @@ const DeleteVisit = ({
             <AlertTriangle className='w-5 h-5 text-red-600' />
             {t('deleteModal.title')}
           </DialogTitle>
-          <DialogDescription>
-            {t('deleteModal.description')}
-          </DialogDescription>
+          <DialogDescription>{t('deleteModal.description')}</DialogDescription>
         </DialogHeader>
 
         {selectedExam && (

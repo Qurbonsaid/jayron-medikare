@@ -1,3 +1,4 @@
+import { Disease } from '@/app/api/diagnosisApi/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -34,7 +35,7 @@ interface Props {
       diagnosis: string;
     }>
   >;
-  diagnoses: any[];
+  diagnoses: Disease[];
   handleUpdate: () => void;
   isUpdating: boolean;
 }
@@ -49,15 +50,13 @@ const EditVisit = ({
   isUpdating,
 }: Props) => {
   const { t } = useTranslation('examinations');
-  
+
   return (
     <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
       <DialogContent className='max-w-2xl'>
         <DialogHeader>
           <DialogTitle>{t('editModal.title')}</DialogTitle>
-          <DialogDescription>
-            {t('editModal.description')}
-          </DialogDescription>
+          <DialogDescription>{t('editModal.description')}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-4'>

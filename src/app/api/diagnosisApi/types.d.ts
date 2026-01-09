@@ -30,40 +30,39 @@ interface getAllDiagnosisRes extends AllResponse {
     is_deleted: boolean;
     created_at: Date;
     updated_at: Date;
-  }[]
+  }[];
 }
 
-
 export interface Disease {
-  _id: string
-  code: string
-  name: string
-  description: string
-  symptoms: Array<string>
-  causes: Array<string>
-  treatments: Array<string>
-  is_chronic: boolean
-  is_contagious: boolean
-  createdAt: string
-  updatedAt: string
+  _id: string;
+  code: string;
+  name: string;
+  description: string;
+  symptoms: Array<string>;
+  causes: Array<string>;
+  treatments: Array<string>;
+  is_chronic: boolean;
+  is_contagious: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DiseaseCreateRequest {
-  code: string
-  name: string
-  description: string
-  symptoms: Array<string>
-  causes: Array<string>
-  treatments: Array<string>
-  is_chronic: boolean
-  is_contagious: boolean
+  code: string;
+  name: string;
+  description: string;
+  symptoms: Array<string>;
+  causes: Array<string>;
+  treatments: Array<string>;
+  is_chronic: boolean;
+  is_contagious: boolean;
 }
 
-export interface DiseaseUpdateRequest extends Partial<DiseaseCreateRequest> {}
+export type DiseaseUpdateRequest = Partial<DiseaseCreateRequest>;
 
 export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
 }

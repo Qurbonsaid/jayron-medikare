@@ -1,3 +1,4 @@
+import { ExamDataItem } from '@/app/api/examinationApi/types';
 import { getStatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 interface Props {
   isDetailModalOpen: boolean;
   setIsDetailModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedExam: any;
+  selectedExam: ExamDataItem | null;
   handleEditFromDetail: () => void;
   handleDeleteFromDetail: () => void;
   handleCompleteExam: () => void;
@@ -33,15 +34,15 @@ const VisitDetail = ({
 }: Props) => {
   const navigate = useNavigate();
   const { t } = useTranslation('examinations');
-  
+
   return (
     <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
       <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('detailModal.title')}</DialogTitle>
-          <DialogDescription>
-            {t('detailModal.description')}
-          </DialogDescription>
+          <DialogTitle className='text-xl'>
+            {t('detailModal.title')}
+          </DialogTitle>
+          <DialogDescription>{t('detailModal.description')}</DialogDescription>
         </DialogHeader>
 
         {selectedExam && (
@@ -172,7 +173,9 @@ const VisitDetail = ({
                                 {t('intake')}:
                               </span>
                               <p className='font-semibold'>
-                                {t('timesPerDay', { count: prescription.frequency })}
+                                {t('timesPerDay', {
+                                  count: prescription.frequency,
+                                })}
                               </p>
                             </div>
                             <div>

@@ -14,8 +14,14 @@ declare module 'xlsx' {
     w?: string;
   }
 
-  export function read(data: any, opts?: any): WorkBook;
+  export function read(
+    data: ArrayBuffer | string,
+    opts?: Record<string, unknown>
+  ): WorkBook;
   export const utils: {
-    sheet_to_json: (worksheet: WorkSheet, opts?: any) => any[];
+    sheet_to_json: <T = Record<string, unknown>>(
+      worksheet: WorkSheet,
+      opts?: Record<string, unknown>
+    ) => T[];
   };
 }

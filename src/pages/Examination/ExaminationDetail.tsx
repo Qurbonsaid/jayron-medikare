@@ -1,133 +1,133 @@
-import { useGetAllDiagnosisQuery } from '@/app/api/diagnosisApi/diagnosisApi'
+import { useGetAllDiagnosisQuery } from '@/app/api/diagnosisApi/diagnosisApi';
 import {
-	useAddServiceMutation,
-	useCompleteExamsMutation,
-	useDeleteExamMutation,
-	useGetManyPrescriptionQuery,
-	useGetManyServiceQuery,
-	useGetOneExamQuery,
-	useUpdateExamMutation,
-	useUpdateExaminationServiceMutation,
-} from '@/app/api/examinationApi/examinationApi'
-import { useGetAllMedicationsQuery } from '@/app/api/medication/medication'
+  useAddServiceMutation,
+  useCompleteExamsMutation,
+  useDeleteExamMutation,
+  useGetManyPrescriptionQuery,
+  useGetManyServiceQuery,
+  useGetOneExamQuery,
+  useUpdateExamMutation,
+  useUpdateExaminationServiceMutation,
+} from '@/app/api/examinationApi/examinationApi';
+import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
 import {
-	useCreateNeurologicStatusMutation,
-	useDeleteNeurologicStatusMutation,
-	useGetAllNeurologicStatusQuery,
-	useUpdateNeurologicStatusMutation,
-} from '@/app/api/neurologicApi/neurologicApi'
-import { useUpdatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi'
-import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+  useCreateNeurologicStatusMutation,
+  useDeleteNeurologicStatusMutation,
+  useGetAllNeurologicStatusQuery,
+  useUpdateNeurologicStatusMutation,
+} from '@/app/api/neurologicApi/neurologicApi';
+import { useUpdatePrescriptionMutation } from '@/app/api/prescription/prescriptionApi';
+import { MedicalImage } from '@/app/api/radiologyApi/types';
+import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-} from '@/components/ui/command'
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
-import { BodyPartConstants } from '@/constants/BodyPart'
-import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
-import { useRouteActions } from '@/hooks/RBS/useRoutePermission'
-import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { BodyPartConstants } from '@/constants/BodyPart';
+import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { useRouteActions } from '@/hooks/RBS/useRoutePermission';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import {
-	AlertTriangle,
-	ArrowLeft,
-	Brain,
-	CalendarDays,
-	Check,
-	CheckCircle2,
-	ChevronsUpDown,
-	Edit,
-	Eye,
-	FilePlus,
-	Loader2,
-	Plus,
-	Repeat,
-	Save,
-	Trash2,
-	X,
-} from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
-import { toast } from 'sonner'
+  AlertTriangle,
+  ArrowLeft,
+  Brain,
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  ChevronsUpDown,
+  Edit,
+  Eye,
+  FilePlus,
+  Loader2,
+  Plus,
+  Repeat,
+  Save,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import AllPrescriptionsDownloadButton, {
-	ExaminationInfoDownloadButton,
-	NeurologicStatusDownloadButton,
-	ServicesDownloadButton,
-} from '../../components/PDF/ExaminationPDF'
-import { ViewMedicalImage } from '../Radiology/components'
+  ExaminationInfoDownloadButton,
+  NeurologicStatusDownloadButton,
+  ServicesDownloadButton,
+} from '../../components/PDF/ExaminationPDF';
+import { ViewMedicalImage } from '../Radiology/components';
 
 // Body part labels will be loaded from translations
 const getBodyPartLabels = (
-	t: (key: string) => string
+  t: (key: string) => string
 ): Record<string, string> => ({
-	[BodyPartConstants.HEAD]: t('examinations:detail.bodyParts.head'),
-	[BodyPartConstants.NECK]: t('examinations:detail.bodyParts.neck'),
-	[BodyPartConstants.CHEST]: t('examinations:detail.bodyParts.chest'),
-	[BodyPartConstants.ABDOMEN]: t('examinations:detail.bodyParts.abdomen'),
-	[BodyPartConstants.PELVIS]: t('examinations:detail.bodyParts.pelvis'),
-	[BodyPartConstants.SPINE]: t('examinations:detail.bodyParts.spine'),
-	[BodyPartConstants.ARM]: t('examinations:detail.bodyParts.arm'),
-	[BodyPartConstants.LEG]: t('examinations:detail.bodyParts.leg'),
-	[BodyPartConstants.KNEE]: t('examinations:detail.bodyParts.knee'),
-	[BodyPartConstants.SHOULDER]: t('examinations:detail.bodyParts.shoulder'),
-	[BodyPartConstants.HAND]: t('examinations:detail.bodyParts.hand'),
-	[BodyPartConstants.FOOT]: t('examinations:detail.bodyParts.foot'),
-})
+  [BodyPartConstants.HEAD]: t('examinations:detail.bodyParts.head'),
+  [BodyPartConstants.NECK]: t('examinations:detail.bodyParts.neck'),
+  [BodyPartConstants.CHEST]: t('examinations:detail.bodyParts.chest'),
+  [BodyPartConstants.ABDOMEN]: t('examinations:detail.bodyParts.abdomen'),
+  [BodyPartConstants.PELVIS]: t('examinations:detail.bodyParts.pelvis'),
+  [BodyPartConstants.SPINE]: t('examinations:detail.bodyParts.spine'),
+  [BodyPartConstants.ARM]: t('examinations:detail.bodyParts.arm'),
+  [BodyPartConstants.LEG]: t('examinations:detail.bodyParts.leg'),
+  [BodyPartConstants.KNEE]: t('examinations:detail.bodyParts.knee'),
+  [BodyPartConstants.SHOULDER]: t('examinations:detail.bodyParts.shoulder'),
+  [BodyPartConstants.HAND]: t('examinations:detail.bodyParts.hand'),
+  [BodyPartConstants.FOOT]: t('examinations:detail.bodyParts.foot'),
+});
 
 const getRoomType = (t: (key: string) => string) => ({
-	stasionar: t('examinations:detail.roomTypes.stasionar'),
-	ambulator: t('examinations:detail.roomTypes.ambulator'),
-})
+  stasionar: t('examinations:detail.roomTypes.stasionar'),
+  ambulator: t('examinations:detail.roomTypes.ambulator'),
+});
 
 const getStatusMap = (
-	t: (key: string) => string
+  t: (key: string) => string
 ): Record<string, { label: string; bgColor: string }> => ({
-	pending: {
-		label: t('examinations:detail.statuses.pending'),
-		bgColor: 'bg-yellow-500',
-	},
-	active: {
-		label: t('examinations:detail.statuses.active'),
-		bgColor: 'bg-blue-500',
-	},
-	completed: {
-		label: t('examinations:detail.statuses.completed'),
-		bgColor: 'bg-green-500',
-	},
-})
+  pending: {
+    label: t('examinations:detail.statuses.pending'),
+    bgColor: 'bg-yellow-500',
+  },
+  active: {
+    label: t('examinations:detail.statuses.active'),
+    bgColor: 'bg-blue-500',
+  },
+  completed: {
+    label: t('examinations:detail.statuses.completed'),
+    bgColor: 'bg-green-500',
+  },
+});
 
 const ExaminationDetail = () => {
-
   const { t } = useTranslation(['examinations', 'common']);
   const navigate = useNavigate();
   const { id } = useParams();
@@ -140,7 +140,7 @@ const ExaminationDetail = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [selectedImage, setSelectedImage] = useState<MedicalImage | null>(null);
   const [activeTab, setActiveTab] = useState('examination');
   const [editForm, setEditForm] = useState({
     complaints: '',
@@ -284,18 +284,20 @@ const ExaminationDetail = () => {
   const diagnoses = diagnosisData?.data || [];
 
   // Fetch all service types with search and pagination
-  const serviceQueryParams: any = {
+  const serviceQueryParams = {
     page: servicePage,
     limit: 20,
+    search: debouncedServiceSearch.trim() || undefined,
+    code: undefined,
+    is_active: undefined,
+    min_price: undefined,
+    max_price: undefined,
   };
-  if (debouncedServiceSearch.trim()) {
-    serviceQueryParams.search = debouncedServiceSearch.trim();
-  }
   const { data: servicesData, isFetching: isFetchingServices } =
     useGetAllServiceQuery(serviceQueryParams);
 
   const [selectedServicesCache, setSelectedServicesCache] = useState<{
-    [key: string]: any;
+    [key: string]: { _id: string; name: string; price: number };
   }>({});
 
   // Service types from API
@@ -305,10 +307,14 @@ const ExaminationDetail = () => {
   // Cache selected services for lookup
   useEffect(() => {
     if (servicesData?.data && servicesData.data.length > 0) {
-      const newCacheItems: { [key: string]: any } = {};
-      servicesData.data.forEach((service: any) => {
-        newCacheItems[service._id] = service;
-      });
+      const newCacheItems: {
+        [key: string]: { _id: string; name: string; price: number };
+      } = {};
+      servicesData.data.forEach(
+        (service: { _id: string; name: string; price: number }) => {
+          newCacheItems[service._id] = service;
+        }
+      );
       setSelectedServicesCache((prev) => ({ ...prev, ...newCacheItems }));
     }
   }, [servicesData?.data]);
@@ -395,10 +401,9 @@ const ExaminationDetail = () => {
     if (patientServices.length > 0) {
       const durations = patientServices
         .flatMap(
-          (doc: any) =>
-            doc.items?.map(
-              (item: any) => item.duration || item.days?.length || 0
-            ) || []
+          (doc: { items?: Array<{ duration?: number; days?: unknown[] }> }) =>
+            doc.items?.map((item) => item.duration || item.days?.length || 0) ||
+            []
         )
         .filter((d: number) => d > 0);
       if (durations.length > 0) {
@@ -411,7 +416,10 @@ const ExaminationDetail = () => {
         .flatMap((doc: any) => doc.items || [])
         .flatMap((item: any) => item.days || [])
         .map((day: any) => day.date)
-        .filter((date: any) => date !== null && date !== undefined)
+        .filter(
+          (date: any): date is Date | string =>
+            date !== null && date !== undefined
+        )
         .sort((a: any, b: any) => {
           const dateA = new Date(a).getTime();
           const dateB = new Date(b).getTime();
@@ -3865,97 +3873,99 @@ const ExaminationDetail = () => {
                 <CardContent>
                   {exam.images && exam.images.length > 0 ? (
                     <div className='space-y-3'>
-                      {exam.images.map((image: any, index: number) => {
-                        if (
-                          !image?.image_paths ||
-                          !Array.isArray(image.image_paths) ||
-                          image.image_paths.length === 0
-                        ) {
-                          return null;
-                        }
+                      {exam.images
+                        .map((image: any, index: number) => {
+                          if (
+                            !image?.image_paths ||
+                            !Array.isArray(image.image_paths) ||
+                            image.image_paths.length === 0
+                          ) {
+                            return null;
+                          }
 
-                        const thumbnailPath = image.image_paths[0];
-                        const bodyPartLabel =
-                          bodyPartLabels[image.body_part] ||
-                          image.body_part ||
-                          t('detail.notSpecified');
-                        const imagingTypeName =
-                          image.imaging_type_id?.name || t('detail.unknown');
-                        const imageDate = image.created_at
-                          ? new Date(image.created_at).toLocaleDateString(
-                              'uz-UZ'
-                            )
-                          : '';
+                          const thumbnailPath = image.image_paths[0];
+                          const bodyPartLabel =
+                            bodyPartLabels[image.body_part] ||
+                            image.body_part ||
+                            t('detail.notSpecified');
+                          const imagingTypeName =
+                            image.imaging_type_id?.name || t('detail.unknown');
+                          const imageDate = image.created_at
+                            ? new Date(image.created_at).toLocaleDateString(
+                                'uz-UZ'
+                              )
+                            : '';
 
-                        return (
-                          <Card
-                            key={image._id || index}
-                            className='overflow-hidden hover:shadow-lg transition-shadow cursor-pointer'
-                            onClick={() => {
-                              setSelectedImage(image);
-                              setShowViewModal(true);
-                            }}
-                          >
-                            <div className='flex flex-col sm:flex-row'>
-                              <div className='relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0'>
-                                <img
-                                  src={thumbnailPath}
-                                  alt={
-                                    image.description ||
-                                    `${t('detail.image')} ${index + 1}`
-                                  }
-                                  className='w-full h-full object-cover hover:scale-105 transition-transform'
-                                  onError={(e) => {
-                                    e.currentTarget.src =
-                                      'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="14"%3EТасвир топилмади%3C/text%3E%3C/svg%3E';
-                                  }}
-                                />
-                                {image.image_paths.length > 1 && (
-                                  <div className='absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded'>
-                                    +{image.image_paths.length - 1}
-                                  </div>
-                                )}
-                                <div className='absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center group'>
-                                  <Eye className='w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity' />
-                                </div>
-                              </div>
-
-                              <div className='flex-1 p-4'>
-                                <div className='space-y-2'>
-                                  <h4
-                                    className='font-semibold text-base line-clamp-2'
-                                    title={image.description}
-                                  >
-                                    {image.description ||
-                                      t('detail.noDescription')}
-                                  </h4>
-                                  <div className='flex flex-wrap items-center gap-3 text-sm text-muted-foreground'>
-                                    <div className='flex items-center gap-1'>
-                                      <span className='font-medium text-foreground'>
-                                        {imagingTypeName}
-                                      </span>
+                          return (
+                            <Card
+                              key={image._id || index}
+                              className='overflow-hidden hover:shadow-lg transition-shadow cursor-pointer'
+                              onClick={() => {
+                                setSelectedImage(image);
+                                setShowViewModal(true);
+                              }}
+                            >
+                              <div className='flex flex-col sm:flex-row'>
+                                <div className='relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0'>
+                                  <img
+                                    src={thumbnailPath}
+                                    alt={
+                                      image.description ||
+                                      `${t('detail.image')} ${index + 1}`
+                                    }
+                                    className='w-full h-full object-cover hover:scale-105 transition-transform'
+                                    onError={(e) => {
+                                      e.currentTarget.src =
+                                        'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="14"%3EТасвир топилмади%3C/text%3E%3C/svg%3E';
+                                    }}
+                                  />
+                                  {image.image_paths.length > 1 && (
+                                    <div className='absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded'>
+                                      +{image.image_paths.length - 1}
                                     </div>
-                                    <span>•</span>
-                                    <div className='flex items-center gap-1'>
-                                      <span>{bodyPartLabel}</span>
-                                    </div>
-                                    <span>•</span>
-                                    <div className='flex items-center gap-1'>
-                                      <span>
-                                        {image.image_paths.length}{' '}
-                                        {t('detail.imagesCount')}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className='text-xs text-muted-foreground'>
-                                    {imageDate}
+                                  )}
+                                  <div className='absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center group'>
+                                    <Eye className='w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity' />
                                   </div>
                                 </div>
+
+                                <div className='flex-1 p-4'>
+                                  <div className='space-y-2'>
+                                    <h4
+                                      className='font-semibold text-base line-clamp-2'
+                                      title={image.description}
+                                    >
+                                      {image.description ||
+                                        t('detail.noDescription')}
+                                    </h4>
+                                    <div className='flex flex-wrap items-center gap-3 text-sm text-muted-foreground'>
+                                      <div className='flex items-center gap-1'>
+                                        <span className='font-medium text-foreground'>
+                                          {imagingTypeName}
+                                        </span>
+                                      </div>
+                                      <span>•</span>
+                                      <div className='flex items-center gap-1'>
+                                        <span>{bodyPartLabel}</span>
+                                      </div>
+                                      <span>•</span>
+                                      <div className='flex items-center gap-1'>
+                                        <span>
+                                          {image.image_paths.length}{' '}
+                                          {t('detail.imagesCount')}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className='text-xs text-muted-foreground'>
+                                      {imageDate}
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </Card>
-                        );
-                      })}
+                            </Card>
+                          );
+                        })
+                        .filter(Boolean)}
                     </div>
                   ) : (
                     <div className='text-center py-8'>

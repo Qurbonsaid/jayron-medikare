@@ -1,5 +1,13 @@
-const ExamFilter = ({exams,searchQuery}:{exams:Array<any>,searchQuery:string}) => {
-  return exams.filter((exam: any) => {
+import { ExamDataItem } from '@/app/api/examinationApi/types';
+
+const ExamFilter = ({
+  exams,
+  searchQuery,
+}: {
+  exams: Array<ExamDataItem>;
+  searchQuery: string;
+}) => {
+  return exams.filter((exam: ExamDataItem) => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return true;
 
@@ -9,6 +17,6 @@ const ExamFilter = ({exams,searchQuery}:{exams:Array<any>,searchQuery:string}) =
       exam.patient_id.phone.includes(query)
     );
   });
-}
+};
 
-export default ExamFilter
+export default ExamFilter;

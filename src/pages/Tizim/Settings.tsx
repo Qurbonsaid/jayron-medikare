@@ -1,583 +1,584 @@
 import {
-	useGetAllSettingsQuery,
-	useUpdateSettingsMutation,
-} from '@/app/api/settingsApi/settingsApi'
-import { useUploadCreateMutation } from '@/app/api/upload/uploadApi'
-import { User, UserCreateResponse, UserId } from '@/app/api/userApi/types'
+  useGetAllSettingsQuery,
+  useUpdateSettingsMutation,
+} from '@/app/api/settingsApi/settingsApi';
+import { useUploadCreateMutation } from '@/app/api/upload/uploadApi';
+import { User, UserCreateResponse, UserId } from '@/app/api/userApi/types';
 import {
-	useCreateUserMutation,
-	useDeleteUserMutation,
-	useGetUserByIdQuery,
-	useGetUsersQuery,
-	useUpdateUserMutation,
-} from '@/app/api/userApi/userApi'
-import CantRead from '@/components/common/CantRead'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+  useCreateUserMutation,
+  useDeleteUserMutation,
+  useGetUserByIdQuery,
+  useGetUsersQuery,
+  useUpdateUserMutation,
+} from '@/app/api/userApi/userApi';
+import CantRead from '@/components/common/CantRead';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { RoleConstants } from '@/constants/Roles'
-import { SectionConstants } from '@/constants/section'
-import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
-import { useRouteActions } from '@/hooks/RBS'
-import { settingsSchema } from '@/validation/validationSettings'
-import { userSchema } from '@/validation/validationUser'
-import { Edit, Plus, Trash2, Upload } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RoleConstants } from '@/constants/Roles';
+import { SectionConstants } from '@/constants/section';
+import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
+import { useRouteActions } from '@/hooks/RBS';
+import { settingsSchema } from '@/validation/validationSettings';
+import { userSchema } from '@/validation/validationUser';
+import { Edit, Plus, Trash2, Upload } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export type Settings = {
-	clinic_name: string
-	address: string
-	phone: string
-	// email: string
-	work_start_time: string
-	work_end_time: string
-	logo_path: string
-}
+  clinic_name: string;
+  address: string;
+  phone: string;
+  // email: string
+  work_start_time: string;
+  work_end_time: string;
+  logo_path: string;
+};
 
 const Settings = () => {
-	const auditLogs = [
-		{
-			timestamp: '07.10.2025 14:32',
-			user: 'Др. Алиев А.Р.',
-			action: 'Яратилди',
-			module: 'Янги ташриф',
-			ip: '192.168.1.45',
-		},
-		{
-			timestamp: '07.10.2025 14:15',
-			user: 'Ресепшн: Усмонова М.',
-			action: 'Янгиланди',
-			module: 'Навбат',
-			ip: '192.168.1.32',
-		},
-	]
-	const navigate = useNavigate()
-	const { t } = useTranslation('settings')
-	const handleRequest = useHandleRequest()
-	const [isUserModalOpen, setIsUserModalOpen] = useState(false)
-	const [search, setSearch] = useState('')
-	const [users, setUsers] = useState<User[]>([])
-	const [totalPages, setTotalPages] = useState(1)
-	const [role, setRole] = useState<string>('')
-	const [page, setPage] = useState(1)
-	const [editingUserId, setEditingUserId] = useState<string | null>(null)
-	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-	const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
-	const [selectedUserName, setSelectedUserName] = useState<string>('')
-	const limit = 10
-	const [getAllSettings, setGetAllSettings] = useState<Settings | null>(null)
-	// --- VALIDATION (Settings ichida) ---
-	const [errors, setErrors] = useState<Record<string, string>>({})
-	const [errorsUser, setErrorsUser] = useState<Record<string, string>>({})
-	const [isUploading, setIsUploading] = useState(false)
+  const auditLogs = [
+    {
+      timestamp: '07.10.2025 14:32',
+      user: 'Др. Алиев А.Р.',
+      action: 'Яратилди',
+      module: 'Янги ташриф',
+      ip: '192.168.1.45',
+    },
+    {
+      timestamp: '07.10.2025 14:15',
+      user: 'Ресепшн: Усмонова М.',
+      action: 'Янгиланди',
+      module: 'Навбат',
+      ip: '192.168.1.32',
+    },
+  ];
+  const navigate = useNavigate();
+  const { t } = useTranslation('settings');
+  const handleRequest = useHandleRequest();
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [users, setUsers] = useState<User[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [role, setRole] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>('');
+  const limit = 10;
+  const [getAllSettings, setGetAllSettings] = useState<Settings | null>(null);
+  // --- VALIDATION (Settings ichida) ---
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errorsUser, setErrorsUser] = useState<Record<string, string>>({});
+  const [isUploading, setIsUploading] = useState(false);
 
-	const { canRead } = useRouteActions('/reports')
+  // --- API HOOKLAR ---
+  const [createUser] = useCreateUserMutation();
+  const [updateUser] = useUpdateUserMutation(); // ✅ PUT endpoint
+  const { data: usersData, error: usersError } = useGetUsersQuery({
+    page,
+    limit,
+    search,
+    role,
+  });
+  const [deleteUser] = useDeleteUserMutation();
+  const { data: editingUserData, refetch: refetchUser } = useGetUserByIdQuery(
+    editingUserId!,
+    {
+      skip: !editingUserId, // agar editingUserId bo'lmasa fetch qilmaslik
+    }
+  );
+  const { data: settingsGetAll } = useGetAllSettingsQuery();
+  const [updateSettings] = useUpdateSettingsMutation();
+  // --- Faylni yuklash (faqat preview va pathni olish)
+  const [uploadCreate] = useUploadCreateMutation();
 
-	if (!canRead) return <CantRead />
+  // --- FORM HOLATI ---
+  const [form, setForm] = useState<UserCreateResponse>({
+    fullname: '',
+    username: '',
+    // email: '',
+    phone: '',
+    password: '',
+    role: '',
+    section: '',
+    license_number: '',
+  });
 
-	// --- API HOOKLAR ---
-	const [createUser] = useCreateUserMutation()
-	const [updateUser] = useUpdateUserMutation() // ✅ PUT endpoint
-	const { data: usersData, error: usersError } = useGetUsersQuery({
-		page,
-		limit,
-		search,
-		role,
-	})
-	const [deleteUser] = useDeleteUserMutation()
-	const { data: editingUserData, refetch: refetchUser } = useGetUserByIdQuery(
-		editingUserId!,
-		{
-			skip: !editingUserId, // agar editingUserId bo'lmasa fetch qilmaslik
-		}
-	)
-	const { data: settingsGetAll } = useGetAllSettingsQuery()
-	const [updateSettings] = useUpdateSettingsMutation()
-	// --- Faylni yuklash (faqat preview va pathni olish)
-	const [uploadCreate] = useUploadCreateMutation()
+  // --- useEffect hooks (must be before any conditional returns) ---
+  useEffect(() => {
+    if (usersData?.data) {
+      setUsers(usersData.data);
+    }
+    if (usersData?.pagination) {
+      setTotalPages(usersData.pagination.total_pages);
+    }
+    if (usersError) {
+      toast.error(t('usersFetchError'));
+      console.error(usersError);
+    }
+  }, [usersData, usersError, t]);
 
-	// --- FORM HOLATI ---
-	const [form, setForm] = useState<UserCreateResponse>({
-		fullname: '',
-		username: '',
-		// email: '',
-		phone: '',
-		password: '',
-		role: '',
-		section: '',
-		license_number: '',
-	})
+  // --- Formni to'ldirish useEffect orqali
+  useEffect(() => {
+    if (editingUserData?.data) {
+      const user = editingUserData.data;
+      setForm({
+        fullname: user.fullname,
+        username: user.username,
+        // email: user.email,
+        phone: user.phone,
+        password: '', // agar foydalanuvchi o'zgartirmasa bo'sh qoldiramiz
+        role: user.role,
+        section: user.section,
+        license_number: user.license_number,
+      });
+    }
+  }, [editingUserData]);
 
-	// ✅ Yangi foydalanuvchi yaratish
-	const handleCreateUser = async () => {
-		await handleRequest({
-			request: async () => await createUser(form).unwrap(),
-			onSuccess: () => {
-				toast.success(t('userCreated'))
-				setIsUserModalOpen(false)
-				setForm({
-					fullname: '',
-					username: '',
-					// email: '',
-					phone: '',
-					password: '',
-					role: '',
-					section: '',
-					license_number: '',
-				})
-			},
-			// 	console.error('Parameter save error:', error)
+  // SettingGetAll
+  useEffect(() => {
+    if (settingsGetAll?.data) {
+      setGetAllSettings(settingsGetAll.data);
+    }
+  }, [settingsGetAll]);
 
-			// 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
-			// 	if (error?.error?.msg) {
-			// 		toast.error(error.error.msg)
-			// 		return
-			// 	}
+  const { canRead } = useRouteActions('/reports');
 
-			// 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
-			// 	if (error?.data?.errors) {
-			// 		const backendErrors: Record<string, string> = {}
+  if (!canRead) return <CantRead />;
 
-			// 		if (Array.isArray(error.data.errors)) {
-			// 			error.data.errors.forEach((err: any) => {
-			// 				if (err.field && err.message) {
-			// 					backendErrors[err.field] = err.message
-			// 				}
-			// 			})
-			// 		} else if (typeof error.data.errors === 'object') {
-			// 			Object.entries(error.data.errors).forEach(([key, value]) => {
-			// 				backendErrors[key] = Array.isArray(value)
-			// 					? value[0]
-			// 					: String(value)
-			// 			})
-			// 		}
+  // ✅ Yangi foydalanuvchi yaratish
+  const handleCreateUser = async () => {
+    await handleRequest({
+      request: async () => await createUser(form).unwrap(),
+      onSuccess: () => {
+        toast.success(t('userCreated'));
+        setIsUserModalOpen(false);
+        setForm({
+          fullname: '',
+          username: '',
+          // email: '',
+          phone: '',
+          password: '',
+          role: '',
+          section: '',
+          license_number: '',
+        });
+      },
+      // 	console.error('Parameter save error:', error)
 
-			// 		if (Object.keys(backendErrors).length > 0) {
-			// 			setErrors(prev => ({ ...prev, ...backendErrors }))
-			// 		}
-			// 	}
+      // 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
+      // 	if (error?.error?.msg) {
+      // 		toast.error(error.error.msg)
+      // 		return
+      // 	}
 
-			// 	// 3️⃣ Fallback: error.msg string bo‘lsa
-			// 	else if (typeof error?.msg === 'string') {
-			// 		toast.error(error.msg)
-			// 	}
-			// },
-			onError: err => {
-				toast.error(err?.data?.error?.msg)
-			},
-		})
-	}
+      // 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
+      // 	if (error?.data?.errors) {
+      // 		const backendErrors: Record<string, string> = {}
 
-	// --- FORM HANDLER ---
-	const handleChange = (field, value) => {
-		setForm(prev => ({ ...prev, [field]: value }))
+      // 		if (Array.isArray(error.data.errors)) {
+      // 			error.data.errors.forEach((err: any) => {
+      // 				if (err.field && err.message) {
+      // 					backendErrors[err.field] = err.message
+      // 				}
+      // 			})
+      // 		} else if (typeof error.data.errors === 'object') {
+      // 			Object.entries(error.data.errors).forEach(([key, value]) => {
+      // 				backendErrors[key] = Array.isArray(value)
+      // 					? value[0]
+      // 					: String(value)
+      // 			})
+      // 		}
 
-		// Agar xato shu fieldda bo'lsa, uni tozalaymiz
-		if (errorsUser[field]) {
-			setErrorsUser(prev => ({ ...prev, [field]: '' }))
-		}
-	}
+      // 		if (Object.keys(backendErrors).length > 0) {
+      // 			setErrors(prev => ({ ...prev, ...backendErrors }))
+      // 		}
+      // 	}
 
-	// Phone input uchun maxsus handler
-	const handlePhoneChange = (value: string) => {
-		// Faqat raqamlar va + belgisini qabul qilish
-		const cleaned = value.replace(/[^\d+]/g, '')
+      // 	// 3️⃣ Fallback: error.msg string bo‘lsa
+      // 	else if (typeof error?.msg === 'string') {
+      // 		toast.error(error.msg)
+      // 	}
+      // },
+      onError: (err) => {
+        toast.error(err?.data?.error?.msg);
+      },
+    });
+  };
 
-		// Agar +998 bilan boshlanmasa, avtomatik qo'shish
-		if (!cleaned.startsWith('+998')) {
-			const digits = cleaned.replace(/\+/g, '')
-			setForm(prev => ({ ...prev, phone: '+998' + digits }))
-		} else {
-			setForm(prev => ({ ...prev, phone: cleaned }))
-		}
+  // --- FORM HANDLER ---
+  const handleChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
 
-		// Real-time validatsiya
-		if (cleaned.length > 0 && cleaned.length < 13) {
-			setErrorsUser(prev => ({
-				...prev,
-				phone: t('phoneRequired13Chars'),
-			}))
-		} else if (cleaned.length === 13 && !cleaned.match(/^\+998\d{9}$/)) {
-			setErrorsUser(prev => ({
-				...prev,
-				phone: t('phoneInvalidFormat'),
-			}))
-		} else if (errorsUser.phone) {
-			setErrorsUser(prev => ({ ...prev, phone: '' }))
-		}
-	}
+    // Agar xato shu fieldda bo'lsa, uni tozalaymiz
+    if (errorsUser[field]) {
+      setErrorsUser((prev) => ({ ...prev, [field]: '' }));
+    }
+  };
 
-	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setSearch(e.target.value)
-		setPage(1) // search qilganda 1-page ga qaytish
-	}
+  // Phone input uchun maxsus handler
+  const handlePhoneChange = (value: string) => {
+    // Faqat raqamlar va + belgisini qabul qilish
+    const cleaned = value.replace(/[^\d+]/g, '');
 
-	// --- Pagination Handler ---
-	const goToPage = (p: number) => {
-		if (p >= 1 && p <= totalPages) setPage(p)
-	}
+    // Agar +998 bilan boshlanmasa, avtomatik qo'shish
+    if (!cleaned.startsWith('+998')) {
+      const digits = cleaned.replace(/\+/g, '');
+      setForm((prev) => ({ ...prev, phone: '+998' + digits }));
+    } else {
+      setForm((prev) => ({ ...prev, phone: cleaned }));
+    }
 
-	const handleSaveUser = async () => {
-		// Agar password bo'sh bo'lsa, payloaddan olib tashlaymiz
-		const payload = { ...form }
-		if (!payload.password) {
-			delete payload.password
-		}
+    // Real-time validatsiya
+    if (cleaned.length > 0 && cleaned.length < 13) {
+      setErrorsUser((prev) => ({
+        ...prev,
+        phone: t('phoneRequired13Chars'),
+      }));
+    } else if (cleaned.length === 13 && !cleaned.match(/^\+998\d{9}$/)) {
+      setErrorsUser((prev) => ({
+        ...prev,
+        phone: t('phoneInvalidFormat'),
+      }));
+    } else if (errorsUser.phone) {
+      setErrorsUser((prev) => ({ ...prev, phone: '' }));
+    }
+  };
 
-		if (editingUserId) {
-			// ✅ UPDATE
-			await handleRequest({
-				request: async () =>
-					await updateUser({ id: editingUserId, data: payload }).unwrap(),
-				onSuccess: () => {
-					toast.success(t('userUpdated'))
-					setIsUserModalOpen(false)
-					setEditingUserId(null)
-					resetForm()
-				},
-				// 	console.error('Parameter save error:', error)
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setPage(1); // search qilganda 1-page ga qaytish
+  };
 
-				// 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
-				// 	if (error?.error?.msg) {
-				// 		toast.error(error.error.msg)
-				// 		return
-				// 	}
+  // --- Pagination Handler ---
+  const goToPage = (p: number) => {
+    if (p >= 1 && p <= totalPages) setPage(p);
+  };
 
-				// 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
-				// 	if (error?.data?.errors) {
-				// 		const backendErrors: Record<string, string> = {}
+  const handleSaveUser = async () => {
+    // Agar password bo'sh bo'lsa, payloaddan olib tashlaymiz
+    const payload = { ...form };
+    if (!payload.password) {
+      delete payload.password;
+    }
 
-				// 		if (Array.isArray(error.data.errors)) {
-				// 			error.data.errors.forEach((err: any) => {
-				// 				if (err.field && err.message) {
-				// 					backendErrors[err.field] = err.message
-				// 				}
-				// 			})
-				// 		} else if (typeof error.data.errors === 'object') {
-				// 			Object.entries(error.data.errors).forEach(([key, value]) => {
-				// 				backendErrors[key] = Array.isArray(value)
-				// 					? value[0]
-				// 					: String(value)
-				// 			})
-				// 		}
+    if (editingUserId) {
+      // ✅ UPDATE
+      await handleRequest({
+        request: async () =>
+          await updateUser({ id: editingUserId, data: payload }).unwrap(),
+        onSuccess: () => {
+          toast.success(t('userUpdated'));
+          setIsUserModalOpen(false);
+          setEditingUserId(null);
+          resetForm();
+        },
+        // 	console.error('Parameter save error:', error)
 
-				// 		if (Object.keys(backendErrors).length > 0) {
-				// 			setErrors(prev => ({ ...prev, ...backendErrors }))
-				// 		}
-				// 	}
+        // 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
+        // 	if (error?.error?.msg) {
+        // 		toast.error(error.error.msg)
+        // 		return
+        // 	}
 
-				// 	// 3️⃣ Fallback: error.msg string bo‘lsa
-				// 	else if (typeof error?.msg === 'string') {
-				// 		toast.error(error.msg)
-				// 	}
-				// },
-				onError: err => {
-					toast.error(err?.data?.error?.msg)
-				},
-			})
-		} else {
-			// ✅ CREATE
-			await handleRequest({
-				request: async () => await createUser(payload).unwrap(),
-				onSuccess: () => {
-					toast.success(t('userCreated'))
-					setIsUserModalOpen(false)
-					resetForm()
-				},
-				// 	console.error('Parameter save error:', error)
+        // 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
+        // 	if (error?.data?.errors) {
+        // 		const backendErrors: Record<string, string> = {}
 
-				// 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
-				// 	if (error?.error?.msg) {
-				// 		toast.error(error.error.msg)
-				// 		return
-				// 	}
+        // 		if (Array.isArray(error.data.errors)) {
+        // 			error.data.errors.forEach((err: any) => {
+        // 				if (err.field && err.message) {
+        // 					backendErrors[err.field] = err.message
+        // 				}
+        // 			})
+        // 		} else if (typeof error.data.errors === 'object') {
+        // 			Object.entries(error.data.errors).forEach(([key, value]) => {
+        // 				backendErrors[key] = Array.isArray(value)
+        // 					? value[0]
+        // 					: String(value)
+        // 			})
+        // 		}
 
-				// 	if (error?.msg) {
-				// 		toast.error(error.msg)
-				// 		return
-				// 	}
+        // 		if (Object.keys(backendErrors).length > 0) {
+        // 			setErrors(prev => ({ ...prev, ...backendErrors }))
+        // 		}
+        // 	}
 
-				// 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
-				// 	if (error?.data?.errors) {
-				// 		const backendErrors: Record<string, string> = {}
+        // 	// 3️⃣ Fallback: error.msg string bo‘lsa
+        // 	else if (typeof error?.msg === 'string') {
+        // 		toast.error(error.msg)
+        // 	}
+        // },
+        onError: (err) => {
+          toast.error(err?.data?.error?.msg);
+        },
+      });
+    } else {
+      // ✅ CREATE
+      await handleRequest({
+        request: async () => await createUser(payload).unwrap(),
+        onSuccess: () => {
+          toast.success(t('userCreated'));
+          setIsUserModalOpen(false);
+          resetForm();
+        },
+        // 	console.error('Parameter save error:', error)
 
-				// 		if (Array.isArray(error.data.errors)) {
-				// 			error.data.errors.forEach((err: any) => {
-				// 				if (err.field && err.message) {
-				// 					backendErrors[err.field] = err.message
-				// 				}
-				// 			})
-				// 		} else if (typeof error.data.errors === 'object') {
-				// 			Object.entries(error.data.errors).forEach(([key, value]) => {
-				// 				backendErrors[key] = Array.isArray(value)
-				// 					? value[0]
-				// 					: String(value)
-				// 			})
-				// 		}
+        // 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
+        // 	if (error?.error?.msg) {
+        // 		toast.error(error.error.msg)
+        // 		return
+        // 	}
 
-				// 		if (Object.keys(backendErrors).length > 0) {
-				// 			setErrors(prev => ({ ...prev, ...backendErrors }))
-				// 		}
-				// 	}
+        // 	if (error?.msg) {
+        // 		toast.error(error.msg)
+        // 		return
+        // 	}
 
-				// 	// 3️⃣ Fallback: error.msg string bo‘lsa
-				// 	else if (typeof error?.msg === 'string') {
-				// 		toast.error(error.msg)
-				// 	}
-				// },
-				onError: err => {
-					toast.error(err?.data?.error?.msg)
-				},
-			})
-		}
-	}
+        // 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
+        // 	if (error?.data?.errors) {
+        // 		const backendErrors: Record<string, string> = {}
 
-	const resetForm = () => {
-		setForm({
-			fullname: '',
-			username: '',
-			// email: '',
-			phone: '+998',
-			password: '',
-			role: '',
-			section: '',
-			license_number: '',
-		})
-		setEditingUserId(null)
-	}
+        // 		if (Array.isArray(error.data.errors)) {
+        // 			error.data.errors.forEach((err: any) => {
+        // 				if (err.field && err.message) {
+        // 					backendErrors[err.field] = err.message
+        // 				}
+        // 			})
+        // 		} else if (typeof error.data.errors === 'object') {
+        // 			Object.entries(error.data.errors).forEach(([key, value]) => {
+        // 				backendErrors[key] = Array.isArray(value)
+        // 					? value[0]
+        // 					: String(value)
+        // 			})
+        // 		}
 
-	// Dialogni ochish funksiyasi
-	const handleOpenDeleteDialog = (userId: string, fullname: string) => {
-		setSelectedUserId(userId)
-		setSelectedUserName(fullname)
-		setIsDeleteDialogOpen(true)
-	}
+        // 		if (Object.keys(backendErrors).length > 0) {
+        // 			setErrors(prev => ({ ...prev, ...backendErrors }))
+        // 		}
+        // 	}
 
-	// Tasdiqlash
-	const handleConfirmDelete = async () => {
-		if (!selectedUserId) return
+        // 	// 3️⃣ Fallback: error.msg string bo‘lsa
+        // 	else if (typeof error?.msg === 'string') {
+        // 		toast.error(error.msg)
+        // 	}
+        // },
+        onError: (err) => {
+          toast.error(err?.data?.error?.msg);
+        },
+      });
+    }
+  };
 
-		await handleRequest({
-			request: async () => await deleteUser(selectedUserId).unwrap(),
-			onSuccess: () => {
-				toast.success(t('userDeletedWithName', { name: selectedUserName }))
-				setIsDeleteDialogOpen(false)
-				setSelectedUserId(null)
-				setSelectedUserName('')
-			},
-			onError: err => {
-				toast.error(err?.data?.error?.msg)
-			},
-		})
-	}
+  const resetForm = () => {
+    setForm({
+      fullname: '',
+      username: '',
+      // email: '',
+      phone: '+998',
+      password: '',
+      role: '',
+      section: '',
+      license_number: '',
+    });
+    setEditingUserId(null);
+  };
 
-	// Bekor qilish
-	const handleCancelDelete = () => {
-		setIsDeleteDialogOpen(false)
-		setSelectedUserId(null)
-		setSelectedUserName('')
-	}
+  // Dialogni ochish funksiyasi
+  const handleOpenDeleteDialog = (userId: string, fullname: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserName(fullname);
+    setIsDeleteDialogOpen(true);
+  };
 
-	const handleSaveSettings = async () => {
-		if (isUploading) {
-			toast.warning(t('waitForLogoUpload'))
-			return
-		}
-		if (!getAllSettings) return
-		try {
-			await updateSettings(getAllSettings).unwrap()
-			toast.success(t('settingsSaved'))
-		} catch (err) {
-			toast.error(t('saveError'))
-			console.error(err)
-		}
-	}
+  // Tasdiqlash
+  const handleConfirmDelete = async () => {
+    if (!selectedUserId) return;
 
-	const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0]
-		if (!file) return
+    await handleRequest({
+      request: async () => await deleteUser(selectedUserId).unwrap(),
+      onSuccess: () => {
+        toast.success(t('userDeletedWithName', { name: selectedUserName }));
+        setIsDeleteDialogOpen(false);
+        setSelectedUserId(null);
+        setSelectedUserName('');
+      },
+      onError: (err) => {
+        toast.error(err?.data?.error?.msg);
+      },
+    });
+  };
 
-		const formData = new FormData()
-		formData.append('file', file)
+  // Bekor qilish
+  const handleCancelDelete = () => {
+    setIsDeleteDialogOpen(false);
+    setSelectedUserId(null);
+    setSelectedUserName('');
+  };
 
-		setIsUploading(true)
-		try {
-			const res = await uploadCreate(formData).unwrap()
-			console.log(res)
-			if (res?.file_path) {
-				handleChangee('logo_path', res.file_path)
-				toast.success(t('logoUploaded'))
-			} else {
-				toast.error(t('filePathNotReturned'))
-			}
-		} catch (err) {
-			console.error('Upload error:', err)
-			toast.error(t('logoUploadError'))
-		} finally {
-			setIsUploading(false)
-		}
-	}
+  const handleSaveSettings = async () => {
+    if (isUploading) {
+      toast.warning(t('waitForLogoUpload'));
+      return;
+    }
+    if (!getAllSettings) return;
+    try {
+      await updateSettings(getAllSettings).unwrap();
+      toast.success(t('settingsSaved'));
+    } catch (err) {
+      toast.error(t('saveError'));
+      console.error(err);
+    }
+  };
 
-	const handleChangee = (field: keyof Settings, value: string) => {
-		setGetAllSettings(prev => ({ ...prev, [field]: value }))
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-		// Agar shu field uchun error bo'lsa, uni tozalaymiz
-		if (errors[field]) {
-			setErrors(prev => ({ ...prev, [field]: '' }))
-		}
-	}
+    const formData = new FormData();
+    formData.append('file', file);
 
-	// Settings phone uchun maxsus handler
-	const handleSettingsPhoneChange = (value: string) => {
-		// Faqat raqamlar va + belgisini qabul qilish
-		const cleaned = value.replace(/[^\d+]/g, '')
+    setIsUploading(true);
+    try {
+      const res = await uploadCreate(formData).unwrap();
+      console.log(res);
+      if (res?.file_path) {
+        handleChangee('logo_path', res.file_path);
+        toast.success(t('logoUploaded'));
+      } else {
+        toast.error(t('filePathNotReturned'));
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      toast.error(t('logoUploadError'));
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-		// Agar +998 bilan boshlanmasa, avtomatik qo'shish
-		if (!cleaned.startsWith('+998')) {
-			const digits = cleaned.replace(/\+/g, '')
-			setGetAllSettings(prev => ({ ...prev!, phone: '+998' + digits }))
-		} else {
-			setGetAllSettings(prev => ({ ...prev!, phone: cleaned }))
-		}
+  const handleChangee = (field: keyof Settings, value: string) => {
+    setGetAllSettings((prev) => ({ ...prev, [field]: value }));
 
-		// Real-time validatsiya
-		if (cleaned.length > 0 && cleaned.length < 13) {
-			setErrors(prev => ({
-				...prev,
-				phone: t('phoneRequired13Chars'),
-			}))
-		} else if (cleaned.length === 13 && !cleaned.match(/^\+998\d{9}$/)) {
-			setErrors(prev => ({
-				...prev,
-				phone: t('phoneInvalidFormat'),
-			}))
-		} else if (errors.phone) {
-			setErrors(prev => ({ ...prev, phone: '' }))
-		}
-	}
+    // Agar shu field uchun error bo'lsa, uni tozalaymiz
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: '' }));
+    }
+  };
 
-	const onSaveSettings = () => {
-		const result = settingsSchema.safeParse(getAllSettings)
-		if (!result.success) {
-			const newErrors = {}
-			result.error.errors.forEach(err => {
-				newErrors[err.path[0]] = err.message
-			})
-			setErrors(newErrors)
-			return
-		}
-		handleSaveSettings()
-	}
+  // Settings phone uchun maxsus handler
+  const handleSettingsPhoneChange = (value: string) => {
+    // Faqat raqamlar va + belgisini qabul qilish
+    const cleaned = value.replace(/[^\d+]/g, '');
 
-	const onSaveUser = async () => {
-		const schema = userSchema(!!editingUserId) // tahrirlashda password optional
-		const result = schema.safeParse(form)
+    // Agar +998 bilan boshlanmasa, avtomatik qo'shish
+    if (!cleaned.startsWith('+998')) {
+      const digits = cleaned.replace(/\+/g, '');
+      setGetAllSettings((prev) => ({ ...prev!, phone: '+998' + digits }));
+    } else {
+      setGetAllSettings((prev) => ({ ...prev!, phone: cleaned }));
+    }
 
-		if (!result.success) {
-			const newErrors: Record<string, string> = {}
-			result.error.errors.forEach(err => {
-				newErrors[err.path[0]] = err.message
-			})
-			setErrorsUser(newErrors)
-			return
-		}
+    // Real-time validatsiya
+    if (cleaned.length > 0 && cleaned.length < 13) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: t('phoneRequired13Chars'),
+      }));
+    } else if (cleaned.length === 13 && !cleaned.match(/^\+998\d{9}$/)) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: t('phoneInvalidFormat'),
+      }));
+    } else if (errors.phone) {
+      setErrors((prev) => ({ ...prev, phone: '' }));
+    }
+  };
 
-		// Agar editingUserId bo'lsa -> update, yo'q bo'lsa -> create
-		if (editingUserId) {
-			await handleSaveUser() // foydalanuvchini yangilash
-		} else {
-			await handleCreateUser() // yangi foydalanuvchi qo'shish
-		}
-	}
+  const onSaveSettings = () => {
+    const result = settingsSchema.safeParse(getAllSettings);
+    if (!result.success) {
+      const newErrors = {};
+      result.error.errors.forEach((err) => {
+        newErrors[err.path[0]] = err.message;
+      });
+      setErrors(newErrors);
+      return;
+    }
+    handleSaveSettings();
+  };
 
-	const handleEditUser = (user: UserId) => {
-		setEditingUserId(user._id)
-		const formData: UserCreateResponse = {
-			fullname: user.fullname,
-			username: user.username,
-			// email: user.email,
-			phone: user.phone,
-			password: '',
-			role: user.role,
-			section: user.section,
-			license_number: user.license_number || '',
-		}
-		setForm(formData)
-		setIsUserModalOpen(true)
-	}
+  const onSaveUser = async () => {
+    const schema = userSchema(!!editingUserId); // tahrirlashda password optional
+    const result = schema.safeParse(form);
 
-	useEffect(() => {
-		if (usersData?.data) {
-			setUsers(usersData.data)
-		}
-		if (usersData?.pagination) {
-			setTotalPages(usersData.pagination.total_pages)
-		}
-		if (usersError) {
-			toast.error(t('usersFetchError'))
-			console.error(usersError)
-		}
-	}, [usersData, usersError])
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        newErrors[err.path[0]] = err.message;
+      });
+      setErrorsUser(newErrors);
+      return;
+    }
 
-	// --- Formni to'ldirish useEffect orqali
-	useEffect(() => {
-		if (editingUserData?.data) {
-			const user = editingUserData.data
-			setForm({
-				fullname: user.fullname,
-				username: user.username,
-				// email: user.email,
-				phone: user.phone,
-				password: '', // agar foydalanuvchi o'zgartirmasa bo'sh qoldiramiz
-				role: user.role,
-				section: user.section,
-				license_number: user.license_number,
-			})
-		}
-	}, [editingUserData])
+    // Agar editingUserId bo'lsa -> update, yo'q bo'lsa -> create
+    if (editingUserId) {
+      await handleSaveUser(); // foydalanuvchini yangilash
+    } else {
+      await handleCreateUser(); // yangi foydalanuvchi qo'shish
+    }
+  };
 
-	// SettingGetAll
-	useEffect(() => {
-		if (settingsGetAll?.data) {
-			setGetAllSettings(settingsGetAll.data)
-		}
-	}, [settingsGetAll])
+  const handleEditUser = (user: UserId) => {
+    setEditingUserId(user._id);
+    const formData: UserCreateResponse = {
+      fullname: user.fullname,
+      username: user.username,
+      // email: user.email,
+      phone: user.phone,
+      password: '',
+      role: user.role,
+      section: user.section,
+      license_number: user.license_number || '',
+    };
+    setForm(formData);
+    setIsUserModalOpen(true);
+  };
 
-	return (
-		<div className='min-h-screen bg-background'>
-			{/* Main Content */}
-			<main className='container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6'>
-				<Tabs defaultValue='users' className='space-y-4 sm:space-y-6'>
-					<TabsList className='grid w-full grid-cols-2 sm:grid-cols-2 gap-1 sm:gap-2 h-auto p-1'>
-						<TabsTrigger value='users' className='text-xs sm:text-sm py-2'>
-							{t('users')}
-						</TabsTrigger>
-						<TabsTrigger value='clinic' className='text-xs sm:text-sm py-2'>
-							{t('clinic')}
-						</TabsTrigger>
-						{/* <TabsTrigger
+  return (
+    <div className='min-h-screen bg-background'>
+      {/* Main Content */}
+      <main className='container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6'>
+        <Tabs defaultValue='users' className='space-y-4 sm:space-y-6'>
+          <TabsList className='grid w-full grid-cols-2 sm:grid-cols-2 gap-1 sm:gap-2 h-auto p-1'>
+            <TabsTrigger value='users' className='text-xs sm:text-sm py-2'>
+              {t('users')}
+            </TabsTrigger>
+            <TabsTrigger value='clinic' className='text-xs sm:text-sm py-2'>
+              {t('clinic')}
+            </TabsTrigger>
+            {/* <TabsTrigger
 							value='notifications'
 							className='text-xs sm:text-sm py-2'
 						>
@@ -586,400 +587,426 @@ const Settings = () => {
 						<TabsTrigger value='audit' className='text-xs sm:text-sm py-2'>
 							Тарих
 						</TabsTrigger> */}
-					</TabsList>
+          </TabsList>
 
-					{/* Users Tab */}
-					<TabsContent value='users'>
-						<Card className='p-3 sm:p-4 lg:p-6'>
-							<div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-3'>
-								<h2 className='text-lg sm:text-xl font-semibold'>
-									{t('usersList')}
-								</h2>
-								<Button
-									onClick={() => {
-										resetForm()
-										setEditingUserId(null)
-										setIsUserModalOpen(true)
-									}}
-									className='w-full sm:w-auto text-xs sm:text-sm'
-									size='sm'
-								>
-									<Plus className='w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2' />
-									{t('newUser')}
-								</Button>
-							</div>
+          {/* Users Tab */}
+          <TabsContent value='users'>
+            <Card className='p-3 sm:p-4 lg:p-6'>
+              <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-3'>
+                <h2 className='text-lg sm:text-xl font-semibold'>
+                  {t('usersList')}
+                </h2>
+                <Button
+                  onClick={() => {
+                    resetForm();
+                    setEditingUserId(null);
+                    setIsUserModalOpen(true);
+                  }}
+                  className='w-full sm:w-auto text-xs sm:text-sm'
+                  size='sm'
+                >
+                  <Plus className='w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2' />
+                  {t('newUser')}
+                </Button>
+              </div>
 
-							{/* Search & Role filter */}
-							<div className='mb-3 sm:mb-4 flex flex-col sm:flex-row gap-2 flex-wrap'>
-								<Input
-									placeholder={t('search')}
-									value={search}
-									onChange={handleSearchChange}
-									className='flex-1 text-xs sm:text-sm h-9 sm:h-10'
-								/>
+              {/* Search & Role filter */}
+              <div className='mb-3 sm:mb-4 flex flex-col sm:flex-row gap-2 flex-wrap'>
+                <Input
+                  placeholder={t('search')}
+                  value={search}
+                  onChange={handleSearchChange}
+                  className='flex-1 text-xs sm:text-sm h-9 sm:h-10'
+                />
 
-								<select
-									className='border border-border rounded-md px-2 sm:px-3 py-2 bg-background text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto'
-									value={role}
-									onChange={e => {
-										setRole(e.target.value)
-										setPage(1)
-									}}
-								>
-									<option value=''>{t('all')}</option>
-									<option value={RoleConstants.ADMIN}>{t('roles.admin')}</option>
-									<option value={RoleConstants.DOCTOR}>{t('roles.doctor')}</option>
-									<option value={RoleConstants.RECEPTIONIST}>{t('roles.receptionist')}</option>
-									<option value={RoleConstants.NURSE}>{t('roles.nurse')}</option>
-								</select>
-							</div>
+                <select
+                  className='border border-border rounded-md px-2 sm:px-3 py-2 bg-background text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto'
+                  value={role}
+                  onChange={(e) => {
+                    setRole(e.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value=''>{t('all')}</option>
+                  <option value={RoleConstants.ADMIN}>
+                    {t('roles.admin')}
+                  </option>
+                  <option value={RoleConstants.DOCTOR}>
+                    {t('roles.doctor')}
+                  </option>
+                  <option value={RoleConstants.RECEPTIONIST}>
+                    {t('roles.receptionist')}
+                  </option>
+                  <option value={RoleConstants.NURSE}>
+                    {t('roles.nurse')}
+                  </option>
+                </select>
+              </div>
 
-							{/* Mobile Card View */}
-							<div className='block lg:hidden space-y-3 sm:space-y-4'>
-								{users.length > 0 &&
-									users.map((user, index) => (
-										<Card
-											key={user._id}
-											className='rounded-xl sm:rounded-2xl shadow-md border border-gray-100 overflow-hidden'
-										>
-											<div className='p-2.5 sm:p-3 space-y-2'>
-												<div className='flex items-start justify-between gap-2'>
-													<div className='flex-1 min-w-0'>
-														<h3 className='font-semibold text-sm sm:text-base text-gray-900 truncate'>
-															{user.fullname}
-														</h3>
-														<p className='text-[10px] sm:text-xs text-muted-foreground'>
-															ID:{' '}
-															<span className='font-medium'>
-																{(page - 1) * limit + (index + 1)}
-															</span>
-														</p>
-														<p className='text-[10px] sm:text-xs text-muted-foreground'>
-															{t('role')}:{' '}
-															<span className='font-medium'>
-																{t(`roles.${user.role.toLowerCase()}`)}
-															</span>
-														</p>
-														<p className='text-[10px] sm:text-xs text-muted-foreground'>
-															{t('department')}:{' '}
-															<span className='font-medium'>
-																{user.section}
-															</span>
-														</p>
-														{/* <p className='text-[10px] sm:text-xs text-muted-foreground truncate'>
+              {/* Mobile Card View */}
+              <div className='block lg:hidden space-y-3 sm:space-y-4'>
+                {users.length > 0 &&
+                  users.map((user, index) => (
+                    <Card
+                      key={user._id}
+                      className='rounded-xl sm:rounded-2xl shadow-md border border-gray-100 overflow-hidden'
+                    >
+                      <div className='p-2.5 sm:p-3 space-y-2'>
+                        <div className='flex items-start justify-between gap-2'>
+                          <div className='flex-1 min-w-0'>
+                            <h3 className='font-semibold text-sm sm:text-base text-gray-900 truncate'>
+                              {user.fullname}
+                            </h3>
+                            <p className='text-[10px] sm:text-xs text-muted-foreground'>
+                              ID:{' '}
+                              <span className='font-medium'>
+                                {(page - 1) * limit + (index + 1)}
+                              </span>
+                            </p>
+                            <p className='text-[10px] sm:text-xs text-muted-foreground'>
+                              {t('role')}:{' '}
+                              <span className='font-medium'>
+                                {t(`roles.${user.role.toLowerCase()}`)}
+                              </span>
+                            </p>
+                            <p className='text-[10px] sm:text-xs text-muted-foreground'>
+                              {t('department')}:{' '}
+                              <span className='font-medium'>
+                                {user.section}
+                              </span>
+                            </p>
+                            {/* <p className='text-[10px] sm:text-xs text-muted-foreground truncate'>
 															Email:{' '}
 															<span className='font-medium'>{user.email}</span>
 														</p> */}
-														<p className='text-[10px] sm:text-xs text-muted-foreground'>
-															{t('status')}:{' '}
-															<Badge
-																className={
-																	user.status === 'active'
-																		? 'bg-success/10 text-success border-success/20 border text-[9px] sm:text-[10px] px-1.5 py-0.5'
-																		: 'bg-destructive/10 text-destructive border-destructive/20 border text-[9px] sm:text-[10px] px-1.5 py-0.5'
-																}
-															>
-																{user.status === 'active' ? t('active') : t('inactive')}
-															</Badge>
-														</p>
-													</div>
-													<span className='text-[10px] sm:text-xs bg-primary/10 text-primary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium whitespace-nowrap'>
-														#{index + 1}
-													</span>
-												</div>
+                            <p className='text-[10px] sm:text-xs text-muted-foreground'>
+                              {t('status')}:{' '}
+                              <Badge
+                                className={
+                                  user.status === 'active'
+                                    ? 'bg-success/10 text-success border-success/20 border text-[9px] sm:text-[10px] px-1.5 py-0.5'
+                                    : 'bg-destructive/10 text-destructive border-destructive/20 border text-[9px] sm:text-[10px] px-1.5 py-0.5'
+                                }
+                              >
+                                {user.status === 'active'
+                                  ? t('active')
+                                  : t('inactive')}
+                              </Badge>
+                            </p>
+                          </div>
+                          <span className='text-[10px] sm:text-xs bg-primary/10 text-primary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium whitespace-nowrap'>
+                            #{index + 1}
+                          </span>
+                        </div>
 
-												<div className='flex gap-1.5 sm:gap-2 pt-2'>
-													<Button
-														size='sm'
-														variant='outline'
-														className='flex-1 flex items-center justify-center gap-1 text-[10px] sm:text-xs py-1.5 h-7 sm:h-8'
-														onClick={() => handleEditUser(user as UserId)}
-													>
-														<Edit size={12} className='sm:w-3 sm:h-3' />
-														<span className='hidden xs:inline'>{t('edit')}</span>
-														<span className='xs:hidden'>{t('edit')}</span>
-													</Button>
+                        <div className='flex gap-1.5 sm:gap-2 pt-2'>
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            className='flex-1 flex items-center justify-center gap-1 text-[10px] sm:text-xs py-1.5 h-7 sm:h-8'
+                            onClick={() => handleEditUser(user as UserId)}
+                          >
+                            <Edit size={12} className='sm:w-3 sm:h-3' />
+                            <span className='hidden xs:inline'>
+                              {t('edit')}
+                            </span>
+                            <span className='xs:hidden'>{t('edit')}</span>
+                          </Button>
 
-													<Dialog
-														open={
-															isDeleteDialogOpen && selectedUserId === user._id
-														}
-														onOpenChange={setIsDeleteDialogOpen}
-													>
-														<DialogTrigger asChild>
-															<Button
-																size='sm'
-																variant='outline'
-																className='flex-1 flex items-center justify-center gap-1 text-red-600 border-red-300 hover:bg-red-50 text-[10px] sm:text-xs py-1.5 h-7 sm:h-8'
-																onClick={() =>
-																	handleOpenDeleteDialog(
-																		user._id,
-																		user.fullname
-																	)
-																}
-															>
-																<Trash2 size={12} className='sm:w-3 sm:h-3' />
-																<span className='hidden xs:inline'>
-																	{t('delete')}
-																</span>
-																<span className='xs:hidden'>{t('delete')}</span>
-															</Button>
-														</DialogTrigger>
+                          <Dialog
+                            open={
+                              isDeleteDialogOpen && selectedUserId === user._id
+                            }
+                            onOpenChange={setIsDeleteDialogOpen}
+                          >
+                            <DialogTrigger asChild>
+                              <Button
+                                size='sm'
+                                variant='outline'
+                                className='flex-1 flex items-center justify-center gap-1 text-red-600 border-red-300 hover:bg-red-50 text-[10px] sm:text-xs py-1.5 h-7 sm:h-8'
+                                onClick={() =>
+                                  handleOpenDeleteDialog(
+                                    user._id,
+                                    user.fullname
+                                  )
+                                }
+                              >
+                                <Trash2 size={12} className='sm:w-3 sm:h-3' />
+                                <span className='hidden xs:inline'>
+                                  {t('delete')}
+                                </span>
+                                <span className='xs:hidden'>{t('delete')}</span>
+                              </Button>
+                            </DialogTrigger>
 
-														<DialogContent className='max-w-[90vw] sm:max-w-xs rounded-xl mx-4'>
-															<DialogTitle className='text-sm sm:text-base'>
-																{t('deleteUser')}
-															</DialogTitle>
-															<DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
-																{t('deleteUserConfirm', { name: selectedUserName })}
-															</DialogDescription>
-															<DialogFooter className='flex flex-row justify-end gap-2 pt-2'>
-																<Button
-																	variant='outline'
-																	size='sm'
-																	className='h-7 sm:h-8 text-xs'
-																	onClick={handleCancelDelete}
-																>
-																	{t('no')}
-																</Button>
-																<Button
-																	size='sm'
-																	className='bg-red-600 text-white h-7 sm:h-8 text-xs'
-																	onClick={handleConfirmDelete}
-																>
-																	{t('yes')}
-																</Button>
-															</DialogFooter>
-														</DialogContent>
-													</Dialog>
-												</div>
-											</div>
-										</Card>
-									))}
-							</div>
+                            <DialogContent className='max-w-[90vw] sm:max-w-xs rounded-xl mx-4'>
+                              <DialogTitle className='text-sm sm:text-base'>
+                                {t('deleteUser')}
+                              </DialogTitle>
+                              <DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
+                                {t('deleteUserConfirm', {
+                                  name: selectedUserName,
+                                })}
+                              </DialogDescription>
+                              <DialogFooter className='flex flex-row justify-end gap-2 pt-2'>
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  className='h-7 sm:h-8 text-xs'
+                                  onClick={handleCancelDelete}
+                                >
+                                  {t('no')}
+                                </Button>
+                                <Button
+                                  size='sm'
+                                  className='bg-red-600 text-white h-7 sm:h-8 text-xs'
+                                  onClick={handleConfirmDelete}
+                                >
+                                  {t('yes')}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+              </div>
 
-							{/* Desktop Table View - UNCHANGED */}
-							<div className='hidden lg:block'>
-								<Card className='card-shadow'>
-									<div className='overflow-x-auto'>
-										<table className='w-full'>
-											<thead className='bg-muted/50'>
-												<tr>
-													{[
-														'ID',
-														t('fullName'),
-														t('role'),
-														t('department'),
-														// 'Email',
-														t('status'),
-														t('actions'),
-													].map(i => (
-														<th
-															key={i}
-															className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'
-														>
-															{i}
-														</th>
-													))}
-												</tr>
-											</thead>
-											<tbody className='divide-y'>
-												{users.length > 0 &&
-													users.map((user, index) => (
-														<tr
-															key={user._id}
-															className='hover:bg-accent/50 transition-smooth'
-														>
-															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm font-medium text-primary'>
-																{(page - 1) * limit + (index + 1)}
-															</td>
-															<td className='px-4 xl:px-6 py-3 xl:py-4'>
-																<div className='font-medium text-sm xl:text-base'>
-																	{user.fullname}
-																</div>
-															</td>
-															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-																<Badge variant='outline'>
-																	{t(`roles.${user.role.toLowerCase()}`)}
-																</Badge>
-															</td>
-															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-																{user.section}
-															</td>
-															{/* <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm text-muted-foreground'>
+              {/* Desktop Table View - UNCHANGED */}
+              <div className='hidden lg:block'>
+                <Card className='card-shadow'>
+                  <div className='overflow-x-auto'>
+                    <table className='w-full'>
+                      <thead className='bg-muted/50'>
+                        <tr>
+                          {[
+                            'ID',
+                            t('fullName'),
+                            t('role'),
+                            t('department'),
+                            // 'Email',
+                            t('status'),
+                            t('actions'),
+                          ].map((i) => (
+                            <th
+                              key={i}
+                              className='px-4 xl:px-6 py-3 xl:py-4 text-left text-xs xl:text-sm font-semibold'
+                            >
+                              {i}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className='divide-y'>
+                        {users.length > 0 &&
+                          users.map((user, index) => (
+                            <tr
+                              key={user._id}
+                              className='hover:bg-accent/50 transition-smooth'
+                            >
+                              <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm font-medium text-primary'>
+                                {(page - 1) * limit + (index + 1)}
+                              </td>
+                              <td className='px-4 xl:px-6 py-3 xl:py-4'>
+                                <div className='font-medium text-sm xl:text-base'>
+                                  {user.fullname}
+                                </div>
+                              </td>
+                              <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+                                <Badge variant='outline'>
+                                  {t(`roles.${user.role.toLowerCase()}`)}
+                                </Badge>
+                              </td>
+                              <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+                                {user.section}
+                              </td>
+                              {/* <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm text-muted-foreground'>
 																{user.email}
 															</td> */}
-															<td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
-																<Badge
-																	className={
-																		user.status === 'active'
-																			? 'bg-success/10 text-success border-success/20 border'
-																			: 'bg-destructive/10 text-destructive border-destructive/20 border'
-																	}
-																>
-																	{user.status === 'active' ? t('active') : t('inactive')}
-																</Badge>
-															</td>
-															<td className='px-4 xl:px-6 py-3 xl:py-4'>
-																<div className='flex justify-center gap-3'>
-																	<Button
-																		size='icon'
-																		variant='outline'
-																		className='h-7 w-7'
-																		onClick={() =>
-																			handleEditUser(user as UserId)
-																		}
-																	>
-																		<Edit size={16} />
-																	</Button>
+                              <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm'>
+                                <Badge
+                                  className={
+                                    user.status === 'active'
+                                      ? 'bg-success/10 text-success border-success/20 border'
+                                      : 'bg-destructive/10 text-destructive border-destructive/20 border'
+                                  }
+                                >
+                                  {user.status === 'active'
+                                    ? t('active')
+                                    : t('inactive')}
+                                </Badge>
+                              </td>
+                              <td className='px-4 xl:px-6 py-3 xl:py-4'>
+                                <div className='flex justify-center gap-3'>
+                                  <Button
+                                    size='icon'
+                                    variant='outline'
+                                    className='h-7 w-7'
+                                    onClick={() =>
+                                      handleEditUser(user as UserId)
+                                    }
+                                  >
+                                    <Edit size={16} />
+                                  </Button>
 
-																	<Dialog
-																		open={
-																			isDeleteDialogOpen &&
-																			selectedUserId === user._id
-																		}
-																		onOpenChange={setIsDeleteDialogOpen}
-																	>
-																		<DialogTrigger asChild>
-																			<Button
-																				size='icon'
-																				variant='outline'
-																				className='h-7 w-7 text-red-500 border-red-300 hover:bg-red-50'
-																				onClick={() =>
-																					handleOpenDeleteDialog(
-																						user._id,
-																						user.fullname
-																					)
-																				}
-																			>
-																				<Trash2 size={16} />
-																			</Button>
-																		</DialogTrigger>
-																		<DialogContent className='max-w-xs rounded-xl'>
-																			<DialogTitle>{t('deleteUser')}</DialogTitle>
-																			<DialogDescription>
-																				{t('deleteUserConfirm', { name: selectedUserName })}
-																			</DialogDescription>
-																			<DialogFooter className='flex justify-end gap-2'>
-																				<Button
-																					variant='outline'
-																					onClick={handleCancelDelete}
-																				>
-																					{t('no')}
-																				</Button>
-																				<Button
-																					className='bg-red-600 text-white'
-																					onClick={handleConfirmDelete}
-																				>
-																					{t('yes')}
-																				</Button>
-																			</DialogFooter>
-																		</DialogContent>
-																	</Dialog>
-																</div>
-															</td>
-														</tr>
-													))}
-											</tbody>
-										</table>
-									</div>
-								</Card>
-							</div>
+                                  <Dialog
+                                    open={
+                                      isDeleteDialogOpen &&
+                                      selectedUserId === user._id
+                                    }
+                                    onOpenChange={setIsDeleteDialogOpen}
+                                  >
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        size='icon'
+                                        variant='outline'
+                                        className='h-7 w-7 text-red-500 border-red-300 hover:bg-red-50'
+                                        onClick={() =>
+                                          handleOpenDeleteDialog(
+                                            user._id,
+                                            user.fullname
+                                          )
+                                        }
+                                      >
+                                        <Trash2 size={16} />
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className='max-w-xs rounded-xl'>
+                                      <DialogTitle>
+                                        {t('deleteUser')}
+                                      </DialogTitle>
+                                      <DialogDescription>
+                                        {t('deleteUserConfirm', {
+                                          name: selectedUserName,
+                                        })}
+                                      </DialogDescription>
+                                      <DialogFooter className='flex justify-end gap-2'>
+                                        <Button
+                                          variant='outline'
+                                          onClick={handleCancelDelete}
+                                        >
+                                          {t('no')}
+                                        </Button>
+                                        <Button
+                                          className='bg-red-600 text-white'
+                                          onClick={handleConfirmDelete}
+                                        >
+                                          {t('yes')}
+                                        </Button>
+                                      </DialogFooter>
+                                    </DialogContent>
+                                  </Dialog>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              </div>
 
-							{/* Pagination */}
-							{totalPages > 1 && (
-								<div className='flex flex-col sm:flex-row items-center justify-between mt-3 sm:mt-4 gap-3'>
-									<div className='flex gap-2 w-full sm:w-auto'>
-										<Button
-											size='sm'
-											onClick={() => goToPage(page - 1)}
-											disabled={page === 1}
-											className='flex-1 sm:flex-none text-xs h-8'
-										>
-											&larr; {t('prev')}
-										</Button>
-										<Button
-											size='sm'
-											onClick={() => goToPage(page + 1)}
-											disabled={page === totalPages}
-											className='flex-1 sm:flex-none text-xs h-8'
-										>
-											{t('next')} &rarr;
-										</Button>
-									</div>
-									<div className='text-xs sm:text-sm text-muted-foreground order-first sm:order-none'>
-										{page} / {totalPages}
-									</div>
-									<div className='hidden md:flex gap-1'>
-										{Array.from({ length: totalPages }, (_, i) => (
-											<Button
-												key={i}
-												size='sm'
-												variant={page === i + 1 ? 'default' : 'outline'}
-												onClick={() => goToPage(i + 1)}
-												className='text-xs h-8'
-											>
-												{i + 1}
-											</Button>
-										))}
-									</div>
-								</div>
-							)}
-						</Card>
-					</TabsContent>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className='flex flex-col sm:flex-row items-center justify-between mt-3 sm:mt-4 gap-3'>
+                  <div className='flex gap-2 w-full sm:w-auto'>
+                    <Button
+                      size='sm'
+                      onClick={() => goToPage(page - 1)}
+                      disabled={page === 1}
+                      className='flex-1 sm:flex-none text-xs h-8'
+                    >
+                      &larr; {t('prev')}
+                    </Button>
+                    <Button
+                      size='sm'
+                      onClick={() => goToPage(page + 1)}
+                      disabled={page === totalPages}
+                      className='flex-1 sm:flex-none text-xs h-8'
+                    >
+                      {t('next')} &rarr;
+                    </Button>
+                  </div>
+                  <div className='text-xs sm:text-sm text-muted-foreground order-first sm:order-none'>
+                    {page} / {totalPages}
+                  </div>
+                  <div className='hidden md:flex gap-1'>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <Button
+                        key={i}
+                        size='sm'
+                        variant={page === i + 1 ? 'default' : 'outline'}
+                        onClick={() => goToPage(i + 1)}
+                        className='text-xs h-8'
+                      >
+                        {i + 1}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          </TabsContent>
 
-					{/* Clinic Tab */}
-					<TabsContent value='clinic' className='space-y-3 sm:space-y-4'>
-						<Card className='p-4 sm:p-5 lg:p-6'>
-							<h2 className='text-lg sm:text-xl font-semibold mb-4 sm:mb-6'>
-								{t('clinicInfo')}
-							</h2>
-							<div className='space-y-3 sm:space-y-4 max-w-2xl'>
-								<div>
-									<Label className='text-xs sm:text-sm'>{t('clinicName')}</Label>
-									<Input
-										value={getAllSettings?.clinic_name || ''}
-										onChange={e => handleChangee('clinic_name', e.target.value)}
-										className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-									/>
-									{errors.clinic_name && (
-										<p className='text-red-500 text-xs sm:text-sm mt-1'>
-											{errors.clinic_name}
-										</p>
-									)}
-								</div>
+          {/* Clinic Tab */}
+          <TabsContent value='clinic' className='space-y-3 sm:space-y-4'>
+            <Card className='p-4 sm:p-5 lg:p-6'>
+              <h2 className='text-lg sm:text-xl font-semibold mb-4 sm:mb-6'>
+                {t('clinicInfo')}
+              </h2>
+              <div className='space-y-3 sm:space-y-4 max-w-2xl'>
+                <div>
+                  <Label className='text-xs sm:text-sm'>
+                    {t('clinicName')}
+                  </Label>
+                  <Input
+                    value={getAllSettings?.clinic_name || ''}
+                    onChange={(e) =>
+                      handleChangee('clinic_name', e.target.value)
+                    }
+                    className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
+                  />
+                  {errors.clinic_name && (
+                    <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                      {errors.clinic_name}
+                    </p>
+                  )}
+                </div>
 
-								<div>
-									<Label className='text-xs sm:text-sm'>{t('address')}</Label>
-									<Input
-										value={getAllSettings?.address || ''}
-										onChange={e => handleChangee('address', e.target.value)}
-										className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-									/>
-									{errors.address && (
-										<p className='text-red-500 text-xs sm:text-sm mt-1'>
-											{errors.address}
-										</p>
-									)}
-								</div>
+                <div>
+                  <Label className='text-xs sm:text-sm'>{t('address')}</Label>
+                  <Input
+                    value={getAllSettings?.address || ''}
+                    onChange={(e) => handleChangee('address', e.target.value)}
+                    className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
+                  />
+                  {errors.address && (
+                    <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                      {errors.address}
+                    </p>
+                  )}
+                </div>
 
-								<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-									<div>
-										<Label className='text-xs sm:text-sm'>{t('phone')}</Label>
-										<Input
-											value={getAllSettings?.phone || '+998'}
-											onChange={e => handleSettingsPhoneChange(e.target.value)}
-											placeholder='+998XXXXXXXXX'
-											maxLength={13}
-											className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-										/>
-										{errors.phone && (
-											<p className='text-red-500 text-xs sm:text-sm mt-1'>
-												{errors.phone}
-											</p>
-										)}
-									</div>
-									{/* <div>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+                  <div>
+                    <Label className='text-xs sm:text-sm'>{t('phone')}</Label>
+                    <Input
+                      value={getAllSettings?.phone || '+998'}
+                      onChange={(e) =>
+                        handleSettingsPhoneChange(e.target.value)
+                      }
+                      placeholder='+998XXXXXXXXX'
+                      maxLength={13}
+                      className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
+                    />
+                    {errors.phone && (
+                      <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                        {errors.phone}
+                      </p>
+                    )}
+                  </div>
+                  {/* <div>
 										<Label className='text-xs sm:text-sm'>Email</Label>
 										<Input
 											value={getAllSettings?.email || ''}
@@ -992,49 +1019,51 @@ const Settings = () => {
 											</p>
 										)}
 									</div> */}
-								</div>
+                </div>
 
-								<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-									<div>
-										<Label className='text-xs sm:text-sm'>
-											{t('workStartTime')}
-										</Label>
-										<Input
-											type='time'
-											value={getAllSettings?.work_start_time || ''}
-											onChange={e =>
-												handleChangee('work_start_time', e.target.value)
-											}
-											className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-										/>
-										{errors.work_start_time && (
-											<p className='text-red-500 text-xs sm:text-sm mt-1'>
-												{errors.work_start_time}
-											</p>
-										)}
-									</div>
-									<div>
-										<Label className='text-xs sm:text-sm'>{t('workEndTime')}</Label>
-										<Input
-											type='time'
-											value={getAllSettings?.work_end_time || ''}
-											onChange={e =>
-												handleChangee('work_end_time', e.target.value)
-											}
-											className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-										/>
-										{errors.work_end_time && (
-											<p className='text-red-500 text-xs sm:text-sm mt-1'>
-												{errors.work_end_time}
-											</p>
-										)}
-									</div>
-								</div>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+                  <div>
+                    <Label className='text-xs sm:text-sm'>
+                      {t('workStartTime')}
+                    </Label>
+                    <Input
+                      type='time'
+                      value={getAllSettings?.work_start_time || ''}
+                      onChange={(e) =>
+                        handleChangee('work_start_time', e.target.value)
+                      }
+                      className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
+                    />
+                    {errors.work_start_time && (
+                      <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                        {errors.work_start_time}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className='text-xs sm:text-sm'>
+                      {t('workEndTime')}
+                    </Label>
+                    <Input
+                      type='time'
+                      value={getAllSettings?.work_end_time || ''}
+                      onChange={(e) =>
+                        handleChangee('work_end_time', e.target.value)
+                      }
+                      className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
+                    />
+                    {errors.work_end_time && (
+                      <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                        {errors.work_end_time}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-								<div>
-									<Label className='text-xs sm:text-sm'>{t('logo')}</Label>
-									<div className='flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-2'>
-										{/* <div className='w-24 h-24 sm:w-32 sm:h-32 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden bg-muted/20'>
+                <div>
+                  <Label className='text-xs sm:text-sm'>{t('logo')}</Label>
+                  <div className='flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-2'>
+                    {/* <div className='w-24 h-24 sm:w-32 sm:h-32 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden bg-muted/20'>
 														{getAllSettings?.logo_path ? (
 																<img
 																		src={getAllSettings.logo_path}
@@ -1047,61 +1076,61 @@ const Settings = () => {
 																</span>
 														)}
 												</div> */}
-										<div className='w-24 h-24 sm:w-32 sm:h-32 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden bg-muted/20'>
-											{getAllSettings?.logo_path ? (
-												<img
-													src={getAllSettings.logo_path}
-													alt='Logo'
-													className='w-full h-full object-cover object-center'
-												/>
-											) : (
-												<span className='text-xs sm:text-sm text-muted-foreground'>
-													{t('logo')}
-												</span>
-											)}
-										</div>
+                    <div className='w-24 h-24 sm:w-32 sm:h-32 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden bg-muted/20'>
+                      {getAllSettings?.logo_path ? (
+                        <img
+                          src={getAllSettings.logo_path}
+                          alt='Logo'
+                          className='w-full h-full object-cover object-center'
+                        />
+                      ) : (
+                        <span className='text-xs sm:text-sm text-muted-foreground'>
+                          {t('logo')}
+                        </span>
+                      )}
+                    </div>
 
-										<div>
-											<input
-												type='file'
-												accept='image/*'
-												id='logoUpload'
-												style={{ display: 'none' }}
-												onChange={handleUploadFile}
-											/>
-											<Button
-												variant='outline'
-												onClick={() =>
-													document.getElementById('logoUpload')?.click()
-												}
-												size='sm'
-												className='text-xs sm:text-sm'
-											>
-												<Upload className='w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2' />
-												{t('upload')}
-											</Button>
-										</div>
-									</div>
-									{errors.logo_path && (
-										<p className='text-red-500 text-xs sm:text-sm mt-1'>
-											{errors.logo_path}
-										</p>
-									)}
-								</div>
+                    <div>
+                      <input
+                        type='file'
+                        accept='image/*'
+                        id='logoUpload'
+                        style={{ display: 'none' }}
+                        onChange={handleUploadFile}
+                      />
+                      <Button
+                        variant='outline'
+                        onClick={() =>
+                          document.getElementById('logoUpload')?.click()
+                        }
+                        size='sm'
+                        className='text-xs sm:text-sm'
+                      >
+                        <Upload className='w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2' />
+                        {t('upload')}
+                      </Button>
+                    </div>
+                  </div>
+                  {errors.logo_path && (
+                    <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                      {errors.logo_path}
+                    </p>
+                  )}
+                </div>
 
-								<Button
-									onClick={onSaveSettings}
-									disabled={isUploading}
-									className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
-								>
-									{isUploading ? t('logoUploading') : t('save')}
-								</Button>
-							</div>
-						</Card>
-					</TabsContent>
+                <Button
+                  onClick={onSaveSettings}
+                  disabled={isUploading}
+                  className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
+                >
+                  {isUploading ? t('logoUploading') : t('save')}
+                </Button>
+              </div>
+            </Card>
+          </TabsContent>
 
-					{/* Notifications Tab */}
-					{/* <TabsContent value='notifications' className='space-y-3 sm:space-y-4'>
+          {/* Notifications Tab */}
+          {/* <TabsContent value='notifications' className='space-y-3 sm:space-y-4'>
 						<Card className='p-4 sm:p-5 lg:p-6'>
 							<h2 className='text-lg sm:text-xl font-semibold mb-4 sm:mb-6'>
 								SMS созламалари
@@ -1162,8 +1191,8 @@ const Settings = () => {
 						</Card>
 					</TabsContent> */}
 
-					{/* Audit Log Tab */}
-					{/* <TabsContent value='audit' className='space-y-3 sm:space-y-4'>
+          {/* Audit Log Tab */}
+          {/* <TabsContent value='audit' className='space-y-3 sm:space-y-4'>
 						<Card className='p-4 sm:p-5 lg:p-6'>
 							<div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3'>
 								<h2 className='text-lg sm:text-xl font-semibold'>
@@ -1242,72 +1271,70 @@ const Settings = () => {
 							</div>
 						</Card>
 					</TabsContent> */}
-				</Tabs>
-			</main>
+        </Tabs>
+      </main>
 
-			{/* Add User Modal */}
-			<Dialog
-				open={isUserModalOpen}
-				onOpenChange={open => {
-					setIsUserModalOpen(open)
-					if (!open) {
-						resetForm()
-						setEditingUserId(null)
-						setErrorsUser({})
-						setForm({
-							fullname: '',
-							username: '',
-							// email: '',
-							phone: '+998',
-							password: '',
-							role: '',
-							section: '',
-							license_number: '',
-						})
-					}
-				}}
-			>
-				<DialogContent className='max-w-[95vw] sm:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto'>
-					<DialogHeader>
-						<DialogTitle className='text-lg sm:text-xl lg:text-2xl'>
-							{editingUserId
-								? t('editUser')
-								: t('addUser')}
-						</DialogTitle>
-					</DialogHeader>
-					<div className='space-y-3 sm:space-y-4'>
-						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-							<div>
-								<Label className='text-xs sm:text-sm'>{t('fullName')}</Label>
-								<Input
-									value={form.fullname}
-									onChange={e => handleChange('fullname', e.target.value)}
-									placeholder={t('enterFullName')}
-									className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-								/>
-								{errorsUser.fullname && (
-									<p className='text-red-500 text-xs sm:text-sm mt-1'>
-										{errorsUser.fullname}
-									</p>
-								)}
-							</div>
-							<div>
-								<Label className='text-xs sm:text-sm'>{t('userName')}</Label>
-								<Input
-									value={form.username}
-									onChange={e => handleChange('username', e.target.value)}
-									placeholder={t('enterUsername')}
-									className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-								/>
-								{errorsUser.username && (
-									<p className='text-red-500 text-xs sm:text-sm mt-1'>
-										{errorsUser.username}
-									</p>
-								)}
-							</div>
-						</div>
-						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-							{/* <div>
+      {/* Add User Modal */}
+      <Dialog
+        open={isUserModalOpen}
+        onOpenChange={(open) => {
+          setIsUserModalOpen(open);
+          if (!open) {
+            resetForm();
+            setEditingUserId(null);
+            setErrorsUser({});
+            setForm({
+              fullname: '',
+              username: '',
+              // email: '',
+              phone: '+998',
+              password: '',
+              role: '',
+              section: '',
+              license_number: '',
+            });
+          }
+        }}
+      >
+        <DialogContent className='max-w-[95vw] sm:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle className='text-lg sm:text-xl lg:text-2xl'>
+              {editingUserId ? t('editUser') : t('addUser')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className='space-y-3 sm:space-y-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+              <div>
+                <Label className='text-xs sm:text-sm'>{t('fullName')}</Label>
+                <Input
+                  value={form.fullname}
+                  onChange={(e) => handleChange('fullname', e.target.value)}
+                  placeholder={t('enterFullName')}
+                  className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
+                />
+                {errorsUser.fullname && (
+                  <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                    {errorsUser.fullname}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className='text-xs sm:text-sm'>{t('userName')}</Label>
+                <Input
+                  value={form.username}
+                  onChange={(e) => handleChange('username', e.target.value)}
+                  placeholder={t('enterUsername')}
+                  className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
+                />
+                {errorsUser.username && (
+                  <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                    {errorsUser.username}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+              {/* <div>
 								<Label className='text-xs sm:text-sm'>Email</Label>
 								<Input
 									value={form.email}
@@ -1321,163 +1348,161 @@ const Settings = () => {
 									</p>
 								)}
 							</div> */}
-							<div>
-								<Label className='text-xs sm:text-sm'>{t('phone')}</Label>
-								<Input
-									value={form.phone || '+998'}
-									onChange={e => handlePhoneChange(e.target.value)}
-									placeholder='+998XXXXXXXXX'
-									maxLength={13}
-									className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-								/>
-								{errorsUser.phone && (
-									<p className='text-red-500 text-xs sm:text-sm mt-1'>
-										{errorsUser.phone}
-									</p>
-								)}
-							</div>
-						</div>
-						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-							<div>
-								<Label className='text-xs sm:text-sm'>{t('role')}</Label>
-								<Select
-									value={form.role}
-									onValueChange={val => handleChange('role', val)}
-								>
-									<SelectTrigger className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'>
-										<SelectValue placeholder={t('selectRole')} />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem
-											value={RoleConstants.DOCTOR}
-											className='text-xs sm:text-sm'
-										>
-											{t('roles.doctor')}
-										</SelectItem>
-										<SelectItem
-											value={RoleConstants.NURSE}
-											className='text-xs sm:text-sm'
-										>
-											{t('roles.nurse')}
-										</SelectItem>
-										<SelectItem
-											value={RoleConstants.RECEPTIONIST}
-											className='text-xs sm:text-sm'
-										>
-											{t('roles.receptionist')}
-										</SelectItem>
-										<SelectItem
-											value={RoleConstants.ADMIN}
-											className='text-xs sm:text-sm'
-										>
-											{t('roles.admin')}
-										</SelectItem>
-									</SelectContent>
-								</Select>
-								{errorsUser.role && (
-									<p className='text-red-500 text-xs sm:text-sm mt-1'>
-										{errorsUser.role}
-									</p>
-								)}
-							</div>
+              <div>
+                <Label className='text-xs sm:text-sm'>{t('phone')}</Label>
+                <Input
+                  value={form.phone || '+998'}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  placeholder='+998XXXXXXXXX'
+                  maxLength={13}
+                  className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
+                />
+                {errorsUser.phone && (
+                  <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                    {errorsUser.phone}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+              <div>
+                <Label className='text-xs sm:text-sm'>{t('role')}</Label>
+                <Select
+                  value={form.role}
+                  onValueChange={(val) => handleChange('role', val)}
+                >
+                  <SelectTrigger className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'>
+                    <SelectValue placeholder={t('selectRole')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      value={RoleConstants.DOCTOR}
+                      className='text-xs sm:text-sm'
+                    >
+                      {t('roles.doctor')}
+                    </SelectItem>
+                    <SelectItem
+                      value={RoleConstants.NURSE}
+                      className='text-xs sm:text-sm'
+                    >
+                      {t('roles.nurse')}
+                    </SelectItem>
+                    <SelectItem
+                      value={RoleConstants.RECEPTIONIST}
+                      className='text-xs sm:text-sm'
+                    >
+                      {t('roles.receptionist')}
+                    </SelectItem>
+                    <SelectItem
+                      value={RoleConstants.ADMIN}
+                      className='text-xs sm:text-sm'
+                    >
+                      {t('roles.admin')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {errorsUser.role && (
+                  <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                    {errorsUser.role}
+                  </p>
+                )}
+              </div>
 
-							<div>
-								<Label className='text-xs sm:text-sm'>{t('department')}</Label>
-								<Select
-									value={form.section}
-									onValueChange={val => handleChange('section', val)}
-								>
-									<SelectTrigger className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'>
-										<SelectValue placeholder={t('selectDepartment')} />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem
-											value={SectionConstants.KARDIOLOGIYA}
-											className='text-xs sm:text-sm'
-										>
-											{SectionConstants.KARDIOLOGIYA}
-										</SelectItem>
-										<SelectItem
-											value={SectionConstants.NEVROLOGIYA}
-											className='text-xs sm:text-sm'
-										>
-											{SectionConstants.NEVROLOGIYA}
-										</SelectItem>
-										<SelectItem
-											value={SectionConstants.UZI_MUTAHASSISI}
-											className='text-xs sm:text-sm'
-										>
-											{SectionConstants.UZI_MUTAHASSISI}
-										</SelectItem>
-									</SelectContent>
-								</Select>
-								{errorsUser.section && (
-									<p className='text-red-500 text-xs sm:text-sm mt-1'>
-										{errorsUser.section}
-									</p>
-								)}
-							</div>
-						</div>
-						<div>
-							<Label className='text-xs sm:text-sm'>
-								{t('licenseNumber')}
-							</Label>
-							<Input
-								value={form.license_number}
-								onChange={e => handleChange('license_number', e.target.value)}
-								autoComplete='off'
-								placeholder={t('enterLicenseNumber')}
-								className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-							/>
-							{errorsUser.license_number && (
-								<p className='text-red-500 text-xs sm:text-sm mt-1'>
-									{errorsUser.license_number}
-								</p>
-							)}
-						</div>
+              <div>
+                <Label className='text-xs sm:text-sm'>{t('department')}</Label>
+                <Select
+                  value={form.section}
+                  onValueChange={(val) => handleChange('section', val)}
+                >
+                  <SelectTrigger className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'>
+                    <SelectValue placeholder={t('selectDepartment')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      value={SectionConstants.KARDIOLOGIYA}
+                      className='text-xs sm:text-sm'
+                    >
+                      {SectionConstants.KARDIOLOGIYA}
+                    </SelectItem>
+                    <SelectItem
+                      value={SectionConstants.NEVROLOGIYA}
+                      className='text-xs sm:text-sm'
+                    >
+                      {SectionConstants.NEVROLOGIYA}
+                    </SelectItem>
+                    <SelectItem
+                      value={SectionConstants.UZI_MUTAHASSISI}
+                      className='text-xs sm:text-sm'
+                    >
+                      {SectionConstants.UZI_MUTAHASSISI}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {errorsUser.section && (
+                  <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                    {errorsUser.section}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div>
+              <Label className='text-xs sm:text-sm'>{t('licenseNumber')}</Label>
+              <Input
+                value={form.license_number}
+                onChange={(e) => handleChange('license_number', e.target.value)}
+                autoComplete='off'
+                placeholder={t('enterLicenseNumber')}
+                className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
+              />
+              {errorsUser.license_number && (
+                <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                  {errorsUser.license_number}
+                </p>
+              )}
+            </div>
 
-						<div>
-							<Label className='text-xs sm:text-sm'>{t('password')}</Label>
-							<Input
-								type='password'
-								value={form.password}
-								onChange={e => handleChange('password', e.target.value)}
-								autoComplete='new-password'
-								placeholder={t('enterPassword')}
-								className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-							/>
-							{!editingUserId
-								? errorsUser.password && (
-										<p className='text-red-500 text-xs sm:text-sm mt-1'>
-											{errorsUser.password}
-										</p>
-								  )
-								: null}
-						</div>
-					</div>
+            <div>
+              <Label className='text-xs sm:text-sm'>{t('password')}</Label>
+              <Input
+                type='password'
+                value={form.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                autoComplete='new-password'
+                placeholder={t('enterPassword')}
+                className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
+              />
+              {!editingUserId
+                ? errorsUser.password && (
+                    <p className='text-red-500 text-xs sm:text-sm mt-1'>
+                      {errorsUser.password}
+                    </p>
+                  )
+                : null}
+            </div>
+          </div>
 
-					<DialogFooter className='flex-col sm:flex-row gap-2'>
-						<Button
-							variant='outline'
-							onClick={() => {
-								setIsUserModalOpen(false)
-								setErrorsUser({})
-							}}
-							className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
-						>
-							{t('cancel')}
-						</Button>
-						<Button
-							onClick={onSaveUser}
-							className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
-						>
-							{editingUserId ? t('save') : t('add')}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-		</div>
-	)
-}
+          <DialogFooter className='flex-col sm:flex-row gap-2'>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setIsUserModalOpen(false);
+                setErrorsUser({});
+              }}
+              className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={onSaveUser}
+              className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
+            >
+              {editingUserId ? t('save') : t('add')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 
-export default Settings
+export default Settings;
