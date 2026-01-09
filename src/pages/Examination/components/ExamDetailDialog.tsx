@@ -220,9 +220,7 @@ const ExamDetailDialog = ({
         <DialogContent className='max-w-2xl'>
           <DialogHeader>
             <DialogTitle>{t('detail.editExamination')}</DialogTitle>
-            <DialogDescription>
-              {t('detail.editDescription')}
-            </DialogDescription>
+            <DialogDescription>{t('detail.editDescription')}</DialogDescription>
           </DialogHeader>
 
           <div className='space-y-4 py-4'>
@@ -297,10 +295,10 @@ const ExamDetailDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('detail.examinationDetails')}</DialogTitle>
-          <DialogDescription>
-            {t('detail.fullPatientInfo')}
-          </DialogDescription>
+          <DialogTitle className='text-xl'>
+            {t('detail.examinationDetails')}
+          </DialogTitle>
+          <DialogDescription>{t('detail.fullPatientInfo')}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-6 py-4'>
@@ -311,19 +309,27 @@ const ExamDetailDialog = ({
             </h3>
             <div className='grid grid-cols-2 gap-4 text-sm'>
               <div>
-                <span className='text-muted-foreground'>{t('detail.name')}:</span>
+                <span className='text-muted-foreground'>
+                  {t('detail.name')}:
+                </span>
                 <p className='font-medium'>{exam.patient_id?.fullname}</p>
               </div>
               <div>
-                <span className='text-muted-foreground'>{t('detail.phone')}:</span>
+                <span className='text-muted-foreground'>
+                  {t('detail.phone')}:
+                </span>
                 <p className='font-medium'>{exam.patient_id?.phone}</p>
               </div>
               <div>
-                <span className='text-muted-foreground'>{t('detail.doctor')}:</span>
+                <span className='text-muted-foreground'>
+                  {t('detail.doctor')}:
+                </span>
                 <p className='font-medium'>{exam.doctor_id?.fullname}</p>
               </div>
               <div>
-                <span className='text-muted-foreground'>{t('detail.status')}:</span>
+                <span className='text-muted-foreground'>
+                  {t('detail.status')}:
+                </span>
                 <div className='mt-1'>{getStatusBadge(exam.status)}</div>
               </div>
             </div>
@@ -348,7 +354,9 @@ const ExamDetailDialog = ({
                   {t('detail.diagnosis')}:
                 </span>
                 <p className='font-medium bg-muted p-3 rounded-md'>
-                  {exam.diagnosis?.name || exam.diagnosis || t('detail.notEntered')}
+                  {exam.diagnosis?.name ||
+                    exam.diagnosis ||
+                    t('detail.notEntered')}
                 </p>
               </div>
               <div>
@@ -356,11 +364,13 @@ const ExamDetailDialog = ({
                   {t('detail.recommendation')}:
                 </span>
                 <p className='font-medium bg-muted p-3 rounded-md'>
-                  {exam.description || t('detail.notEntered')}}
+                  {exam.description || t('detail.notEntered')}
                 </p>
               </div>
               <div>
-                <span className='text-muted-foreground block mb-1'>{t('detail.date')}:</span>
+                <span className='text-muted-foreground block mb-1'>
+                  {t('detail.date')}:
+                </span>
                 <p className='font-medium'>
                   {new Date(exam.created_at).toLocaleString('ru-RU')}
                 </p>
@@ -410,7 +420,9 @@ const ExamDetailDialog = ({
                           {t('detail.intake')}:
                         </span>
                         <p className='font-semibold'>
-                          {t('detail.timesPerDay', { count: prescription.frequency })}
+                          {t('detail.timesPerDay', {
+                            count: prescription.frequency,
+                          })}
                         </p>
                       </div>
                       <div>
@@ -440,7 +452,9 @@ const ExamDetailDialog = ({
 
           {/* Action Buttons */}
           <div className='space-y-2 pt-4 border-t'>
-            <h3 className='text-lg font-semibold mb-3'>{t('detail.actions')}</h3>
+            <h3 className='text-lg font-semibold mb-3'>
+              {t('detail.actions')}
+            </h3>
             <div className='grid grid-cols-2 gap-3'>
               <Button
                 variant='outline'

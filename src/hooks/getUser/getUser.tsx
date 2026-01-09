@@ -1,8 +1,8 @@
-import { useMeQuery } from "@/app/api/authApi/authApi"
+import { useMeQuery } from '@/app/api/authApi/authApi';
 
-const getUser = () => {
-  const {data} = useMeQuery();
-  return data.data
-}
+const useGetUser = () => {
+  const { data } = useMeQuery();
+  return data.data;
+};
 
-export default getUser
+export default useGetUser;

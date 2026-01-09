@@ -161,6 +161,12 @@ const collectionToRouteMap: Record<
     update: '/reports',
     delete: '/reports',
   },
+  history: {
+    read: '/history',
+    create: '/history',
+    update: '/history',
+    delete: '/history',
+  },
 };
 
 export const usePermissions = (): PermissionsResult => {

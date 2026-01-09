@@ -689,6 +689,18 @@ export const RoutePermissions: RoutePermission[] = [
     ],
     description: 'Patient portal access',
   },
+
+  {
+    path: '/history',
+    name: 'History',
+    method: 'GET',
+    roles: [
+      RoleConstants.CEO,
+      RoleConstants.ADMIN,
+      RoleConstants.DOCTOR,
+    ],
+    description: 'History',
+  },
 ];
 
 /**

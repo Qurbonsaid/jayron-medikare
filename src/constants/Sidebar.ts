@@ -219,7 +219,7 @@ export const systemMenu: MenuCategory = {
       titleKey: 'menu.history',
       url: '/history',
       icon: History,
-      permission: 'examinations',
+      permission: 'history',
     },
     {
       title: 'Созламалар',
@@ -228,6 +228,12 @@ export const systemMenu: MenuCategory = {
       icon: Settings,
       permission: 'ceo_only',
     },
-    { title: 'Профил', titleKey: 'menu.profile', url: '/profile', icon: User, permission: null }, // har kim ko'ra oladi
+    {
+      title: 'Профил',
+      titleKey: 'menu.profile',
+      url: '/profile',
+      icon: User,
+      permission: null,
+    }, // har kim ko'ra oladi
   ],
 };
