@@ -11,7 +11,7 @@ Healthcare management system (Medikare) built with React, TypeScript, Vite, shad
 - **RTK Query with code splitting**: All API endpoints use `baseApi.injectEndpoints()` pattern (see [../src/app/api/baseApi/baseApi.ts](../src/app/api/baseApi/baseApi.ts))
 - Each domain has its own API file: `src/app/api/{domain}Api/*.ts`
 - Endpoints auto-generate hooks like `useGetAllServiceQuery`, `useCreateServiceMutation`
-- **API Tags** for cache invalidation defined in [src/constants/apiTags.ts](src/constants/apiTags.ts)
+- **API Tags** for cache invalidation defined in [../src/constants/apiTags.ts](../src/constants/apiTags.ts)
 - Use `providesTags` and `invalidatesTags` for automatic cache updates
 - Example API pattern:
   ```typescript
@@ -28,33 +28,33 @@ Healthcare management system (Medikare) built with React, TypeScript, Vite, shad
 ### Authentication & Authorization
 
 - Token stored in localStorage via `baseApi.ts` automatic caching
-- **Role-Based Security (RBS)**: Use hooks from [src/hooks/RBS/](src/hooks/RBS/) for permission checks
+- **Role-Based Security (RBS)**: Use hooks from [../src/hooks/RBS/](../src/hooks/RBS/) for permission checks
 - `usePermission(collectionName)` returns `{ canCreate, canRead, canUpdate, canDelete }`
 - `useRouteActions(path)` checks route-level permissions per HTTP method
-- Route permissions defined in [src/constants/route-permissions.ts](src/constants/route-permissions.ts) with roles
+- Route permissions defined in [../src/constants/route-permissions.ts](../src/constants/route-permissions.ts) with roles
 - Always wrap protected routes with `<RouteProtection path="/route" />` component
 - Biometric endpoints skip auth (check `isBiometricEndpoint` logic in baseApi)
 
 ### UI Components
 
-- **shadcn/ui**: All components in [src/components/ui/](src/components/ui/) use `cn()` utility from [src/lib/utils.ts](src/lib/utils.ts)
+- **shadcn/ui**: All components in [../src/components/ui/](../src/components/ui/) use `cn()` utility from [../src/lib/utils.ts](../src/lib/utils.ts)
 - `cn()` merges Tailwind classes with `twMerge(clsx(...))` - always use for conditional styling
 - Custom theme extends default Tailwind with HSL color variables (primary, success, warning, danger)
 - Form validation uses `react-hook-form` + `zod` (validation schemas in `src/validation/`)
 
 ### Internationalization
 
-- i18next with namespace-based translations: [src/i18n/locales/{lang}/{namespace}.json](src/i18n/locales/)
+- i18next with namespace-based translations: [../src/i18n/locales/{lang}/{namespace}.json](../src/i18n/locales/)
 - Three languages: `uz-Cyrl`, `uz-Latn`, `en`
 - Use `const { t } = useTranslation('namespace')` then `t('key')`
-- Sidebar menu items use `titleKey` property for translation (see [src/constants/Sidebar.ts](src/constants/Sidebar.ts))
+- Sidebar menu items use `titleKey` property for translation (see [../src/constants/Sidebar.ts](../src/constants/Sidebar.ts))
 
 ### Routing
 
-- React Router with `RouteConfig[]` array in [src/router.tsx](src/router.tsx)
+- React Router with `RouteConfig[]` array in [../src/router.tsx](../src/router.tsx)
 - Each route has `permission` field (null = public, string = permission key)
 - Routes auto-protected via `RouteProtection` component based on RBS system
-- Permission-to-route mapping in [src/hooks/usePermission.ts](src/hooks/usePermission.ts)
+- Permission-to-route mapping in [../src/hooks/usePermission.ts](../src/hooks/usePermission.ts)
 
 ## Development Workflows
 
@@ -72,21 +72,21 @@ yarn preview      # Preview production build
 
 1. Create API file: `src/app/api/{domain}Api/{name}Api.ts`
 2. Use `baseApi.injectEndpoints()` pattern
-3. Add API tag to [src/constants/apiTags.ts](src/constants/apiTags.ts) if new domain
+3. Add API tag to [../src/constants/apiTags.ts](../src/constants/apiTags.ts) if new domain
 4. Export auto-generated hooks: `export const { useGetQuery, useMutation } = api`
 
 ### Adding Protected Routes
 
-1. Add route config to [src/router.tsx](src/router.tsx) with `permission` key
-2. Add permission mappings to [src/constants/route-permissions.ts](src/constants/route-permissions.ts)
-3. Update [src/hooks/usePermission.ts](src/hooks/usePermission.ts) collection mapping if CRUD needed
-4. Add sidebar menu item to [src/constants/Sidebar.ts](src/constants/Sidebar.ts) with `permission` field
+1. Add route config to [../src/router.tsx](../src/router.tsx) with `permission` key
+2. Add permission mappings to [../src/constants/route-permissions.ts](../src/constants/route-permissions.ts)
+3. Update [../src/hooks/usePermission.ts](../src/hooks/usePermission.ts) collection mapping if CRUD needed
+4. Add sidebar menu item to [../src/constants/Sidebar.ts](../src/constants/Sidebar.ts) with `permission` field
 
 ### Creating New Pages
 
 - Place in `src/pages/{Feature}/` directory
 - Use `usePermission('collectionName')` for action-level permissions
-- Use `useHandleRequest()` hook from [src/hooks/Handle_Request/](src/hooks/Handle_Request/) for error handling
+- Use `useHandleRequest()` hook from [../src/hooks/Handle_Request/](../src/hooks/Handle_Request/) for error handling
 - Follow pagination pattern: RTK Query with `{ page, limit, search }` params
 - Toasts via `sonner` library: `toast.success()`, `toast.error()`
 
@@ -94,7 +94,7 @@ yarn preview      # Preview production build
 
 ### TypeScript Configuration
 
-- Path alias: `@/*` maps to `src/*` (configured in [vite.config.ts](vite.config.ts) and [tsconfig.json](tsconfig.json))
+- Path alias: `@/*` maps to `src/*` (configured in [../vite.config.ts](../vite.config.ts) and [../tsconfig.json](../tsconfig.json))
 - Relaxed strictness: `noImplicitAny: false`, `strictNullChecks: false` (legacy, gradually improving)
 - Always import from `@/` instead of relative paths
 
@@ -232,7 +232,7 @@ yarn preview      # Preview production build
 
 ### Phone Number Formatting
 
-- Use `formatPhoneNumber()` from [src/lib/utils.ts](src/lib/utils.ts) - formats to `+998 92 694 42 47`
+- Use `formatPhoneNumber()` from [../src/lib/utils.ts](../src/lib/utils.ts) - formats to `+998 92 694 42 47`
 - Assumes Uzbekistan numbers starting with 998
 
 ### Number Input Handling
@@ -281,24 +281,24 @@ const { canCreate, canUpdate, canDelete } = usePermission('patients');
 
 - Use `providesTags` on queries to mark cached data
 - Use `invalidatesTags` on mutations to auto-refetch
-- Tags defined in [API_TAGS enum](src/constants/apiTags.ts)
+- Tags defined in [API_TAGS enum](../src/constants/apiTags.ts)
 - Token auto-cached in localStorage by baseApi on login response
 
 ## Integration Points
 
 ### External Dependencies
 
-- **Backend API**: Configured via `SERVER_URL` in [src/constants/ServerUrl.ts](src/constants/ServerUrl.ts)
-- **PDF Generation**: `@react-pdf/renderer` for reports (see [src/components/PDF/](src/components/PDF/))
-- **Charts**: Recharts library (see [src/components/Reports/](src/components/Reports/))
-- **File Uploads**: XLSX parsing with `xlsx` library ([src/types/xlsx.d.ts](src/types/xlsx.d.ts) for types)
+- **Backend API**: Configured via `SERVER_URL` in [../src/constants/ServerUrl.ts](../src/constants/ServerUrl.ts)
+- **PDF Generation**: `@react-pdf/renderer` for reports (see [../src/components/PDF/](../src/components/PDF/))
+- **Charts**: Recharts library (see [../src/components/Reports/](../src/components/Reports/))
+- **File Uploads**: XLSX parsing with `xlsx` library ([../src/types/xlsx.d.ts](../src/types/xlsx.d.ts) for types)
 
 ### Key Service Boundaries
 
-- **Authentication**: [src/app/api/authApi/](src/app/api/authApi/) - login, me, updateMe
-- **Patients**: [src/app/api/patientApi/](src/app/api/patientApi/) - patient CRUD
-- **Examinations**: [src/app/api/examinationApi/](src/app/api/examinationApi/) - medical visits
-- **Billing**: [src/app/api/billingApi/](src/app/api/billingApi/) - payments & invoices
+- **Authentication**: [../src/app/api/authApi/](../src/app/api/authApi/) - login, me, updateMe
+- **Patients**: [../src/app/api/patientApi/](../src/app/api/patientApi/) - patient CRUD
+- **Examinations**: [../src/app/api/examinationApi/](../src/app/api/examinationApi/) - medical visits
+- **Billing**: [../src/app/api/billingApi/](../src/app/api/billingApi/) - payments & invoices
 - **Templates**: Service & prescription templates for quick workflows
 
 ### Data Flow Example
@@ -316,7 +316,7 @@ const { canCreate, canUpdate, canDelete } = usePermission('patients');
 - Always check permission before showing actions - use `usePermission()` hook
 - Biometric endpoints need special handling (skip auth in baseApi)
 - Translations must exist in ALL three language files or will show key
-- Route permissions are method-specific (GET vs POST) - check [route-permissions.ts](src/constants/route-permissions.ts)
+- Route permissions are method-specific (GET vs POST) - check [route-permissions.ts](../src/constants/route-permissions.ts)
 
 ## Testing & Debugging
 

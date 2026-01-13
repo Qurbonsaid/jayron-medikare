@@ -1444,13 +1444,15 @@ const Prescription = () => {
                       searchValue={prescriptionTemplateSearch}
                       onSearchChange={setPrescriptionTemplateSearch}
                       options={
-                        prescriptionTemplatesData?.data?.map((template: any) => ({
-                          value: template._id,
-                          label: template.name,
-                          sublabel: `${template.items?.length || 0} ${t(
-                            'prescription:medications'
-                          )}`,
-                        })) || []
+                        prescriptionTemplatesData?.data?.map(
+                          (template: any) => ({
+                            value: template._id,
+                            label: template.name,
+                            sublabel: `${template.items?.length || 0} ${t(
+                              'prescription:medications'
+                            )}`,
+                          })
+                        ) || []
                       }
                       isLoading={isFetchingPrescriptionTemplates}
                       hasMore={
@@ -1519,7 +1521,8 @@ const Prescription = () => {
                       isLoading={isFetchingServiceTemplates}
                       hasMore={
                         serviceTemplatesData
-                          ? serviceTemplatePage < serviceTemplatesData.totalPages
+                          ? serviceTemplatePage <
+                            serviceTemplatesData.totalPages
                           : false
                       }
                       onScroll={(e) => {
