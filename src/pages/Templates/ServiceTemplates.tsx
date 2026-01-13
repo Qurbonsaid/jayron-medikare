@@ -72,7 +72,7 @@ export default function ServiceTemplates() {
 
   // Form state
   const [templateName, setTemplateName] = useState('');
-  const [templateDuration, setTemplateDuration] = useState(30);
+  const [templateDuration, setTemplateDuration] = useState(7);
   const [templateItems, setTemplateItems] = useState<ServiceTemplateItem[]>([
     { service_type_id: '' },
   ]);
@@ -122,7 +122,7 @@ export default function ServiceTemplates() {
 
   const resetForm = () => {
     setTemplateName('');
-    setTemplateDuration(30);
+    setTemplateDuration(7);
     setTemplateItems([{ service_type_id: '' }]);
     setSelectedTemplateId(null);
     // Don't reset service search and page to preserve loaded services
@@ -316,18 +316,21 @@ export default function ServiceTemplates() {
 
         <div className='space-y-2'>
           <Label htmlFor='duration'>
-            {t('fields.duration', 'Давомийлиги (дақиқа)')}
+            {t('fields.duration', 'Давомийлиги (кун)')}
           </Label>
           <Input
             id='duration'
             type='number'
             min='1'
-            value={templateDuration}
+            value={templateDuration === 0 ? '' : templateDuration}
             onChange={(e) => {
               const value = e.target.value;
+              if (value === '') {
+                setTemplateDuration(0);
+                return;
+              }
               // Prevent leading zeros and ensure minimum value of 1
-              const numValue =
-                value === '' ? 1 : Math.max(1, parseInt(value, 10) || 1);
+              const numValue = Math.max(1, parseInt(value, 10) || 1);
               setTemplateDuration(numValue);
             }}
             placeholder={t('placeholders.duration', 'Давомийликни киритинг')}
@@ -493,7 +496,7 @@ export default function ServiceTemplates() {
                 <TableRow key={template._id}>
                   <TableCell className='font-medium'>{template.name}</TableCell>
                   <TableCell>
-                    {template.duration} {t('table.minutes', 'дақиқа')}
+                    {template.duration} {t('table.days', 'кун')}
                   </TableCell>
                   <TableCell>{template.items.length}</TableCell>
                   <TableCell>

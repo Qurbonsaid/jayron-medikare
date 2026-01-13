@@ -8,7 +8,7 @@ Healthcare management system (Medikare) built with React, TypeScript, Vite, shad
 
 ### State Management & API
 
-- **RTK Query with code splitting**: All API endpoints use `baseApi.injectEndpoints()` pattern (see [src/app/api/baseApi/baseApi.ts](src/app/api/baseApi/baseApi.ts))
+- **RTK Query with code splitting**: All API endpoints use `baseApi.injectEndpoints()` pattern (see [../src/app/api/baseApi/baseApi.ts](../src/app/api/baseApi/baseApi.ts))
 - Each domain has its own API file: `src/app/api/{domain}Api/*.ts`
 - Endpoints auto-generate hooks like `useGetAllServiceQuery`, `useCreateServiceMutation`
 - **API Tags** for cache invalidation defined in [src/constants/apiTags.ts](src/constants/apiTags.ts)
@@ -239,14 +239,29 @@ yarn preview      # Preview production build
 
 - Always prevent leading zeros in number inputs (e.g., 03 should become 3)
 - Parse values using `parseInt(value, 10)` with radix 10 to avoid octal interpretation
-- Handle empty strings appropriately (typically default to minimum value)
+- Handle empty strings by displaying empty input (not 0) for better UX
+- When user clears input completely, set state to 0 but display empty string
 - Example pattern:
+
   ```tsx
-  onChange={(e) => {
-    const value = e.target.value;
-    const numValue = value === '' ? 1 : Math.max(1, parseInt(value, 10) || 1);
-    setFieldValue(numValue);
-  }}
+  // In component state
+  const [fieldValue, setFieldValue] = useState(7);
+
+  // In JSX
+  <Input
+    type='number'
+    value={fieldValue === 0 ? '' : fieldValue}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value === '') {
+        setFieldValue(0);
+        return;
+      }
+      // Prevent leading zeros and ensure minimum value
+      const numValue = Math.max(1, parseInt(value, 10) || 1);
+      setFieldValue(numValue);
+    }}
+  />;
   ```
 
 ### Permission Checks in UI
