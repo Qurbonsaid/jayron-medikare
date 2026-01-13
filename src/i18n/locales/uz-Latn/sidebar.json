@@ -30,7 +30,8 @@
     "settings": "Sozlamalar",
     "profile": "Profil",
     "appointments": "Uchrashuvlar",
-    "rooms": "Xonalar"
+    "rooms": "Xonalar",
+    "templates":"Shablon"
   },
   "nav": {
     "patients": "Bemorlar",
@@ -55,6 +56,7 @@
     "settings": "Sozlamalar",
     "profile": "Profil",
     "patientPortal": "Bemor portali",
-    "dashboard": "Bosh sahifa"
+    "dashboard": "Bosh sahifa",
+    "templates":"Shablon"
   }
 }

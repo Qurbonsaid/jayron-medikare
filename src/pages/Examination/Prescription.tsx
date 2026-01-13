@@ -12,10 +12,13 @@ import {
   useCreatePrescriptionMutation,
   useUpdatePrescriptionMutation,
 } from '@/app/api/prescription/prescriptionApi';
+import { useGetAllPrecriptionTemplateQuery } from '@/app/api/prescriptionTemplateApi/prescriptionTemplateApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
+import { useGetAllServiceTemplateQuery } from '@/app/api/serviceTemplateApi/serviceTemplateApi';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ComboBox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -168,6 +171,17 @@ const Prescription = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [queryKey, setQueryKey] = useState(0);
 
+  // Template states
+  const [selectedPrescriptionTemplate, setSelectedPrescriptionTemplate] =
+    useState('');
+  const [prescriptionTemplateSearch, setPrescriptionTemplateSearch] =
+    useState('');
+  const [prescriptionTemplatePage, setPrescriptionTemplatePage] = useState(1);
+
+  const [selectedServiceTemplate, setSelectedServiceTemplate] = useState('');
+  const [serviceTemplateSearch, setServiceTemplateSearch] = useState('');
+  const [serviceTemplatePage, setServiceTemplatePage] = useState(1);
+
   // Get examination ID from navigation state
   const examinationIdFromState = location.state?.examinationId;
 
@@ -209,6 +223,24 @@ const Prescription = () => {
       page: 1,
       limit: 20,
     } as any);
+
+  // Fetch prescription templates
+  const {
+    data: prescriptionTemplatesData,
+    isFetching: isFetchingPrescriptionTemplates,
+  } = useGetAllPrecriptionTemplateQuery({
+    page: prescriptionTemplatePage,
+    limit: 20,
+    ...(prescriptionTemplateSearch && { name: prescriptionTemplateSearch }),
+  });
+
+  // Fetch service templates
+  const { data: serviceTemplatesData, isFetching: isFetchingServiceTemplates } =
+    useGetAllServiceTemplateQuery({
+      page: serviceTemplatePage,
+      limit: 20,
+      ...(serviceTemplateSearch && { search: serviceTemplateSearch }),
+    });
 
   // Store all available services
   useEffect(() => {
@@ -399,6 +431,9 @@ const Prescription = () => {
       medications: {},
       services: {},
     });
+    // Clear templates
+    setSelectedPrescriptionTemplate('');
+    setSelectedServiceTemplate('');
     // Clear navigation state first
     if (examinationIdFromState) {
       navigate(location.pathname, { replace: true, state: {} });
@@ -409,6 +444,78 @@ const Prescription = () => {
     setPage(1);
     // Change query key to force new query and bypass cache
     setQueryKey((prev) => prev + 1);
+  };
+
+  // Handle prescription template selection
+  const handlePrescriptionTemplateSelect = (templateId: string) => {
+    setSelectedPrescriptionTemplate(templateId);
+
+    const template = prescriptionTemplatesData?.data.find(
+      (t: any) => t._id === templateId
+    );
+    if (!template) return;
+
+    // Extract populated medication objects from template items and add to medicationOptions
+    const populatedMedications = template.items
+      .map((item: any) => item.medication_id)
+      .filter((med: any) => med && typeof med === 'object' && med._id);
+
+    if (populatedMedications.length > 0) {
+      setMedicationOptions((prev) => {
+        const existingIds = new Set(prev.map((m: any) => m._id));
+        const newMeds = populatedMedications.filter(
+          (m: any) => !existingIds.has(m._id)
+        );
+        return [...prev, ...newMeds];
+      });
+    }
+
+    // Add medications from template - replace existing ones
+    const templateMedications: Medication[] = template.items.map(
+      (item: any) => ({
+        id: Date.now().toString() + Math.random(),
+        medication_id: item.medication_id?._id || item.medication_id || '',
+        additionalInfo: '',
+        frequency: item.frequency?.toString() || '',
+        duration: item.duration?.toString() || '',
+        instructions: item.instructions || '',
+        addons: item.addons || '',
+      })
+    );
+
+    // Replace medications list instead of appending
+    setMedications(templateMedications);
+    toast.success(t('prescription:templateApplied'));
+  };
+
+  // Handle service template selection
+  const handleServiceTemplateSelect = (templateId: string) => {
+    setSelectedServiceTemplate(templateId);
+
+    const template = serviceTemplatesData?.data.find(
+      (t: any) => t._id === templateId
+    );
+    if (!template) return;
+
+    // Set duration from template
+    if (template.duration) {
+      setServiceDuration(template.duration);
+    }
+
+    // Add services from template - replace existing ones
+    const duration = template.duration || serviceDuration || 7;
+    const allDays = Array.from({ length: duration }, (_, i) => i + 1);
+
+    const templateServices: ServiceItem[] = template.items.map((item: any) => ({
+      id: Date.now().toString() + Math.random(),
+      service_id: item.service_type_id?._id || item.service_type_id || '',
+      notes: '',
+      markedDays: allDays, // Mark all days by default
+    }));
+
+    // Replace services list instead of appending
+    setServices(templateServices);
+    toast.success(t('prescription:templateApplied'));
   };
 
   const loadMoreExaminations = () => {
@@ -1294,6 +1401,162 @@ const Prescription = () => {
               </AlertDescription>
             </Alert>
           )}
+
+        {/* Template Selection */}
+        {!isLoading && selectedExaminationId && patient && (
+          <Card className='mb-4 sm:mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent'>
+            <CardHeader className='pb-3'>
+              <CardTitle className='text-base sm:text-lg flex items-center gap-2'>
+                <svg
+                  className='w-5 h-5 text-primary'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+                  />
+                </svg>
+                {t('prescription:selectTemplates')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                {/* Prescription Template */}
+                <div className='space-y-3'>
+                  <div className='flex items-center gap-2'>
+                    <div className='w-2 h-2 rounded-full bg-blue-500'></div>
+                    <Label className='text-sm font-medium text-muted-foreground'>
+                      {t('prescription:prescriptionTemplate')}
+                    </Label>
+                  </div>
+                  <div className='relative'>
+                    <ComboBox
+                      value={selectedPrescriptionTemplate}
+                      onValueChange={handlePrescriptionTemplateSelect}
+                      placeholder={t('prescription:selectPrescriptionTemplate')}
+                      searchPlaceholder={t('prescription:searchTemplate')}
+                      emptyText={t('prescription:noTemplatesFound')}
+                      loadingText={t('prescription:loading')}
+                      searchValue={prescriptionTemplateSearch}
+                      onSearchChange={setPrescriptionTemplateSearch}
+                      options={
+                        prescriptionTemplatesData?.data?.map(
+                          (template: any) => ({
+                            value: template._id,
+                            label: template.name,
+                            sublabel: `${template.items?.length || 0} ${t(
+                              'prescription:medications'
+                            )}`,
+                          })
+                        ) || []
+                      }
+                      isLoading={isFetchingPrescriptionTemplates}
+                      hasMore={
+                        prescriptionTemplatesData
+                          ? prescriptionTemplatePage <
+                            prescriptionTemplatesData.totalPages
+                          : false
+                      }
+                      onScroll={(e) => {
+                        const target = e.currentTarget;
+                        const scrollPercentage =
+                          (target.scrollTop /
+                            (target.scrollHeight - target.clientHeight)) *
+                          100;
+                        if (
+                          scrollPercentage > 80 &&
+                          !isFetchingPrescriptionTemplates &&
+                          prescriptionTemplatesData &&
+                          prescriptionTemplatePage <
+                            prescriptionTemplatesData.totalPages
+                        ) {
+                          setPrescriptionTemplatePage((prev) => prev + 1);
+                        }
+                      }}
+                    />
+                    {selectedPrescriptionTemplate && (
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        onClick={() => setSelectedPrescriptionTemplate('')}
+                        className='absolute right-10 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors'
+                      >
+                        <X className='h-4 w-4' />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Service Template */}
+                <div className='space-y-3'>
+                  <div className='flex items-center gap-2'>
+                    <div className='w-2 h-2 rounded-full bg-green-500'></div>
+                    <Label className='text-sm font-medium text-muted-foreground'>
+                      {t('prescription:serviceTemplate')}
+                    </Label>
+                  </div>
+                  <div className='relative'>
+                    <ComboBox
+                      value={selectedServiceTemplate}
+                      onValueChange={handleServiceTemplateSelect}
+                      placeholder={t('prescription:selectServiceTemplate')}
+                      searchPlaceholder={t('prescription:searchTemplate')}
+                      emptyText={t('prescription:noTemplatesFound')}
+                      loadingText={t('prescription:loading')}
+                      searchValue={serviceTemplateSearch}
+                      onSearchChange={setServiceTemplateSearch}
+                      options={
+                        serviceTemplatesData?.data?.map((template: any) => ({
+                          value: template._id,
+                          label: template.name,
+                          sublabel: `${template.items?.length || 0} ${t(
+                            'prescription:services'
+                          )} • ${template.duration} ${t('prescription:days')}`,
+                        })) || []
+                      }
+                      isLoading={isFetchingServiceTemplates}
+                      hasMore={
+                        serviceTemplatesData
+                          ? serviceTemplatePage <
+                            serviceTemplatesData.totalPages
+                          : false
+                      }
+                      onScroll={(e) => {
+                        const target = e.currentTarget;
+                        const scrollPercentage =
+                          (target.scrollTop /
+                            (target.scrollHeight - target.clientHeight)) *
+                          100;
+                        if (
+                          scrollPercentage > 80 &&
+                          !isFetchingServiceTemplates &&
+                          serviceTemplatesData &&
+                          serviceTemplatePage < serviceTemplatesData.totalPages
+                        ) {
+                          setServiceTemplatePage((prev) => prev + 1);
+                        }
+                      }}
+                    />
+                    {selectedServiceTemplate && (
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        onClick={() => setSelectedServiceTemplate('')}
+                        className='absolute right-10 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors'
+                      >
+                        <X className='h-4 w-4' />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Show forms only when examination is selected */}
         {!isLoading && selectedExaminationId && patient && (

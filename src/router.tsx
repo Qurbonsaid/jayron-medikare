@@ -8,6 +8,7 @@ import PatientProfile from '@/pages/Patients/PatientProfile';
 import Patients from '@/pages/Patients/Patients';
 import Radiology from '@/pages/Radiology/RadiologyNew';
 import Reports from '@/pages/Reports';
+import Templates from '@/pages/Templates';
 import Settings from '@/pages/Tizim/Settings';
 import { Navigate } from 'react-router-dom';
 import Billing from './pages/Billing/Billing';
@@ -21,12 +22,12 @@ import Medication from './pages/Examination/Medication';
 import NewVisit from './pages/Examination/NewVisit';
 import Prescription from './pages/Examination/Prescription';
 import Service from './pages/Examination/Service';
+import History from './pages/History';
 import { RoomCalendar, RoomsList } from './pages/InpatientCalendar';
 import Medicine from './pages/Medicine/Medicine';
 import RoomDetail from './pages/RoomDetail/RoomDetail';
 import Rooms from './pages/Rooms/Rooms';
 import Profil from './pages/Tizim/Profil';
-import History from './pages/History';
 
 export interface RouteConfig {
   path: string;
@@ -104,6 +105,7 @@ export const routers: RouteConfig[] = [
   },
   { path: '/billing', element: <Billing />, permission: 'billing' },
   { path: '/reports', element: <Reports />, permission: 'reports' },
+  { path: '/templates', element: <Templates />, permission: 'templates' },
   { path: '/history', element: <History />, permission: 'examinations' },
   { path: '/settings', element: <Settings />, permission: 'ceo_only' },
   { path: '/profile', element: <Profil />, permission: null },
@@ -248,6 +250,12 @@ export const navigator = [
     to: null,
     title: 'Ҳисоботлар',
     titleKey: 'menu.reports',
+  },
+  {
+    path: '/templates',
+    to: null,
+    title: 'Шаблонлар',
+    titleKey: 'menu.templates',
   },
   {
     path: '/history',
