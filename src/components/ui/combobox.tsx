@@ -132,6 +132,10 @@ export const ComboBox = React.forwardRef<HTMLButtonElement, ComboBoxProps>(
                 e.preventDefault();
               }
             }}
+            onWheel={(e) => {
+              // Prevent wheel event from closing popover
+              e.stopPropagation();
+            }}
           >
             {/* Search Input */}
             <div
@@ -165,8 +169,16 @@ export const ComboBox = React.forwardRef<HTMLButtonElement, ComboBoxProps>(
 
             {/* Options List */}
             <div
-              className='max-h-[300px] overflow-y-auto p-1'
+              className='max-h-[300px] overflow-y-auto overscroll-contain p-1'
               onScroll={onScroll}
+              onWheel={(e) => {
+                // Allow wheel scrolling within the container
+                e.stopPropagation();
+              }}
+              style={{
+                scrollBehavior: 'smooth',
+                WebkitOverflowScrolling: 'touch',
+              }}
             >
               {isLoading && options.length === 0 ? (
                 <div className='flex items-center justify-center py-6 text-sm text-muted-foreground'>

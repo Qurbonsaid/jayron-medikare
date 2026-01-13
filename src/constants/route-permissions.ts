@@ -694,12 +694,38 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/history',
     name: 'History',
     method: 'GET',
-    roles: [
-      RoleConstants.CEO,
-      RoleConstants.ADMIN,
-      RoleConstants.DOCTOR,
-    ],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
     description: 'History',
+  },
+
+  // Templates Routes
+  {
+    path: '/templates',
+    name: 'Templates',
+    method: 'GET',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'View templates',
+  },
+  {
+    path: '/templates',
+    name: 'Create Template',
+    method: 'POST',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Create template',
+  },
+  {
+    path: '/templates/:id',
+    name: 'Update Template',
+    method: 'PUT',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Update template',
+  },
+  {
+    path: '/templates/:id',
+    name: 'Delete Template',
+    method: 'DELETE',
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    description: 'Delete template',
   },
 ];
 

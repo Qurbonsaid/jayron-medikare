@@ -137,8 +137,8 @@ export interface GetOneBillingRes {
             _id: string;
           }
         >;
-        created_at: '2025-12-17T04:27:34.001Z';
-        updated_at: '2025-12-17T04:27:34.001Z';
+        created_at: Date;
+        updated_at: Date;
       };
       rooms: Array<{
         room_id: string;

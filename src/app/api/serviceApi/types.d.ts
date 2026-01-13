@@ -21,11 +21,11 @@ interface ServiceRes {
 interface getAllReq {
   page?: number;
   limit?: number;
-  search: ?string;
-  code: ?string;
-  is_active: ?boolean;
-  min_price: ?number;
-  max_price: ?number;
+  search?:string;
+  code?:string;
+  is_active?:boolean;
+  min_price?:number;
+  max_price?:number;
 }
 
 interface ServiceData {

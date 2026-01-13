@@ -75,6 +75,13 @@ export const menuCategories: MenuCategory[] = [
         permission: 'examinations',
       },
       {
+        title: 'Шаблонлар',
+        titleKey: 'menu.templates',
+        url: '/templates',
+        icon: FileEdit,
+        permission: 'templates',
+      },
+      {
         title: 'Рецепт ёзиш',
         titleKey: 'menu.writePrescription',
         url: '/prescription',
@@ -205,7 +212,7 @@ export const menuCategories: MenuCategory[] = [
         permission: 'reports',
       },
     ],
-  },
+  }
 ];
 
 export const systemMenu: MenuCategory = {
