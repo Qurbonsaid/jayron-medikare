@@ -4,7 +4,9 @@ import {
   useGetAllPatientQuery,
   useGetPatientByIdQuery,
 } from '@/app/api/patientApi/patientApi';
+import { useGetAllPrecriptionTemplateQuery } from '@/app/api/prescriptionTemplateApi/prescriptionTemplateApi';
 import { useGetAllServiceQuery } from '@/app/api/serviceApi/serviceApi';
+import { useGetAllServiceTemplateQuery } from '@/app/api/serviceTemplateApi/serviceTemplateApi';
 import { useGetUsersQuery } from '@/app/api/userApi/userApi';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,12 +39,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { format } from 'date-fns';
 import {
   Activity,
-  FileText,
   Pill,
   Plus,
   Search,
@@ -70,8 +70,6 @@ const NewVisitDialog = ({
   preSelectedPatientId,
 }: NewVisitDialogProps) => {
   const { t } = useTranslation('patients');
-  const [subjective, setSubjective] = useState('');
-  const [description, setDescription] = useState('');
   const [patient, setPatient] = useState<any>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
@@ -117,6 +115,17 @@ const NewVisitDialog = ({
   // Doctor search state
   const [doctorSearch, setDoctorSearch] = useState('');
 
+  // Template states
+  const [selectedPrescriptionTemplate, setSelectedPrescriptionTemplate] =
+    useState('');
+  const [prescriptionTemplateSearch, setPrescriptionTemplateSearch] =
+    useState('');
+  const [prescriptionTemplatePage, setPrescriptionTemplatePage] = useState(1);
+
+  const [selectedServiceTemplate, setSelectedServiceTemplate] = useState('');
+  const [serviceTemplateSearch, setServiceTemplateSearch] = useState('');
+  const [serviceTemplatePage, setServiceTemplatePage] = useState(1);
+
   // Refs for autofocus
   const doctorSearchRef = useRef<HTMLInputElement>(null);
   const medicationSearchRef = useRef<HTMLInputElement>(null);
@@ -158,6 +167,24 @@ const NewVisitDialog = ({
     search: serviceSearch || undefined,
   } as any);
 
+  // Fetch prescription templates
+  const {
+    data: prescriptionTemplatesData,
+    isFetching: isFetchingPrescriptionTemplates,
+  } = useGetAllPrecriptionTemplateQuery({
+    page: prescriptionTemplatePage,
+    limit: 20,
+    ...(prescriptionTemplateSearch && { name: prescriptionTemplateSearch }),
+  });
+
+  // Fetch service templates
+  const { data: serviceTemplatesData, isFetching: isFetchingServiceTemplates } =
+    useGetAllServiceTemplateQuery({
+      page: serviceTemplatePage,
+      limit: 20,
+      ...(serviceTemplateSearch && { search: serviceTemplateSearch }),
+    });
+
   const availableMedications = medicationsData?.data || [];
   const availableServices = servicesData?.data || [];
 
@@ -182,8 +209,6 @@ const NewVisitDialog = ({
   useEffect(() => {
     if (!open) {
       setTimeout(() => {
-        setSubjective('');
-        setDescription('');
         setPatient(null);
         setSelectedPatientId('');
         setSelectedDoctorId('');
@@ -194,6 +219,8 @@ const NewVisitDialog = ({
         setServices([]);
         setMedicationSearch('');
         setServiceSearch('');
+        setSelectedPrescriptionTemplate('');
+        setSelectedServiceTemplate('');
       }, 200);
     }
   }, [open]);
@@ -347,6 +374,63 @@ const NewVisitDialog = ({
     );
   };
 
+  // Handle prescription template selection
+  const handlePrescriptionTemplateSelect = (templateId: string) => {
+    setSelectedPrescriptionTemplate(templateId);
+
+    const template = prescriptionTemplatesData?.data.find(
+      (t: any) => t._id === templateId
+    );
+    if (!template) return;
+
+    // Add medications from template - replace existing ones
+    const templateMedications: MedicationItem[] = template.items.map(
+      (item: any) => ({
+        id: Date.now().toString() + Math.random(),
+        medication_id: item.medication_id?._id || item.medication_id || '',
+        additionalInfo: '',
+        frequency: item.frequency?.toString() || '',
+        duration: item.duration?.toString() || '',
+        instructions: item.instructions || '',
+        addons: item.addons || '',
+      })
+    );
+
+    // Replace medications list instead of appending
+    setMedications(templateMedications);
+    toast.success(t('newVisitDialog.templateApplied'));
+  };
+
+  // Handle service template selection
+  const handleServiceTemplateSelect = (templateId: string) => {
+    setSelectedServiceTemplate(templateId);
+
+    const template = serviceTemplatesData?.data.find(
+      (t: any) => t._id === templateId
+    );
+    if (!template) return;
+
+    // Set duration from template
+    if (template.duration) {
+      setServiceDuration(template.duration);
+    }
+
+    // Add services from template - replace existing ones
+    const duration = template.duration || serviceDuration || 7;
+    const allDays = Array.from({ length: duration }, (_, i) => i + 1);
+
+    const templateServices: ServiceItem[] = template.items.map((item: any) => ({
+      id: Date.now().toString() + Math.random(),
+      service_id: item.service_type_id?._id || item.service_type_id || '',
+      notes: '',
+      markedDays: allDays, // Mark all days by default
+    }));
+
+    // Replace services list instead of appending
+    setServices(templateServices);
+    toast.success(t('newVisitDialog.templateApplied'));
+  };
+
   const handleSave = async () => {
     setShowErrors(true);
 
@@ -356,10 +440,6 @@ const NewVisitDialog = ({
     }
     if (!selectedDoctorId) {
       toast.error(t('newVisitDialog.errors.selectDoctor'));
-      return;
-    }
-    if (!subjective.trim()) {
-      toast.error(t('newVisitDialog.errors.enterComplaint'));
       return;
     }
 
@@ -413,7 +493,6 @@ const NewVisitDialog = ({
     const request: any = {
       patient_id: selectedPatientId,
       doctor_id: selectedDoctorId,
-      complaints: subjective,
       treatment_type: treatmentType,
       prescription_data: {
         items: prescriptionItems,
@@ -422,10 +501,6 @@ const NewVisitDialog = ({
     console.log(request);
     await handleRequest({
       request: async () => {
-        if (description.trim()) {
-          request.description = description;
-        }
-
         if (serviceData) {
           request.service_data = serviceData;
         }
@@ -636,34 +711,119 @@ const NewVisitDialog = ({
                 </div>
               </div>
 
-              {/* Subjective - Complaints */}
-              <div className='space-y-2 shadow-sm border p-2 rounded-lg'>
-                <Label className='flex items-center gap-2'>
-                  <FileText className='w-4 h-4 text-primary' />
-                  {t('newVisitDialog.complaint')}
-                </Label>
-                <Textarea
-                  placeholder={t('newVisitDialog.complaintPlaceholder')}
-                  className={`min-h-24 ${
-                    showErrors && !subjective.trim() ? 'border-red-500' : ''
-                  }`}
-                  value={subjective}
-                  onChange={(e) => setSubjective(e.target.value)}
-                />
-              </div>
+              {/* Template Selection - Side by Side */}
+              <div className='shadow-sm border rounded-lg p-4 bg-gradient-to-r from-blue-50/50 to-green-50/50'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  {/* Prescription Template */}
+                  <div className='space-y-2'>
+                    <Label className='flex items-center gap-2'>
+                      <Pill className='w-4 h-4 text-primary' />
+                      {t('newVisitDialog.prescriptionTemplate')}
+                    </Label>
+                    <Select
+                      value={selectedPrescriptionTemplate}
+                      onValueChange={handlePrescriptionTemplateSelect}
+                    >
+                      <SelectTrigger className='h-10'>
+                        <SelectValue
+                          placeholder={t(
+                            'newVisitDialog.selectPrescriptionTemplate'
+                          )}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className='p-2'>
+                          <Input
+                            placeholder={t('newVisitDialog.searchTemplate')}
+                            value={prescriptionTemplateSearch}
+                            onChange={(e) =>
+                              setPrescriptionTemplateSearch(e.target.value)
+                            }
+                            onKeyDown={(e) => e.stopPropagation()}
+                            className='h-8 mb-2'
+                          />
+                        </div>
+                        {prescriptionTemplatesData?.data?.length > 0 ? (
+                          prescriptionTemplatesData.data.map(
+                            (template: any) => (
+                              <SelectItem
+                                key={template._id}
+                                value={template._id}
+                              >
+                                <div className='flex flex-col'>
+                                  <span className='font-medium'>
+                                    {template.name}
+                                  </span>
+                                  <span className='text-xs text-muted-foreground'>
+                                    {template.items?.length || 0}{' '}
+                                    {t('newVisitDialog.medications')}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            )
+                          )
+                        ) : (
+                          <div className='p-4 text-center text-sm text-muted-foreground'>
+                            {t('newVisitDialog.noTemplatesFound')}
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* Description */}
-              <div className='space-y-2 shadow-sm border p-2 rounded-lg'>
-                <Label className='flex items-center gap-2'>
-                  <Activity className='w-4 h-4 text-primary' />
-                  {t('newVisitDialog.descriptionLabel')}
-                </Label>
-                <Textarea
-                  placeholder={t('newVisitDialog.descriptionPlaceholder')}
-                  className='min-h-24'
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
+                  {/* Service Template */}
+                  <div className='space-y-2'>
+                    <Label className='flex items-center gap-2'>
+                      <Activity className='w-4 h-4 text-primary' />
+                      {t('newVisitDialog.serviceTemplate')}
+                    </Label>
+                    <Select
+                      value={selectedServiceTemplate}
+                      onValueChange={handleServiceTemplateSelect}
+                    >
+                      <SelectTrigger className='h-10'>
+                        <SelectValue
+                          placeholder={t(
+                            'newVisitDialog.selectServiceTemplate'
+                          )}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className='p-2'>
+                          <Input
+                            placeholder={t('newVisitDialog.searchTemplate')}
+                            value={serviceTemplateSearch}
+                            onChange={(e) =>
+                              setServiceTemplateSearch(e.target.value)
+                            }
+                            onKeyDown={(e) => e.stopPropagation()}
+                            className='h-8 mb-2'
+                          />
+                        </div>
+                        {serviceTemplatesData?.data?.length > 0 ? (
+                          serviceTemplatesData.data.map((template: any) => (
+                            <SelectItem key={template._id} value={template._id}>
+                              <div className='flex flex-col'>
+                                <span className='font-medium'>
+                                  {template.name}
+                                </span>
+                                <span className='text-xs text-muted-foreground'>
+                                  {template.items?.length || 0}{' '}
+                                  {t('newVisitDialog.services')} •{' '}
+                                  {template.duration} {t('newVisitDialog.days')}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <div className='p-4 text-center text-sm text-muted-foreground'>
+                            {t('newVisitDialog.noTemplatesFound')}
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
               {/* Prescriptions Section */}
