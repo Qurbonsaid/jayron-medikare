@@ -388,8 +388,10 @@ export const NewMedicalImage = ({
                             }
                             disabled={isUploading}
                           >
-                            <Upload className="mr-2 h-4 w-4" />
-                            {isUploading ? t("newMedicalImage.uploading") : t("newMedicalImage.selectFile")}
+                            <Upload className="mr-2 h-4 w-4 flex-shrink-0" />
+                            <span className="text-xs sm:text-sm truncate">
+                              {isUploading ? t("newMedicalImage.uploading") : t("newMedicalImage.selectFile")}
+                            </span>
                           </Button>
                           <input
                             id="image-upload"

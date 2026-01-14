@@ -129,5 +129,15 @@
   "everyDayTitle": "Ҳар куни",
   "everyOtherDayTitle": "2 кунда бир",
   "deleteTitle": "Ўчириш",
-  "saveServicesBtn": "Хизматларни сақлаш"
+  "saveServicesBtn": "Хизматларни сақлаш",
+  "selectTemplates": "Шаблонларни танлаш",
+  "prescriptionTemplate": "Рецепт шаблони",
+  "serviceTemplate": "Хизмат шаблони",
+  "selectPrescriptionTemplate": "Рецепт шаблонини танланг",
+  "selectServiceTemplate": "Хизмат шаблонини танланг",
+  "searchTemplate": "Шаблон қидириш...",
+  "noTemplatesFound": "Шаблонлар топилмади",
+  "templateApplied": "Шаблон қўлланилди",
+  "medications": "та дори",
+  "services": "та хизмат"
 }
