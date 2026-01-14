@@ -129,5 +129,15 @@
   "everyDayTitle": "Every day",
   "everyOtherDayTitle": "Every other day",
   "deleteTitle": "Delete",
-  "saveServicesBtn": "Save services"
+  "saveServicesBtn": "Save services",
+  "selectTemplates": "Select Templates",
+  "prescriptionTemplate": "Prescription Template",
+  "serviceTemplate": "Service Template",
+  "selectPrescriptionTemplate": "Select prescription template",
+  "selectServiceTemplate": "Select service template",
+  "searchTemplate": "Search template...",
+  "noTemplatesFound": "No templates found",
+  "templateApplied": "Template applied",
+  "medications": "medications",
+  "services": "services"
 }

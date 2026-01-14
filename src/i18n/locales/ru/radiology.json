@@ -159,7 +159,7 @@
     "bodyPart": "Часть тела",
     "selectBodyPart": "Выберите часть тела...",
     "files": "Файлы (Изображение, PDF, Word, Excel, RTF, MDFX)",
-    "selectFile": "Выберите файл (изображение, PDF, Word, Excel, RTF, MDFX)",
+    "selectFile": "Выберите файл",
     "uploading": "Загрузка...",
     "uploadedImages": "Загруженные изображения",
     "image": "Изображение",

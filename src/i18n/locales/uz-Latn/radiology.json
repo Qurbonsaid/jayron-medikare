@@ -159,7 +159,7 @@
     "bodyPart": "Tanasining qismi",
     "selectBodyPart": "Tana qismini tanlang...",
     "files": "Fayllar (Rasm, PDF, Word, Excel, RTF, MDFX)",
-    "selectFile": "Fayl tanlang (rasm, PDF, Word, Excel, RTF, MDFX)",
+    "selectFile": "Fayl tanlang",
     "uploading": "Yuklanmoqda...",
     "uploadedImages": "Yuklangan tasvirlar",
     "image": "Rasm",

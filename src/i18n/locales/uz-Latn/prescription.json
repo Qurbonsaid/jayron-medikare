@@ -129,5 +129,15 @@
   "everyDayTitle": "Har kuni",
   "everyOtherDayTitle": "2 kunda bir",
   "deleteTitle": "O'chirish",
-  "saveServicesBtn": "Xizmatlarni saqlash"
+  "saveServicesBtn": "Xizmatlarni saqlash",
+  "selectTemplates": "Shablonlarni tanlash",
+  "prescriptionTemplate": "Retsept shabloni",
+  "serviceTemplate": "Xizmat shabloni",
+  "selectPrescriptionTemplate": "Retsept shablonini tanlang",
+  "selectServiceTemplate": "Xizmat shablonini tanlang",
+  "searchTemplate": "Shablon qidirish...",
+  "noTemplatesFound": "Shablonlar topilmadi",
+  "templateApplied": "Shablon qo'llandi",
+  "medications": "ta dori",
+  "services": "ta xizmat"
 }

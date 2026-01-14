@@ -159,7 +159,7 @@
     "bodyPart": "Body Part",
     "selectBodyPart": "Select body part...",
     "files": "Files (Image, PDF, Word, Excel, RTF, MDFX)",
-    "selectFile": "Select file (image, PDF, Word, Excel, RTF, MDFX)",
+    "selectFile": "Select file",
     "uploading": "Uploading...",
     "uploadedImages": "Uploaded images",
     "image": "Image",

@@ -129,5 +129,15 @@
   "everyDayTitle": "Каждый день",
   "everyOtherDayTitle": "Через день",
   "deleteTitle": "Удалить",
-  "saveServicesBtn": "Сохранить услуги"
+  "saveServicesBtn": "Сохранить услуги",
+  "selectTemplates": "Выбор шаблонов",
+  "prescriptionTemplate": "Шаблон рецепта",
+  "serviceTemplate": "Шаблон услуги",
+  "selectPrescriptionTemplate": "Выберите шаблон рецепта",
+  "selectServiceTemplate": "Выберите шаблон услуги",
+  "searchTemplate": "Поиск шаблона...",
+  "noTemplatesFound": "Шаблоны не найдены",
+  "templateApplied": "Шаблон применён",
+  "medications": "лекарств",
+  "services": "услуг"
 }
