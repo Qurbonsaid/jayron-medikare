@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { toast } from "sonner";
 import { useErrorMsg } from "./useErrorMsg";
 
