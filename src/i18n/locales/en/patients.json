@@ -200,7 +200,8 @@
     "success": {
       "examCreated": "Examination successfully created"
     },
-    "errorOccurred": "An error occurred",    "prescriptionTemplate": "Prescription Template",
+    "errorOccurred": "An error occurred",
+    "prescriptionTemplate": "Prescription Template",
     "selectPrescriptionTemplate": "Select prescription template...",
     "serviceTemplate": "Service Template",
     "selectServiceTemplate": "Select service template...",
@@ -208,7 +209,8 @@
     "noTemplatesFound": "No templates found",
     "templateApplied": "Template applied",
     "medications": "medications",
-    "days": "days",    "prescriptions": "Prescriptions (Medications)",
+    "days": "days",
+    "prescriptions": "Prescriptions (Medications)",
     "addMedication": "Add medication",
     "noMedicationsAdded": "No medications added",
     "medication": "Medication",

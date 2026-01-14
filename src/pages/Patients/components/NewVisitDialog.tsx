@@ -39,12 +39,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { format } from 'date-fns';
 import {
   Activity,
-  FileText,
   Pill,
   Plus,
   Search,
@@ -746,17 +744,24 @@ const NewVisitDialog = ({
                           />
                         </div>
                         {prescriptionTemplatesData?.data?.length > 0 ? (
-                          prescriptionTemplatesData.data.map((template: any) => (
-                            <SelectItem key={template._id} value={template._id}>
-                              <div className='flex flex-col'>
-                                <span className='font-medium'>{template.name}</span>
-                                <span className='text-xs text-muted-foreground'>
-                                  {template.items?.length || 0}{' '}
-                                  {t('newVisitDialog.medications')}
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))
+                          prescriptionTemplatesData.data.map(
+                            (template: any) => (
+                              <SelectItem
+                                key={template._id}
+                                value={template._id}
+                              >
+                                <div className='flex flex-col'>
+                                  <span className='font-medium'>
+                                    {template.name}
+                                  </span>
+                                  <span className='text-xs text-muted-foreground'>
+                                    {template.items?.length || 0}{' '}
+                                    {t('newVisitDialog.medications')}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            )
+                          )
                         ) : (
                           <div className='p-4 text-center text-sm text-muted-foreground'>
                             {t('newVisitDialog.noTemplatesFound')}
@@ -778,7 +783,9 @@ const NewVisitDialog = ({
                     >
                       <SelectTrigger className='h-10'>
                         <SelectValue
-                          placeholder={t('newVisitDialog.selectServiceTemplate')}
+                          placeholder={t(
+                            'newVisitDialog.selectServiceTemplate'
+                          )}
                         />
                       </SelectTrigger>
                       <SelectContent>
@@ -797,7 +804,9 @@ const NewVisitDialog = ({
                           serviceTemplatesData.data.map((template: any) => (
                             <SelectItem key={template._id} value={template._id}>
                               <div className='flex flex-col'>
-                                <span className='font-medium'>{template.name}</span>
+                                <span className='font-medium'>
+                                  {template.name}
+                                </span>
                                 <span className='text-xs text-muted-foreground'>
                                   {template.items?.length || 0}{' '}
                                   {t('newVisitDialog.services')} •{' '}
