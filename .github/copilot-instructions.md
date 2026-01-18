@@ -324,3 +324,20 @@ const { canCreate, canUpdate, canDelete } = usePermission('patients');
 - Console logs in baseApi show URL and auth status
 - Permission denied? Check user role in `useMeQuery()` response
 - Translation missing? Verify key exists in `src/i18n/locales/{lang}/{namespace}.json`
+
+## Antigravity / Gemini Agent Rules
+
+### 1. Language & Communication
+- **Bilingual Adaptability**: Adapt to the user's language (Uzbek/English).
+- **Uzbek Context**: In Uzbek, use technical terms in English where appropriate for clarity (e.g., "Component", "Hook", "Prop").
+
+### 2. Operational Protocol
+- **No Assumptions**: Verify file paths and APIs before using them.
+- **Strict Adherence**: Follow "Critical Conventions" above without exception.
+- **Artifacts**: Use `task.md` and `implementation_plan.md` for multi-step tasks.
+
+### 3. Technical Constraints
+- **UI**: Use `shadcn/ui` components from `@/components/ui`.
+- **Styling**: Use Tailwind CSS via `cn()` utility.
+- **State**: Use RTK Query `injectEndpoints` pattern.
+- **Types**: `any` is strictly forbidden.
