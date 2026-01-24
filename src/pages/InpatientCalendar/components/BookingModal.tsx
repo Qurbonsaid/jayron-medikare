@@ -49,6 +49,7 @@ interface BookingModalProps {
   corpusId: string;
   roomId?: string | null;
   defaultStartDate?: string;
+  defaultBedNumber?: number; // Katak bosilganda avtomatik tanlanadi
 }
 
 export const BookingModal = ({
@@ -57,10 +58,12 @@ export const BookingModal = ({
   corpusId,
   roomId,
   defaultStartDate,
+  defaultBedNumber,
 }: BookingModalProps) => {
   const { t } = useTranslation("inpatient");
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [selectedRoomId, setSelectedRoomId] = useState<string>(roomId || "");
+  const [selectedBedNumber, setSelectedBedNumber] = useState<number>(defaultBedNumber || 0);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [note, setNote] = useState<string>("");
@@ -81,6 +84,13 @@ export const BookingModal = ({
       setEndDate(end.toISOString().split("T")[0]);
     }
   }, [open, defaultStartDate]);
+
+  // Set default bed number
+  useEffect(() => {
+    if (open && defaultBedNumber) {
+      setSelectedBedNumber(defaultBedNumber);
+    }
+  }, [open, defaultBedNumber]);
 
   // Set default room
   useEffect(() => {
@@ -124,6 +134,11 @@ export const BookingModal = ({
       return;
     }
 
+    if (!selectedBedNumber || selectedBedNumber < 1) {
+      toast.error(t("booking.selectBedNumber"));
+      return;
+    }
+
     if (!startDate || !endDate) {
       toast.error(t("booking.enterDates"));
       return;
@@ -161,6 +176,7 @@ export const BookingModal = ({
           corpus_id: corpusId,
           start_at: startAt,
           end_at: endAt,
+          bed_number: selectedBedNumber,
           note: note || undefined,
         }).unwrap(),
       onSuccess: () => {
@@ -179,6 +195,7 @@ export const BookingModal = ({
   const resetForm = () => {
     setSelectedPatientId("");
     setSelectedRoomId(roomId || "");
+    setSelectedBedNumber(defaultBedNumber || 0);
     setStartDate("");
     setEndDate("");
     setNote("");
@@ -373,6 +390,61 @@ export const BookingModal = ({
               </div>
             </div>
 
+            {/* Bed Number Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="bed_number" className="text-sm">
+                {t("booking.bedNumber")} <span className="text-red-500">*</span>
+              </Label>
+              {roomsLoading ? (
+                <div className="animate-pulse h-10 bg-gray-200 rounded"></div>
+              ) : availableRoomsData?.data?.[0]?.patient_capacity ? (
+                <Select 
+                  value={selectedBedNumber ? selectedBedNumber.toString() : ""} 
+                  onValueChange={(value) => setSelectedBedNumber(parseInt(value, 10))}
+                >
+                  <SelectTrigger className="text-sm h-10 sm:h-11">
+                    <SelectValue placeholder={t("booking.selectBedNumber")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from(
+                      { length: availableRoomsData.data[0].patient_capacity },
+                      (_, i) => i + 1
+                    ).map((bedNum) => {
+                      // Availability ma'lumotlarini tekshirish
+                      const bedAvailability = availableRoomsData.data[0].availability?.find(
+                        (a) => a.bed === bedNum
+                      );
+                      const isAvailable = bedAvailability?.status === "available";
+                      
+                      return (
+                        <SelectItem 
+                          key={bedNum} 
+                          value={bedNum.toString()} 
+                          className="py-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              {bedNum}-{t("calendar.bed")}
+                            </span>
+                            <Badge 
+                              variant={isAvailable ? "default" : "secondary"}
+                              className="text-[10px] px-1.5 py-0"
+                            >
+                              {isAvailable ? t("calendar.free") : t("calendar.booked")}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm text-muted-foreground p-2 border rounded">
+                  {t("booking.selectDatesFirst")}
+                </div>
+              )}
+            </div>
+
             {/* Room Selection */}
             {/* {startDate && endDate && (
               <div className="space-y-2">
@@ -455,6 +527,7 @@ export const BookingModal = ({
                   isCreating ||
                   !selectedPatientId ||
                   !selectedRoomId ||
+                  !selectedBedNumber ||
                   !startDate ||
                   !endDate
                 }

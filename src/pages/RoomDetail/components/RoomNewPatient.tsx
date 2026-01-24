@@ -356,9 +356,9 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 						></div>
 					)}
 
-					<div className='w-full relative mt-2'>
+					<div className={`w-full relative mt-2 ${openPopover ? 'h-[100px]' : ''}`}>
 						{openPopover && (
-							<Card className='absolute top-0 left-0 w-full z-30 bg-white '>
+							<Card className='h-[200px] absolute top-0 left-0 w-full z-30 bg-white '>
 								<Command shouldFilter={false}>
 									<CommandInput
 										placeholder={t('searchByNamePhone')}
@@ -366,7 +366,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 										onValueChange={setSearchQuery}
 										className='text-sm'
 									/>
-									<CommandList className='max-h-[210px] overflow-y-auto'>
+									<CommandList className='overflow-y-auto'>
 										<CommandEmpty className='text-sm py-6'>
 											{isLoading ? (
 												<div className='flex flex-col items-center gap-2'>

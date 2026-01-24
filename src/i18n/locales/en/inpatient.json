@@ -274,6 +274,9 @@
   "booking": {
     "selectPatient": "Select patient",
     "selectRoom": "Select room",
+    "selectBedNumber": "Select bed number",
+    "bedNumber": "Bed number",
+    "selectDatesFirst": "Select dates first",
     "enterDates": "Enter dates",
     "cannotBookPastDate": "Cannot book for past date",
     "endDateBeforeStartDate": "End date cannot be before start date",

@@ -275,6 +275,9 @@
   "booking": {
     "selectPatient": "Беморни танланг",
     "selectRoom": "Хонани танланг",
+    "selectBedNumber": "Жой рақамини танланг",
+    "bedNumber": "Жой рақами",
+    "selectDatesFirst": "Авваал саналарни танланг",
     "enterDates": "Саналарни киритинг",
     "cannotBookPastDate": "Ўтган санага бронь қилиб бўлмайди",
     "endDateBeforeStartDate": "Тугаш санаси бошланиш санасидан олдин бўлмаслиги керак",

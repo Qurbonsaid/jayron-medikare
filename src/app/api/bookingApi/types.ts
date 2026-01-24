@@ -40,6 +40,7 @@ export type CreateBookingRequest = {
   corpus_id: string;
   start_at: string;
   end_at: string;
+  bed_number: number; // Joy raqami (1, 2, 3...)
   note?: string;
 };
 
