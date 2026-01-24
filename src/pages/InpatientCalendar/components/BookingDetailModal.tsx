@@ -48,11 +48,15 @@ export const BookingDetailModal = ({
   const corpus =
     typeof booking.corpus_id === "object" ? booking.corpus_id : null;
 
-  const startDate = new Date(booking.start_at);
-  const endDate = new Date(booking.end_at);
-  const duration = Math.ceil(
-    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) + 1
-  );
+  // Davomiylikni hisoblash - faqat sanalarni solishtirish (vaqtsiz)
+  // Masalan: 30-yanvar dan 31-yanvar = 2 kun (30 va 31)
+  const startDateStr = booking.start_at.split("T")[0]; // "2026-01-30"
+  const endDateStr = booking.end_at.split("T")[0]; // "2026-01-31"
+  const startDate = new Date(startDateStr + "T00:00:00");
+  const endDate = new Date(endDateStr + "T00:00:00");
+  const duration = Math.round(
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+  ) + 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
