@@ -71,6 +71,7 @@ const RoomCalendar = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedBedNumber, setSelectedBedNumber] = useState<number>(0);
 
   // Calculate week range
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
@@ -236,7 +237,7 @@ const RoomCalendar = () => {
   };
 
   // Bo'sh katak bosilganda - yangi bron ochish
-  const handleEmptyCellClick = (day: Date) => {
+  const handleEmptyCellClick = (day: Date, bedNumber: number) => {
     // Bugungi kunni olish
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -256,6 +257,7 @@ const RoomCalendar = () => {
     const month = String(day.getMonth() + 1).padStart(2, "0");
     const dayNum = String(day.getDate()).padStart(2, "0");
     setSelectedDate(`${year}-${month}-${dayNum}`);
+    setSelectedBedNumber(bedNumber);
     setShowBookingModal(true);
   };
 
@@ -338,6 +340,7 @@ const RoomCalendar = () => {
             const month = String(startDate.getMonth() + 1).padStart(2, "0");
             const day = String(startDate.getDate()).padStart(2, "0");
             setSelectedDate(`${year}-${month}-${day}`);
+            setSelectedBedNumber(0); // User o'zi tanlaydi
             setShowBookingModal(true);
           }}
           className="w-full sm:w-auto text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10"
@@ -547,7 +550,7 @@ const RoomCalendar = () => {
                             ) : (
                               <div
                                 className="h-full min-h-[35px] lg:min-h-[45px] rounded border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer"
-                                onClick={() => handleEmptyCellClick(day)}
+                                onClick={() => handleEmptyCellClick(day, bedIndex + 1)}
                               >
                                 <span className="text-[7px] lg:text-[8px] xl:text-[9px] font-medium">{t("calendar.free")}</span>
                               </div>
@@ -573,6 +576,7 @@ const RoomCalendar = () => {
         corpusId={corpusId || ""}
         roomId={roomId}
         defaultStartDate={selectedDate || new Date().toISOString()}
+        defaultBedNumber={selectedBedNumber || undefined}
       />
 
       {selectedBooking && (

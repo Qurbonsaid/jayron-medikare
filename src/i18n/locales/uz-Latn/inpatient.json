@@ -275,6 +275,9 @@
   "booking": {
     "selectPatient": "Bemorni tanlang",
     "selectRoom": "Xonani tanlang",
+    "selectBedNumber": "Joy raqamini tanlang",
+    "bedNumber": "Joy raqami",
+    "selectDatesFirst": "Avval sanalarni tanlang",
     "enterDates": "Sanalarni kiriting",
     "cannotBookPastDate": "O'tgan sanaga bron qilib bo'lmaydi",
     "endDateBeforeStartDate": "Tugash sanasi boshlanish sanasidan oldin bo'lmasligi kerak",

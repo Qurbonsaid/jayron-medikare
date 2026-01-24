@@ -275,6 +275,9 @@
   "booking": {
     "selectPatient": "Выберите пациента",
     "selectRoom": "Выберите палату",
+    "selectBedNumber": "Выберите номер места",
+    "bedNumber": "Номер места",
+    "selectDatesFirst": "Сначала выберите даты",
     "enterDates": "Введите даты",
     "cannotBookPastDate": "Нельзя забронировать на прошедшую дату",
     "endDateBeforeStartDate": "Дата окончания не может быть раньше даты начала",
