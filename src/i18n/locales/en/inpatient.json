@@ -268,7 +268,9 @@
     "bed": "bed",
     "free": "Free",
     "newBooking": "New Booking",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "leaving": "Leaving",
+    "arriving": "Arriving"
   },
 
   "booking": {

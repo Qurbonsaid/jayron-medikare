@@ -484,22 +484,109 @@ const RoomCalendar = () => {
 
                       {/* Days for this bed */}
                       {weekDays.map((day, dayIndex) => {
-                        const activeBooking = bedBookings.find((booking) => {
+                        const dayStr = format(day, "yyyy-MM-dd");
+                        
+                        // Bu kun uchun barcha bronlarni topish
+                        const dayBookings = bedBookings.filter((booking) => {
                           const bookingDays = getBookingDays(booking);
                           return bookingDays[dayIndex];
                         });
 
-                        const isToday = format(day, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
-                        const dayStr = format(day, "yyyy-MM-dd");
+                        // Ketayotgan bemor (tugash sanasi bugun)
+                        const endingBooking = dayBookings.find(
+                          (b) => b.end_at.split("T")[0] === dayStr
+                        );
+                        
+                        // Kelayotgan bemor (boshlanish sanasi bugun)
+                        const startingBooking = dayBookings.find(
+                          (b) => b.start_at.split("T")[0] === dayStr
+                        );
+                        
+                        // Davom etayotgan bemor (boshlanish < bugun < tugash)
+                        const continuingBooking = dayBookings.find((b) => {
+                          const startStr = b.start_at.split("T")[0];
+                          const endStr = b.end_at.split("T")[0];
+                          return startStr < dayStr && endStr > dayStr;
+                        });
+
+                        // Agar bir kunda ikki bron uchashsa (biri tugayapti, biri boshlanayapti)
+                        const hasSplitCell = endingBooking && startingBooking && endingBooking._id !== startingBooking._id;
+                        
+                        // Oddiy holat: faqat bitta bron
+                        const activeBooking = hasSplitCell ? null : (endingBooking || startingBooking || continuingBooking);
+
+                        const isToday = dayStr === format(new Date(), "yyyy-MM-dd");
                         const isFirstDay = activeBooking ? activeBooking.start_at.split("T")[0] === dayStr : false;
                         const isLastDay = activeBooking ? activeBooking.end_at.split("T")[0] === dayStr : false;
+
+                        // Split cell uchun render funksiyasi
+                        const renderSplitBookingHalf = (booking: Booking, isLeft: boolean) => {
+                          const isEnding = booking.end_at.split("T")[0] === dayStr;
+                          return (
+                            <TooltipProvider key={booking._id}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div
+                                    style={{
+                                      borderTopLeftRadius: !isLeft ? "0.25rem" : "0",
+                                      borderBottomLeftRadius: !isLeft ? "0.25rem" : "0",
+                                      borderTopRightRadius: isLeft ? "0.25rem" : "0",
+                                      borderBottomRightRadius: isLeft ? "0.25rem" : "0",
+                                      borderLeft: !isLeft ? `3px solid ${booking.is_real_patient ? "green" : "blue"}` : "none",
+                                      borderRight: isLeft ? `3px solid ${booking.is_real_patient ? "green" : "blue"}` : "none",
+                                      borderTop: `1px solid ${booking.is_real_patient ? "green" : "blue"}`,
+                                      borderBottom: `1px solid ${booking.is_real_patient ? "green" : "blue"}`,
+                                    }}
+                                    className={`w-1/2 h-full min-h-[35px] lg:min-h-[45px] p-0.5 cursor-pointer ${getBookingColor(booking.is_real_patient || false)} shadow-sm hover:shadow-md transition-all flex flex-col justify-center`}
+                                    onClick={() => handleBookingClick(booking)}
+                                  >
+                                    <p className="font-bold text-[7px] lg:text-[8px] xl:text-[9px] truncate text-gray-900 leading-tight">
+                                      {typeof booking.patient_id === "object"
+                                        ? booking.patient_id.fullname.split(" ")[0]
+                                        : t("calendar.unknown")}
+                                    </p>
+                                    <p className="text-[6px] lg:text-[7px] xl:text-[8px] font-semibold text-gray-800">
+                                      {booking.start_at.split("T")[0].split("-")[2]} - {booking.end_at.split("T")[0].split("-")[2]}
+                                    </p>
+                                    <p className="text-[6px] lg:text-[7px] font-medium text-gray-700">
+                                      {getBookingLabel(booking.is_real_patient || false)}
+                                    </p>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-[200px] p-2">
+                                  <div className="space-y-1">
+                                    <p className="font-bold text-xs break-words">
+                                      {typeof booking.patient_id === "object" ? booking.patient_id.fullname : t("calendar.unknown")}
+                                    </p>
+                                    {typeof booking.patient_id === "object" && booking.patient_id.phone && (
+                                      <p className="text-[10px]">{formatPhoneNumber(booking.patient_id.phone)}</p>
+                                    )}
+                                    <p className="text-[10px]">
+                                      {format(parseISO(booking.start_at), "d MMM", { locale: dateLocale })} -{" "}
+                                      {format(parseISO(booking.end_at), "d MMM", { locale: dateLocale })} | {getBookingLabel(booking.is_real_patient || false)}
+                                    </p>
+                                    {isEnding && <p className="text-[10px] text-orange-600 font-semibold">{t("calendar.leaving")}</p>}
+                                    {!isEnding && <p className="text-[10px] text-green-600 font-semibold">{t("calendar.arriving")}</p>}
+                                    {booking?.note && <p className="text-[10px] break-words">{booking?.note}</p>}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          );
+                        };
 
                         return (
                           <td
                             key={dayIndex}
                             className={`p-0.5 lg:p-1 border-b border-r border-gray-200 h-[45px] lg:h-[55px] ${isToday ? "bg-red-50" : ""}`}
                           >
-                            {activeBooking ? (
+                            {hasSplitCell ? (
+                              // Split cell: ikki bemor bir kunda (ketayotgan + kelayotgan)
+                              <div className="flex h-full gap-0.5">
+                                {renderSplitBookingHalf(endingBooking!, true)}
+                                {renderSplitBookingHalf(startingBooking!, false)}
+                              </div>
+                            ) : activeBooking ? (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
