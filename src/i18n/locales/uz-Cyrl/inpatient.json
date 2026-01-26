@@ -269,7 +269,9 @@
     "bed": "жой",
     "free": "Бўш",
     "newBooking": "Янги бронь",
-    "unknown": "Номаълум"
+    "unknown": "Номаълум",
+    "leaving": "Кетаяпти",
+    "arriving": "Келаяпти"
   },
 
   "booking": {

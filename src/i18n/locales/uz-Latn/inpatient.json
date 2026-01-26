@@ -269,7 +269,9 @@
     "bed": "joy",
     "free": "Bo'sh",
     "newBooking": "Yangi bron",
-    "unknown": "Noma'lum"
+    "unknown": "Noma'lum",
+    "leaving": "Ketayapti",
+    "arriving": "Kelayapti"
   },
 
   "booking": {
