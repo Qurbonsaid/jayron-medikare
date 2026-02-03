@@ -57,6 +57,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { calculateAge } from '../../Examination/components/calculateAge';
 import { Textarea } from '@/components/ui/textarea';
+import { CreateExamWithPrescriptionAndServiceReq } from '@/app/api/examinationApi/types';
 
 interface TemplateMedicationItem {
   medication_id?: { _id: string } | string;
@@ -647,7 +648,7 @@ const NewVisitDialog = ({
           day: day.day,
           date:
             markedDays.includes(day.day) && day.date
-              ? format(day.date, 'yyyy-MM-dd')
+              ? day.date.toISOString().split('T')[0]
               : null,
         }));
 
@@ -668,6 +669,8 @@ const NewVisitDialog = ({
       patient_id: selectedPatientId,
       doctor_id: selectedDoctorId,
       treatment_type: treatmentType,
+      complaints: subjective,
+      description,
       prescription_data: {
         items: prescriptionItems,
       },
