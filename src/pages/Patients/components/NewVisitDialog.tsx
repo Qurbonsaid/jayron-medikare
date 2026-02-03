@@ -43,6 +43,7 @@ import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { format } from 'date-fns';
 import {
   Activity,
+  FileText,
   Pill,
   Plus,
   Search,
@@ -55,6 +56,33 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { calculateAge } from '../../Examination/components/calculateAge';
+import { Textarea } from '@/components/ui/textarea';
+import { CreateExamWithPrescriptionAndServiceReq } from '@/app/api/examinationApi/types';
+
+interface TemplateMedicationItem {
+  medication_id?: { _id: string } | string;
+  frequency?: number | string;
+  duration?: number | string;
+  instructions?: string;
+  addons?: string;
+}
+
+interface PrescriptionTemplate {
+  _id: string;
+  name: string;
+  items: TemplateMedicationItem[];
+}
+
+interface TemplateServiceItem {
+  service_type_id?: { _id: string } | string;
+}
+
+interface ServiceTemplate {
+  _id: string;
+  name: string;
+  duration?: number;
+  items: TemplateServiceItem[];
+}
 
 interface NewVisitDialogProps {
   open: boolean;
@@ -70,6 +98,8 @@ const NewVisitDialog = ({
   preSelectedPatientId,
 }: NewVisitDialogProps) => {
   const { t } = useTranslation('patients');
+  const [subjective, setSubjective] = useState('');
+  const [description, setDescription] = useState('');
   const [patient, setPatient] = useState<any>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
@@ -121,10 +151,19 @@ const NewVisitDialog = ({
   const [prescriptionTemplateSearch, setPrescriptionTemplateSearch] =
     useState('');
   const [prescriptionTemplatePage, setPrescriptionTemplatePage] = useState(1);
+  const [prescriptionTemplates, setPrescriptionTemplates] = useState<
+    PrescriptionTemplate[]
+  >([]);
+  const [hasMorePrescriptionTemplates, setHasMorePrescriptionTemplates] =
+    useState(true);
 
   const [selectedServiceTemplate, setSelectedServiceTemplate] = useState('');
   const [serviceTemplateSearch, setServiceTemplateSearch] = useState('');
   const [serviceTemplatePage, setServiceTemplatePage] = useState(1);
+  const [serviceTemplates, setServiceTemplates] = useState<ServiceTemplate[]>(
+    []
+  );
+  const [hasMoreServiceTemplates, setHasMoreServiceTemplates] = useState(true);
 
   // Refs for autofocus
   const doctorSearchRef = useRef<HTMLInputElement>(null);
@@ -191,6 +230,72 @@ const NewVisitDialog = ({
   const patients = patientsData?.data || [];
   const doctors = doctorsData?.data || [];
 
+  const TEMPLATE_PAGE_SIZE = 20;
+
+  useEffect(() => {
+    if (!prescriptionTemplatesData?.data) {
+      return;
+    }
+
+    const newTemplates: PrescriptionTemplate[] = prescriptionTemplatesData.data;
+
+    if (prescriptionTemplatePage === 1) {
+      setPrescriptionTemplates(newTemplates);
+    } else if (newTemplates.length > 0) {
+      setPrescriptionTemplates((prev) => {
+        const merged = [...prev];
+        newTemplates.forEach((template) => {
+          if (!merged.some((item) => item._id === template._id)) {
+            merged.push(template);
+          }
+        });
+        return merged;
+      });
+    }
+
+    if (newTemplates.length < TEMPLATE_PAGE_SIZE) {
+      setHasMorePrescriptionTemplates(false);
+    }
+  }, [prescriptionTemplatesData, prescriptionTemplatePage]);
+
+  useEffect(() => {
+    if (!serviceTemplatesData?.data) {
+      return;
+    }
+
+    const newTemplates: ServiceTemplate[] = serviceTemplatesData.data;
+
+    if (serviceTemplatePage === 1) {
+      setServiceTemplates(newTemplates);
+    } else if (newTemplates.length > 0) {
+      setServiceTemplates((prev) => {
+        const merged = [...prev];
+        newTemplates.forEach((template) => {
+          if (!merged.some((item) => item._id === template._id)) {
+            merged.push(template);
+          }
+        });
+        return merged;
+      });
+    }
+
+    if (newTemplates.length < TEMPLATE_PAGE_SIZE) {
+      setHasMoreServiceTemplates(false);
+    }
+  }, [serviceTemplatesData, serviceTemplatePage]);
+
+  useEffect(() => {
+    setPrescriptionTemplatePage(1);
+    setHasMorePrescriptionTemplates(true);
+    setPrescriptionTemplates([]);
+  }, [prescriptionTemplateSearch]);
+
+  useEffect(() => {
+    setServiceTemplatePage(1);
+    setHasMoreServiceTemplates(true);
+    setServiceTemplates([]);
+  }, [serviceTemplateSearch]);
+
   // Auto-select patient if provided
   useEffect(() => {
     if (preSelectedPatientId && open) {
@@ -221,9 +326,43 @@ const NewVisitDialog = ({
         setServiceSearch('');
         setSelectedPrescriptionTemplate('');
         setSelectedServiceTemplate('');
+        setPrescriptionTemplatePage(1);
+        setServiceTemplatePage(1);
+        setPrescriptionTemplateSearch('');
+        setServiceTemplateSearch('');
+        setPrescriptionTemplates([]);
+        setServiceTemplates([]);
+        setHasMorePrescriptionTemplates(true);
+        setHasMoreServiceTemplates(true);
       }, 200);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open || prescriptionTemplates.length > 0) {
+      return;
+    }
+
+    if (prescriptionTemplatesData?.data) {
+      setPrescriptionTemplates(prescriptionTemplatesData.data);
+      setHasMorePrescriptionTemplates(
+        prescriptionTemplatesData.data.length >= TEMPLATE_PAGE_SIZE
+      );
+    }
+  }, [open, prescriptionTemplates.length, prescriptionTemplatesData]);
+
+  useEffect(() => {
+    if (!open || serviceTemplates.length > 0) {
+      return;
+    }
+
+    if (serviceTemplatesData?.data) {
+      setServiceTemplates(serviceTemplatesData.data);
+      setHasMoreServiceTemplates(
+        serviceTemplatesData.data.length >= TEMPLATE_PAGE_SIZE
+      );
+    }
+  }, [open, serviceTemplates.length, serviceTemplatesData]);
 
   const selectPatient = (patientId: string) => {
     setSelectedPatientId(patientId);
@@ -378,23 +517,26 @@ const NewVisitDialog = ({
   const handlePrescriptionTemplateSelect = (templateId: string) => {
     setSelectedPrescriptionTemplate(templateId);
 
-    const template = prescriptionTemplatesData?.data.find(
-      (t: any) => t._id === templateId
-    );
+    const template = prescriptionTemplates.find((t) => t._id === templateId);
     if (!template) return;
 
     // Add medications from template - replace existing ones
-    const templateMedications: MedicationItem[] = template.items.map(
-      (item: any) => ({
+    const templateMedications: MedicationItem[] = template.items.map((item) => {
+      const medicationId =
+        typeof item.medication_id === 'string'
+          ? item.medication_id
+          : item.medication_id?._id || '';
+
+      return {
         id: Date.now().toString() + Math.random(),
-        medication_id: item.medication_id?._id || item.medication_id || '',
+        medication_id: medicationId,
         additionalInfo: '',
         frequency: item.frequency?.toString() || '',
         duration: item.duration?.toString() || '',
         instructions: item.instructions || '',
         addons: item.addons || '',
-      })
-    );
+      };
+    });
 
     // Replace medications list instead of appending
     setMedications(templateMedications);
@@ -405,9 +547,7 @@ const NewVisitDialog = ({
   const handleServiceTemplateSelect = (templateId: string) => {
     setSelectedServiceTemplate(templateId);
 
-    const template = serviceTemplatesData?.data.find(
-      (t: any) => t._id === templateId
-    );
+    const template = serviceTemplates.find((t) => t._id === templateId);
     if (!template) return;
 
     // Set duration from template
@@ -419,16 +559,51 @@ const NewVisitDialog = ({
     const duration = template.duration || serviceDuration || 7;
     const allDays = Array.from({ length: duration }, (_, i) => i + 1);
 
-    const templateServices: ServiceItem[] = template.items.map((item: any) => ({
-      id: Date.now().toString() + Math.random(),
-      service_id: item.service_type_id?._id || item.service_type_id || '',
-      notes: '',
-      markedDays: allDays, // Mark all days by default
-    }));
+    const templateServices: ServiceItem[] = template.items.map((item) => {
+      const serviceId =
+        typeof item.service_type_id === 'string'
+          ? item.service_type_id
+          : item.service_type_id?._id || '';
+
+      return {
+        id: Date.now().toString() + Math.random(),
+        service_id: serviceId,
+        notes: '',
+        markedDays: allDays, // Mark all days by default
+      };
+    });
 
     // Replace services list instead of appending
     setServices(templateServices);
     toast.success(t('newVisitDialog.templateApplied'));
+  };
+
+  const handlePrescriptionTemplateScroll = (
+    event: React.UIEvent<HTMLDivElement>
+  ) => {
+    const target = event.currentTarget;
+    const isNearBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 20;
+
+    if (
+      isNearBottom &&
+      hasMorePrescriptionTemplates &&
+      !isFetchingPrescriptionTemplates
+    ) {
+      setPrescriptionTemplatePage((prev) => prev + 1);
+    }
+  };
+
+  const handleServiceTemplateScroll = (
+    event: React.UIEvent<HTMLDivElement>
+  ) => {
+    const target = event.currentTarget;
+    const isNearBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 20;
+
+    if (isNearBottom && hasMoreServiceTemplates && !isFetchingServiceTemplates) {
+      setServiceTemplatePage((prev) => prev + 1);
+    }
   };
 
   const handleSave = async () => {
@@ -473,7 +648,7 @@ const NewVisitDialog = ({
           day: day.day,
           date:
             markedDays.includes(day.day) && day.date
-              ? format(day.date, 'yyyy-MM-dd')
+              ? day.date.toISOString().split('T')[0]
               : null,
         }));
 
@@ -494,6 +669,8 @@ const NewVisitDialog = ({
       patient_id: selectedPatientId,
       doctor_id: selectedDoctorId,
       treatment_type: treatmentType,
+      complaints: subjective,
+      description,
       prescription_data: {
         items: prescriptionItems,
       },
@@ -711,6 +888,36 @@ const NewVisitDialog = ({
                 </div>
               </div>
 
+                          {/* Subjective - Complaints */}
+              <div className='space-y-2 shadow-sm border p-2 rounded-lg'>
+                <Label className='flex items-center gap-2'>
+                  <FileText className='w-4 h-4 text-primary' />
+                  {t('newVisitDialog.complaint')}
+                </Label>
+                <Textarea
+                  placeholder={t('newVisitDialog.complaintPlaceholder')}
+                  className={`min-h-24 ${
+                    showErrors && !subjective.trim() ? 'border-red-500' : ''
+                  }`}
+                  value={subjective}
+                  onChange={(e) => setSubjective(e.target.value)}
+                />
+              </div>
+
+              {/* Description */}
+              <div className='space-y-2 shadow-sm border p-2 rounded-lg'>
+                <Label className='flex items-center gap-2'>
+                  <Activity className='w-4 h-4 text-primary' />
+                  {t('newVisitDialog.descriptionLabel')}
+                </Label>
+                <Textarea
+                  placeholder={t('newVisitDialog.descriptionPlaceholder')}
+                  className='min-h-24'
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
+
               {/* Template Selection - Side by Side */}
               <div className='shadow-sm border rounded-lg p-4 bg-gradient-to-r from-blue-50/50 to-green-50/50'>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -743,9 +950,12 @@ const NewVisitDialog = ({
                             className='h-8 mb-2'
                           />
                         </div>
-                        {prescriptionTemplatesData?.data?.length > 0 ? (
-                          prescriptionTemplatesData.data.map(
-                            (template: any) => (
+                        <div
+                          className='max-h-64 overflow-auto'
+                          onScroll={handlePrescriptionTemplateScroll}
+                        >
+                          {prescriptionTemplates.length > 0 ? (
+                            prescriptionTemplates.map((template) => (
                               <SelectItem
                                 key={template._id}
                                 value={template._id}
@@ -760,13 +970,18 @@ const NewVisitDialog = ({
                                   </span>
                                 </div>
                               </SelectItem>
-                            )
-                          )
-                        ) : (
-                          <div className='p-4 text-center text-sm text-muted-foreground'>
-                            {t('newVisitDialog.noTemplatesFound')}
-                          </div>
-                        )}
+                            ))
+                          ) : (
+                            <div className='p-4 text-center text-sm text-muted-foreground'>
+                              {t('newVisitDialog.noTemplatesFound')}
+                            </div>
+                          )}
+                          {isFetchingPrescriptionTemplates && (
+                            <div className='p-2 text-center text-xs text-muted-foreground'>
+                              {t('newVisitDialog.loading')}
+                            </div>
+                          )}
+                        </div>
                       </SelectContent>
                     </Select>
                   </div>
@@ -800,26 +1015,36 @@ const NewVisitDialog = ({
                             className='h-8 mb-2'
                           />
                         </div>
-                        {serviceTemplatesData?.data?.length > 0 ? (
-                          serviceTemplatesData.data.map((template: any) => (
-                            <SelectItem key={template._id} value={template._id}>
-                              <div className='flex flex-col'>
-                                <span className='font-medium'>
-                                  {template.name}
-                                </span>
-                                <span className='text-xs text-muted-foreground'>
-                                  {template.items?.length || 0}{' '}
-                                  {t('newVisitDialog.services')} •{' '}
-                                  {template.duration} {t('newVisitDialog.days')}
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <div className='p-4 text-center text-sm text-muted-foreground'>
-                            {t('newVisitDialog.noTemplatesFound')}
-                          </div>
-                        )}
+                        <div
+                          className='max-h-64 overflow-auto'
+                          onScroll={handleServiceTemplateScroll}
+                        >
+                          {serviceTemplates.length > 0 ? (
+                            serviceTemplates.map((template) => (
+                              <SelectItem key={template._id} value={template._id}>
+                                <div className='flex flex-col'>
+                                  <span className='font-medium'>
+                                    {template.name}
+                                  </span>
+                                  <span className='text-xs text-muted-foreground'>
+                                    {template.items?.length || 0}{' '}
+                                    {t('newVisitDialog.services')} •{' '}
+                                    {template.duration} {t('newVisitDialog.days')}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className='p-4 text-center text-sm text-muted-foreground'>
+                              {t('newVisitDialog.noTemplatesFound')}
+                            </div>
+                          )}
+                          {isFetchingServiceTemplates && (
+                            <div className='p-2 text-center text-xs text-muted-foreground'>
+                              {t('newVisitDialog.loading')}
+                            </div>
+                          )}
+                        </div>
                       </SelectContent>
                     </Select>
                   </div>
