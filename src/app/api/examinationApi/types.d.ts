@@ -406,7 +406,7 @@ export interface GetAlldailyCheckup {
 	}[]
 }
 
-interface CreateExamWithPrescriptionAndServiceReq {
+export interface CreateExamWithPrescriptionAndServiceReq {
 	patient_id: string
 	doctor_id: string
 	description: string
