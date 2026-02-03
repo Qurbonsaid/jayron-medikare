@@ -131,6 +131,126 @@
           }
         }
       },
+      "/upload/video": {
+        "post": {
+          "tags": ["Upload"],
+          "summary": "Upload a single video file (MP4, MOV, WEBM, AVI, MKV) — Max 100MB",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "video": {
+                      "type": "string",
+                      "format": "binary",
+                      "description": "Video file (MP4, MOV, WEBM, AVI, MKV)"
+                    }
+                  },
+                  "required": ["video"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Video uploaded successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "file_path": {
+                        "type": "string",
+                        "example": "video/abc123.mp4"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "No file uploaded"
+            },
+            "422": {
+              "description": "Invalid file type or size exceeded"
+            }
+          }
+        }
+      },
+      "/upload/videos": {
+        "post": {
+          "tags": ["Upload"],
+          "summary": "Upload multiple video files (max 10) — Max 100MB each",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "videos": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "binary"
+                      },
+                      "description": "Video files (MP4, MOV, WEBM, AVI, MKV)"
+                    }
+                  },
+                  "required": ["videos"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Videos uploaded successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "file_paths": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "example": ["video/abc123.mp4", "video/def456.mp4"]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "No files uploaded"
+            },
+            "422": {
+              "description": "Invalid file type or size exceeded"
+            }
+          }
+        }
+      },
       "/auth/login": {
         "post": {
           "tags": ["Auth"],
@@ -9091,6 +9211,429 @@
             },
             "404": {
               "description": "History not found"
+            }
+          }
+        }
+      },
+      "/about-video/create": {
+        "post": {
+          "tags": ["AboutVideo"],
+          "summary": "Create a new about video",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "video_type": {
+                      "type": "string",
+                      "enum": [
+                        "CEO",
+                        "ADMIN",
+                        "DOCTOR",
+                        "NURSE",
+                        "RECEPTIONIST",
+                        "PHARMACIST"
+                      ],
+                      "example": "CEO",
+                      "description": "Type of video (role-based)"
+                    },
+                    "video_url": {
+                      "type": "string",
+                      "example": "https://example.com/video.mp4",
+                      "description": "URL of the video"
+                    }
+                  },
+                  "required": ["video_type", "video_url"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "About video created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Video muvaffaqiyatli yaratildi"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "About video for this type already exists"
+            }
+          }
+        }
+      },
+      "/about-video/get-all": {
+        "get": {
+          "tags": ["AboutVideo"],
+          "summary": "Get all about videos with pagination",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              },
+              "description": "Page number"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "example": 10
+              },
+              "description": "Items per page"
+            },
+            {
+              "name": "video_type",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "CEO",
+                  "ADMIN",
+                  "DOCTOR",
+                  "NURSE",
+                  "RECEPTIONIST",
+                  "PHARMACIST"
+                ]
+              },
+              "description": "Filter by video type"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of about videos",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "video_type": {
+                              "type": "string",
+                              "enum": [
+                                "CEO",
+                                "ADMIN",
+                                "DOCTOR",
+                                "NURSE",
+                                "RECEPTIONIST",
+                                "PHARMACIST"
+                              ]
+                            },
+                            "video_url": {
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "updated_at": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "pagination": {
+                        "type": "object",
+                        "properties": {
+                          "page": {
+                            "type": "integer"
+                          },
+                          "limit": {
+                            "type": "integer"
+                          },
+                          "total_items": {
+                            "type": "integer"
+                          },
+                          "total_pages": {
+                            "type": "integer"
+                          },
+                          "next_page": {
+                            "type": "integer"
+                          },
+                          "prev_page": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/about-video/get-one/{id}": {
+        "get": {
+          "tags": ["AboutVideo"],
+          "summary": "Get about video by ID",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "About video ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "About video found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "video_type": {
+                            "type": "string",
+                            "enum": [
+                              "CEO",
+                              "ADMIN",
+                              "DOCTOR",
+                              "NURSE",
+                              "RECEPTIONIST",
+                              "PHARMACIST"
+                            ]
+                          },
+                          "video_url": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "About video not found"
+            }
+          }
+        }
+      },
+      "/about-video/get-by-type/{type}": {
+        "get": {
+          "tags": ["AboutVideo"],
+          "summary": "Get about video by type",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "type",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "CEO",
+                  "ADMIN",
+                  "DOCTOR",
+                  "NURSE",
+                  "RECEPTIONIST",
+                  "PHARMACIST"
+                ]
+              },
+              "description": "Video type"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "About video found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "video_type": {
+                            "type": "string",
+                            "enum": [
+                              "CEO",
+                              "ADMIN",
+                              "DOCTOR",
+                              "NURSE",
+                              "RECEPTIONIST",
+                              "PHARMACIST"
+                            ]
+                          },
+                          "video_url": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "About video not found"
+            }
+          }
+        }
+      },
+      "/about-video/update/{id}": {
+        "put": {
+          "tags": ["AboutVideo"],
+          "summary": "Update about video",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "About video ID"
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "video_type": {
+                      "type": "string",
+                      "enum": [
+                        "CEO",
+                        "ADMIN",
+                        "DOCTOR",
+                        "NURSE",
+                        "RECEPTIONIST",
+                        "PHARMACIST"
+                      ],
+                      "example": "CEO"
+                    },
+                    "video_url": {
+                      "type": "string",
+                      "example": "https://example.com/new-video.mp4"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "About video updated successfully"
+            },
+            "404": {
+              "description": "About video not found"
+            },
+            "409": {
+              "description": "Video type already exists"
+            }
+          }
+        }
+      },
+      "/about-video/delete/{id}": {
+        "delete": {
+          "tags": ["AboutVideo"],
+          "summary": "Delete about video",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "About video ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "About video deleted successfully"
+            },
+            "404": {
+              "description": "About video not found"
             }
           }
         }

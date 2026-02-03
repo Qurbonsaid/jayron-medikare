@@ -58,5 +58,13 @@
     "patientPortal": "Patient Portal",
     "dashboard": "Dashboard",
     "templates":"Templates"
+  },
+  "videoTutorial": {
+    "title": "Video Tutorial",
+    "description": "Video guide on how to use the system",
+    "tooltip": "Video Tutorial",
+    "notFound": "Video not found",
+    "noVideo": "No video available for this role",
+    "browserNotSupported": "Your browser does not support video player"
   }
 }
