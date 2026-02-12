@@ -22,7 +22,7 @@ type MutationResponse = {
 type GetAllParam = {
   page: number;
   limit: number;
-  name: string;
+  search: string;
 };
 
 type GetResponse = {
