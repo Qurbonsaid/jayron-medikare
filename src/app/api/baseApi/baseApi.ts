@@ -67,9 +67,6 @@ const customBaseQuery: BaseQueryFn<
   
   // Check if this is a biometric endpoint (should skip auth)
   const isBiometricEndpoint = url.includes('/biometric/');
-  
-  console.log('🔍 BaseAPI - URL:', url);
-  console.log('🔍 BaseAPI - Is biometric endpoint:', isBiometricEndpoint);
 
   const baseQuery = fetchBaseQuery({
     baseUrl: SERVER_URL,
@@ -81,10 +78,7 @@ const customBaseQuery: BaseQueryFn<
         const token = getTokenFromCache();
         if (token) {
           headers.set('Authorization', `Bearer ${token}`);
-          console.log('🔑 BaseAPI - Auth token added');
         }
-      } else {
-        console.log('🚫 BaseAPI - Skipping auth token for biometric endpoint');
       }
       
       return headers;

@@ -117,7 +117,7 @@ const UpdateBloodPressure = ({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='sm:max-w-[500px]'>
+			<DialogContent className='sm:max-w-[500px]' aria-describedby={undefined}>
 				<DialogHeader className='p-4 sm:p-6 pb-0'>
 					<DialogTitle className='text-xl sm:text-2xl'>
 						{t('updateBloodPressure')}

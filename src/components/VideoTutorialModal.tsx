@@ -62,8 +62,8 @@ export function VideoTutorialModal({ open, onOpenChange }: VideoTutorialModalPro
   };
 
   const isLoading = userLoading || videoLoading;
-  const hasVideo = videoData?.data?.video_url && !videoError;
-  const hasError = error || videoError;
+  const hasVideo = !!(videoData?.data?.video_url) && !videoError;
+  const hasError = !!(error) || videoError;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,6 +72,7 @@ export function VideoTutorialModal({ open, onOpenChange }: VideoTutorialModalPro
           'w-[95vw] max-w-2xl p-0 overflow-hidden',
           'sm:rounded-xl'
         )}
+        aria-describedby={undefined}
       >
         <DialogHeader className='p-2 pb-0'>
           <DialogTitle className='flex items-center gap-2 text-base sm:text-lg'>
@@ -104,6 +105,7 @@ export function VideoTutorialModal({ open, onOpenChange }: VideoTutorialModalPro
               controls
               controlsList='nodownload'
               playsInline
+              crossOrigin='anonymous'
               onError={handleVideoError}
             >
               {t('videoTutorial.browserNotSupported', 'Brauzeringiz video playerni qo\'llab-quvvatlamaydi.')}
