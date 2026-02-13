@@ -52,7 +52,7 @@ export const UpdateLeaveTime = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
             {t("updateLeaveTime")}

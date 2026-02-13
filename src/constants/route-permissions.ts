@@ -573,7 +573,7 @@ export const RoutePermissions: RoutePermission[] = [
     path: '/daily-checkup/:id',
     name: 'Update Daily Checkup',
     method: 'PUT',
-    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR],
+    roles: [RoleConstants.CEO, RoleConstants.ADMIN, RoleConstants.DOCTOR, RoleConstants.NURSE],
     description: 'Update daily checkup',
   },
   {

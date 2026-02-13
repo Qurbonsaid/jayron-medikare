@@ -115,11 +115,6 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 							videoRef.current.videoHeight > 0
 						) {
 							clearTimeout(timeout)
-							console.log('📹 Video ready:', {
-								width: videoRef.current.videoWidth,
-								height: videoRef.current.videoHeight,
-								readyState: videoRef.current.readyState,
-							})
 							setIsVideoReady(true)
 							resolve()
 						} else if (videoRef.current) {
@@ -148,19 +143,15 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 	}
 
 	const stopCamera = () => {
-		console.log('📹 RoomNewPatient - stopCamera called')
 		if (streamRef.current) {
-			console.log('🛑 Stopping camera stream...')
 			streamRef.current.getTracks().forEach(track => track.stop())
 			streamRef.current = null
 		}
 		if (videoRef.current) {
-			console.log('🗑️ Clearing video source...')
 			videoRef.current.srcObject = null
 		}
 		setIsCameraActive(false)
 		setIsVideoReady(false)
-		console.log('✅ Camera stopped and cleaned up')
 	}
 
 	const capturePhoto = () => {
@@ -174,21 +165,11 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 			return
 		}
 
-		// Debug: Check video state
-		console.log('🔍 Video state:', {
-			videoWidth: videoRef.current.videoWidth,
-			videoHeight: videoRef.current.videoHeight,
-			readyState: videoRef.current.readyState,
-			paused: videoRef.current.paused,
-			ended: videoRef.current.ended,
-		})
-
 		// Check if video is ready and has valid dimensions
 		if (
 			videoRef.current.videoWidth === 0 ||
 			videoRef.current.videoHeight === 0
 		) {
-			console.error('❌ Video not ready yet')
 			toast.error(t('cameraNotReadyWait'))
 			return
 		}
@@ -227,7 +208,6 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 
 				setCaptureCount(newImages.length)
 
-				console.log(`📸 Photo ${newImages.length} captured`)
 				toast.success(t('photoCaptured', { count: newImages.length }))
 
 				// Stop camera if reached 5 images
@@ -262,8 +242,6 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 					patient_id: selectedPatient._id,
 					estimated_leave_time: estimatedLeaveTime,
 				}).unwrap()
-
-				console.log('✅ Patient added to room SUCCESS')
 			},
 			onSuccess: () => {
 				toast.success(
@@ -289,9 +267,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 		<Dialog
 			open={open}
 			onOpenChange={open => {
-				console.log('🔄 RoomNewPatient modal open changed to:', open)
 				if (!open) {
-					console.log('🧹 Modal closing, cleaning up...')
 					stopCamera()
 					imagePreviewUrls.forEach(url => URL.revokeObjectURL(url))
 
@@ -306,13 +282,11 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 					setImagePreviewUrls([])
 					setImageError('')
 					setCaptureCount(0)
-
-					console.log('✅ Cleanup completed (form + camera)')
 				}
 				onOpenChange(open)
 			}}
 		>
-			<DialogContent className='max-w-[95vw] sm:max-w-[90vw] lg:max-w-2xl max-h-[85vh] p-0 border-2 border-primary/30 flex flex-col'>
+			<DialogContent className='max-w-[95vw] sm:max-w-[90vw] lg:max-w-2xl max-h-[85vh] p-0 border-2 border-primary/30 flex flex-col' aria-describedby={undefined}>
 				<DialogHeader className='p-4 sm:p-6 pb-3 m-0 flex-shrink-0'>
 					<DialogTitle className='text-xl m-0 p-0'>
 						{t('addNewPatientToRoom')}

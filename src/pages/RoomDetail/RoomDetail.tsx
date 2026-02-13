@@ -54,12 +54,18 @@ const RoomDetail = () => {
 
   const { id: roomId } = useParams();
 
-  // Permission checks - CEO, ADMIN, and RECEPTIONIST can see action buttons
+  // Permission checks - CEO, ADMIN, RECEPTIONIST can manage patients, NURSE can measure blood pressure
   const { userRole } = useRouteActions('/room/:id');
   const showActionButtons =
     userRole === RoleConstants.CEO ||
     userRole === RoleConstants.ADMIN ||
-    userRole === RoleConstants.RECEPTIONIST;
+    userRole === RoleConstants.RECEPTIONIST || 
+    userRole === RoleConstants.DOCTOR || 
+    userRole === RoleConstants.NURSE;
+
+  // Nurse can only measure/update blood pressure
+  const canMeasureBloodPressure =
+    showActionButtons
   const {
     data: room,
     isLoading,
@@ -157,14 +163,13 @@ const RoomDetail = () => {
                   </h3>
 
                   <p
-                    className={`mt-1 text-lg font-semibold ${
-                      room?.data.patient_occupied
+                    className={`mt-1 text-lg font-semibold ${room?.data.patient_occupied
                         ? room.data.patient_occupied ===
                           room.data.patient_capacity
                           ? 'text-red-600'
                           : 'text-yellow-600'
                         : 'text-green-600'
-                    }`}
+                      }`}
                   >
                     {room?.data.patient_occupied
                       ? room.data.patient_occupied ===
@@ -222,22 +227,20 @@ const RoomDetail = () => {
                     return (
                       <Card
                         key={patient._id}
-                        className={`p-4 transition-smooth relative ${
-                          handleIsLeavingToday(patient.estimated_leave_time)
+                        className={`p-4 transition-smooth relative ${handleIsLeavingToday(patient.estimated_leave_time)
                             ? 'border-red-500 bg-red-100 hover:bg-red-200'
                             : 'bg-green-100 border-green-500/50 hover:bg-green-200'
-                        }`}
+                          }`}
                       >
                         {showActionButtons && (
                           <div className='absolute top-4 right-4'>
                             <DropdownMenu>
-                              <DropdownMenuTrigger>
-                                <Button
-                                  variant='default'
-                                  className='w-8 h-6 border-green-500/50 bg-transparent hover:bg-green-500/20'
+                              <DropdownMenuTrigger asChild>
+                                <div
+                                  className='w-8 h-6 flex items-center justify-center border border-green-500/50 bg-transparent hover:bg-green-500/20 rounded cursor-pointer'
                                 >
-                                  <MoreHorizontal className='w-8 h-6 text-black' />
-                                </Button>
+                                  <MoreHorizontal className='w-5 h-5 text-black' />
+                                </div>
                               </DropdownMenuTrigger>
 
                               <DropdownMenuContent>
@@ -245,7 +248,7 @@ const RoomDetail = () => {
                                   onClick={() => {
                                     const bpData =
                                       patientBloodPressureMap[
-                                        patientData?._id || ''
+                                      patientData?._id || ''
                                       ];
                                     if (bpData?.hasData && bpData.checkupId) {
                                       setShowUpdateBloodPressure(true);
@@ -342,7 +345,20 @@ const RoomDetail = () => {
                                 ? 'default'
                                 : 'secondary'
                             }
-                            className='text-xs'
+                            className={`text-xs ${canMeasureBloodPressure ? 'cursor-pointer hover:opacity-80' : ''}`}
+                            onClick={() => {
+                              if (!canMeasureBloodPressure) return;
+                              const bpData =
+                                patientBloodPressureMap[patientData?._id || ''];
+                              if (bpData?.hasData && bpData.checkupId) {
+                                setShowUpdateBloodPressure(true);
+                                setSelectedPatientId(patientData?._id || null);
+                                setSelectedDailyCheckupId(bpData.checkupId);
+                              } else {
+                                setShowMeasureBloodPressure(true);
+                                setSelectedPatientId(patientData?._id || null);
+                              }
+                            }}
                           >
                             {patientBloodPressureMap[patientData?._id || '']
                               ?.hasData

@@ -19,10 +19,17 @@ import {
 import { menuCategories, systemMenu } from '@/constants/Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePermissions } from '@/hooks/usePermissions';
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, PlayCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { VideoTutorialModal } from './VideoTutorialModal';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export function AppSidebar() {
   const { t } = useTranslation('sidebar');
@@ -36,6 +43,7 @@ export function AppSidebar() {
   const isMobile = useIsMobile();
   const prevPathRef = useRef<string>();
   const { canRead, isLoading: permissionsLoading } = usePermissions();
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
 
   // Filter menu items based on read permission
   const filteredMenuCategories = menuCategories
@@ -110,10 +118,29 @@ export function AppSidebar() {
     <Sidebar collapsible='icon' className='border-r bg-card z-20'>
       {/* Logo Area */}
       <div className='h-18 flex items-center justify-center border-b relative'>
-        <Link to='/patients'>
-          {open ? (
-            <div className='flex items-center gap-3'>
-              <div className='w-10 h-10 gradient-primary rounded-lg flex items-center justify-center'>
+        <div className='flex items-center gap-2'>
+          <Link to='/patients'>
+            {open ? (
+              <div className='flex items-center gap-3'>
+                <div className='w-10 h-10 gradient-primary rounded-lg flex items-center justify-center'>
+                  <svg
+                    className='w-6 h-6 text-white'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+                    />
+                  </svg>
+                </div>
+                <span className='font-bold text-sm'>JAYRON MEDSERVIS</span>
+              </div>
+            ) : (
+              <div className='w-10 h-10 gradient-primary rounded-lg flex items-center justify-center z-10'>
                 <svg
                   className='w-6 h-6 text-white'
                   fill='none'
@@ -128,26 +155,51 @@ export function AppSidebar() {
                   />
                 </svg>
               </div>
-              <span className='font-bold text-sm'>JAYRON MEDSERVIS</span>
-            </div>
-          ) : (
-            <div className='w-10 h-10 gradient-primary rounded-lg flex items-center justify-center z-10'>
-              <svg
-                className='w-6 h-6 text-white'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
-                />
-              </svg>
-            </div>
+            )}
+          </Link>
+          
+          {/* Video Tutorial Button */}
+          {open && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={() => setVideoModalOpen(true)}
+                    className='h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors'
+                  >
+                    <PlayCircle className='h-5 w-5' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side='bottom'>
+                  <p>{t('videoTutorial.tooltip', 'Video qo\'llanma')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
-        </Link>
+        </div>
+        
+        {/* Video button when sidebar is collapsed */}
+        {!open && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  onClick={() => setVideoModalOpen(true)}
+                  className='absolute bottom-1 h-7 w-7 rounded-full hover:bg-primary/10 hover:text-primary transition-colors'
+                >
+                  <PlayCircle className='h-4 w-4' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side='right'>
+                <p>{t('videoTutorial.tooltip', 'Video qo\'llanma')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
 
       <SidebarContent
@@ -332,6 +384,12 @@ export function AppSidebar() {
             </SidebarFooter>
           );
         })()}
+        
+      {/* Video Tutorial Modal */}
+      <VideoTutorialModal 
+        open={videoModalOpen} 
+        onOpenChange={setVideoModalOpen} 
+      />
     </Sidebar>
   );
 }

@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -56,7 +55,7 @@ export const PatientSearchModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl flex flex-col p-4 sm:p-6">
+      <DialogContent className="max-w-2xl flex flex-col p-4 sm:p-6" aria-describedby={undefined}>
         <DialogHeader className="space-y-2 sm:space-y-3 flex-shrink-0">
           <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
             <Search className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />

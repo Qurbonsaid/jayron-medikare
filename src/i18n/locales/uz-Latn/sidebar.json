@@ -58,5 +58,13 @@
     "patientPortal": "Bemor portali",
     "dashboard": "Bosh sahifa",
     "templates":"Shablon"
+  },
+  "videoTutorial": {
+    "title": "Video qo'llanma",
+    "description": "Ishlatish bo'yicha video qo'llanma",
+    "tooltip": "Video qo'llanma",
+    "notFound": "Video topilmadi",
+    "noVideo": "Bu rol uchun video mavjud emas",
+    "browserNotSupported": "Brauzeringiz video pleyerni qo'llab-quvvatlamaydi"
   }
 }

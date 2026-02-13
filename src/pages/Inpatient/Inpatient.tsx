@@ -103,13 +103,12 @@ const Inpatient = () => {
                   >
                     <div className="absolute top-4 right-4">
                       <DropdownMenu>
-                        <DropdownMenuTrigger>
-                          <Button
-                            variant="default"
-                            className="w-8 h-6 border-green-500/50 bg-transparent hover:bg-green-500/20"
+                        <DropdownMenuTrigger asChild>
+                          <div
+                            className="w-8 h-6 flex items-center justify-center border border-green-500/50 bg-transparent hover:bg-green-500/20 rounded cursor-pointer"
                           >
-                            <MoreHorizontal className="w-8 h-6 text-black" />
-                          </Button>
+                            <MoreHorizontal className="w-5 h-5 text-black" />
+                          </div>
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent>
