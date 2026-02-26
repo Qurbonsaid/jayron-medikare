@@ -256,22 +256,22 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
             ]}
           >
             <View style={[styles.tableCol, { flex: 0.25 }]}>
-              <Text style={styles.tableCell}>#</Text>
+              <Text style={[styles.tableCell, { fontSize: 10 }]}>#</Text>
             </View>
             <View style={[styles.tableCol, { flex: 1.2 }]}>
-              <Text style={styles.tableCell}>Dori nomi</Text>
+              <Text style={[styles.tableCell, { fontSize: 10 }]}>Dori nomi</Text>
             </View>
             <View style={[styles.tableCol, { flex: 0.8 }]}>
-              <Text style={styles.tableCell}>Qo'shimcha</Text>
+              <Text style={[styles.tableCell, { fontSize: 10 }]}>Qo'shimcha</Text>
             </View>
             <View style={[styles.tableCol, { flex: 1 }]}>
-              <Text style={styles.tableCell}>Ko'rsatmalar</Text>
+              <Text style={[styles.tableCell, { fontSize: 10 }]}>Ko'rsatmalar</Text>
             </View>
             <View style={[styles.tableCol, { flex: 0.5 }]}>
-              <Text style={styles.tableCell}>Kuniga</Text>
+              <Text style={[styles.tableCell, { fontSize: 10 }]}>Kuniga</Text>
             </View>
             <View style={[styles.tableColLast, { flex: 0.5 }]}>
-              <Text style={styles.tableCell}>Muddati</Text>
+              <Text style={[styles.tableCell, { fontSize: 10 }]}>Muddati</Text>
             </View>
           </View>
 
@@ -298,10 +298,10 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
                 ]}
               >
                 <View style={[styles.tableCol, { flex: 0.25 }]}>
-                  <Text style={styles.tableCell}>{index + 1}</Text>
+                  <Text style={[styles.tableCell, { fontSize: 10 }]}>{index + 1}</Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 1.2 }]}>
-                  <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                  <Text style={[styles.tableCell, { textAlign: 'left', fontSize: 10 }]}>
                     {medication.name}
                   </Text>
                 </View>
@@ -309,7 +309,7 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
                   <Text
                     style={[
                       styles.tableCell,
-                      { textAlign: 'left', fontSize: 8 },
+                      { textAlign: 'left', fontSize: 10 },
                     ]}
                   >
                     {prescription.addons || '-'}
@@ -319,19 +319,19 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
                   <Text
                     style={[
                       styles.tableCell,
-                      { textAlign: 'left', fontSize: 8 },
+                      { textAlign: 'left', fontSize: 10 },
                     ]}
                   >
                     {instructions}
                   </Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 0.5 }]}>
-                  <Text style={styles.tableCell}>
+                  <Text style={[styles.tableCell, { fontSize: 10 }]}>
                     {frequency ? `${frequency} marta` : '-'}
                   </Text>
                 </View>
                 <View style={[styles.tableColLast, { flex: 0.5 }]}>
-                  <Text style={styles.tableCell}>
+                  <Text style={[styles.tableCell, { fontSize: 10 }]}>
                     {duration ? `${duration} kun` : '-'}
                   </Text>
                 </View>
@@ -670,22 +670,22 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                 ]}
               >
                 <View style={[styles.tableCol, { flex: 0.3 }]}>
-                  <Text style={styles.tableCell}>#</Text>
+                  <Text style={[styles.tableCell, { fontSize: 10 }]}>#</Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 1.2 }]}>
-                  <Text style={styles.tableCell}>Dori nomi</Text>
+                  <Text style={[styles.tableCell, { fontSize: 10 }]}>Dori nomi</Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 0.8 }]}>
-                  <Text style={styles.tableCell}>Qo'shimcha</Text>
+                  <Text style={[styles.tableCell, { fontSize: 10 }]}>Qo'shimcha</Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 0.6 }]}>
-                  <Text style={styles.tableCell}>Kuniga</Text>
+                  <Text style={[styles.tableCell, { fontSize: 10 }]}>Kuniga</Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 1 }]}>
-                  <Text style={styles.tableCell}>Ko'rsatmalar</Text>
+                  <Text style={[styles.tableCell, { fontSize: 10 }]}>Ko'rsatmalar</Text>
                 </View>
                 <View style={[styles.tableColLast, { flex: 0.6 }]}>
-                  <Text style={styles.tableCell}>Muddati</Text>
+                  <Text style={[styles.tableCell, { fontSize: 10 }]}>Muddati</Text>
                 </View>
               </View>
 
@@ -709,10 +709,10 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                     ]}
                   >
                     <View style={[styles.tableCol, { flex: 0.3 }]}>
-                      <Text style={styles.tableCell}>{index + 1}</Text>
+                      <Text style={[styles.tableCell, { fontSize: 10 }]}>{index + 1}</Text>
                     </View>
                     <View style={[styles.tableCol, { flex: 1.2 }]}>
-                      <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                      <Text style={[styles.tableCell, { textAlign: 'left', fontSize: 10 }]}>
                         {medication.name}
                       </Text>
                     </View>
@@ -720,14 +720,14 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                       <Text
                         style={[
                           styles.tableCell,
-                          { textAlign: 'left', fontSize: 8 },
+                          { textAlign: 'left', fontSize: 10 },
                         ]}
                       >
                         {prescription.addons || '-'}
                       </Text>
                     </View>
                     <View style={[styles.tableCol, { flex: 0.6 }]}>
-                      <Text style={styles.tableCell}>
+                      <Text style={[styles.tableCell, { fontSize: 10 }]}>
                         {frequency ? `${frequency} marta` : '-'}
                       </Text>
                     </View>
@@ -735,14 +735,14 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
                       <Text
                         style={[
                           styles.tableCell,
-                          { textAlign: 'left', fontSize: 8 },
+                          { textAlign: 'left', fontSize: 10 },
                         ]}
                       >
                         {instructions}
                       </Text>
                     </View>
                     <View style={[styles.tableColLast, { flex: 0.6 }]}>
-                      <Text style={styles.tableCell}>
+                      <Text style={[styles.tableCell, { fontSize: 10 }]}>
                         {duration ? `${duration} kun` : '-'}
                       </Text>
                     </View>
