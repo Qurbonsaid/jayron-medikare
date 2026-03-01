@@ -240,6 +240,11 @@ const ExaminationDetail = () => {
   });
   const [medicationSearch, setMedicationSearch] = useState('');
 
+  // Diagnosis combobox state
+  const [openDiagnosisCombobox, setOpenDiagnosisCombobox] = useState(false);
+  const [diagnosisSearch, setDiagnosisSearch] = useState('');
+  const [debouncedDiagnosisSearch, setDebouncedDiagnosisSearch] = useState('');
+
   // Neurologic status states
   const [isAddingNeurologic, setIsAddingNeurologic] = useState(false);
   const [editingNeurologicId, setEditingNeurologicId] = useState<string | null>(
@@ -268,6 +273,14 @@ const ExaminationDetail = () => {
   };
   const [neurologicForm, setNeurologicForm] = useState(initialNeurologicForm);
 
+  // Debounce diagnosis search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedDiagnosisSearch(diagnosisSearch);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [diagnosisSearch]);
+
   // Fetch examination details
   const {
     data: examData,
@@ -279,9 +292,15 @@ const ExaminationDetail = () => {
 
   const exam = examData?.data;
 
-  // Fetch all diagnosis
-  const { data: diagnosisData } = useGetAllDiagnosisQuery({});
+  // Fetch diagnoses with server-side search
+  const { data: diagnosisData, isFetching: isFetchingDiagnosis } =
+    useGetAllDiagnosisQuery({
+      page: 1,
+      limit: 20,
+      search: debouncedDiagnosisSearch.trim() || undefined,
+    });
   const diagnoses = diagnosisData?.data || [];
+  const diagnosisHasMore = (diagnosisData?.data?.length ?? 0) === 20;
 
   // Fetch all service types with search and pagination
   const serviceQueryParams = {
@@ -1461,31 +1480,75 @@ const ExaminationDetail = () => {
                           className='min-h-24'
                         />
                       </div>
-
                       <div className='space-y-2'>
                         <Label>{t('detail.diagnosis')}</Label>
-                        <Select
-                          value={editForm.diagnosis}
-                          onValueChange={(value) =>
-                            setEditForm({ ...editForm, diagnosis: value })
-                          }
+                        <Popover
+                          open={openDiagnosisCombobox}
+                          onOpenChange={setOpenDiagnosisCombobox}
                         >
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={t('detail.selectDiagnosis')}
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {diagnoses.map((diagnosis: any) => (
-                              <SelectItem
-                                key={diagnosis._id}
-                                value={diagnosis._id}
-                              >
-                                {diagnosis.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant='outline'
+                              role='combobox'
+                              aria-expanded={openDiagnosisCombobox}
+                              className='w-full justify-between font-normal'
+                            >
+                              {editForm.diagnosis
+                                ? diagnoses.find(
+                                    (d: any) => d._id === editForm.diagnosis
+                                  )?.name || t('detail.selectDiagnosis')
+                                : t('detail.selectDiagnosis')}
+                              <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className='w-[--radix-popover-trigger-width] p-0' align='start'>
+                            <Command shouldFilter={false}>
+                              <CommandInput
+                                placeholder={t('detail.searchDiagnosis')}
+                                value={diagnosisSearch}
+                                onValueChange={setDiagnosisSearch}
+                              />
+                              <CommandList>
+                                <CommandEmpty>
+                                  {isFetchingDiagnosis
+                                    ? t('common:loading')
+                                    : t('detail.noDiagnosisFound')}
+                                </CommandEmpty>
+                                <CommandGroup>
+                                  {diagnoses.map((diagnosis: any) => (
+                                    <CommandItem
+                                      key={diagnosis._id}
+                                      value={diagnosis._id}
+                                      onSelect={() => {
+                                        setEditForm({
+                                          ...editForm,
+                                          diagnosis: diagnosis._id,
+                                        });
+                                        setOpenDiagnosisCombobox(false);
+                                        setDiagnosisSearch('');
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          'mr-2 h-4 w-4',
+                                          editForm.diagnosis === diagnosis._id
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                      {diagnosis.name}
+                                    </CommandItem>
+                                  ))}
+                                  {diagnosisHasMore && (
+                                    <CommandItem disabled className='justify-center text-xs text-muted-foreground'>
+                                      {isFetchingDiagnosis ? t('common:loading') : t('detail.searchDiagnosis')}
+                                    </CommandItem>
+                                  )}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
 
                       <div className='space-y-2'>
