@@ -221,6 +221,8 @@
     "editDescription": "Кўрик маълумотларини ўзгартиринг",
     "enterComplaintPlaceholder": "Бемор шикоятини киритинг...",
     "selectDiagnosis": "Ташхисни танланг...",
+    "searchDiagnosis": "Ташхис қидириш...",
+    "noDiagnosisFound": "Ташхис топилмади",
     "enterRecommendationPlaceholder": "Кўрик натижаси ва тавсияларни киритинг...",
     "examinationDetails": "Кўрик Тафсилотлари",
     "fullPatientInfo": "Кўрик ва бемор ҳақида тўлиқ маълумот",

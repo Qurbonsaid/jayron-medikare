@@ -221,6 +221,8 @@
     "editDescription": "Изменить данные осмотра",
     "enterComplaintPlaceholder": "Введите жалобу пациента...",
     "selectDiagnosis": "Выберите диагноз...",
+    "searchDiagnosis": "Поиск диагноза...",
+    "noDiagnosisFound": "Диагноз не найден",
     "enterRecommendationPlaceholder": "Введите результаты осмотра и рекомендации...",
     "examinationDetails": "Детали Осмотра",
     "fullPatientInfo": "Полная информация об осмотре и пациенте",

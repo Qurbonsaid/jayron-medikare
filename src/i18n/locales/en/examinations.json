@@ -221,6 +221,8 @@
     "editDescription": "Modify examination details",
     "enterComplaintPlaceholder": "Enter patient complaint...",
     "selectDiagnosis": "Select diagnosis...",
+    "searchDiagnosis": "Search diagnosis...",
+    "noDiagnosisFound": "No diagnosis found",
     "enterRecommendationPlaceholder": "Enter examination results and recommendations...",
     "examinationDetails": "Examination Details",
     "fullPatientInfo": "Full information about examination and patient",

@@ -221,6 +221,8 @@
     "editDescription": "Ko'rik ma'lumotlarini o'zgartiring",
     "enterComplaintPlaceholder": "Bemor shikoyatini kiriting...",
     "selectDiagnosis": "Tashxisni tanlang...",
+    "searchDiagnosis": "Tashxis qidirish...",
+    "noDiagnosisFound": "Tashxis topilmadi",
     "enterRecommendationPlaceholder": "Ko'rik natijasi va tavsiyalarni kiriting...",
     "examinationDetails": "Ko'rik Tafsilotlari",
     "fullPatientInfo": "Ko'rik va bemor haqida to'liq ma'lumot",
