@@ -148,6 +148,7 @@ export type UpdateExamReq = {
 		diagnosis: string
 		description: string
 		complaints: string
+		treatment_type: 'stasionar' | 'ambulator'
 	}
 }
 

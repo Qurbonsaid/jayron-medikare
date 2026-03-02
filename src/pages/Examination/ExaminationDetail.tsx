@@ -146,6 +146,7 @@ const ExaminationDetail = () => {
     complaints: '',
     description: '',
     diagnosis: '',
+    treatment_type: 'ambulator' as 'stasionar' | 'ambulator',
   });
 
   const {
@@ -470,6 +471,7 @@ const ExaminationDetail = () => {
         complaints: exam.complaints || '',
         description: exam.description || '',
         diagnosis: diagnosisId,
+        treatment_type: exam.treatment_type || 'ambulator',
       });
     }
   }, [exam?._id]);
@@ -491,6 +493,7 @@ const ExaminationDetail = () => {
       complaints: exam.complaints || '',
       description: exam.description || '',
       diagnosis: diagnosisId,
+      treatment_type: exam.treatment_type || 'ambulator',
     });
   };
 
@@ -509,6 +512,7 @@ const ExaminationDetail = () => {
             diagnosis: editForm.diagnosis,
             complaints: editForm.complaints,
             description: editForm.description,
+            treatment_type: editForm.treatment_type,
           },
         });
         return res;
@@ -1291,19 +1295,43 @@ const ExaminationDetail = () => {
                   {new Date(exam.created_at).toLocaleDateString('uz-UZ')}
                 </p>
               </div>
-              <div>
+              <div className='flex items-center'>
                 <Label className='text-muted-foreground mr-5'>
                   {t('type')} :
                 </Label>
-                <p
-                  className={`font-medium mt-1 inline-block px-2 py-0.5 rounded ${
-                    exam.treatment_type === 'stasionar'
-                      ? 'bg-green-300 text-green-900'
-                      : 'bg-red-300 text-red-900'
-                  }`}
-                >
-                  {roomType[exam.treatment_type]}
-                </p>
+                {isEditMode ? (
+                  <Select
+                    value={editForm.treatment_type}
+                    onValueChange={(value: 'stasionar' | 'ambulator') =>
+                      setEditForm({
+                        ...editForm,
+                        treatment_type: value,
+                      })
+                    }
+                  >
+                    <SelectTrigger className='w-32 h-7'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='stasionar'>
+                        {roomType.stasionar}
+                      </SelectItem>
+                      <SelectItem value='ambulator'>
+                        {roomType.ambulator}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p
+                    className={`font-medium mt-1 inline-block px-2 py-0.5 rounded ${
+                      exam.treatment_type === 'stasionar'
+                        ? 'bg-green-300 text-green-900'
+                        : 'bg-red-300 text-red-900'
+                    }`}
+                  >
+                    {roomType[exam.treatment_type]}
+                  </p>
+                )}
               </div>
               <div>
                 <Label className='text-muted-foreground mr-5'>
