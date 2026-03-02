@@ -56,7 +56,7 @@ const ExamDetailDialog = ({
   const [editForm, setEditForm] = useState({
     complaints: '',
     description: '',
-    diagnosis: '',
+    diagnosis: [] as string[],
   });
 
   // Fetch all diagnosis
@@ -75,7 +75,9 @@ const ExamDetailDialog = ({
       setEditForm({
         complaints: exam.complaints || '',
         description: exam.description || '',
-        diagnosis: exam.diagnosis?._id || exam.diagnosis || '',
+        diagnosis: Array.isArray(exam.diagnosis)
+          ? exam.diagnosis.map((d: any) => (typeof d === 'object' ? d._id : d))
+          : [],
       });
       setIsEditMode(false);
       setIsDeleteConfirm(false);
@@ -91,7 +93,9 @@ const ExamDetailDialog = ({
     setEditForm({
       complaints: exam.complaints || '',
       description: exam.description || '',
-      diagnosis: exam.diagnosis?._id || exam.diagnosis || '',
+      diagnosis: Array.isArray(exam.diagnosis)
+        ? exam.diagnosis.map((d: any) => (typeof d === 'object' ? d._id : d))
+        : [],
     });
   };
 
@@ -241,9 +245,9 @@ const ExamDetailDialog = ({
             <div className='space-y-2'>
               <Label>{t('detail.diagnosis')}</Label>
               <Select
-                value={editForm.diagnosis}
+                value={editForm.diagnosis[0] || ''}
                 onValueChange={(value) =>
-                  setEditForm({ ...editForm, diagnosis: value })
+                  setEditForm({ ...editForm, diagnosis: [value] })
                 }
               >
                 <SelectTrigger>
@@ -354,9 +358,9 @@ const ExamDetailDialog = ({
                   {t('detail.diagnosis')}:
                 </span>
                 <p className='font-medium bg-muted p-3 rounded-md'>
-                  {exam.diagnosis?.name ||
-                    exam.diagnosis ||
-                    t('detail.notEntered')}
+                  {Array.isArray(exam.diagnosis) && exam.diagnosis.length > 0
+                    ? exam.diagnosis.map((d: any) => (typeof d === 'object' ? d.name : d)).join(', ')
+                    : t('detail.notEntered')}
                 </p>
               </div>
               <div>
@@ -379,16 +383,16 @@ const ExamDetailDialog = ({
           </div>
 
           {/* Prescriptions List */}
-          {exam.prescriptions && exam.prescriptions.length > 0 && (
+          {exam.prescription?.items && exam.prescription.items.length > 0 && (
             <div className='space-y-3'>
               <h3 className='text-lg font-semibold border-b pb-2 flex items-center justify-between'>
                 <span>{t('detail.prescriptions')}</span>
                 <span className='text-sm font-normal text-muted-foreground'>
-                  ({exam.prescriptions.length} {t('detail.items')})
+                  ({exam.prescription.items.length} {t('detail.items')})
                 </span>
               </h3>
               <div className='space-y-3'>
-                {exam.prescriptions.map((prescription: any, index: number) => (
+                {exam.prescription.items.map((prescription: any, index: number) => (
                   <div
                     key={prescription._id}
                     className='p-4 bg-primary/5 border border-primary/10 rounded-lg space-y-3'

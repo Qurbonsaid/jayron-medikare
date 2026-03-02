@@ -99,9 +99,9 @@ const VisitDetail = ({
                     {t('diagnosis')}:
                   </span>
                   <p className='font-medium bg-muted p-3 rounded-md'>
-                    {selectedExam.diagnosis?.name ||
-                      selectedExam.diagnosis ||
-                      t('notEntered')}
+                    {selectedExam.diagnosis && selectedExam.diagnosis.length > 0
+                      ? selectedExam.diagnosis.map(d => d.name).join(', ')
+                      : t('notEntered')}
                   </p>
                 </div>
                 <div>
@@ -130,17 +130,17 @@ const VisitDetail = ({
             </div>
 
             {/* Prescriptions List */}
-            {selectedExam.prescriptions &&
-              selectedExam.prescriptions.length > 0 && (
+            {selectedExam.prescription?.items &&
+              selectedExam.prescription.items.length > 0 && (
                 <div className='space-y-3'>
                   <h3 className='text-lg font-semibold border-b pb-2 flex items-center justify-between'>
                     <span>{t('prescriptions')}</span>
                     <span className='text-sm font-normal text-muted-foreground'>
-                      ({selectedExam.prescriptions.length} {t('count')})
+                      ({selectedExam.prescription.items.length} {t('count')})
                     </span>
                   </h3>
                   <div className='space-y-3'>
-                    {selectedExam.prescriptions.map(
+                    {selectedExam.prescription.items.map(
                       (prescription: any, index: number) => (
                         <div
                           key={prescription._id}

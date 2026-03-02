@@ -58,7 +58,7 @@ const Examinations = () => {
   const [editForm, setEditForm] = useState({
     complaints: '',
     description: '',
-    diagnosis: '',
+    diagnosis: [] as string[],
   });
 
   // Fetch exams
@@ -99,7 +99,9 @@ const Examinations = () => {
     setEditForm({
       complaints: selectedExam.complaints || '',
       description: selectedExam.description || '',
-      diagnosis: selectedExam.diagnosis?._id || selectedExam.diagnosis || '',
+      diagnosis: Array.isArray(selectedExam.diagnosis)
+        ? selectedExam.diagnosis.map((d: any) => (typeof d === 'object' ? d._id : d))
+        : [],
     });
     setIsDetailModalOpen(false);
     setIsEditModalOpen(true);
@@ -135,7 +137,9 @@ const Examinations = () => {
     setEditForm({
       complaints: exam.complaints || '',
       description: exam.description || '',
-      diagnosis: exam.diagnosis?._id || exam.diagnosis || '',
+      diagnosis: Array.isArray(exam.diagnosis)
+        ? exam.diagnosis.map((d: any) => (typeof d === 'object' ? d._id : d))
+        : [],
     });
     setIsEditModalOpen(true);
   };

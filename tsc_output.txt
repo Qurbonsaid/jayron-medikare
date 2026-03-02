@@ -1,0 +1,85 @@
+src/app/api/prescriptionTemplateApi/index.ts(2,15): error TS2306: File 'S:/jayron-medikare/src/app/api/prescriptionTemplateApi/type.d.ts' is not a module.
+src/components/AppLayout.tsx(120,23): error TS2322: Type 'string | number' is not assignable to type 'To'.
+  Type 'number' is not assignable to type 'To'.
+src/pages/Billing/components/NewBilling.tsx(2,10): error TS2305: Module '"@/app/api/billingApi/types"' has no exported member 'service_type'.
+src/pages/Billing/components/NewBilling.tsx(57,7): error TS2353: Object literal may only specify known properties, and 'service_type' does not exist in type 'Service'.
+src/pages/Billing/components/NewBilling.tsx(71,7): error TS2353: Object literal may only specify known properties, and 'service_type' does not exist in type 'Service'.
+src/pages/Billing/components/NewBilling.tsx(207,7): error TS2353: Object literal may only specify known properties, and 'has_billing' does not exist in type 'AllExamReq'.
+src/pages/Billing/components/NewBilling.tsx(431,27): error TS2339: Property 'service_type' does not exist on type 'Service'.
+src/pages/Billing/components/NewBilling.tsx(620,31): error TS2322: Type '{ key: any; analysis: any; }' is not assignable to type 'IntrinsicAttributes & Props'.
+  Property 'analysis' does not exist on type 'IntrinsicAttributes & Props'. Did you mean 'analysisId'?
+src/pages/Billing/components/NewBilling.tsx(632,27): error TS2322: Type '{ key: any; analysis: any; isMobile: true; }' is not assignable to type 'IntrinsicAttributes & Props'.
+  Property 'analysis' does not exist on type 'IntrinsicAttributes & Props'. Did you mean 'analysisId'?
+src/pages/Billing/components/NewBilling.tsx(822,44): error TS2339: Property 'service_type' does not exist on type 'Service'.
+src/pages/Billing/components/NewBilling.tsx(824,57): error TS2345: Argument of type '"service_type"' is not assignable to parameter of type 'keyof Service'.
+src/pages/Billing/components/NewBilling.tsx(928,42): error TS2339: Property 'service_type' does not exist on type 'Service'.
+src/pages/Billing/components/NewBilling.tsx(930,55): error TS2345: Argument of type '"service_type"' is not assignable to parameter of type 'keyof Service'.
+src/pages/Billing/components/RoomItem.tsx(15,39): error TS2339: Property 'estimated_leave_time' does not exist on type 'Room'.
+src/pages/Billing/components/RoomItem.tsx(31,22): error TS2339: Property 'status' does not exist on type 'Room'.
+src/pages/Billing/components/RoomItem.tsx(50,23): error TS2339: Property 'estimated_leave_time' does not exist on type 'Room'.
+src/pages/Billing/components/RoomItem.tsx(55,34): error TS2339: Property 'estimated_leave_time' does not exist on type 'Room'.
+src/pages/Billing/components/RoomItem.tsx(92,18): error TS2339: Property 'status' does not exist on type 'Room'.
+src/pages/Billing/components/RoomItem.tsx(104,17): error TS2339: Property 'estimated_leave_time' does not exist on type 'Room'.
+src/pages/Billing/components/RoomItem.tsx(108,29): error TS2339: Property 'estimated_leave_time' does not exist on type 'Room'.
+src/pages/Billing/components/ViewBillingDialog.tsx(6,15): error TS2305: Module '"@/app/api/billingApi/types"' has no exported member 'service_type'.
+src/pages/Billing/components/ViewBillingDialog.tsx(215,13): error TS2353: Object literal may only specify known properties, and 'payment_type' does not exist in type '{ payment_method: string; amount: number; }'.
+src/pages/Billing/components/ViewBillingDialog.tsx(1307,41): error TS2551: Property 'payment_type' does not exist on type '{ payment_method: string; amount: number; payment_date: string; _id: string; }'. Did you mean 'payment_date'?
+src/pages/Diagnostika/LabResults.tsx(226,44): error TS2339: Property 'error' does not exist on type 'GetByIdResults'.
+src/pages/Diagnostika/LabResults.tsx(268,5): error TS2322: Type '{ analysis_parameter_type: string; analysis_parameter_value: string | number; }[]' is not assignable to type '[{ analysis_parameter_type: string; analysis_parameter_value: string | number; }]'.
+  Target requires 1 element(s) but source may have fewer.
+src/pages/Diagnostika/LabResults.tsx(378,5): error TS2353: Object literal may only specify known properties, and 'error' does not exist in type 'GetByIdResults'.
+src/pages/Diagnostika/LabResults.tsx(398,22): error TS2345: Argument of type '{ analysis_parameter_value: string; error: boolean; analysis_parameter_type: { normal_range: NormalRange; _id: string; parameter_code: string; parameter_name: string; unit: string; value_type: "NUMBER" | "STRING"; gender_type: "GENERAL" | "MALE_FEMALE"; }; _id: string; }[]' is not assignable to parameter of type 'SetStateAction<GetByIdResults[]>'.
+  Type '{ analysis_parameter_value: string; error: boolean; analysis_parameter_type: { normal_range: NormalRange; _id: string; parameter_code: string; parameter_name: string; unit: string; value_type: "NUMBER" | "STRING"; gender_type: "GENERAL" | "MALE_FEMALE"; }; _id: string; }[]' is not assignable to type 'GetByIdResults[]'.
+    Type '{ analysis_parameter_value: string; error: boolean; analysis_parameter_type: { normal_range: NormalRange; _id: string; parameter_code: string; parameter_name: string; unit: string; value_type: "NUMBER" | "STRING"; gender_type: "GENERAL" | "MALE_FEMALE"; }; _id: string; }' is not assignable to type 'GetByIdResults'.
+      The types of 'analysis_parameter_type.normal_range.male.min' are incompatible between these types.
+        Type 'string | number' is not assignable to type 'number'.
+          Type 'string' is not assignable to type 'number'.
+src/pages/Diagnostika/LabResults.tsx(688,47): error TS2554: Expected 1 arguments, but got 2.
+src/pages/Diagnostika/LabResults.tsx(739,38): error TS2339: Property 'error' does not exist on type 'GetByIdResults'.
+src/pages/Diagnostika/LabResults.tsx(747,49): error TS2554: Expected 1 arguments, but got 2.
+src/pages/Diagnostika/LabResults.tsx(776,45): error TS2554: Expected 1 arguments, but got 2.
+src/pages/Diagnostika/LabResults.tsx(836,35): error TS2339: Property 'error' does not exist on type 'GetByIdResults'.
+src/pages/Diagnostika/LabResults.tsx(849,48): error TS2554: Expected 1 arguments, but got 2.
+src/pages/Examination/components/ExamDetailDialog.tsx(110,13): error TS2322: Type 'string' is not assignable to type 'string[]'.
+src/pages/Examination/components/NewVisitDialog.tsx(388,19): error TS2322: Type '{ service_type_id: string; days: { day: number; date: Date; }[]; notes: string; }' is not assignable to type 'Service & { _id: string; }'.
+  Property '_id' is missing in type '{ service_type_id: string; days: { day: number; date: Date; }[]; notes: string; }' but required in type '{ _id: string; }'.
+src/pages/Examination/components/VisitDetail.tsx(102,46): error TS2339: Property 'name' does not exist on type '{ _id: string; name: string; code: string; description: string; }[]'.
+src/pages/Examination/components/VisitDetail.tsx(133,27): error TS2551: Property 'prescriptions' does not exist on type 'ExamDataItem'. Did you mean 'prescription'?
+src/pages/Examination/components/VisitDetail.tsx(134,28): error TS2551: Property 'prescriptions' does not exist on type 'ExamDataItem'. Did you mean 'prescription'?
+src/pages/Examination/components/VisitDetail.tsx(139,38): error TS2551: Property 'prescriptions' does not exist on type 'ExamDataItem'. Did you mean 'prescription'?
+src/pages/Examination/components/VisitDetail.tsx(143,35): error TS2551: Property 'prescriptions' does not exist on type 'ExamDataItem'. Did you mean 'prescription'?
+src/pages/Examination/ExaminationDetail.tsx(465,63): error TS2339: Property '_id' does not exist on type '{ _id: string; name: string; code: string; description: string; }[]'.
+src/pages/Examination/ExaminationDetail.tsx(466,28): error TS2339: Property '_id' does not exist on type '{ _id: string; name: string; code: string; description: string; }[]'.
+src/pages/Examination/ExaminationDetail.tsx(487,61): error TS2339: Property '_id' does not exist on type '{ _id: string; name: string; code: string; description: string; }[]'.
+src/pages/Examination/ExaminationDetail.tsx(488,26): error TS2339: Property '_id' does not exist on type '{ _id: string; name: string; code: string; description: string; }[]'.
+src/pages/Examination/ExaminationDetail.tsx(512,13): error TS2322: Type 'string' is not assignable to type 'string[]'.
+src/pages/Examination/ExaminationDetail.tsx(1629,43): error TS2339: Property 'name' does not exist on type '{ _id: string; name: string; code: string; description: string; }[]'.
+src/pages/Examination/ExaminationDetail.tsx(1630,46): error TS2339: Property 'name' does not exist on type '{ _id: string; name: string; code: string; description: string; }[]'.
+src/pages/Examination/Examinations.tsx(156,13): error TS2322: Type 'string' is not assignable to type 'string[]'.
+src/pages/Examination/Examinations.tsx(534,11): error TS2322: Type '{ _id: string; name: string; code: string; description: string; symptoms: string[]; causes: string[]; treatments: string[]; is_chronic: boolean; is_contagious: boolean; is_deleted: boolean; created_at: Date; updated_at: Date; }[]' is not assignable to type 'Disease[]'.
+  Type '{ _id: string; name: string; code: string; description: string; symptoms: string[]; causes: string[]; treatments: string[]; is_chronic: boolean; is_contagious: boolean; is_deleted: boolean; created_at: Date; updated_at: Date; }' is missing the following properties from type 'Disease': createdAt, updatedAt
+src/pages/Examination/Prescription.tsx(231,41): error TS2345: Argument of type '{ name: string; page: number; limit: number; }' is not assignable to parameter of type 'unique symbol | GetAllParam'.
+  Property 'search' is missing in type '{ name: string; page: number; limit: number; }' but required in type 'GetAllParam'.
+src/pages/Medicine/components/PrescriptionCard.tsx(38,45): error TS2339: Property 'data' does not exist on type 'GetOnePresc'.
+src/pages/Medicine/Medicine.tsx(650,29): error TS2353: Object literal may only specify known properties, and 'images' does not exist in type 'SetStateAction<{ open: boolean; day: any; frequency: number; type: "service" | "medicine"; medicationName?: string; serviceName?: string; }>'.
+src/pages/Patients/components/NewVisitDialog.tsx(213,41): error TS2345: Argument of type '{ name: string; page: number; limit: number; }' is not assignable to parameter of type 'unique symbol | GetAllParam'.
+  Property 'search' is missing in type '{ name: string; page: number; limit: number; }' but required in type 'GetAllParam'.
+src/pages/Patients/Patients.tsx(390,62): error TS2339: Property 'name' does not exist on type '{ _id: string; name: string; code: string; description: string; }[]'.
+src/pages/Radiology/components/UpdateMedicalImage.tsx(92,4): error TS2552: Cannot find name 'UpdateMedicalImageProps'. Did you mean 'UpdatedMedicalImageRequest'?
+src/pages/Templates/hooks/useMedicationOptions.ts(62,11): error TS2322: Type '{ _id: string; name: string; form: string; dosage: string; is_active: true; created_at: string; updated_at: string; }[]' is not assignable to type '{ _id: string; name: string; form: MedicationForm; dosage: string; is_active: boolean; created_at: string; updated_at: string; }[]'.
+  Type '{ _id: string; name: string; form: string; dosage: string; is_active: true; created_at: string; updated_at: string; }' is not assignable to type '{ _id: string; name: string; form: MedicationForm; dosage: string; is_active: boolean; created_at: string; updated_at: string; }'.
+    Types of property 'form' are incompatible.
+      Type 'string' is not assignable to type 'MedicationForm'.
+src/pages/Tizim/Settings.tsx(118,56): error TS2345: Argument of type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' is not assignable to parameter of type 'UserCreateResponse | (() => UserCreateResponse)'.
+  Property 'email' is missing in type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' but required in type 'UserCreateResponse'.
+src/pages/Tizim/Settings.tsx(147,15): error TS2345: Argument of type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' is not assignable to parameter of type 'SetStateAction<UserCreateResponse>'.
+  Property 'email' is missing in type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' but required in type 'UserCreateResponse'.
+src/pages/Tizim/Settings.tsx(178,17): error TS2345: Argument of type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' is not assignable to parameter of type 'SetStateAction<UserCreateResponse>'.
+  Property 'email' is missing in type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' but required in type 'UserCreateResponse'.
+src/pages/Tizim/Settings.tsx(396,13): error TS2345: Argument of type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' is not assignable to parameter of type 'SetStateAction<UserCreateResponse>'.
+  Property 'email' is missing in type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' but required in type 'UserCreateResponse'.
+src/pages/Tizim/Settings.tsx(448,28): error TS2345: Argument of type 'import("S:/jayron-medikare/src/pages/Tizim/Settings").Settings' is not assignable to parameter of type 'import("S:/jayron-medikare/src/app/api/settingsApi/types").Settings'.
+  Property 'email' is missing in type 'import("S:/jayron-medikare/src/pages/Tizim/Settings").Settings' but required in type 'import("S:/jayron-medikare/src/app/api/settingsApi/types").Settings'.
+src/pages/Tizim/Settings.tsx(555,11): error TS2741: Property 'email' is missing in type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' but required in type 'UserCreateResponse'.
+src/pages/Tizim/Settings.tsx(1286,21): error TS2345: Argument of type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' is not assignable to parameter of type 'SetStateAction<UserCreateResponse>'.
+  Property 'email' is missing in type '{ fullname: string; username: string; phone: string; password: string; role: string; section: string; license_number: string; }' but required in type 'UserCreateResponse'.

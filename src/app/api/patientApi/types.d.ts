@@ -107,7 +107,7 @@ export type AllPatientRes = {
         name: string;
         code: string;
         description: string;
-      };
+      }[];
     };
   }[];
   pagination: Pagination;
