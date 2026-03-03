@@ -88,6 +88,8 @@ export type Room = {
 	floor_number: number
 	_id: string
 	end_date?: string
+	estimated_leave_time?: string
+	status?: string
 }
 
 export type ExamDataItem = {
@@ -102,13 +104,12 @@ export type ExamDataItem = {
 		fullname: string
 		phone: string
 	}
-	diagnosis:
-		| {
+	diagnosis:{
 				_id: string
-				name: string
-		  }
-		| string
-		| null
+				name: string;
+				code:string;
+				description:string;
+		  }[];
 	description: string
 	complaints: string
 	treatment_type: 'stasionar' | 'ambulator'
@@ -145,7 +146,7 @@ export type UpdateExamReq = {
 	id: string
 	body: {
 		patient_id: string
-		diagnosis: string
+		diagnosis: string[]
 		description: string
 		complaints: string
 		treatment_type: 'stasionar' | 'ambulator'

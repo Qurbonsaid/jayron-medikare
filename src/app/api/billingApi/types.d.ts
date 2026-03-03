@@ -7,9 +7,12 @@ export interface CreateBillingReq {
   }>;
   payment: {
     payment_method: string;
+    payment_type: service_type;
     amount: number;
   };
 }
+
+export type service_type = 'XIZMAT' | 'TAHLIL' | 'XONA' | 'BOSHQA';
 
 export interface AllRes {
   success: boolean;
@@ -228,6 +231,7 @@ export interface UpdatePayment {
   body: {
     payment: {
       payment_method: string;
+      payment_type: service_type;
       amount: number;
     };
   };

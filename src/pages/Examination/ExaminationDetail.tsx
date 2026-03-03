@@ -145,7 +145,7 @@ const ExaminationDetail = () => {
   const [editForm, setEditForm] = useState({
     complaints: '',
     description: '',
-    diagnosis: '',
+    diagnosis: [] as string[],
     treatment_type: 'ambulator' as 'stasionar' | 'ambulator',
   });
 
@@ -245,6 +245,9 @@ const ExaminationDetail = () => {
   const [openDiagnosisCombobox, setOpenDiagnosisCombobox] = useState(false);
   const [diagnosisSearch, setDiagnosisSearch] = useState('');
   const [debouncedDiagnosisSearch, setDebouncedDiagnosisSearch] = useState('');
+  const [diagnosisPage, setDiagnosisPage] = useState(1);
+  const [accumulatedDiagnoses, setAccumulatedDiagnoses] = useState<any[]>([]);
+  const [hasMoreDiagnoses, setHasMoreDiagnoses] = useState(true);
 
   // Neurologic status states
   const [isAddingNeurologic, setIsAddingNeurologic] = useState(false);
@@ -282,6 +285,13 @@ const ExaminationDetail = () => {
     return () => clearTimeout(timer);
   }, [diagnosisSearch]);
 
+  // Reset diagnosis pagination on search
+  useEffect(() => {
+    setDiagnosisPage(1);
+    setAccumulatedDiagnoses([]);
+    setHasMoreDiagnoses(true);
+  }, [debouncedDiagnosisSearch]);
+
   // Fetch examination details
   const {
     data: examData,
@@ -296,12 +306,41 @@ const ExaminationDetail = () => {
   // Fetch diagnoses with server-side search
   const { data: diagnosisData, isFetching: isFetchingDiagnosis } =
     useGetAllDiagnosisQuery({
-      page: 1,
+      page: diagnosisPage,
       limit: 20,
       search: debouncedDiagnosisSearch.trim() || undefined,
     });
-  const diagnoses = diagnosisData?.data || [];
-  const diagnosisHasMore = (diagnosisData?.data?.length ?? 0) === 20;
+
+  // Accumulate diagnoses for infinite scroll
+  useEffect(() => {
+    if (diagnosisData?.data) {
+      if (diagnosisPage === 1) {
+        setAccumulatedDiagnoses(diagnosisData.data);
+      } else {
+        setAccumulatedDiagnoses((prev) => {
+          const newItems = diagnosisData.data.filter(
+            (newItem: any) => !prev.some((item) => item._id === newItem._id)
+          );
+          return [...prev, ...newItems];
+        });
+      }
+      const totalPages = diagnosisData.pagination?.pages || 1;
+      setHasMoreDiagnoses(diagnosisPage < totalPages);
+    }
+  }, [diagnosisData, diagnosisPage]);
+
+  const diagnoses = accumulatedDiagnoses;
+  const diagnosisHasMore = hasMoreDiagnoses;
+
+  const handleDiagnosisScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const isBottom =
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
+
+    if (isBottom && diagnosisHasMore && !isFetchingDiagnosis) {
+      setDiagnosisPage((prev) => prev + 1);
+    }
+  };
 
   // Fetch all service types with search and pagination
   const serviceQueryParams = {
@@ -461,16 +500,13 @@ const ExaminationDetail = () => {
   // Update form when exam changes
   useEffect(() => {
     if (exam) {
-      const diagnosisId =
-        typeof exam.diagnosis === 'object' && exam.diagnosis?._id
-          ? exam.diagnosis._id
-          : typeof exam.diagnosis === 'string'
-          ? exam.diagnosis
-          : '';
+      const diagnosisIds = Array.isArray(exam.diagnosis)
+        ? exam.diagnosis.map((d: any) => (typeof d === 'object' ? d._id : d))
+        : [];
       setEditForm({
         complaints: exam.complaints || '',
         description: exam.description || '',
-        diagnosis: diagnosisId,
+        diagnosis: diagnosisIds,
         treatment_type: exam.treatment_type || 'ambulator',
       });
     }
@@ -483,16 +519,13 @@ const ExaminationDetail = () => {
 
   const handleCancelEdit = () => {
     setIsEditMode(false);
-    const diagnosisId =
-      typeof exam.diagnosis === 'object' && exam.diagnosis?._id
-        ? exam.diagnosis._id
-        : typeof exam.diagnosis === 'string'
-        ? exam.diagnosis
-        : '';
+    const diagnosisIds = Array.isArray(exam.diagnosis)
+      ? exam.diagnosis.map((d: any) => (typeof d === 'object' ? d._id : d))
+      : [];
     setEditForm({
       complaints: exam.complaints || '',
       description: exam.description || '',
-      diagnosis: diagnosisId,
+      diagnosis: diagnosisIds,
       treatment_type: exam.treatment_type || 'ambulator',
     });
   };
@@ -1521,10 +1554,13 @@ const ExaminationDetail = () => {
                               aria-expanded={openDiagnosisCombobox}
                               className='w-full justify-between font-normal'
                             >
-                              {editForm.diagnosis
-                                ? diagnoses.find(
-                                    (d: any) => d._id === editForm.diagnosis
-                                  )?.name || t('detail.selectDiagnosis')
+                              {editForm.diagnosis.length > 0
+                                ? diagnoses
+                                    .filter((d: any) =>
+                                      editForm.diagnosis.includes(d._id)
+                                    )
+                                    .map((d: any) => d.name)
+                                    .join(', ') || t('detail.selectDiagnosis')
                                 : t('detail.selectDiagnosis')}
                               <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                             </Button>
@@ -1536,9 +1572,9 @@ const ExaminationDetail = () => {
                                 value={diagnosisSearch}
                                 onValueChange={setDiagnosisSearch}
                               />
-                              <CommandList>
+                              <CommandList onScroll={handleDiagnosisScroll}>
                                 <CommandEmpty>
-                                  {isFetchingDiagnosis
+                                  {isFetchingDiagnosis && diagnosisPage === 1
                                     ? t('common:loading')
                                     : t('detail.noDiagnosisFound')}
                                 </CommandEmpty>
@@ -1548,18 +1584,28 @@ const ExaminationDetail = () => {
                                       key={diagnosis._id}
                                       value={diagnosis._id}
                                       onSelect={() => {
+                                        const isSelected = editForm.diagnosis.includes(
+                                          diagnosis._id
+                                        );
+                                        const newDiagnosis = isSelected
+                                          ? editForm.diagnosis.filter(
+                                              (id) => id !== diagnosis._id
+                                            )
+                                          : [...editForm.diagnosis, diagnosis._id];
+
                                         setEditForm({
                                           ...editForm,
-                                          diagnosis: diagnosis._id,
+                                          diagnosis: newDiagnosis,
                                         });
-                                        setOpenDiagnosisCombobox(false);
                                         setDiagnosisSearch('');
                                       }}
                                     >
                                       <Check
                                         className={cn(
                                           'mr-2 h-4 w-4',
-                                          editForm.diagnosis === diagnosis._id
+                                          editForm.diagnosis.includes(
+                                            diagnosis._id
+                                          )
                                             ? 'opacity-100'
                                             : 'opacity-0'
                                         )}
@@ -1625,11 +1671,8 @@ const ExaminationDetail = () => {
                           {t('examinations:detail.diagnosis')}
                         </Label>
                         <p className='font-medium bg-muted p-3 rounded-md mt-1'>
-                          {typeof exam.diagnosis === 'object' &&
-                          exam.diagnosis?.name
-                            ? exam.diagnosis.name
-                            : typeof exam.diagnosis === 'string'
-                            ? exam.diagnosis
+                          {Array.isArray(exam.diagnosis) && exam.diagnosis.length > 0
+                            ? exam.diagnosis.map(d => (typeof d === 'object' ? d.name : d)).join(', ')
                             : t('examinations:detail.notEntered')}
                         </p>
                       </div>

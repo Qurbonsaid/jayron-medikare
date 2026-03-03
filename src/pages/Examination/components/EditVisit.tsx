@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { Check } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -26,13 +28,13 @@ interface Props {
   editForm: {
     complaints: string;
     description: string;
-    diagnosis: string;
+    diagnosis: string[];
   };
   setEditForm: React.Dispatch<
     React.SetStateAction<{
       complaints: string;
       description: string;
-      diagnosis: string;
+      diagnosis: string[];
     }>
   >;
   diagnoses: Disease[];
@@ -77,9 +79,9 @@ const EditVisit = ({
           <div className='space-y-2'>
             <Label>{t('diagnosis')}</Label>
             <Select
-              value={editForm.diagnosis}
+              value={editForm.diagnosis[0] || ''}
               onValueChange={(value) =>
-                setEditForm({ ...editForm, diagnosis: value })
+                setEditForm({ ...editForm, diagnosis: [value] })
               }
             >
               <SelectTrigger>

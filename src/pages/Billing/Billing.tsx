@@ -1,4 +1,5 @@
 import { useGetAllBillingQuery } from '@/app/api/billingApi/billingApi';
+import { service_type } from '@/app/api/billingApi/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -23,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 export interface Service {
   id: string;
   name: string;
+  service_type: service_type;
   quantity: number;
   unitPrice: number;
   total: number;
