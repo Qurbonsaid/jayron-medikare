@@ -139,5 +139,6 @@
   "noTemplatesFound": "Shablonlar topilmadi",
   "templateApplied": "Shablon qo'llandi",
   "medications": "ta dori",
-  "services": "ta xizmat"
+  "services": "ta xizmat",
+  "backToExaminations": "Koʻrikga qaytish"
 }

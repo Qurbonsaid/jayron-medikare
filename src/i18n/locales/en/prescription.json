@@ -139,5 +139,6 @@
   "noTemplatesFound": "No templates found",
   "templateApplied": "Template applied",
   "medications": "medications",
-  "services": "services"
+  "services": "services",
+  "backToExaminations": "Back to Examinations"
 }

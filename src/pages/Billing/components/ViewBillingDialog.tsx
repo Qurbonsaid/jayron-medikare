@@ -3,8 +3,12 @@ import {
   useUpdatePaymentMutation,
   useUpdateServiceBillingMutation,
 } from '@/app/api/billingApi/billingApi';
-import type { service_type as ServiceType } from '@/app/api/billingApi/types';
+import type {
+  GetOneBillingRes,
+  service_type as ServiceType,
+} from '@/app/api/billingApi/types';
 import { getStatusBadge } from '@/components/common/StatusBadge';
+import { downloadBillingPDF } from '@/components/PDF/BillingPDF';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -26,7 +30,7 @@ import {
 } from '@/components/ui/select';
 import { PAYMENT } from '@/constants/payment';
 import { format } from 'date-fns';
-import { CreditCard, Edit, Save } from 'lucide-react';
+import { CreditCard, Edit, Printer, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ServiceItem } from './ServiceItem';
@@ -47,6 +51,43 @@ interface EditableService {
   total_price: number;
 }
 
+export const getPaymentMethodDisplay = (
+    method: string,
+    purpose: 'type' | 'purpose',
+    t: (key: string) => string
+  ) => {
+    if (purpose === 'purpose') {
+      switch (method) {
+        case 'KORIK':
+          return '💵 ' + t('serviceTypes.examination');
+        case 'XIZMAT':
+          return '🏥 ' + t('service');
+        case 'XONA':
+          return '🛏️ ' + t('serviceTypes.room');
+        case 'TASVIR':
+          return '🖼️ ' + t('serviceTypes.image');
+        case 'TAHLIL':
+          return '🧪 ' + t('serviceTypes.analysis');
+        default:
+          return method;
+      }
+    } else {
+      const lowerMethod = method?.toLowerCase() || '';
+      switch (lowerMethod) {
+        case 'cash':
+          return '💵 ' + t('cash');
+        case 'card':
+          return '💳 ' + t('card');
+        case 'click':
+          return '📱 Click';
+        case 'online':
+          return '📱 Online';
+        default:
+          return '📱 ' + method;
+      }
+    }
+  };
+
 const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
   const { t } = useTranslation('billing');
   const [isEditMode, setIsEditMode] = useState(false);
@@ -54,6 +95,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [paymentType, setPaymentType] = useState<ServiceType>('XIZMAT');
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false);
 
   const { data: billingData, isLoading } = useGetOneBillingQuery(
     billingId || '',
@@ -91,41 +133,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   };
 
-  const getPaymentMethodDisplay = (
-    method: string,
-    purpose: 'type' | 'purpose'
-  ) => {
-    if (purpose === 'purpose') {
-      switch (method) {
-        case 'KORIK':
-          return '💵 ' + t('serviceTypes.examination');
-        case 'XIZMAT':
-          return '🏥 ' + t('service');
-        case 'XONA':
-          return '🛏️ ' + t('serviceTypes.room');
-        case 'TASVIR':
-          return '🖼️ ' + t('serviceTypes.image');
-        case 'TAHLIL':
-          return '🧪 ' + t('serviceTypes.analysis');
-        default:
-          return method;
-      }
-    } else {
-      const lowerMethod = method?.toLowerCase() || '';
-      switch (lowerMethod) {
-        case 'cash':
-          return '💵 ' + t('cash');
-        case 'card':
-          return '💳 ' + t('card');
-        case 'click':
-          return '📱 Click';
-        case 'online':
-          return '📱 Online';
-        default:
-          return '📱 ' + method;
-      }
-    }
-  };
+  
 
   const handleUpdateService = (
     id: string,
@@ -228,6 +236,27 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    const billing = billingData?.data as GetOneBillingRes['data'] | undefined;
+    if (!billing) {
+      toast.error(t('errorOccurred'));
+      return;
+    }
+
+    try {
+      setIsPdfGenerating(true);
+      toast.loading('PDF tayyorlanmoqda...');
+      await downloadBillingPDF(billing, t);
+      toast.dismiss();
+      toast.success('Billing PDF yuklandi');
+    } catch (error) {
+      toast.dismiss();
+      toast.error(t('errorOccurred'));
+    } finally {
+      setIsPdfGenerating(false);
+    }
+  };
+
   const calculateTotal = () => {
     return services.reduce((sum, s) => sum + s.total_price, 0);
   };
@@ -261,50 +290,62 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
         <DialogHeader>
           <DialogTitle className='text-xl sm:text-2xl flex items-center justify-between'>
             <span>{t('invoiceDetails')}</span>
-            {!isEditMode ? (
+            <div className='flex gap-2'>
               <Button
                 size='sm'
                 variant='outline'
-                onClick={() => setIsEditMode(true)}
+                onClick={handleDownloadPdf}
+                disabled={isPdfGenerating || isLoading || !billingData?.data}
               >
-                <Edit className='w-4 h-4 mr-2' />
-                {t('edit')}
+                <Printer className='w-4 h-4 mr-2' />
+                {isPdfGenerating ? 'PDF...' : 'PDF yuklash'}
               </Button>
-            ) : (
-              <div className='flex gap-2'>
+
+              {!isEditMode ? (
                 <Button
                   size='sm'
                   variant='outline'
-                  onClick={() => {
-                    setIsEditMode(false);
-                    if (billingData?.data?.services) {
-                      setServices(
-                        billingData.data.services.map((s: any) => ({
-                          _id: s._id,
-                          id: s._id,
-                          name: s.name,
-                          service_type: (s.service_type ??
-                            'XIZMAT') as ServiceType,
-                          count: s.count,
-                          price: s.price,
-                          total_price: s.total_price,
-                        }))
-                      );
-                    }
-                  }}
+                  onClick={() => setIsEditMode(true)}
                 >
-                  {t('cancel')}
+                  <Edit className='w-4 h-4 mr-2' />
+                  {t('edit')}
                 </Button>
-                <Button
-                  size='sm'
-                  onClick={handleSaveServices}
-                  disabled={isUpdating}
-                >
-                  <Save className='w-4 h-4 mr-2' />
-                  {isUpdating ? t('saving') : t('save')}
-                </Button>
-              </div>
-            )}
+              ) : (
+                <>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={() => {
+                      setIsEditMode(false);
+                      if (billingData?.data?.services) {
+                        setServices(
+                          billingData.data.services.map((s: any) => ({
+                            _id: s._id,
+                            id: s._id,
+                            name: s.name,
+                            service_type: (s.service_type ??
+                              'XIZMAT') as ServiceType,
+                            count: s.count,
+                            price: s.price,
+                            total_price: s.total_price,
+                          }))
+                        );
+                      }
+                    }}
+                  >
+                    {t('cancel')}
+                  </Button>
+                  <Button
+                    size='sm'
+                    onClick={handleSaveServices}
+                    disabled={isUpdating}
+                  >
+                    <Save className='w-4 h-4 mr-2' />
+                    {isUpdating ? t('saving') : t('save')}
+                  </Button>
+                </>
+              )}
+            </div>
           </DialogTitle>
         </DialogHeader>
 
@@ -976,19 +1017,19 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value='KORIK'>
-                                  {getPaymentMethodDisplay('KORIK', 'purpose')}
+                                  {getPaymentMethodDisplay('KORIK', 'purpose', t)}
                                 </SelectItem>
                                 <SelectItem value='XIZMAT'>
-                                  {getPaymentMethodDisplay('XIZMAT', 'purpose')}
+                                  {getPaymentMethodDisplay('XIZMAT', 'purpose', t)}
                                 </SelectItem>
                                 <SelectItem value='XONA'>
-                                  {getPaymentMethodDisplay('XONA', 'purpose')}
+                                  {getPaymentMethodDisplay('XONA', 'purpose', t)}
                                 </SelectItem>
                                 <SelectItem value='TASVIR'>
-                                  {getPaymentMethodDisplay('TASVIR', 'purpose')}
+                                  {getPaymentMethodDisplay('TASVIR', 'purpose', t)}
                                 </SelectItem>
                                 <SelectItem value='TAHLIL'>
-                                  {getPaymentMethodDisplay('TAHLIL', 'purpose')}
+                                  {getPaymentMethodDisplay('TAHLIL', 'purpose', t)}
                                 </SelectItem>
                               </SelectContent>
                             </Select>
@@ -996,7 +1037,8 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             <div className='text-center text-sm'>
                               {getPaymentMethodDisplay(
                                 service.service_type,
-                                'purpose'
+                                'purpose',
+                                t
                               )}
                             </div>
                           )}
@@ -1130,19 +1172,19 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value='KORIK'>
-                                {getPaymentMethodDisplay('KORIK', 'purpose')}
+                                {getPaymentMethodDisplay('KORIK', 'purpose', t)}
                               </SelectItem>
                               <SelectItem value='XIZMAT'>
-                                {getPaymentMethodDisplay('XIZMAT', 'purpose')}
+                                {getPaymentMethodDisplay('XIZMAT', 'purpose', t)}
                               </SelectItem>
                               <SelectItem value='XONA'>
-                                {getPaymentMethodDisplay('XONA', 'purpose')}
+                                {getPaymentMethodDisplay('XONA', 'purpose', t)}
                               </SelectItem>
                               <SelectItem value='TASVIR'>
-                                {getPaymentMethodDisplay('TASVIR', 'purpose')}
+                                {getPaymentMethodDisplay('TASVIR', 'purpose', t)}
                               </SelectItem>
                               <SelectItem value='TAHLIL'>
-                                {getPaymentMethodDisplay('TAHLIL', 'purpose')}
+                                {getPaymentMethodDisplay('TAHLIL', 'purpose', t)}
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -1150,7 +1192,8 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                           <div className='text-sm'>
                             {getPaymentMethodDisplay(
                               service.service_type,
-                              'purpose'
+                              'purpose',
+                              t
                             )}
                           </div>
                         )}
@@ -1265,7 +1308,8 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                       {formatCurrency(billingData.data.total_amount)}
                     </span>
                   </div>
-                )}n                <div className='flex justify-between items-center text-sm'>
+                )}
+                <div className='flex justify-between items-center text-sm'>
                   <span className='text-muted-foreground'>{t('paidAmount')}</span>
                   <span className='font-semibold text-success'>
                     {formatCurrency(billingData.data.paid_amount)}
@@ -1296,7 +1340,8 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             <span>
                               {getPaymentMethodDisplay(
                                 payment.payment_method,
-                                'type'
+                                'type',
+                                t
                               )}
                             </span>
                             <span className='text-muted-foreground'>
@@ -1305,7 +1350,8 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
                             <span>
                               {getPaymentMethodDisplay(
                                 payment.payment_type,
-                                'purpose'
+                                'purpose',
+                                t
                               )}
                             </span>
                           </div>
