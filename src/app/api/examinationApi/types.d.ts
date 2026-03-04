@@ -161,6 +161,7 @@ export type AllExamReq = {
 	treatment_type?: 'stasionar' | 'ambulator'
 	room_name?: string
 	search?: string
+	has_billing?:boolean
 }
 
 // prescriptions

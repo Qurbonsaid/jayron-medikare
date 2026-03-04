@@ -191,9 +191,21 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
 
   // Diagnozni olish
   const getDiagnosis = (): string => {
-    if (!exam.diagnosis) return "Ko'rsatilmagan";
-    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
-    return exam.diagnosis.name;
+    if (!exam.diagnosis) return "Belgilanmagan";
+    
+    if (Array.isArray(exam.diagnosis)) {
+      if (exam.diagnosis.length === 0) return "Belgilanmagan";
+      return exam.diagnosis
+        .map((d: any) => (typeof d === 'object' ? d.name : d))
+        .filter((name: string) => name && name.trim())
+        .join(", ");
+    }
+    
+    if (typeof exam.diagnosis === 'string') {
+      return exam.diagnosis.trim() || "Belgilanmagan";
+    }
+    
+    return exam.diagnosis.name || "Belgilanmagan";
   };
 
   // Flatten prescriptions if they contain items arrays
@@ -374,9 +386,21 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
 
   // Diagnozni olish
   const getDiagnosis = (): string => {
-    if (!exam.diagnosis) return "Ko'rsatilmagan";
-    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
-    return exam.diagnosis.name;
+    if (!exam.diagnosis) return "Belgilanmagan";
+    
+    if (Array.isArray(exam.diagnosis)) {
+      if (exam.diagnosis.length === 0) return "Belgilanmagan";
+      return exam.diagnosis
+        .map((d: any) => (typeof d === 'object' ? d.name : d))
+        .filter((name: string) => name && name.trim())
+        .join(", ");
+    }
+    
+    if (typeof exam.diagnosis === 'string') {
+      return exam.diagnosis.trim() || "Belgilanmagan";
+    }
+    
+    return exam.diagnosis.name || "Belgilanmagan";
   };
 
   // Ko'rik turini olish
@@ -1113,9 +1137,21 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
   };
 
   const getDiagnosis = (): string => {
-    if (!exam.diagnosis) return "Ko'rsatilmagan";
-    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
-    return exam.diagnosis.name;
+    if (!exam.diagnosis) return "Belgilanmagan";
+    
+    if (Array.isArray(exam.diagnosis)) {
+      if (exam.diagnosis.length === 0) return "Belgilanmagan";
+      return exam.diagnosis
+        .map((d: any) => (typeof d === 'object' ? d.name : d))
+        .filter((name: string) => name && name.trim())
+        .join(", ");
+    }
+    
+    if (typeof exam.diagnosis === 'string') {
+      return exam.diagnosis.trim() || "Belgilanmagan";
+    }
+    
+    return exam.diagnosis.name || "Belgilanmagan";
   };
 
   // Check if patient is statsionar (inpatient)
@@ -1515,9 +1551,21 @@ const NeurologicStatusPDF: React.FC<NeurologicStatusPDFProps> = ({
   };
 
   const getDiagnosis = (): string => {
-    if (!exam.diagnosis) return "Ko'rsatilmagan";
-    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
-    return exam.diagnosis.name;
+    if (!exam.diagnosis) return "Belgilanmagan";
+    
+    if (Array.isArray(exam.diagnosis)) {
+      if (exam.diagnosis.length === 0) return "Belgilanmagan";
+      return exam.diagnosis
+        .map((d: any) => (typeof d === 'object' ? d.name : d))
+        .filter((name: string) => name && name.trim())
+        .join(", ");
+    }
+    
+    if (typeof exam.diagnosis === 'string') {
+      return exam.diagnosis.trim() || "Belgilanmagan";
+    }
+    
+    return exam.diagnosis.name || "Belgilanmagan";
   };
 
   // Yoshni hisoblash

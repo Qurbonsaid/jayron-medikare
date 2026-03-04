@@ -9,15 +9,47 @@ interface Props {
 
 export const RoomItem = ({ isMobile, room }: Props) => {
   const { t } = useTranslation('billing');
-  console.log(room);
 
-  const days = Math.ceil(
-    (new Date(room?.end_date || room?.estimated_leave_time).getTime() -
-      new Date(room?.start_date).getTime()) /
-      (1000 * 60 * 60 * 24)
+  const getEndDate = () => {
+    if (room?.end_date) {
+      const endDate = new Date(room.end_date);
+      const startDate = new Date(room.start_date);
+
+      
+      if (endDate > startDate) {
+        return endDate;
+      }
+    }
+    
+    return room?.estimated_leave_time 
+    ? new Date(room.estimated_leave_time) 
+      : new Date();
+  };
+  
+  const endDate = getEndDate();
+  const startDate = new Date(room?.start_date);
+  
+  // Check if using estimated_leave_time (not completed)
+  const isOngoing = !room?.end_date || new Date(room.end_date) <= startDate;
+
+  const startDay = new Date(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    startDate.getDate()
+  );
+  const endDay = new Date(
+    endDate.getFullYear(),
+    endDate.getMonth(),
+    endDate.getDate()
   );
 
-  const totalPrice = days ? room?.room_price * days : room?.room_price;
+  const diffDays = Math.floor(
+    (endDay.getTime() - startDay.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  const days = diffDays <= 0 ? 0 : diffDays + 1;
+
+  const totalPrice = days > 0 ? room?.room_price * days : 0;
 
   if (isMobile) {
     return (
@@ -36,33 +68,22 @@ export const RoomItem = ({ isMobile, room }: Props) => {
               <div>
                 <span className='text-muted-foreground'>{t('entryDate')}:</span>
                 <div className='font-medium'>
-                  {new Date(room?.start_date).toLocaleDateString('uz-UZ')}
+                  {startDate.toLocaleDateString('uz-UZ')}
                 </div>
               </div>
             )}
-            {room?.end_date ? (
-              <div>
-                <span className='text-muted-foreground'>{t('exitDate')}:</span>
-                <div className='font-medium'>
-                  {new Date(room.end_date).toLocaleDateString('uz-UZ')}
-                </div>
-              </div>
-            ) : room?.estimated_leave_time ? (
+            {isOngoing ? (
               <div>
                 <span className='text-muted-foreground'>{t('exitDate')}:</span>
                 <div className='font-medium text-yellow-600'>
-                  {t('ongoing')} (
-                  {new Date(room.estimated_leave_time).toLocaleDateString(
-                    'uz-UZ'
-                  )}
-                  )
+                  {t('ongoing')} ({endDate.toLocaleDateString('uz-UZ')})
                 </div>
               </div>
             ) : (
               <div>
                 <span className='text-muted-foreground'>{t('exitDate')}:</span>
-                <div className='font-medium text-yellow-600'>
-                  {t('ongoing')}
+                <div className='font-medium'>
+                  {endDate.toLocaleDateString('uz-UZ')}
                 </div>
               </div>
             )}
@@ -114,7 +135,7 @@ export const RoomItem = ({ isMobile, room }: Props) => {
         </td>
       )}
 
-      <td className='py-3 px-4 text-sm text-center'>{days > 0 || '-'}</td>
+      <td className='py-3 px-4 text-sm text-center'>{days || '-'}</td>
       <td className='py-3 px-4 text-sm text-right font-semibold'>
         {formatCurrency(totalPrice)}
       </td>
