@@ -42,6 +42,7 @@ import { format } from 'date-fns';
 import {
   Activity,
   AlertCircle,
+  ArrowLeft,
   CalendarDays,
   Edit,
   Loader2,
@@ -51,7 +52,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -113,12 +114,11 @@ const Prescription = () => {
   const [serviceSearch, setServiceSearch] = useState<Record<string, string>>(
     {}
   );
-  const [servicePage, setServicePage] = useState(1);
   const [serviceOptions, setServiceOptions] = useState<any[]>([]);
-  const [hasMoreServices, setHasMoreServices] = useState(true);
   const serviceSearchRefs = React.useRef<
     Record<string, HTMLInputElement | null>
   >({});
+  const newMedicationRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Common service settings
   const [serviceDuration, setServiceDuration] = useState<number>(7);
@@ -231,7 +231,7 @@ const Prescription = () => {
   } = useGetAllPrecriptionTemplateQuery({
     page: prescriptionTemplatePage,
     limit: 20,
-    ...(prescriptionTemplateSearch && { name: prescriptionTemplateSearch }),
+    ...(prescriptionTemplateSearch && { search: prescriptionTemplateSearch }),
   });
 
   // Fetch service templates
@@ -268,24 +268,6 @@ const Prescription = () => {
     { skip: !examinationData?.data.patient_id?._id }
   );
   const patientServices = patientServicesData?.data || [];
-
-  const availableServices = serviceOptions;
-
-  // Helper function to get service by ID
-  const getServiceById = (serviceId: string) => {
-    return (
-      serviceOptions.find((s: any) => s._id === serviceId) ||
-      patientServices
-        .flatMap((doc: any) => doc.items || [])
-        .find((item: any) => {
-          const itemServiceId =
-            typeof item.service_type_id === 'object'
-              ? item.service_type_id?._id
-              : item.service_type_id;
-          return itemServiceId === serviceId;
-        })?.service_type_id
-    );
-  };
 
   // Update serviceDuration and serviceStartDate based on existing services
   useEffect(() => {
@@ -353,7 +335,20 @@ const Prescription = () => {
     setHasMoreMedications(medicationPage < totalPages);
 
     if (medicationPage === 1) {
-      setMedicationOptions(data);
+      setMedicationOptions((prev) => {
+        // If in edit mode and we have a pre-populated medication, keep it
+        // and merge with new data to avoid losing the selected value
+        if (editingPrescriptionId && prev.length > 0 && editPrescriptionForm.medication_id) {
+          const selectedMed = prev.find((m: any) => m._id === editPrescriptionForm.medication_id);
+          if (selectedMed) {
+            // Merge: keep selected med + add new data that's not duplicate
+            const ids = new Set([selectedMed._id, ...data.map((m: any) => m._id)]);
+            const merged = [selectedMed, ...data.filter((m: any) => m._id !== selectedMed._id)];
+            return merged;
+          }
+        }
+        return data;
+      });
     } else if (Array.isArray(data) && data.length > 0) {
       setMedicationOptions((prev) => {
         const ids = new Set(prev.map((m: any) => m._id));
@@ -365,7 +360,7 @@ const Prescription = () => {
     if (!isFetchingMedications) {
       setIsLoadingMoreMedications(false);
     }
-  }, [medicationsData, medicationPage, isFetchingMedications, isDropdownOpen]);
+  }, [medicationsData, medicationPage, isFetchingMedications, isDropdownOpen, editingPrescriptionId, editPrescriptionForm.medication_id]);
 
   // Update examinations list when new data arrives
   useEffect(() => {
@@ -561,6 +556,14 @@ const Prescription = () => {
       addons: '',
     };
     setMedications([...medications, newMed]);
+    
+    // Scroll to the newly added medication after state update
+    setTimeout(() => {
+      const element = newMedicationRefs.current[newMed.id];
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   };
 
   const updateMedication = (
@@ -727,10 +730,6 @@ const Prescription = () => {
         return srv;
       })
     );
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   // Dorilarni alohida saqlash
@@ -1041,6 +1040,16 @@ const Prescription = () => {
       addons: prescription.addons || '',
     });
     setEditMedicationSearch('');
+    
+    // Pre-populate medicationOptions with current medication if populated
+    if (
+      typeof prescription.medication_id === 'object' &&
+      prescription.medication_id !== null
+    ) {
+      setMedicationOptions([prescription.medication_id]);
+      setMedicationPage(1);
+      setHasMoreMedications(true);
+    }
   };
 
   const cancelEditPrescription = () => {
@@ -1054,6 +1063,9 @@ const Prescription = () => {
       addons: '',
     });
     setEditMedicationSearch('');
+    // Reset medication options when cancelling edit
+    setMedicationOptions([]);
+    setMedicationPage(1);
   };
 
   const handleUpdatePrescription = async () => {
@@ -1133,6 +1145,9 @@ const Prescription = () => {
         setEditMedicationSearch('');
         setEditingPrescriptionId(null);
         setEditingPrescriptionDocId(null);
+        // Reset medication options after successful update
+        setMedicationOptions([]);
+        setMedicationPage(1);
       },
       onError: (error) => {
         toast.error(
@@ -1145,6 +1160,21 @@ const Prescription = () => {
   return (
     <div className='min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8'>
       <div className='max-w-5xl mx-auto'>
+        {/* Back Link to Examination Detail */}
+        {selectedExaminationId && patient && (
+          <div className='mb-4'>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() => navigate(`/examination/${selectedExaminationId}`)}
+              className='text-primary hover:bg-primary/10'
+            >
+              <ArrowLeft className='w-4 h-4 mr-2' />
+              {t('prescription:backToExaminations')}
+            </Button>
+          </div>
+        )}
+
         {/* Loading Spinner */}
         {isLoading && (
           <div className='flex items-center justify-center min-h-[400px]'>
@@ -1613,8 +1643,11 @@ const Prescription = () => {
                                           if (open) {
                                             setEditMedicationSearch('');
                                             setMedicationPage(1);
-                                            setMedicationOptions([]);
-                                            setHasMoreMedications(true);
+                                            // Don't clear options if current medication is already loaded
+                                            // This preserves the initial selected value
+                                            if (medicationOptions.length === 0) {
+                                              setHasMoreMedications(true);
+                                            }
                                           }
                                         }}
                                         onValueChange={(value) =>
@@ -1933,6 +1966,7 @@ const Prescription = () => {
                     {medications.map((med, index) => (
                       <Card
                         key={med.id}
+                        ref={(el) => (newMedicationRefs.current[med.id] = el)}
                         className='border border-border shadow-sm'
                       >
                         <CardContent className='pt-3 sm:pt-4'>

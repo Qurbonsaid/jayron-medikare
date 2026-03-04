@@ -139,5 +139,6 @@
   "noTemplatesFound": "Шаблоны не найдены",
   "templateApplied": "Шаблон применён",
   "medications": "лекарств",
-  "services": "услуг"
+  "services": "услуги",
+  "backToExaminations": "Вернуться к осмотрам"
 }
