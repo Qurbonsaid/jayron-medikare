@@ -168,6 +168,7 @@ export interface GetOneBillingRes {
       payment_method: string;
       amount: number;
       payment_date: string;
+      payment_type:'KORIK'|'XIZMAT'|'XONA'|'TASVIR'|'TAHLIL'
       _id: string;
     }>;
     created_at: string;

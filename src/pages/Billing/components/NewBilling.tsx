@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { PAYMENT } from '@/constants/payment';
 import { Plus, Printer, Send } from 'lucide-react';
-import React from 'react';
+import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Service } from '../Billing';
@@ -40,6 +40,8 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
   const [allExams, setAllExams] = React.useState<any[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const [discount, setDiscount] = React.useState<number>(0);
+  const serviceNameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const comboBoxRef = useRef<HTMLDivElement | null>(null);
 
   // Analysis, Room, Service states
   const [paymentAmount, setPaymentAmount] = React.useState('');
@@ -134,18 +136,21 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
 
       if (!room) return;
 
-      // Use EXACT same calculation as RoomItem component (line 12-16)
-      // Note: RoomItem uses room?.end_date || room?.estimated_leave_time without fallback to new Date()
-      const days = Math.ceil(
-        (new Date(room?.end_date || room?.estimated_leave_time).getTime() -
-          new Date(room?.start_date).getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
+      // Use EXACT same calculation as RoomItem component - calendar day level comparison
+      const startDay = new Date(room?.start_date);
+      startDay.setHours(0, 0, 0, 0);
+      
+      const endDate = room?.end_date || room?.estimated_leave_time;
+      const endDay = new Date(endDate);
+      endDay.setHours(0, 0, 0, 0);
 
-      // Use EXACT same calculation as RoomItem component (line 18)
-      const roomTotal = days
-        ? (room?.room_price || 0) * days
-        : room?.room_price || 0;
+      const ms_per_day = 1000 * 60 * 60 * 24;
+      const diffDays = Math.floor((endDay.getTime() - startDay.getTime()) / ms_per_day);
+      
+      // Use EXACT same logic as RoomItem: if same day (diffDays <= 0) return 0, else diffDays + 1
+      const days = diffDays <= 0 ? 0 : diffDays + 1;
+
+      const roomTotal = days > 0 ? (room?.room_price || 0) * days : 0;
       total += roomTotal;
     });
     return total;
@@ -338,6 +343,16 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     }
   }, [isInvoiceModalOpen]);
 
+  // Auto-focus ComboBox search input when modal opens
+  React.useEffect(() => {
+    if (isInvoiceModalOpen) {
+      setTimeout(() => {
+        const searchInput = comboBoxRef.current?.querySelector('input[type="text"]') as HTMLInputElement;
+        searchInput?.focus();
+      }, 100);
+    }
+  }, [isInvoiceModalOpen]);
+
   const handleSaveBilling = async () => {
     // Validation
     if (!selectedExaminationId) {
@@ -409,19 +424,25 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
       // Add rooms as services
       if (selectedExam?.rooms && selectedExam.rooms.length > 0) {
         selectedExam.rooms.forEach((room: any) => {
-          const days = Math.ceil(
-            (new Date(
-              room?.end_date || room?.estimated_leave_time || new Date()
-            ).getTime() -
-              new Date(room?.start_date).getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
-          const roomTotal =
-            days > 0 ? (room?.room_price || 0) * days : room?.room_price || 0;
+          // Use EXACT same calculation as RoomItem component - calendar day level comparison
+          const startDay = new Date(room?.start_date);
+          startDay.setHours(0, 0, 0, 0);
+          
+          const endDate = room?.end_date || room?.estimated_leave_time;
+          const endDay = new Date(endDate);
+          endDay.setHours(0, 0, 0, 0);
+
+          const ms_per_day = 1000 * 60 * 60 * 24;
+          const diffDays = Math.floor((endDay.getTime() - startDay.getTime()) / ms_per_day);
+          
+          // Use EXACT same logic as RoomItem: if same day (diffDays <= 0) return 0, else diffDays + 1
+          const days = diffDays <= 0 ? 0 : diffDays + 1;
+          
+          const roomTotal = days > 0 ? (room?.room_price || 0) * days : 0;
           if (roomTotal > 0) {
             examinationServices.push({
               name: room?.room_name || t('serviceTypes.room'),
-              count: days > 0 ? days : 1,
+              count: days,
               price: room?.room_price || 0,
               service_type: 'XONA',
             });
@@ -507,7 +528,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
         </AlertDialogHeader>
 
         <div className='space-y-4 sm:space-y-6'>
-          <div>
+          <div ref={comboBoxRef}>
             <Label className='text-sm mb-2 block'>{t('selectExamination')} <span className='text-red-500 font-bold'>*</span></Label>
             <ComboBox
               value={selectedExaminationId}
@@ -806,6 +827,9 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                       <tr key={service.id} className='border-b'>
                         <td className='py-2 px-4'>
                           <Input
+                            ref={(el) => {
+                              if (el) serviceNameInputRefs.current[service.id] = el;
+                            }}
                             value={service.name}
                             onChange={(e) =>
                               updateService(service.id, 'name', e.target.value)
@@ -817,9 +841,12 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                         <td className='py-2 px-4'>
                           <Select
                             value={service.service_type}
-                            onValueChange={(value: service_type) =>
-                              updateService(service.id, 'service_type', value)
-                            }
+                            onValueChange={(value: service_type) => {
+                              updateService(service.id, 'service_type', value);
+                              setTimeout(() => {
+                                serviceNameInputRefs.current[service.id]?.focus();
+                              }, 0);
+                            }}
                           >
                             <SelectTrigger className='h-9 text-sm w-[170px]'>
                               <SelectValue placeholder={t('selectType')} />
@@ -908,6 +935,9 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                           {t('serviceName')}
                         </Label>
                         <Input
+                          ref={(el) => {
+                            if (el) serviceNameInputRefs.current[service.id] = el;
+                          }}
                           value={service.name}
                           onChange={(e) =>
                             updateService(service.id, 'name', e.target.value)
@@ -923,9 +953,12 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                         </Label>
                         <Select
                           value={service.service_type}
-                          onValueChange={(value: service_type) =>
-                            updateService(service.id, 'service_type', value)
-                          }
+                          onValueChange={(value: service_type) => {
+                            updateService(service.id, 'service_type', value);
+                            setTimeout(() => {
+                              serviceNameInputRefs.current[service.id]?.focus();
+                            }, 0);
+                          }}
                         >
                           <SelectTrigger className='text-sm'>
                             <SelectValue placeholder={t('selectType')} />
@@ -1078,16 +1111,6 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                 </div>
               </Card>
             )}
-            {/* <div className='space-y-3 sm:space-y-4'>
-              <Card className='p-3 sm:p-4 bg-primary/5 flex justify-between items-center'>
-                <span className='text-base sm:text-lg font-semibold'>
-                  Жами тўлов:
-                </span>
-                <span className='text-lg sm:text-2xl font-bold text-primary'>
-                  {formatCurrency(calculateGrandTotal())}
-                </span>
-              </Card>
-            </div> */}
 
             <div className='space-y-3 sm:space-y-4'>
               <div>
@@ -1110,7 +1133,6 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                   className='text-sm'
                 />
               </div>
-
               <div>
                 <Label className='text-sm'>{t('paymentMethod')}</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
