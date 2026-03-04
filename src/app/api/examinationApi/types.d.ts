@@ -10,18 +10,10 @@ export type ExamResponse = {
 	}
 }
 
-export type CreateExamReq = {
-	patient_id: string
-	doctor_id: string
-	description?: string
-	complaints: string
-	treatment_type: 'STASIONAR' | 'AMBULATOR'
-}
-
 export type examCreateReq = {
 	patient_id: string
 	doctor_id: string
-	description: string
+	description?: string
 	complaints: string
 	treatment_type: 'stasionar' | 'ambulator'
 }
@@ -147,7 +139,7 @@ export type UpdateExamReq = {
 	body: {
 		patient_id: string
 		diagnosis: string[]
-		description: string
+		description?: string
 		complaints: string
 		treatment_type: 'stasionar' | 'ambulator'
 	}
