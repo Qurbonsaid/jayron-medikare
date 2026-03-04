@@ -101,14 +101,7 @@ export interface createPrescriptionReq {
 export interface updatePrescriptionReq {
 	id: string
 	body: {
-		items: {
-			_id: string
-			medication_id: string
-			addons: string
-			frequency: number
-			instructions: string
-			duration: number
-		}[]
+		items: (Prescription & { _id: string })[]
 	}
 }
 

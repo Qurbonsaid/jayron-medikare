@@ -1,17 +1,16 @@
 import { useCreateBillingMutation } from '@/app/api/billingApi/billingApi';
 import { service_type } from '@/app/api/billingApi/types';
 import { useGetAllExamsQuery } from '@/app/api/examinationApi/examinationApi';
-import { getStatusBadge } from '@/components/common/StatusBadge';
 import {
   AlertDialogFooter,
   AlertDialogHeader,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ComboBox, ComboBoxOption } from '@/components/ui/combobox';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import {
   Select,
   SelectContent,
@@ -20,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PAYMENT } from '@/constants/payment';
-import { CreditCard, Plus, Printer, Send } from 'lucide-react';
+import { Plus, Printer, Send } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -40,13 +39,14 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
   const [page, setPage] = React.useState(1);
   const [allExams, setAllExams] = React.useState<any[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
-  const [discount, setDiscount] = React.useState(0);
+  const [discount, setDiscount] = React.useState<number>(0);
 
   // Analysis, Room, Service states
   const [paymentAmount, setPaymentAmount] = React.useState('');
   const [paymentMethod, setPaymentMethod] = React.useState('cash');
   const [paymentType, setPaymentType] = React.useState<service_type>('XIZMAT');
   const [selectedExaminationId, setSelectedExaminationId] = React.useState('');
+  const [examinationSearch, setExaminationSearch] = React.useState('');
   const [selectedRooms, setSelectedRooms] = React.useState<string[]>([]);
 
   // General services state (local to NewBilling)
@@ -190,9 +190,9 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
 
   const calculateGrandTotal = () => {
     const subtotal = calculateSubtotal();
-    console.log('Services for calc', services);
     const examinationServicesTotal = calculateExaminationServicesTotal();
-    return subtotal + examinationServicesTotal - discount;
+    const discountAmount = discount || 0;
+    return Math.max(0, subtotal + examinationServicesTotal - discountAmount);
   };
 
   const {
@@ -235,6 +235,37 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
   const selectedExam = React.useMemo(() => {
     return allExams.find((exam) => exam._id === selectedExaminationId);
   }, [allExams, selectedExaminationId]);
+
+  const filteredExams = React.useMemo(() => {
+    if (!examinationSearch.trim()) return allExams;
+    const query = examinationSearch.toLowerCase().trim();
+
+    return allExams.filter((exam) => {
+      const patientName = exam?.patient_id?.fullname?.toLowerCase?.() || '';
+      const complaints = exam?.complaints?.toLowerCase?.() || '';
+      const doctorName = exam?.doctor_id?.fullname?.toLowerCase?.() || '';
+
+      return (
+        patientName.includes(query) ||
+        complaints.includes(query) ||
+        doctorName.includes(query)
+      );
+    });
+  }, [allExams, examinationSearch]);
+
+  const examinationOptions = React.useMemo<ComboBoxOption[]>(() => {
+    return filteredExams.map((exam) => ({
+      value: exam._id,
+      label: exam.patient_id?.fullname || t('selectExamination'),
+      sublabel: `${t('complaint')}: ${exam.complaints || '-'} • ${t(
+        'doctor'
+      )}: ${exam.doctor_id?.fullname || '-'}`,
+    }));
+  }, [filteredExams, t]);
+
+  const examsById = React.useMemo(() => {
+    return new Map(allExams.map((exam) => [exam._id, exam]));
+  }, [allExams]);
 
   // Get selected items from examination
   const analysisIds = React.useMemo(() => {
@@ -288,8 +319,18 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
       setAllExams([]);
       setHasMore(true);
       setSelectedExaminationId('');
+      setExaminationSearch('');
       setSelectedRooms([]);
-      setServices([]);
+      setServices([
+        {
+          id: Date.now().toString(),
+          name: '',
+          service_type: 'XIZMAT',
+          quantity: 1,
+          unitPrice: 0,
+          total: 0,
+        },
+      ]);
       setPaymentType('XIZMAT');
       setPaymentAmount('');
       setPaymentMethod('cash');
@@ -325,17 +366,14 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
       return;
     }
 
-    if (
-      paymentAmount === '' ||
-      paymentAmount === null ||
-      paymentAmount === undefined
-    ) {
+    const paymentAmountNum = parseFloat(paymentAmount || '0');
+    if (paymentAmountNum <= 0 || isNaN(paymentAmountNum)) {
       toast.error(t('validation.enterPaymentAmount'));
       return;
     }
 
     const grandTotal = calculateGrandTotal();
-    if (parseFloat(paymentAmount) > grandTotal) {
+    if (paymentAmountNum > grandTotal) {
       toast.error(t('validation.paymentExceedsTotal'));
       return;
     }
@@ -439,7 +477,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
         payment: {
           payment_method: paymentMethod,
           payment_type: paymentType,
-          amount: parseFloat(paymentAmount),
+          amount: paymentAmountNum,
         },
       };
 
@@ -470,84 +508,43 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
 
         <div className='space-y-4 sm:space-y-6'>
           <div>
-            <Label className='text-sm mb-2 block'>{t('selectExamination')} *</Label>
-            <Select
+            <Label className='text-sm mb-2 block'>{t('selectExamination')} <span className='text-red-500 font-bold'>*</span></Label>
+            <ComboBox
               value={selectedExaminationId}
               onValueChange={setSelectedExaminationId}
-            >
-              <SelectTrigger className='h-auto min-h-[42px] py-2.5 px-3'>
-                {selectedExam ? (
+              options={examinationOptions}
+              placeholder={t('selectExamination')}
+              searchPlaceholder='Search...'
+              emptyText={t('noActiveExaminations')}
+              loadingText={t('loading')}
+              searchValue={examinationSearch}
+              onSearchChange={setExaminationSearch}
+              onScroll={handleScroll}
+              isLoading={isLoadingExams || isFetching}
+              hasMore={hasMore}
+              className='h-auto min-h-[42px] py-2.5 px-3'
+              renderOption={(option) => {
+                const exam = examsById.get(option.value);
+
+                return (
                   <div className='flex items-start justify-between w-full gap-3 text-left'>
                     <div className='flex-1 min-w-0 space-y-0.5'>
                       <div className='font-semibold text-sm text-primary truncate'>
-                        {selectedExam.patient_id.fullname}
+                        {exam?.patient_id?.fullname}
                       </div>
                       <div className='text-xs text-muted-foreground truncate'>
                         <span className='font-medium'>{t('complaint')}:</span>{' '}
-                        {selectedExam.complaints}
+                        {exam?.complaints}
                       </div>
                       <div className='text-xs text-muted-foreground truncate'>
                         <span className='font-medium'>{t('doctor')}:</span>{' '}
-                        {selectedExam.doctor_id.fullname}
+                        {exam?.doctor_id?.fullname}
                       </div>
                     </div>
-                    <div className='flex-shrink-0 mt-0.5'>
-                      {getStatusBadge(selectedExam.status)}
-                    </div>
                   </div>
-                ) : (
-                  <span className='text-muted-foreground text-sm'>
-                    {t('selectExamination')}
-                  </span>
-                )}
-              </SelectTrigger>
-              <SelectContent
-                onScroll={handleScroll}
-                className='max-h-[420px] overflow-y-auto w-full'
-              >
-                {isLoadingExams && allExams.length === 0 ? (
-                  <div className='p-4 text-center'>
-                    <LoadingSpinner className='w-5 h-5 mx-auto' />
-                  </div>
-                ) : allExams && allExams.length > 0 ? (
-                  allExams.map((exam) => (
-                    <SelectItem
-                      key={exam._id}
-                      value={exam._id}
-                      className='py-3 px-3 cursor-pointer hover:bg-accent transition-colors'
-                    >
-                      <div className='flex items-start justify-between w-full gap-3'>
-                        <div className='flex-1 min-w-0 space-y-1'>
-                          <div className='font-semibold text-sm text-primary'>
-                            {exam.patient_id.fullname}
-                          </div>
-                          <div className='text-xs text-muted-foreground line-clamp-2'>
-                            <span className='font-medium'>{t('complaint')}:</span>{' '}
-                            {exam.complaints}
-                          </div>
-                          <div className='text-xs text-muted-foreground'>
-                            <span className='font-medium'>{t('doctor')}:</span>{' '}
-                            {exam.doctor_id.fullname}
-                          </div>
-                        </div>
-                        <div className='flex-shrink-0 mt-0.5'>
-                          {getStatusBadge(exam.status)}
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))
-                ) : (
-                  <div className='p-4 text-center text-muted-foreground text-sm'>
-                    {t('noActiveExaminations')}
-                  </div>
-                )}
-                {isFetching && allExams.length > 0 && (
-                  <div className='p-2 text-center'>
-                    <LoadingSpinner className='w-4 h-4 mx-auto' />
-                  </div>
-                )}
-              </SelectContent>
-            </Select>
+                );
+              }}
+            />
           </div>
 
           {/* Patient Info - Show after selecting examination */}
@@ -617,7 +614,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                           {selectedExam?.analyses?.map((analysis: any) => (
                             <AnalysisItem
                               key={analysis._id}
-                              analysis={analysis}
+                              analysisId={analysis._id}
                             />
                           ))}
                         </tbody>
@@ -629,7 +626,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                       {selectedExam?.analyses?.map((analysis: any) => (
                         <AnalysisItem
                           key={analysis._id}
-                          analysis={analysis}
+                          analysisId={analysis._id}
                           isMobile
                         />
                       ))}
@@ -1121,12 +1118,7 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={PAYMENT.CASH}>
-                      <div className='flex items-center'>
-                        <CreditCard className='w-4 h-4 mr-2' />
-                        {t('cash')}
-                      </div>
-                    </SelectItem>
+                    <SelectItem value={PAYMENT.CASH}>{t('cash')}</SelectItem>
                     <SelectItem value={PAYMENT.CARD}>{t('card')}</SelectItem>
                     <SelectItem value={PAYMENT.ONLINE}>Online</SelectItem>
                   </SelectContent>

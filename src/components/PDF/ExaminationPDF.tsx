@@ -191,9 +191,21 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
 
   // Diagnozni olish
   const getDiagnosis = (): string => {
-    if (!exam.diagnosis) return "Ko'rsatilmagan";
-    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
-    return exam.diagnosis.name;
+    if (!exam.diagnosis) return "Belgilanmagan";
+    
+    if (Array.isArray(exam.diagnosis)) {
+      if (exam.diagnosis.length === 0) return "Belgilanmagan";
+      return exam.diagnosis
+        .map((d: any) => (typeof d === 'object' ? d.name : d))
+        .filter((name: string) => name && name.trim())
+        .join(", ");
+    }
+    
+    if (typeof exam.diagnosis === 'string') {
+      return exam.diagnosis.trim() || "Belgilanmagan";
+    }
+    
+    return exam.diagnosis.name || "Belgilanmagan";
   };
 
   // Flatten prescriptions if they contain items arrays
@@ -374,9 +386,21 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
 
   // Diagnozni olish
   const getDiagnosis = (): string => {
-    if (!exam.diagnosis) return "Ko'rsatilmagan";
-    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
-    return exam.diagnosis.name;
+    if (!exam.diagnosis) return "Belgilanmagan";
+    
+    if (Array.isArray(exam.diagnosis)) {
+      if (exam.diagnosis.length === 0) return "Belgilanmagan";
+      return exam.diagnosis
+        .map((d: any) => (typeof d === 'object' ? d.name : d))
+        .filter((name: string) => name && name.trim())
+        .join(", ");
+    }
+    
+    if (typeof exam.diagnosis === 'string') {
+      return exam.diagnosis.trim() || "Belgilanmagan";
+    }
+    
+    return exam.diagnosis.name || "Belgilanmagan";
   };
 
   // Ko'rik turini olish
@@ -540,94 +564,136 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
         )}
 
         {/* Xizmatlar (agar mavjud bo'lsa) */}
-        {exam.services && exam.services.length > 0 && (
-          <View style={[styles.tableContainer, { marginTop: 8 }]}>
-            <Text style={styles.sectionTitle}>
-              XIZMATLAR ({exam.services.length} ta)
-            </Text>
+        {(() => {
+          // Flatten services if they contain items arrays
+          let allServices: any[] = exam.services || [];
+          if (allServices.length > 0 && allServices[0]?.items) {
+            allServices = allServices.flatMap(
+              (serviceDoc: any) => serviceDoc.items || []
+            );
+          }
+          // Also check exam.service.items as fallback
+          if (allServices.length === 0 && exam.service?.items) {
+            allServices = exam.service.items;
+          }
 
-            {/* Jadval sarlavhasi */}
-            <View
-              style={[
-                styles.tableRow,
-                styles.tableHeader,
-                {
-                  borderTopWidth: 1,
-                  borderTopColor: '#000',
-                  borderTopStyle: 'solid',
-                  borderLeftWidth: 1,
-                  borderLeftColor: '#000',
-                  borderLeftStyle: 'solid',
-                },
-              ]}
-            >
-              <View style={[styles.tableCol, { flex: 0.3 }]}>
-                <Text style={styles.tableCell}>#</Text>
-              </View>
-              <View style={[styles.tableCol, { flex: 1.5 }]}>
-                <Text style={styles.tableCell}>Xizmat nomi</Text>
-              </View>
-              <View style={[styles.tableCol, { flex: 0.6 }]}>
-                <Text style={styles.tableCell}>Miqdor</Text>
-              </View>
-              <View style={[styles.tableCol, { flex: 0.8 }]}>
-                <Text style={styles.tableCell}>Narxi</Text>
-              </View>
-              <View style={[styles.tableColLast, { flex: 0.8 }]}>
-                <Text style={styles.tableCell}>Holati</Text>
-              </View>
-            </View>
+          // Check if patient is statsionar (inpatient)
+          const isStatsionar = exam.treatment_type === 'stasionar';
 
-            {/* Jadval qatorlari */}
-            {exam.services.map((service: any, index: number) => {
-              const serviceName =
-                typeof service.service_type_id === 'object' &&
-                service.service_type_id
-                  ? service.service_type_id.name
-                  : 'Noma`lum';
-              const serviceStatus: Record<string, string> = {
-                pending: 'Kutilmoqda',
-                active: 'Faol',
-                completed: 'Yakunlangan',
-              };
-              return (
-                <View
-                  key={service._id || index}
-                  style={[
-                    styles.tableRow,
-                    {
-                      borderLeftWidth: 1,
-                      borderLeftColor: '#000',
-                      borderLeftStyle: 'solid',
-                    },
-                  ]}
-                >
-                  <View style={[styles.tableCol, { flex: 0.3 }]}>
-                    <Text style={styles.tableCell}>{index + 1}</Text>
-                  </View>
-                  <View style={[styles.tableCol, { flex: 1.5 }]}>
-                    <Text style={[styles.tableCell, { textAlign: 'left' }]}>
-                      {serviceName}
-                    </Text>
-                  </View>
-                  <View style={[styles.tableCol, { flex: 0.6 }]}>
-                    <Text style={styles.tableCell}>{service.quantity}</Text>
-                  </View>
-                  <View style={[styles.tableCol, { flex: 0.8 }]}>
-                    <Text style={styles.tableCell}>
-                      {service.price?.toLocaleString() || '-'} so'm
-                    </Text>
-                  </View>
-                  <View style={[styles.tableColLast, { flex: 0.8 }]}>
-                    <Text style={styles.tableCell}>
-                      {serviceStatus[service.status] || service.status}
-                    </Text>
-                  </View>
+          if (allServices.length === 0) return null;
+
+          return (
+            <View style={[styles.tableContainer, { marginTop: 8 }]}>
+              <Text style={styles.sectionTitle}>
+                XIZMATLAR ({allServices.length} ta)
+              </Text>
+
+              {/* Jadval sarlavhasi */}
+              <View
+                style={[
+                  styles.tableRow,
+                  styles.tableHeader,
+                  {
+                    borderTopWidth: 1,
+                    borderTopColor: '#000',
+                    borderTopStyle: 'solid',
+                    borderLeftWidth: 1,
+                    borderLeftColor: '#000',
+                    borderLeftStyle: 'solid',
+                  },
+                ]}
+              >
+                <View style={[styles.tableCol, { flex: 0.3 }]}>
+                  <Text style={styles.tableCell}>#</Text>
                 </View>
-              );
-            })}
-          </View>
-        )}
+                <View style={[styles.tableCol, { flex: 1.5 }]}>
+                  <Text style={styles.tableCell}>Xizmat nomi</Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 0.6 }]}>
+                  <Text style={styles.tableCell}>Miqdor</Text>
+                </View>
+                <View style={[styles.tableCol, { flex: 0.8 }]}>
+                  <Text style={styles.tableCell}>Narxi</Text>
+                </View>
+                <View style={[styles.tableColLast, { flex: 0.8 }]}>
+                  <Text style={styles.tableCell}>Holati</Text>
+                </View>
+              </View>
+
+              {/* Jadval qatorlari */}
+              {allServices.map((service: any, index: number) => {
+                const serviceName =
+                  typeof service.service_type_id === 'object' &&
+                  service.service_type_id
+                    ? service.service_type_id.name
+                    : 'Noma`lum';
+
+                // Get price from service_type_id or service itself
+                const servicePrice =
+                  typeof service.service_type_id === 'object' &&
+                  service.service_type_id
+                    ? service.service_type_id.price
+                    : service.price || 0;
+
+                // Get quantity - count days where date is not null
+                const quantity =
+                  service.quantity ??
+                  service.days?.filter(
+                    (day: any) => day.date !== null && day.date !== undefined
+                  ).length ??
+                  1;
+
+                // Status mapping
+                const serviceStatus: Record<string, string> = {
+                  pending: 'Kutilmoqda',
+                  active: 'Faol',
+                  completed: 'Yakunlangan',
+                };
+
+                // Display price - show "Bepul" for statsionar patients
+                const displayPrice = isStatsionar
+                  ? 'Bepul'
+                  : servicePrice > 0
+                    ? `${servicePrice.toLocaleString()} so'm`
+                    : '-';
+
+                return (
+                  <View
+                    key={service._id || index}
+                    style={[
+                      styles.tableRow,
+                      {
+                        borderLeftWidth: 1,
+                        borderLeftColor: '#000',
+                        borderLeftStyle: 'solid',
+                      },
+                    ]}
+                  >
+                    <View style={[styles.tableCol, { flex: 0.3 }]}>
+                      <Text style={styles.tableCell}>{index + 1}</Text>
+                    </View>
+                    <View style={[styles.tableCol, { flex: 1.5 }]}>
+                      <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+                        {serviceName}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableCol, { flex: 0.6 }]}>
+                      <Text style={styles.tableCell}>{quantity}</Text>
+                    </View>
+                    <View style={[styles.tableCol, { flex: 0.8 }]}>
+                      <Text style={styles.tableCell}>{displayPrice}</Text>
+                    </View>
+                    <View style={[styles.tableColLast, { flex: 0.8 }]}>
+                      <Text style={styles.tableCell}>
+                        {serviceStatus[service.status] || service.status || 'Faol'}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          );
+        })()}
 
         {/* Retseptlar (agar mavjud bo'lsa) */}
         {(() => {
@@ -898,11 +964,12 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
 // Ko'rik umumiy ma'lumotlarini PDF yuklab olish komponenti
 interface ExaminationInfoDownloadButtonProps {
   exam: any;
+  services?: any[];
 }
 
 const ExaminationInfoDownloadButton: React.FC<
   ExaminationInfoDownloadButtonProps
-> = ({ exam }) => {
+> = ({ exam, services: propServices }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const { t } = useTranslation('common');
   const patientId = exam?.patient_id?._id || exam?.patient_id;
@@ -916,7 +983,24 @@ const ExaminationInfoDownloadButton: React.FC<
   const handleDownloadExaminationInfo = async () => {
     try {
       setIsGenerating(true);
-      const examWithPatient = { ...exam, patient_id: patient };
+
+      // Flatten services if they contain items arrays
+      let allServices: any[] = propServices || exam.services || [];
+      if (allServices.length > 0 && allServices[0]?.items) {
+        allServices = allServices.flatMap(
+          (serviceDoc: any) => serviceDoc.items || []
+        );
+      }
+      // Also check exam.service.items as fallback
+      if (allServices.length === 0 && exam.service?.items) {
+        allServices = exam.service.items;
+      }
+
+      const examWithPatient = {
+        ...exam,
+        patient_id: patient,
+        services: allServices,
+      };
 
       const blob = await pdf(
         <ExaminationInfoPDF exam={examWithPatient} />
@@ -1053,13 +1137,31 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
   };
 
   const getDiagnosis = (): string => {
-    if (!exam.diagnosis) return "Ko'rsatilmagan";
-    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
-    return exam.diagnosis.name;
+    if (!exam.diagnosis) return "Belgilanmagan";
+    
+    if (Array.isArray(exam.diagnosis)) {
+      if (exam.diagnosis.length === 0) return "Belgilanmagan";
+      return exam.diagnosis
+        .map((d: any) => (typeof d === 'object' ? d.name : d))
+        .filter((name: string) => name && name.trim())
+        .join(", ");
+    }
+    
+    if (typeof exam.diagnosis === 'string') {
+      return exam.diagnosis.trim() || "Belgilanmagan";
+    }
+    
+    return exam.diagnosis.name || "Belgilanmagan";
   };
+
+  // Check if patient is statsionar (inpatient)
+  const isStatsionar = exam.treatment_type === 'stasionar';
 
   // Jami narxni hisoblash
   const getTotalPrice = (): number => {
+    // If statsionar, services are free
+    if (isStatsionar) return 0;
+
     if (!exam.services || exam.services.length === 0) return 0;
     return exam.services.reduce((total: number, service: any) => {
       const serviceType = service.service_type_id;
@@ -1178,6 +1280,19 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
             };
             const itemTotal = servicePrice * quantity;
 
+            // Display price - show "Bepul" for statsionar patients
+            const displayPrice = isStatsionar
+              ? 'Bepul'
+              : servicePrice > 0
+                ? `${servicePrice.toLocaleString()} so'm`
+                : '-';
+
+            const displayTotal = isStatsionar
+              ? 'Bepul'
+              : itemTotal > 0
+                ? `${itemTotal.toLocaleString()} so'm`
+                : `0 so'm`;
+
             // Get status - check if service has status field, otherwise check days completion
             const getStatus = (): string => {
               if (service.status) {
@@ -1221,18 +1336,10 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
                   <Text style={styles.tableCell}>{quantity}</Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 1 }]}>
-                  <Text style={styles.tableCell}>
-                    {servicePrice > 0
-                      ? `${servicePrice.toLocaleString()} so'm`
-                      : '-'}
-                  </Text>
+                  <Text style={styles.tableCell}>{displayPrice}</Text>
                 </View>
                 <View style={[styles.tableCol, { flex: 1 }]}>
-                  <Text style={styles.tableCell}>
-                    {itemTotal > 0
-                      ? `${itemTotal.toLocaleString()} so'm`
-                      : `0 so'm`}
-                  </Text>
+                  <Text style={styles.tableCell}>{displayTotal}</Text>
                 </View>
                 <View style={[styles.tableColLast, { flex: 0.8 }]}>
                   <Text style={styles.tableCell}>{getStatus()}</Text>
@@ -1274,7 +1381,9 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
             </View>
             <View style={[styles.tableCol, { flex: 1 }]}>
               <Text style={[styles.tableCell, { fontWeight: 'bold' }]}>
-                {getTotalPrice().toLocaleString()} so'm
+                {isStatsionar
+                  ? 'Bepul'
+                  : `${getTotalPrice().toLocaleString()} so'm`}
               </Text>
             </View>
             <View style={[styles.tableColLast, { flex: 0.8 }]}>
@@ -1442,9 +1551,21 @@ const NeurologicStatusPDF: React.FC<NeurologicStatusPDFProps> = ({
   };
 
   const getDiagnosis = (): string => {
-    if (!exam.diagnosis) return "Ko'rsatilmagan";
-    if (typeof exam.diagnosis === 'string') return exam.diagnosis;
-    return exam.diagnosis.name;
+    if (!exam.diagnosis) return "Belgilanmagan";
+    
+    if (Array.isArray(exam.diagnosis)) {
+      if (exam.diagnosis.length === 0) return "Belgilanmagan";
+      return exam.diagnosis
+        .map((d: any) => (typeof d === 'object' ? d.name : d))
+        .filter((name: string) => name && name.trim())
+        .join(", ");
+    }
+    
+    if (typeof exam.diagnosis === 'string') {
+      return exam.diagnosis.trim() || "Belgilanmagan";
+    }
+    
+    return exam.diagnosis.name || "Belgilanmagan";
   };
 
   // Yoshni hisoblash
