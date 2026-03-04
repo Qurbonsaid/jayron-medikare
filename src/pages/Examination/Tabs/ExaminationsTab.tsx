@@ -138,16 +138,24 @@ const { t } = useTranslation(["examinations", "common"]);
                       variant="outline"
                       role="combobox"
                       aria-expanded={openDiagnosisCombobox}
-                      className="w-full justify-between font-normal"
+                      className="w-full justify-between font-normal h-auto"
                     >
-                      {prop.editForm.diagnosis.length > 0
-                        ? prop.accumulatedDiagnoses
-                            .filter((d: getAllDiagnosisRes["data"][0]) =>
-                              prop.editForm.diagnosis.includes(d._id),
-                            )
-                            .map((d: any) => d.name)
-                            .join(", ") || t("detail.selectDiagnosis")
-                        : t("detail.selectDiagnosis")}
+                      <div className="flex flex-wrap gap-2 w-full">
+                        {prop.editForm.diagnosis.length > 0
+                          ? prop.accumulatedDiagnoses
+                              .filter((d: getAllDiagnosisRes["data"][0]) =>
+                                prop.editForm.diagnosis.includes(d._id),
+                              )
+                              .map((d: any) => (
+                                <span
+                                  key={d._id}
+                                  className="inline-block bg-primary/20 text-primary px-2 py-1 rounded text-xs"
+                                >
+                                  {d.name}
+                                </span>
+                              ))
+                          : t("detail.selectDiagnosis")}
+                      </div>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -168,41 +176,41 @@ const { t } = useTranslation(["examinations", "common"]);
                             : t("detail.noDiagnosisFound")}
                         </CommandEmpty>
                         <CommandGroup>
-                          {prop.accumulatedDiagnoses.map((diagnosis: any) => (
-                            <CommandItem
-                              key={diagnosis._id}
-                              value={diagnosis._id}
-                              onSelect={() => {
-                                const isSelected =
-                                  prop.editForm.diagnosis.includes(
-                                    diagnosis._id,
-                                  );
-                                const newDiagnosis = isSelected
-                                  ? prop.editForm.diagnosis.filter(
-                                      (id) => id !== diagnosis._id,
-                                    )
-                                  : [...prop.editForm.diagnosis, diagnosis._id];
+                          {prop.accumulatedDiagnoses.map((diagnosis: any) => {
+                            const isSelected = prop.editForm.diagnosis.includes(
+                              diagnosis._id,
+                            );
+                            return (
+                              <CommandItem
+                                key={diagnosis._id}
+                                value={diagnosis._id}
+                                onSelect={() => {
+                                  const newDiagnosis = isSelected
+                                    ? prop.editForm.diagnosis.filter(
+                                        (id) => id !== diagnosis._id,
+                                      )
+                                    : [...prop.editForm.diagnosis, diagnosis._id];
 
-                                prop.setEditForm({
-                                  ...prop.editForm,
-                                  diagnosis: newDiagnosis,
-                                });
-                                prop.setDiagnosisSearch("");
-                              }}
-                            >
-                              <Check
+                                  prop.setEditForm({
+                                    ...prop.editForm,
+                                    diagnosis: newDiagnosis,
+                                  });
+                                  prop.setDiagnosisSearch("");
+                                }}
                                 className={cn(
-                                  "mr-2 h-4 w-4",
-                                  prop.editForm.diagnosis.includes(
-                                    diagnosis._id,
-                                  )
-                                    ? "opacity-100"
-                                    : "opacity-0",
+                                  isSelected && "bg-primary/10 hover:bg-primary/15",
                                 )}
-                              />
-                              {diagnosis.name}
-                            </CommandItem>
-                          ))}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    isSelected ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {diagnosis.name}
+                              </CommandItem>
+                            );
+                          })}
                           {prop.hasMoreDiagnoses && (
                             <CommandItem
                               disabled

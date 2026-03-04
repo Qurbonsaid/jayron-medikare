@@ -446,7 +446,10 @@ const ExaminationDetail = () => {
         <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t("detail.patientInfo")}</CardTitle>
-            <ExaminationInfoDownloadButton exam={exam} />
+            <ExaminationInfoDownloadButton
+              exam={exam}
+              services={patientServices}
+            />
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
