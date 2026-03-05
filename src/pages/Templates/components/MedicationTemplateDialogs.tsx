@@ -27,6 +27,9 @@ interface MedicationTemplateDialogsProps {
   isEditOpen: boolean;
   isViewOpen: boolean;
   isDeleteOpen: boolean;
+  createLoading: boolean;
+  updateLoading: boolean;
+  deleteLoading: boolean;
   onCreateOpenChange: (value: boolean) => void;
   onEditOpenChange: (value: boolean) => void;
   onViewOpenChange: (value: boolean) => void;
@@ -60,6 +63,9 @@ export default function MedicationTemplateDialogs({
   isEditOpen,
   isViewOpen,
   isDeleteOpen,
+  createLoading,
+  updateLoading,
+  deleteLoading,
   onCreateOpenChange,
   onEditOpenChange,
   onViewOpenChange,
@@ -109,7 +115,7 @@ export default function MedicationTemplateDialogs({
             <Button variant='outline' onClick={onCloseAndReset}>
               {t('buttons.cancel', 'Бекор қилиш')}
             </Button>
-            <Button onClick={onCreate}>{t('buttons.save', 'Сақлаш')}</Button>
+            <Button disabled={createLoading} onClick={onCreate}>{t('buttons.save', 'Сақлаш')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -145,7 +151,7 @@ export default function MedicationTemplateDialogs({
             <Button variant='outline' onClick={onCloseAndReset}>
               {t('buttons.cancel', 'Бекор қилиш')}
             </Button>
-            <Button onClick={onEdit}>{t('buttons.update', 'Янгилаш')}</Button>
+            <Button disabled={updateLoading} onClick={onEdit}>{t('buttons.update', 'Янгилаш')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -198,7 +204,7 @@ export default function MedicationTemplateDialogs({
             <Button variant='outline' onClick={onDeleteCancel}>
               {t('buttons.cancel', 'Бекор қилиш')}
             </Button>
-            <Button variant='destructive' onClick={onDelete}>
+            <Button disabled={deleteLoading} variant='destructive' onClick={onDelete}>
               {t('buttons.delete', 'Ўчириш')}
             </Button>
           </DialogFooter>

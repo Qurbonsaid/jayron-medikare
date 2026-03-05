@@ -213,7 +213,7 @@ const NewVisitDialog = ({
   } = useGetAllPrecriptionTemplateQuery({
     page: prescriptionTemplatePage,
     limit: 20,
-    ...(prescriptionTemplateSearch && { name: prescriptionTemplateSearch }),
+    ...(prescriptionTemplateSearch && { search: prescriptionTemplateSearch }),
   });
 
   // Fetch service templates

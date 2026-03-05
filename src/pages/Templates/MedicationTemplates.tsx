@@ -70,9 +70,9 @@ export default function MedicationTemplates() {
     ...(searchTerm && { search: searchTerm }),
   });
 
-  const [createTemplate] = useCreatePrecriptionTemplateMutation();
-  const [updateTemplate] = useUpdatePrecriptionTemplateMutation();
-  const [deleteTemplate] = useDeletePrecriptionTemplateMutation();
+  const [createTemplate , {isLoading:createLoading}] = useCreatePrecriptionTemplateMutation();
+  const [updateTemplate , {isLoading:updateLoading}] = useUpdatePrecriptionTemplateMutation();
+  const [deleteTemplate , {isLoading:deleteLoading}] = useDeletePrecriptionTemplateMutation();
 
   const resetForm = React.useCallback(() => {
     setTemplateName('');
@@ -285,15 +285,18 @@ export default function MedicationTemplates() {
           setIsDeleteOpen(open);
           if (!open) setDeleteId(null);
         }}
+        createLoading={createLoading}
+        updateLoading={updateLoading}
+        deleteLoading={deleteLoading}
         onTemplateNameChange={setTemplateName}
         onAddItem={addItem}
         onRemoveItem={removeItem}
         onUpdateItem={updateItem}
         onMedicationSearchChange={setMedicationSearch}
         onMedicationListScroll={onMedicationListScroll}
-        onCreate={() => void handleCreate()}
-        onEdit={() => void handleEdit()}
-        onDelete={() => void handleDelete()}
+        onCreate={handleCreate}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
         onCloseAndReset={handleCloseAndReset}
         onDeleteCancel={() => {
           setIsDeleteOpen(false);

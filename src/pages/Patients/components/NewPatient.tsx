@@ -123,7 +123,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
     },
   });
 
-  const [createPatient] = useCreatePatientMutation();
+  const [createPatient,{isLoading}] = useCreatePatientMutation();
   const handleRequest = useHandleRequest();
 
   const onSubmit = async (data: PatientFormData) => {
@@ -810,6 +810,7 @@ const NewPatient = ({ open, onOpenChange }: NewPatientProps) => {
           <Button
             type='submit'
             onClick={form.handleSubmit(onSubmit)}
+            disabled={isLoading}
             className='gradient-primary w-full sm:w-auto order-1 sm:order-2'
           >
             <Save className='w-4 h-4 mr-2' />
