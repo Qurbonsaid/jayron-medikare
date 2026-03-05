@@ -10,7 +10,7 @@ import {
   ZoomOut,
   RotateCw,
 } from 'lucide-react';
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -22,9 +22,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 interface PDFViewerProps {
   url: string;
   filename?: string;
+  isFullscreen?: boolean;
 }
 
-export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename }) => {
+export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename, isFullscreen }) => {
   const { t } = useTranslation('radiology');
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -32,6 +33,47 @@ export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename }) => {
   const [rotation, setRotation] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Drag-to-scroll
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+
+  // Ctrl+Scroll zoom
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        setScale((prev) => Math.max(0.5, Math.min(3, +(prev + delta).toFixed(1))));
+      }
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX, y: e.clientY, scrollLeft: el.scrollLeft, scrollTop: el.scrollTop };
+  }, []);
+
+  const handleDragMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    e.preventDefault();
+    el.scrollLeft = dragStartRef.current.scrollLeft - (e.clientX - dragStartRef.current.x);
+    el.scrollTop = dragStartRef.current.scrollTop - (e.clientY - dragStartRef.current.y);
+  }, [isDragging]);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
 
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -84,9 +126,9 @@ export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename }) => {
   }
 
   return (
-    <div className='w-full h-full flex flex-col gap-3'>
+    <div ref={containerRef} className='w-full h-full flex flex-col gap-2'>
       {/* Controls */}
-      <div className='flex flex-wrap justify-between items-center gap-2 bg-muted/50 p-2 rounded-lg'>
+      <div className='flex flex-wrap justify-between items-center gap-2 bg-muted/50 p-2 rounded-lg flex-shrink-0'>
         {/* Page Navigation */}
         <div className='flex items-center gap-1'>
           <Button
@@ -134,8 +176,16 @@ export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename }) => {
       </div>
 
       {/* PDF Document */}
-      <Card className='flex-1 overflow-hidden'>
-        <CardContent className='p-0 h-[60vh] overflow-auto flex justify-center'>
+      <Card className='h-full flex-1 overflow-hidden'>
+        <CardContent
+          ref={scrollRef}
+          className={`p-0 w-full ${isFullscreen ? 'h-[calc(100vh-120px)]' : 'h-[55vh] sm:h-[60vh] xl:h-[70vh]'} overflow-auto select-none`}
+          onMouseDown={handleDragStart}
+          onMouseMove={handleDragMove}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        >
           {loading && (
             <div className='flex items-center justify-center h-full'>
               <div className='text-center space-y-2'>
@@ -151,7 +201,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = memo(({ url, filename }) => {
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
             loading={null}
-            className='flex justify-center'
+            className='w-fit mx-auto'
           >
             <Page
               pageNumber={pageNumber}

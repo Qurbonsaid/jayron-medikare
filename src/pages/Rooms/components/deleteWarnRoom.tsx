@@ -43,14 +43,14 @@ export const DeleteWarnRoom = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!isDeletedLoading) onOpenChange(v); }}>
       <DialogContent>
         <DialogTitle>{t('deleteRoom')}</DialogTitle>
         <DialogDescription>
           {t('deleteConfirm')} <span className="font-semibold">{room.room_name}</span>
         </DialogDescription>
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isDeletedLoading}>
             {t('cancel')}
           </Button>
           <Button

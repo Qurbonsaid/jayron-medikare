@@ -2,21 +2,63 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Download, Loader2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { downloadFile } from '@/lib/fileTypeUtils';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import mammoth from 'mammoth';
 
 interface WordViewerProps {
   url: string;
   filename?: string;
+  isFullscreen?: boolean;
 }
 
-export const WordViewer: React.FC<WordViewerProps> = memo(({ url, filename }) => {
+export const WordViewer: React.FC<WordViewerProps> = memo(({ url, filename, isFullscreen }) => {
   const { t } = useTranslation('radiology');
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [scale, setScale] = useState<number>(100);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Drag-to-scroll
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+
+  // Ctrl+Scroll zoom
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -10 : 10;
+        setScale((prev) => Math.max(50, Math.min(200, prev + delta)));
+      }
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX, y: e.clientY, scrollLeft: el.scrollLeft, scrollTop: el.scrollTop };
+  }, []);
+
+  const handleDragMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    e.preventDefault();
+    el.scrollLeft = dragStartRef.current.scrollLeft - (e.clientX - dragStartRef.current.x);
+    el.scrollTop = dragStartRef.current.scrollTop - (e.clientY - dragStartRef.current.y);
+  }, [isDragging]);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
 
   useEffect(() => {
     const loadWordDocument = async () => {
@@ -89,9 +131,9 @@ export const WordViewer: React.FC<WordViewerProps> = memo(({ url, filename }) =>
   }
 
   return (
-    <div className='h-full flex flex-col gap-3'>
+    <div ref={containerRef} className='h-full flex flex-col gap-2'>
       {/* Controls */}
-      <div className='flex flex-wrap justify-between items-center gap-2 bg-muted/50 p-2 rounded-lg'>
+      <div className='flex flex-wrap justify-between items-center gap-2 bg-muted/50 p-2 rounded-lg flex-shrink-0'>
         <div className='flex items-center gap-1'>
           <Button onClick={zoomOut} disabled={scale <= 50} size='sm' variant='outline'>
             <ZoomOut className='w-4 h-4' />
@@ -112,10 +154,23 @@ export const WordViewer: React.FC<WordViewerProps> = memo(({ url, filename }) =>
 
       {/* Content */}
       <Card className='flex-1 overflow-hidden'>
-        <CardContent className='p-4 sm:p-6 h-[60vh] overflow-auto'>
+        <CardContent
+          ref={scrollRef}
+          className={`p-4 sm:p-6 ${isFullscreen ? 'h-[calc(100vh-120px)]' : 'h-[55vh] sm:h-[60vh] xl:h-[70vh]'} overflow-auto select-none`}
+          onMouseDown={handleDragStart}
+          onMouseMove={handleDragMove}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        >
           <div
-            className='prose prose-sm sm:prose max-w-none dark:prose-invert origin-top-left transition-transform'
-            style={{ transform: `scale(${scale / 100})`, transformOrigin: 'top left' }}
+            className='prose prose-sm sm:prose max-w-none dark:prose-invert origin-top-left'
+            style={{
+              transform: `scale(${scale / 100})`,
+              transformOrigin: 'top left',
+              minWidth: scale > 100 ? `${scale}%` : '100%',
+              minHeight: scale > 100 ? `${scale}%` : 'auto',
+            }}
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
         </CardContent>

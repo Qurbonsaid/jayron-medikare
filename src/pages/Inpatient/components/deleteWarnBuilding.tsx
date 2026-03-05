@@ -43,7 +43,7 @@ export const DeleteWarnBuilding = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!isDeletedLoading) onOpenChange(v); }}>
       <DialogContent>
         <DialogTitle>{t("deleteBuilding")}</DialogTitle>
         <DialogDescription>
@@ -52,7 +52,7 @@ export const DeleteWarnBuilding = ({
           {t("buildingQuestion")}
         </DialogDescription>
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isDeletedLoading}>
             {t("cancel")}
           </Button>
           <Button

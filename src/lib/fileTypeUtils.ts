@@ -5,10 +5,11 @@ import {
   FileCode,
   Activity,
   File,
+  Presentation,
   type LucideIcon
 } from 'lucide-react';
 
-export type FileType = 'image' | 'pdf' | 'word' | 'excel' | 'rtf' | 'mdfx' | 'other';
+export type FileType = 'image' | 'pdf' | 'word' | 'excel' | 'presentation' | 'rtf' | 'mdfx' | 'other';
 
 export interface FileTypeInfo {
   type: FileType;
@@ -47,6 +48,12 @@ export const getFileTypeInfo = (url: string): FileTypeInfo => {
     return { type: 'excel', extension, canPreview: true };
   }
 
+  // Presentation documents - Google Docs / MS Office Online viewer bilan ko'rish
+  const presentationExtensions = ['ppt', 'pptx', 'odp'];
+  if (presentationExtensions.includes(extension)) {
+    return { type: 'presentation', extension, canPreview: true };
+  }
+
   // RTF - oddiy text parser bilan ko'rish mumkin
   if (extension === 'rtf') {
     return { type: 'rtf', extension, canPreview: true };
@@ -70,6 +77,7 @@ export const getFileIcon = (fileType: FileType | string): LucideIcon => {
     pdf: FileText,
     word: FileText,
     excel: FileSpreadsheet,
+    presentation: Presentation,
     rtf: FileCode,
     mdfx: Activity,
     other: File,
@@ -86,6 +94,7 @@ export const getFileTypeName = (fileType: FileType): string => {
     pdf: 'PDF ҳужжат',
     word: 'Word ҳужжат',
     excel: 'Excel жадвал',
+    presentation: 'Презентация',
     rtf: 'RTF ҳужжат',
     mdfx: 'EEG маълумотлари',
     other: 'Файл',

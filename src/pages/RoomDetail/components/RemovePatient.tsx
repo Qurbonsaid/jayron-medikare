@@ -46,14 +46,14 @@ export const RemovePatient = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
       <DialogContent>
         <DialogTitle>{t("removePatientTitle")}</DialogTitle>
         <DialogDescription>
           {t("removePatientConfirmation")}
         </DialogDescription>
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             {t("cancel")}
           </Button>
           <Button

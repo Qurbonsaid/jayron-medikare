@@ -133,7 +133,7 @@ export const QuickAddPatientModal = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="space-y-2 sm:space-y-3">
           <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">

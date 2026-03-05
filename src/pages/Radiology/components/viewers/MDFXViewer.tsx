@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 interface MDFXViewerProps {
   url: string;
   filename?: string;
+  isFullscreen?: boolean;
 }
 
 interface MDFXData {
@@ -60,7 +61,7 @@ const parseMDFX = (content: string): MDFXData => {
   return data;
 };
 
-export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) => {
+export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename, isFullscreen }) => {
   const { t } = useTranslation('radiology');
   const [data, setData] = useState<MDFXData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -120,9 +121,9 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
   }
 
   return (
-    <div className='h-full flex flex-col gap-3'>
+    <div className='h-full flex flex-col gap-2'>
       {/* Header */}
-      <div className='flex flex-wrap justify-between items-center gap-2 bg-muted/50 p-2 rounded-lg'>
+      <div className='flex flex-wrap justify-between items-center gap-2 bg-muted/50 p-2 rounded-lg flex-shrink-0'>
         <div className='flex items-center gap-2'>
           <Activity className='w-5 h-5 text-primary' />
           <span className='text-sm font-medium'>{t('viewers.mdfx.eegData')}</span>
@@ -135,7 +136,7 @@ export const MDFXViewer: React.FC<MDFXViewerProps> = memo(({ url, filename }) =>
 
       {/* Content */}
       <Card className='flex-1 overflow-hidden'>
-        <CardContent className='p-4 sm:p-6 h-[60vh] overflow-auto'>
+        <CardContent className={`p-4 sm:p-6 ${isFullscreen ? 'h-[calc(100vh-120px)]' : 'h-[55vh] sm:h-[60vh] xl:h-[70vh]'} overflow-auto`}>
           {data?.patientInfo && (
             <div className='mb-6'>
               <h3 className='font-semibold mb-2 text-primary'>{t('viewers.mdfx.patientInfo')}</h3>

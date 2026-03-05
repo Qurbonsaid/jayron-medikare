@@ -21,13 +21,13 @@ import { Image as ImageIcon, Maximize2, Minimize2, Download } from "lucide-react
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { BodyPartConstants } from "@/constants/BodyPart";
-import { useGetOneMedicalImageQuery } from "@/app/api/radiologyApi";
 import { SERVER_URL } from "@/constants/ServerUrl";
 import { formatPhoneNumber } from "@/lib/utils";
 import { getFileTypeInfo, getFileIcon, downloadFile } from "@/lib/fileTypeUtils";
 import { PDFViewer } from "./viewers/PDFViewer";
 import { WordViewer } from "./viewers/WordViewer";
 import { ExcelViewer } from "./viewers/ExcelViewer";
+import { PresentationViewer } from "./viewers/PresentationViewer";
 import { RTFViewer } from "./viewers/RTFViewer";
 import { MDFXViewer } from "./viewers/MDFXViewer";
 import { DownloadOnlyCard } from "./viewers/DownloadOnlyCard";
@@ -71,11 +71,6 @@ export const ViewMedicalImage = memo(({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
-  const { data: getMedicalImage, isLoading } = useGetOneMedicalImageQuery(
-    { id: medicalImage?._id || "" },
-    { skip: !medicalImage?._id }
-  );
-
   // Get current file info - useMemo bilan optimallashtirish
   const currentFilePath = useMemo(() => 
     medicalImage?.image_paths?.[selectedImageIndex] || "", 
@@ -113,37 +108,64 @@ export const ViewMedicalImage = memo(({
     }
   }, [open, medicalImage?._id, handleResetView]);
 
-  // Keyboard navigation handler
+  // Prevent browser zoom (Ctrl+Scroll, Ctrl+=/-) when modal is open
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!medicalImage?.image_paths || medicalImage.image_paths.length <= 1)
-        return;
+    if (!open) return;
+    const preventBrowserZoom = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener('wheel', preventBrowserZoom, { passive: false });
+    return () => document.removeEventListener('wheel', preventBrowserZoom);
+  }, [open]);
 
-      if (e.key === "ArrowLeft") {
+  // Keyboard navigation & shortcuts
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
+      // Prevent browser zoom shortcuts & apply custom zoom for images
+      if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '-' || e.key === '+' || e.key === '0')) {
+        e.preventDefault();
+        if (isImage) {
+          if (e.key === '=' || e.key === '+') setZoom((prev) => Math.min(300, prev + 10));
+          else if (e.key === '-') setZoom((prev) => Math.max(50, prev - 10));
+          else if (e.key === '0') handleResetView();
+        }
+        return;
+      }
+
+      // File navigation with ← →
+      if (e.key === "ArrowLeft" && medicalImage?.image_paths && medicalImage.image_paths.length > 1) {
         e.preventDefault();
         setSelectedImageIndex((prev) =>
           prev === 0 ? medicalImage.image_paths!.length - 1 : prev - 1
         );
-      } else if (e.key === "ArrowRight") {
+      } else if (e.key === "ArrowRight" && medicalImage?.image_paths && medicalImage.image_paths.length > 1) {
         e.preventDefault();
         setSelectedImageIndex((prev) =>
           prev === medicalImage.image_paths!.length - 1 ? 0 : prev + 1
         );
-      } else if (e.key === "Escape" && isFullscreen) {
-        setIsFullscreen(false);
+      }
+
+      // Fullscreen toggle: F key (skip if Ctrl/Meta held to allow Ctrl+F)
+      if ((e.key === "f" || e.key === "F") && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        setIsFullscreen((prev) => !prev);
       }
     };
 
-    if (open) {
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }
-  }, [open, medicalImage, isFullscreen]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, medicalImage, isImage, handleResetView]);
 
-  // Wheel zoom handler
+  // Ctrl+Scroll zoom for images
   useEffect(() => {
     const container = imageContainerRef.current;
-    if (!container) return;
+    if (!container || !isImage) return;
 
     const handleWheel = (e: WheelEvent) => {
       if (e.ctrlKey || e.metaKey) {
@@ -155,7 +177,7 @@ export const ViewMedicalImage = memo(({
 
     container.addEventListener("wheel", handleWheel, { passive: false });
     return () => container.removeEventListener("wheel", handleWheel);
-  }, []);
+  }, [isImage]);
 
   // getImageUrl - useCallback bilan
   const getImageUrl = useCallback((path: string) => {
@@ -178,32 +200,55 @@ export const ViewMedicalImage = memo(({
   );
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (zoom > 100) {
+    if (isImage && zoom > 100) {
+      e.preventDefault();
       setIsDragging(true);
       setDragStart({
         x: e.clientX - pan.x,
         y: e.clientY - pan.y,
       });
     }
-  }, [zoom, pan.x, pan.y]);
+  }, [isImage, zoom, pan.x, pan.y]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (isDragging && zoom > 100) {
+    if (isDragging && isImage && zoom > 100) {
+      e.preventDefault();
       setPan({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y,
       });
     }
-  }, [isDragging, zoom, dragStart.x, dragStart.y]);
+  }, [isDragging, isImage, zoom, dragStart.x, dragStart.y]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
   }, []);
 
+  // Double-click: toggle between 100% and 200% zoom
+  const handleDoubleClick = useCallback(() => {
+    if (isImage) {
+      if (zoom !== 100) {
+        handleResetView();
+      } else {
+        setZoom(200);
+        setPan({ x: 0, y: 0 });
+      }
+    }
+  }, [isImage, zoom, handleResetView]);
+
+  // Intercept Dialog close: exit fullscreen first, then close
+  const handleDialogOpenChange = useCallback((newOpen: boolean) => {
+    if (!newOpen && isFullscreen) {
+      setIsFullscreen(false);
+      return;
+    }
+    onOpenChange(newOpen);
+  }, [isFullscreen, onOpenChange]);
+
   if (!medicalImage) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-[98vw] max-h-[98vh] sm:max-w-[95vw] sm:max-h-[95vh] md:max-w-[99vw] lg:max-w-[95vw] xl:max-w-[98vw] p-0 overflow-hidden overflow-y-auto">
         <DialogHeader className="p-2 sm:pb-3 border-b flex-shrink-0">
           <DialogTitle className="text-sm md:text-base lg:text-lg line-clamp-1 sm:line-clamp-2">
@@ -217,17 +262,19 @@ export const ViewMedicalImage = memo(({
           <div className="lg:col-span-9 flex flex-col">
             <Card
               ref={imageContainerRef}
-              className={`${isImage ? 'bg-black' : 'bg-background'} rounded-lg relative flex flex-col items-center justify-center overflow-hidden ${isImage ? 'touch-none' : ''} transition-all ${
+              tabIndex={0}
+              className={`${isImage ? 'bg-black' : 'bg-background'} rounded-lg relative flex flex-col items-center justify-center overflow-hidden ${isImage ? 'touch-none select-none' : ''} transition-all outline-none ${
                 isFullscreen
-                  ? "fixed inset-0 z-[100] rounded-none h-screen w-screen"
-                  : "h-full"
+                  ? "fixed inset-0 z-[9999] rounded-none"
+                  : "h-full min-h-[300px] sm:min-h-[400px]"
               }`}
               onMouseDown={isImage ? handleMouseDown : undefined}
               onMouseMove={isImage ? handleMouseMove : undefined}
               onMouseUp={isImage ? handleMouseUp : undefined}
               onMouseLeave={isImage ? handleMouseUp : undefined}
+              onDoubleClick={isImage ? handleDoubleClick : undefined}
               style={{
-                cursor: isImage && zoom > 100 ? (isDragging ? "grabbing" : "grab") : "default",
+                cursor: isImage ? (zoom > 100 ? (isDragging ? "grabbing" : "grab") : "zoom-in") : "default",
               }}
             >
               {medicalImage.image_paths &&
@@ -254,8 +301,8 @@ export const ViewMedicalImage = memo(({
                         alt={`${t('viewMedicalImage.image')} ${selectedImageIndex + 1}`}
                         className={`max-w-full object-contain rounded-lg select-none ${
                           isFullscreen
-                            ? "max-h-[85vh]"
-                            : "max-h-[300px] xs:max-h-[350px] sm:max-h-[400px] md:max-h-[50vh] lg:max-h-[70vh]"
+                            ? "max-h-[calc(100vh-80px)]"
+                            : "max-h-[300px] xs:max-h-[350px] sm:max-h-[400px] md:max-h-[50vh] lg:max-h-[65vh]"
                         }`}
                         draggable={false}
                         onError={(e) => {
@@ -267,52 +314,67 @@ export const ViewMedicalImage = memo(({
                   )}
                   
                   {currentFileType === "pdf" && (
-                    <div className="w-full h-full p-4">
+                    <div className={`w-full p-2 sm:p-4 ${isFullscreen ? 'h-screen' : 'h-full'}`}>
                       <PDFViewer
                         url={currentFileUrl}
                         filename={currentFilename}
+                        isFullscreen={isFullscreen}
                       />
                     </div>
                   )}
                   
                   {currentFileType === "word" && (
-                    <div className="w-full h-full p-4">
+                    <div className={`w-full p-2 sm:p-4 ${isFullscreen ? 'h-screen' : 'h-full'}`}>
                       <WordViewer
                         url={currentFileUrl}
                         filename={currentFilename}
+                        isFullscreen={isFullscreen}
                       />
                     </div>
                   )}
                   
                   {currentFileType === "excel" && (
-                    <div className="w-full h-full p-4">
+                    <div className={`w-full p-2 sm:p-4 ${isFullscreen ? 'h-screen' : 'h-full'}`}>
                       <ExcelViewer
                         url={currentFileUrl}
                         filename={currentFilename}
+                        isFullscreen={isFullscreen}
+                      />
+                    </div>
+                  )}
+
+                  {currentFileType === "presentation" && (
+                    <div className={`w-full p-2 sm:p-4 ${isFullscreen ? 'h-screen' : 'h-full'}`}>
+                      <PresentationViewer
+                        url={currentFileUrl}
+                        filename={currentFilename}
+                        isFullscreen={isFullscreen}
                       />
                     </div>
                   )}
                   
                   {currentFileType === "rtf" && (
-                    <div className="w-full h-full p-4 flex items-center justify-center">
+                    <div className={`w-full p-2 sm:p-4 ${isFullscreen ? 'h-screen' : 'h-full'}`}>
                       <RTFViewer
                         url={currentFileUrl}
                         filename={currentFilename}
+                        isFullscreen={isFullscreen}
                       />
                     </div>
                   )}
                   
                   {currentFileType === "mdfx" && (
-                    <div className="w-full h-full p-4 flex items-center justify-center">
+                    <div className={`w-full p-2 sm:p-4 ${isFullscreen ? 'h-screen' : 'h-full'}`}>
                       <MDFXViewer
                         url={currentFileUrl}
                         filename={currentFilename}
+                        isFullscreen={isFullscreen}
                       />
                     </div>
                   )}
                   
                   {currentFileType === "other" && (
-                    <div className="w-full h-full p-4 flex items-center justify-center">
+                    <div className={`w-full p-2 sm:p-4 flex items-center justify-center ${isFullscreen ? 'h-screen' : 'h-full'}`}>
                       <DownloadOnlyCard
                         url={currentFileUrl}
                         filename={currentFilename}
@@ -470,7 +532,7 @@ export const ViewMedicalImage = memo(({
                     className="text-white hover:bg-white/20 h-7 w-7 sm:h-8 sm:w-8 p-0"
                     onClick={() => setIsFullscreen(!isFullscreen)}
                     title={
-                      isFullscreen ? "Exit Fullscreen (Esc)" : "Fullscreen"
+                      isFullscreen ? "Exit Fullscreen (Esc)" : "Fullscreen (F)"
                     }
                   >
                     {isFullscreen ? (
@@ -519,14 +581,35 @@ export const ViewMedicalImage = memo(({
                 </div>
               )}
 
-              {/* Hints - Only for images */}
-              {isImage && !isFullscreen && (
-                <div className="hidden sm:block absolute top-2 left-2 bg-black/70 text-white text-[10px] px-2.5 py-1 rounded-lg backdrop-blur-sm space-y-0.5">
-                  <div>🖱️ Ctrl + Scroll - Zoom</div>
-                  <div>⌨️ ← → - Navigate</div>
-                  <div>🖼️ Click ⛶ - Fullscreen</div>
+              {/* Controls - Non-image files */}
+              {!isImage && medicalImage.image_paths && medicalImage.image_paths.length > 0 && (
+                <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 right-2 sm:right-3 md:right-4 flex items-center gap-1.5 bg-black/80 rounded-lg px-2 py-1.5 backdrop-blur-sm z-10">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-7 w-7 p-0"
+                    onClick={() => downloadFile(currentFileUrl, currentFilename)}
+                    title={t('viewMedicalImage.downloadImage')}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <div className="w-px bg-white/30 h-5" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-7 w-7 p-0"
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                    title={isFullscreen ? "Exit Fullscreen (Esc)" : "Fullscreen (F)"}
+                  >
+                    {isFullscreen ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
               )}
+
             </Card>
           </div>
 
@@ -627,23 +710,32 @@ export const ViewMedicalImage = memo(({
                           <span className="text-muted-foreground flex-shrink-0">
                             {t("viewMedicalImage.bodyPart")}:
                           </span>
-                          {medicalImage.body_part &&
-                          medicalImage.body_part.length > 15 ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="font-medium text-right truncate cursor-help">
-                                  {medicalImage.body_part.slice(0, 15)}...
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{medicalImage.body_part}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            <span className="font-medium text-right">
-                              {medicalImage.body_part || t("viewMedicalImage.notSpecified")}
-                            </span>
-                          )}
+                          {(() => {
+                            const bodyPartKey = bodyPartKeys[medicalImage.body_part];
+                            const bodyPartLabel = bodyPartKey
+                              ? t(`bodyParts.${bodyPartKey}`)
+                              : medicalImage.body_part;
+                            
+                            if (bodyPartLabel && bodyPartLabel.length > 15) {
+                              return (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="font-medium text-right truncate cursor-help">
+                                      {bodyPartLabel.slice(0, 15)}...
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{bodyPartLabel}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            }
+                            return (
+                              <span className="font-medium text-right">
+                                {bodyPartLabel || t("viewMedicalImage.notSpecified")}
+                              </span>
+                            );
+                          })()}
                         </div>
                         <div className="flex justify-between gap-1">
                           <span className="text-muted-foreground flex-shrink-0">

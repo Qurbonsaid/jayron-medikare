@@ -252,8 +252,8 @@ export const MedicalImageTab = () => {
                     <TableCell className="text-center font-semibold">
                       <Tooltip>
                         <TooltipTrigger>
-                          {image?.description.length > 22
-                            ? image?.description.slice(0, 20) + "..."
+                          {(image?.description?.length ?? 0) > 22
+                            ? image?.description?.slice(0, 20) + "..."
                             : image?.description || t('medicalImageTab.notSpecified')}
                         </TooltipTrigger>
 
