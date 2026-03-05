@@ -97,7 +97,7 @@ const PatientProfile = () => {
     navigate('/patients');
   }
 
-  const [deletePatient] = useDeletePatientMutation();
+  const [deletePatient,{isLoading:deleteLoading}] = useDeletePatientMutation();
   const handleRequest = useHandleRequest();
   const patient = patientData?.data;
   const exams = examsData?.data || [];
@@ -680,7 +680,7 @@ const PatientProfile = () => {
                   >
                     {tCommon('cancel')}
                   </Button>
-                  <Button variant='destructive' onClick={onDelete}>
+                  <Button variant='destructive' disabled={deleteLoading} onClick={onDelete}>
                     {tCommon('delete')}
                   </Button>
                 </DialogFooter>

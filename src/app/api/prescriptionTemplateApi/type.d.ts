@@ -32,7 +32,7 @@ type GetResponse = {
     medication_id: {
       _id: string;
       name: string;
-      form: string;
+      form: MedicationForm;
     } | null;
     addons: string;
     frequency: number;
