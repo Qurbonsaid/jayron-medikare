@@ -50,14 +50,14 @@ export const DeleteWarnMedicalImage = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
       <DialogContent>
         <DialogTitle>{t("deleteMedicalImage")}</DialogTitle>
         <DialogDescription>
           {t("deleteMedicalImageConfirm", { patientName: getPatientName() })}
         </DialogDescription>
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             {t("cancel")}
           </Button>
           <Button

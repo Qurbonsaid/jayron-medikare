@@ -267,6 +267,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 		<Dialog
 			open={open}
 			onOpenChange={open => {
+				if (isAddPatientLoading || isUploadLoading) return
 				if (!open) {
 					stopCamera()
 					imagePreviewUrls.forEach(url => URL.revokeObjectURL(url))
@@ -403,6 +404,7 @@ export const RoomNewPatient = ({ open, onOpenChange }: RoomNewPatientProps) => {
 						variant='outline'
 						onClick={() => onOpenChange(false)}
 						className='w-full sm:w-auto order-2 sm:order-1'
+						disabled={isAddPatientLoading || isUploadLoading}
 					>
 						{t('cancel')}
 					</Button>

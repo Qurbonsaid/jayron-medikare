@@ -48,6 +48,8 @@ import { toast } from "sonner";
 import z from "zod";
 import { BodyPartConstants } from "@/constants/BodyPart";
 import { useState, useEffect } from "react";
+import { SERVER_URL } from "@/constants/ServerUrl";
+import { getFileTypeInfo, getFileIcon } from "@/lib/fileTypeUtils";
 
 // Error type interface
 interface UploadError {
@@ -239,9 +241,16 @@ export const NewMedicalImage = ({
   };
 
   const onSubmit = async (data: MedicalImageFormData) => {
+    // Bo'sh body_part va description ni undefined ga aylantirish
+    const submitData: CreatedMedicalImageRequest = {
+      ...data,
+      body_part: data.body_part || undefined,
+      description: data.description || undefined,
+    };
+
     await handleRequest({
       request: async () =>
-        await createMedicalImage(data as CreatedMedicalImageRequest).unwrap(),
+        await createMedicalImage(submitData).unwrap(),
       onSuccess: () => {
         toast.success(t("newMedicalImage.imageAddedSuccess"));
         form.reset();
@@ -259,7 +268,7 @@ export const NewMedicalImage = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!isLoading && !isUploading) onOpenChange(v); }}>
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-3xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
@@ -397,7 +406,7 @@ export const NewMedicalImage = ({
                             id="image-upload"
                             type="file"
                             multiple
-                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.rtf,.mdfx"
+                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.rtf,.mdfx"
                             className="hidden"
                             onChange={(e) => handleFileUpload(e.target.files)}
                           />
@@ -429,20 +438,35 @@ export const NewMedicalImage = ({
                             <div className="relative max-w-[85vw] sm:max-w-[80vw] lg:max-w-2xl overflow-hidden mx-auto">
                               <div className="overflow-x-auto pb-2 scroll-smooth scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40 w-full">
                                 <div className="flex gap-3">
-                                  {field.value.map((path, index) => (
+                                  {field.value.map((path, index) => {
+                                    const fileUrl = path.startsWith("http") ? path : `${SERVER_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+                                    const fileInfo = getFileTypeInfo(path);
+                                    const isImageFile = fileInfo.type === "image";
+                                    const IconComponent = getFileIcon(fileInfo.type);
+
+                                    return (
                                     <div
                                       key={index}
                                       className="relative group flex-shrink-0 w-28 h-28 xs:w-32 xs:h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 border-2 border-slate-200 rounded-lg overflow-hidden hover:border-primary transition-all"
                                     >
-                                      <img
-                                        src={path}
-                                        alt={`${t("newMedicalImage.image")} ${index + 1}`}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                          e.currentTarget.src =
-                                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
-                                        }}
-                                      />
+                                      {isImageFile ? (
+                                        <img
+                                          src={fileUrl}
+                                          alt={`${t("newMedicalImage.image")} ${index + 1}`}
+                                          className="w-full h-full object-cover"
+                                          onError={(e) => {
+                                            e.currentTarget.src =
+                                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
+                                          }}
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center bg-muted gap-1">
+                                          <IconComponent className="w-8 h-8 text-primary" />
+                                          <span className="text-[9px] font-semibold text-primary uppercase">
+                                            {fileInfo.extension}
+                                          </span>
+                                        </div>
+                                      )}
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -460,7 +484,8 @@ export const NewMedicalImage = ({
                                         #{index + 1}
                                       </div>
                                     </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </div>

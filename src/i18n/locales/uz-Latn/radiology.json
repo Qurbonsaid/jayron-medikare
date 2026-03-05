@@ -331,6 +331,14 @@
       "description": "Bu faylni brauzerda ko'rib bo'lmaydi. Pastdagi tugmadan yuklab oling va mos dastur bilan oching.",
       "downloadFile": "Faylni yuklab olish"
     },
+    "presentation": {
+      "title": "Prezentatsiya",
+      "loading": "Prezentatsiya yuklanmoqda...",
+      "loadError": "Prezentatsiya faylini yuklab bo'lmadi. Yuklab olib PowerPoint bilan oching.",
+      "download": "Yuklab olish",
+      "noSlides": "Bu faylda slaydlar topilmadi",
+      "emptySlide": "Bo'sh slayd"
+    },
     "excel": {
       "loading": "Excel hujjati yuklanmoqda...",
       "loadError": "Faylni yuklab bo'lmadi. Pastdagi tugmadan yuklab oling.",

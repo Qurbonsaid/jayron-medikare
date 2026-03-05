@@ -41,6 +41,8 @@ import { toast } from "sonner";
 import z from "zod";
 import { BodyPartConstants } from "@/constants/BodyPart";
 import { useState, useEffect } from "react";
+import { SERVER_URL } from "@/constants/ServerUrl";
+import { getFileTypeInfo, getFileIcon } from "@/lib/fileTypeUtils";
 
 // Error type interface
 interface UploadError {
@@ -67,6 +69,12 @@ interface ExamData {
     _id: string;
     fullname: string;
   };
+}
+
+interface UpdateMedicalImageProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  medicalImage: MedicalImage | null;
 }
 
 // Tana qismlari ro'yxati - keys for translation
@@ -154,28 +162,29 @@ export const UpdateMedicalImage = ({
     // Fayllarni array'ga o'tkazamiz
     const fileArray = Array.from(files);
 
-    // Faqat rasm fayllarini filtrlash
-    const imageFiles = fileArray.filter((file) => {
-      if (!file.type.startsWith("image/")) {
-        toast.warning(t("updateMedicalImage.notImageFile", { fileName: file.name }));
+    // Maksimal fayl hajmini tekshirish (50MB)
+    const maxSize = 50 * 1024 * 1024;
+    const validFiles = fileArray.filter((file) => {
+      if (file.size > maxSize) {
+        toast.warning(t("newMedicalImage.fileTooLarge", { fileName: file.name }));
         return false;
       }
       return true;
     });
 
-    if (imageFiles.length === 0) {
-      toast.error(t("updateMedicalImage.selectImageFiles"));
+    if (validFiles.length === 0) {
+      toast.error(t("newMedicalImage.selectCorrectFiles"));
       return;
     }
 
     // Barcha fayllarni uploading holatiga qo'shamiz
-    setUploadingFiles((prev) => [...prev, ...imageFiles.map((f) => f.name)]);
+    setUploadingFiles((prev) => [...prev, ...validFiles.map((f) => f.name)]);
 
     let successCount = 0;
     let errorCount = 0;
 
     // Barcha fayllarni parallel yuklash
-    const uploadPromises = imageFiles.map(async (file) => {
+    const uploadPromises = validFiles.map(async (file) => {
       try {
         const formData = new FormData();
         formData.append("file", file);
@@ -256,8 +265,8 @@ export const UpdateMedicalImage = ({
             examination_id: data.examination_id,
             imaging_type_id: data.imaging_type_id,
             image_paths: data.image_paths,
-            body_part: data.body_part,
-            description: data.description,
+            body_part: data.body_part || undefined,
+            description: data.description || undefined,
           },
         }).unwrap(),
       onSuccess: () => {
@@ -276,7 +285,7 @@ export const UpdateMedicalImage = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!isLoading && !isUploading) onOpenChange(v); }}>
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-3xl max-h-[75vh] p-0 border-2 border-primary/30">
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
@@ -410,7 +419,7 @@ export const UpdateMedicalImage = ({
                           <input
                             id="update-image-upload"
                             type="file"
-                            accept="image/*"
+                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.rtf,.mdfx"
                             multiple
                             className="hidden"
                             onChange={(e) => handleFileUpload(e.target.files)}
@@ -442,20 +451,35 @@ export const UpdateMedicalImage = ({
                             <div className="relative max-w-[85vw] sm:max-w-[80vw] lg:max-w-2xl overflow-hidden mx-auto">
                               <div className="overflow-x-auto pb-2 scroll-smooth scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40 w-full">
                                 <div className="flex gap-3">
-                                  {field.value.map((path, index) => (
+                                  {field.value.map((path, index) => {
+                                    const fileUrl = path.startsWith("http") ? path : `${SERVER_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+                                    const fileInfo = getFileTypeInfo(path);
+                                    const isImageFile = fileInfo.type === "image";
+                                    const IconComponent = getFileIcon(fileInfo.type);
+
+                                    return (
                                     <div
                                       key={index}
                                       className="relative group flex-shrink-0 w-28 h-28 xs:w-32 xs:h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 border-2 border-slate-200 rounded-lg overflow-hidden hover:border-primary transition-all"
                                     >
-                                      <img
-                                        src={path}
-                                        alt={`Расм ${index + 1}`}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                          e.currentTarget.src =
-                                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
-                                        }}
-                                      />
+                                      {isImageFile ? (
+                                        <img
+                                          src={fileUrl}
+                                          alt={`${t("updateMedicalImage.image")} ${index + 1}`}
+                                          className="w-full h-full object-cover"
+                                          onError={(e) => {
+                                            e.currentTarget.src =
+                                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
+                                          }}
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center bg-muted gap-1">
+                                          <IconComponent className="w-8 h-8 text-primary" />
+                                          <span className="text-[9px] font-semibold text-primary uppercase">
+                                            {fileInfo.extension}
+                                          </span>
+                                        </div>
+                                      )}
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -473,7 +497,8 @@ export const UpdateMedicalImage = ({
                                         #{index + 1}
                                       </div>
                                     </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </div>

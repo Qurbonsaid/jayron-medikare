@@ -60,7 +60,7 @@ export const DeleteBookingModal = ({
   const room = typeof booking.room_id === "object" ? booking.room_id : null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
       <DialogContent className="max-w-md sm:max-w-lg p-4 sm:p-6">
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2 text-red-600">

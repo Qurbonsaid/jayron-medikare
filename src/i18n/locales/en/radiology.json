@@ -331,6 +331,14 @@
       "description": "This file cannot be viewed in the browser. Download it using the button below and open with a suitable application.",
       "downloadFile": "Download file"
     },
+    "presentation": {
+      "title": "Presentation",
+      "loading": "Loading presentation...",
+      "loadError": "Failed to load presentation file. You can download and open it with PowerPoint.",
+      "download": "Download",
+      "noSlides": "No slides found in this file",
+      "emptySlide": "Empty slide"
+    },
     "excel": {
       "loading": "Loading Excel document...",
       "loadError": "Failed to load file. Download it using the button below.",

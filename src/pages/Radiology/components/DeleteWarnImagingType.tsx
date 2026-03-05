@@ -44,14 +44,14 @@ export const DeleteWarnImagingType = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
       <DialogContent>
         <DialogTitle>{t("deleteImagingType")}</DialogTitle>
         <DialogDescription>
           {t("deleteImagingTypeConfirm", { name: imagingType?.name })}
         </DialogDescription>
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             {t("cancel")}
           </Button>
           <Button variant="destructive" disabled={isLoading} onClick={handleDelete}>

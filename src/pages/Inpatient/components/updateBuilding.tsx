@@ -88,7 +88,7 @@ export const UpdatedBuilding = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!isUpdatedLoading) onOpenChange(v); }}>
       <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl max-h-[75vh] p-0 border-2 border-primary/30" aria-describedby={undefined}>
         <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl sm:text-2xl">
@@ -186,6 +186,7 @@ export const UpdatedBuilding = ({
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto order-2 sm:order-1"
+            disabled={isUpdatedLoading}
           >
             {t("cancel")}
           </Button>
