@@ -56,6 +56,7 @@ export interface MedicationGetByIdRes {
 		form: MedicationForm
 		dosage: string
 		is_active: boolean
+		prescription_count: number
 		created_at: string
 		updated_at: string
 	}

@@ -5,6 +5,7 @@ import {
 } from '@/app/api/medication/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import {
 	Card,
 	CardContent,
@@ -32,6 +33,11 @@ import {
 	PaginationPrevious,
 } from '@/components/ui/pagination'
 import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover'
+import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -50,7 +56,10 @@ import {
 } from '@/components/ui/table'
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest'
 import { usePermission } from '@/hooks/usePermission'
+import { cn } from '@/lib/utils'
+import { format } from 'date-fns'
 import {
+	Calendar as CalendarIcon,
 	Droplets,
 	Eye,
 	Filter,
@@ -64,6 +73,7 @@ import {
 	Trash2,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { DateRange } from 'react-day-picker'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -80,7 +90,7 @@ function Medication() {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [filterForm, setFilterForm] = useState<MedicationForm | 'all'>('all')
 	const [filterActive, setFilterActive] = useState<boolean | undefined>(
-		undefined
+		undefined,
 	)
 	const [page, setPage] = useState(1)
 	const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -92,6 +102,10 @@ function Medication() {
 	>(null)
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 	const [deleteId, setDeleteId] = useState<string | null>(null)
+	const [fromDate, setFromDate] = useState<Date | undefined>(undefined)
+	const [toDate, setToDate] = useState<Date | undefined>(undefined)
+	const [dateRange, setDateRange] = useState<DateRange | undefined>()
+	const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
 
 	const handleRequest = useHandleRequest()
 
@@ -112,10 +126,15 @@ function Medication() {
 		refetch()
 	}, [searchTerm, filterForm, filterActive])
 
-	const { data: selectedMedication } = MedicationApi.useGetOneMedicationQuery(
-		{ id: selectedMedicationId! },
-		{ skip: !selectedMedicationId }
-	)
+	const { data: selectedMedication, refetch: refetchMedication } =
+		MedicationApi.useGetOneMedicationQuery(
+			{
+				id: selectedMedicationId!,
+				form_date: fromDate ? format(fromDate, 'yyyy-MM-dd') : '',
+				to_date: toDate ? format(toDate, 'yyyy-MM-dd') : '',
+			},
+			{ skip: !selectedMedicationId },
+		)
 
 	const [createMedication, { isLoading: isCreating }] =
 		MedicationApi.useCreateMedicationMutation()
@@ -213,7 +232,25 @@ function Medication() {
 
 	const handleView = (id: string) => {
 		setSelectedMedicationId(id)
+		setFromDate(undefined)
+		setToDate(undefined)
+		setDateRange(undefined)
+		setIsDatePickerOpen(false)
 		setIsViewOpen(true)
+	}
+
+	// Apply date filter and refetch
+	const handleApplyDateFilter = () => {
+		if (dateRange?.from) {
+			setFromDate(dateRange.from)
+			setToDate(dateRange.to || dateRange.from)
+			setIsDatePickerOpen(false)
+			if (selectedMedicationId) {
+				setTimeout(() => {
+					refetchMedication()
+				}, 100)
+			}
+		}
 	}
 
 	const getFormIcon = (form: MedicationForm) => {
@@ -348,12 +385,12 @@ function Medication() {
 									filterActive === undefined
 										? 'all'
 										: filterActive
-										? 'active'
-										: 'inactive'
+											? 'active'
+											: 'inactive'
 								}
 								onValueChange={value =>
 									setFilterActive(
-										value === 'all' ? undefined : value === 'active'
+										value === 'all' ? undefined : value === 'active',
 									)
 								}
 							>
@@ -378,7 +415,9 @@ function Medication() {
 						{t('medicationsList')}
 					</CardTitle>
 					<CardDescription className='text-sm'>
-						{t('medicationsFound', { count: medicationsData?.pagination.total_items || 0 })}
+						{t('medicationsFound', {
+							count: medicationsData?.pagination.total_items || 0,
+						})}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -632,7 +671,9 @@ function Medication() {
 					{medicationsData && medicationsData.pagination.total_pages > 1 && (
 						<div className='mt-6 flex flex-col lg:flex-row items-center justify-between gap-4'>
 							<div className='flex items-center gap-2'>
-								<span className='text-sm text-muted-foreground'>{t('perPage')}:</span>
+								<span className='text-sm text-muted-foreground'>
+									{t('perPage')}:
+								</span>
 								<Select
 									value={itemsPerPage.toString()}
 									onValueChange={value => {
@@ -731,7 +772,7 @@ function Medication() {
 												<PaginationLink
 													onClick={() =>
 														setPage(
-															medicationsData.pagination?.total_pages || 1
+															medicationsData.pagination?.total_pages || 1,
 														)
 													}
 													className='cursor-pointer'
@@ -747,8 +788,8 @@ function Medication() {
 													setPage(prev =>
 														Math.min(
 															prev + 1,
-															medicationsData.pagination?.total_pages || 1
-														)
+															medicationsData.pagination?.total_pages || 1,
+														),
 													)
 												}
 												className={
@@ -764,7 +805,8 @@ function Medication() {
 							</div>
 
 							<div className='text-sm text-muted-foreground lg:min-w-[180px] text-center lg:text-right'>
-								{t('total')}: {medicationsData.pagination?.total_items || 0} {t('items')}
+								{t('total')}: {medicationsData.pagination?.total_items || 0}{' '}
+								{t('items')}
 							</div>
 						</div>
 					)}
@@ -1058,17 +1100,17 @@ function Medication() {
 										{selectedMedication.data.name}
 									</div>
 								</div>
-
 								<Separator />
-
 								<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
 									<div className='space-y-2'>
-										<Label className='text-muted-foreground'>{t('formLabel')}</Label>
+										<Label className='text-muted-foreground'>
+											{t('formLabel')}
+										</Label>
 										<div>
 											<Badge
 												variant='outline'
 												className={`gap-2 text-base px-3 py-1 ${getFormColor(
-													selectedMedication.data.form
+													selectedMedication.data.form,
 												)}`}
 											>
 												{getFormIcon(selectedMedication.data.form)}
@@ -1078,28 +1120,99 @@ function Medication() {
 									</div>
 
 									<div className='space-y-2'>
-										<Label className='text-muted-foreground'>{t('dosage')}</Label>
+										<Label className='text-muted-foreground'>
+											{t('dosage')}
+										</Label>
 										<div className='text-lg font-medium'>
 											{selectedMedication.data.dosage}
 										</div>
 									</div>
 								</div>
-
 								<Separator />
-
 								<div className='space-y-2'>
 									<Label className='text-muted-foreground'>{t('status')}</Label>
 									<div>
 										{selectedMedication.data.is_active ? (
-											<Badge className='bg-green-500 text-white'>✓ {t('active')}</Badge>
+											<Badge className='bg-green-500 text-white'>
+												✓ {t('active')}
+											</Badge>
 										) : (
 											<Badge variant='secondary'>○ {t('inactive')}</Badge>
 										)}
 									</div>
 								</div>
-
 								<Separator />
+								<div className='space-y-4'>
+									<div className='space-y-2'>
+										<Label className='text-muted-foreground font-semibold'>
+											{t('prescriptionCount')}
+										</Label>
+										<div className='text-2xl font-bold text-primary'>
+											{selectedMedication.data.prescription_count || 0}
+										</div>
+									</div>
 
+									<div className='space-y-3'>
+										<Label className='text-sm font-medium'>
+											{t('dateRange')}
+										</Label>
+										<Popover
+											open={isDatePickerOpen}
+											onOpenChange={setIsDatePickerOpen}
+										>
+											<PopoverTrigger asChild>
+												<Button
+													variant='outline'
+													className={cn(
+														'w-full justify-start text-left font-normal',
+														!dateRange?.from && 'text-muted-foreground',
+													)}
+												>
+													<CalendarIcon className='mr-2 h-4 w-4' />
+													{dateRange?.from && dateRange?.to
+														? `${format(dateRange.from, 'dd.MM.yyyy')} - ${format(dateRange.to, 'dd.MM.yyyy')}`
+														: dateRange?.from
+															? format(dateRange.from, 'dd.MM.yyyy')
+															: t('selectDateRange')}
+												</Button>
+											</PopoverTrigger>
+											<PopoverContent className='w-auto p-0' align='start'>
+												<div className='p-3 space-y-3'>
+													<Calendar
+														mode='range'
+														selected={dateRange}
+														onSelect={setDateRange}
+														numberOfMonths={2}
+														initialFocus
+													/>
+													<div className='flex gap-2 pt-2 border-t'>
+														<Button
+															variant='outline'
+															size='sm'
+															className='flex-1'
+															onClick={() => {
+																setDateRange(undefined)
+																setIsDatePickerOpen(false)
+															}}
+														>
+															{t('clear')}
+														</Button>
+														<Button
+															size='sm'
+															className='flex-1'
+															onClick={handleApplyDateFilter}
+															disabled={!dateRange?.from}
+														>
+															{t('apply')}
+														</Button>
+													</div>
+												</div>
+											</PopoverContent>
+										</Popover>
+									
+									</div>
+								</div>{' '}
+								<Separator />{' '}
 								<div className='grid grid-cols-2 gap-4'>
 									<div className='space-y-2'>
 										<Label className='text-muted-foreground'>
@@ -1107,7 +1220,7 @@ function Medication() {
 										</Label>
 										<div className='text-sm'>
 											{new Date(
-												selectedMedication.data.created_at
+												selectedMedication.data.created_at,
 											).toLocaleDateString('uz-UZ', {
 												year: 'numeric',
 												month: 'long',
@@ -1124,7 +1237,7 @@ function Medication() {
 										</Label>
 										<div className='text-sm'>
 											{new Date(
-												selectedMedication.data.updated_at
+												selectedMedication.data.updated_at,
 											).toLocaleDateString('uz-UZ', {
 												year: 'numeric',
 												month: 'long',
