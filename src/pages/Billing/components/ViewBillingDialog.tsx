@@ -3,6 +3,7 @@ import {
   useUpdatePaymentMutation,
   useUpdateServiceBillingMutation,
 } from '@/app/api/billingApi/billingApi';
+import { useGetAllSettingsQuery } from '@/app/api/settingsApi/settingsApi';
 import type {
   GetOneBillingRes,
   service_type as ServiceType,
@@ -103,6 +104,8 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
       skip: !billingId,
     }
   );
+
+  const { data: settingsData } = useGetAllSettingsQuery();
 
   const [updateService, { isLoading: isUpdating }] =
     useUpdateServiceBillingMutation();
@@ -246,7 +249,7 @@ const ViewBillingDialog = ({ isOpen, onClose, billingId }: Props) => {
     try {
       setIsPdfGenerating(true);
       toast.loading('PDF tayyorlanmoqda...');
-      await downloadBillingPDF(billing, t);
+      await downloadBillingPDF(billing, t, settingsData?.data);
       toast.dismiss();
       toast.success('Billing PDF yuklandi');
     } catch (error) {

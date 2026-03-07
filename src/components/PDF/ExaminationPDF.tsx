@@ -1,4 +1,6 @@
 import { useGetPatientByIdQuery } from '@/app/api/patientApi/patientApi';
+import { useGetAllSettingsQuery } from '@/app/api/settingsApi/settingsApi';
+import { Settings } from '@/app/api/settingsApi/types.d';
 import { Button } from '@/components/ui/button';
 import {
   Document,
@@ -104,8 +106,8 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   bold: {
-    fontWeight: 'bold',
     marginBottom: '1px',
+    lineHeight:1.6
   },
   signature: {
     marginTop: 8,
@@ -169,15 +171,38 @@ const styles = StyleSheet.create({
   },
 });
 
+interface PDFContactFooterProps {
+  settings?: Settings;
+}
+
+const PDFContactFooter: React.FC<PDFContactFooterProps> = ({ settings }) => {
+  if (!settings?.contacts || settings.contacts.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={[styles.patientInfo, { marginTop: 8 }]}>
+      <Text style={styles.sectionTitle}>Aloqa ma&apos;lumotlari</Text>
+      {settings.contacts.map((contact, index) => (
+        <View key={`${contact.full_name}-${contact.phone}-${index}`} style={{ marginBottom: 3 }}>
+            <Text style={styles.bold}>{contact.full_name || '-'} : {contact.phone || '-'}</Text>
+        </View>
+      ))}
+    </View>
+  );
+};
+
 // Barcha retseptlar uchun jadval ko'rinishida PDF komponenti
 interface AllPrescriptionsPDFProps {
   exam: any;
   prescriptions: any[];
+  settings?: Settings;
 }
 
 const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
   exam,
   prescriptions: propPrescriptions,
+  settings,
 }) => {
   // Sana formatini o'zgartirish
   const formatDate = (date: Date | string): string => {
@@ -363,6 +388,8 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
             Dushanba-Shanba
           </Text>
         </View>
+
+        <PDFContactFooter settings={settings} />
       </Page>
     </Document>
   );
@@ -371,9 +398,10 @@ const AllPrescriptionsPDF: React.FC<AllPrescriptionsPDFProps> = ({
 // Ko'rik umumiy ma'lumotlari uchun PDF komponenti
 interface ExaminationInfoPDFProps {
   exam: any;
+  settings?: Settings;
 }
 
-const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
+const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam, settings }) => {
   // Sana formatini o'zgartirish
   const formatDate = (date: Date | string): string => {
     const dateObj = new Date(date);
@@ -956,6 +984,8 @@ const ExaminationInfoPDF: React.FC<ExaminationInfoPDFProps> = ({ exam }) => {
             Dushanba-Shanba
           </Text>
         </View>
+
+        <PDFContactFooter settings={settings} />
       </Page>
     </Document>
   );
@@ -972,6 +1002,7 @@ const ExaminationInfoDownloadButton: React.FC<
 > = ({ exam, services: propServices }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const { t } = useTranslation('common');
+  const { data: settingsData } = useGetAllSettingsQuery();
   const patientId = exam?.patient_id?._id || exam?.patient_id;
   const { data: patientData } = useGetPatientByIdQuery(patientId, {
     skip: !patientId,
@@ -1003,7 +1034,7 @@ const ExaminationInfoDownloadButton: React.FC<
       };
 
       const blob = await pdf(
-        <ExaminationInfoPDF exam={examWithPatient} />
+        <ExaminationInfoPDF exam={examWithPatient} settings={settingsData?.data} />
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -1055,6 +1086,7 @@ const AllPrescriptionsDownloadButton: React.FC<
 > = ({ exam, prescriptions: propPrescriptions }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const { t } = useTranslation('common');
+  const { data: settingsData } = useGetAllSettingsQuery();
 
   // Use prop prescriptions or fall back to exam.prescriptions
   // If prescriptions is array of GetOnePresc objects, extract items from each
@@ -1080,7 +1112,11 @@ const AllPrescriptionsDownloadButton: React.FC<
       setIsGenerating(true);
 
       const blob = await pdf(
-        <AllPrescriptionsPDF exam={exam} prescriptions={prescriptions} />
+        <AllPrescriptionsPDF
+          exam={exam}
+          prescriptions={prescriptions}
+          settings={settingsData?.data}
+        />
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -1124,9 +1160,10 @@ const AllPrescriptionsDownloadButton: React.FC<
 // Xizmatlar uchun PDF komponenti
 interface ServicesPDFProps {
   exam: any;
+  settings?: Settings;
 }
 
-const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
+const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam, settings }) => {
   const formatDate = (date: Date | string): string => {
     const dateObj = new Date(date);
     return dateObj.toLocaleDateString('uz-UZ', {
@@ -1403,6 +1440,8 @@ const ServicesPDF: React.FC<ServicesPDFProps> = ({ exam }) => {
             Dushanba-Shanba
           </Text>
         </View>
+
+        <PDFContactFooter settings={settings} />
       </Page>
     </Document>
   );
@@ -1420,6 +1459,7 @@ const ServicesDownloadButton: React.FC<ServicesDownloadButtonProps> = ({
 }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const { t } = useTranslation('common');
+  const { data: settingsData } = useGetAllSettingsQuery();
 
   // Flatten services if they contain items arrays (GetOneServiceRes format)
   let allServices: any[] = propServices || exam.services || [];
@@ -1447,7 +1487,9 @@ const ServicesDownloadButton: React.FC<ServicesDownloadButtonProps> = ({
 
       // Create exam object with services from props
       const examWithServices = { ...exam, services: allServices };
-      const blob = await pdf(<ServicesPDF exam={examWithServices} />).toBlob();
+      const blob = await pdf(
+        <ServicesPDF exam={examWithServices} settings={settingsData?.data} />
+      ).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -1491,6 +1533,7 @@ const ServicesDownloadButton: React.FC<ServicesDownloadButtonProps> = ({
 interface NeurologicStatusPDFProps {
   exam: any;
   neurologic: any;
+  settings?: Settings;
 }
 
 const neurologicFieldLabels: Record<string, string> = {
@@ -1540,6 +1583,7 @@ const neurologicFieldOrder = [
 const NeurologicStatusPDF: React.FC<NeurologicStatusPDFProps> = ({
   exam,
   neurologic,
+  settings,
 }) => {
   const formatDate = (date: Date | string): string => {
     const dateObj = new Date(date);
@@ -1686,6 +1730,8 @@ const NeurologicStatusPDF: React.FC<NeurologicStatusPDFProps> = ({
             })}
           </View>
         </View>
+
+        <PDFContactFooter settings={settings} />
       </Page>
     </Document>
   );
@@ -1701,6 +1747,7 @@ const NeurologicStatusDownloadButton: React.FC<
 > = ({ exam, neurologic }) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const { t } = useTranslation('common');
+  const { data: settingsData } = useGetAllSettingsQuery();
 
   const handleDownloadNeurologicStatus = async () => {
     if (!neurologic) {
@@ -1712,7 +1759,11 @@ const NeurologicStatusDownloadButton: React.FC<
       setIsGenerating(true);
 
       const blob = await pdf(
-        <NeurologicStatusPDF exam={exam} neurologic={neurologic} />
+        <NeurologicStatusPDF
+          exam={exam}
+          neurologic={neurologic}
+          settings={settingsData?.data}
+        />
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');

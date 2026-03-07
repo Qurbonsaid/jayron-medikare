@@ -28,6 +28,26 @@ import { useNavigate } from 'react-router-dom';
 import NewPatient from './components/NewPatient';
 import { useTranslation } from 'react-i18next';
 
+interface Diagnosis {
+  name: string;
+}
+
+interface PatientDiagnosis {
+  doctor_id: {
+    fullname: string;
+  };
+  diagnosis_id: Diagnosis | Diagnosis[] | null;
+}
+
+interface Patient {
+  _id: string;
+  patient_id: string;
+  fullname: string;
+  phone: string;
+  gender: 'male' | 'female';
+  diagnosis?: PatientDiagnosis | null;
+}
+
 const Patients = () => {
   const { t } = useTranslation('patients');
   const { t: tCommon } = useTranslation('common');
@@ -52,7 +72,6 @@ const Patients = () => {
   const {
     data: patientdata,
     isLoading,
-    isFetching,
   } = useGetAllPatientQuery({
     page: currentPage,
     limit: itemsPerPage,
@@ -387,7 +406,9 @@ const Patients = () => {
                             : '-'}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4 text-xs xl:text-sm '>
-                          {patient?.diagnosis?.diagnosis_id?.name || t('none')}
+                          {Array.isArray(patient.diagnosis?.diagnosis_id) 
+                            ? (patient.diagnosis.diagnosis_id[0] as Diagnosis)?.name || t('none')
+                            : (patient.diagnosis?.diagnosis_id as Diagnosis | null)?.name || t('none')}
                         </td>
                         <td className='px-4 xl:px-6 py-3 xl:py-4'>
                           <div className='flex justify-center'>

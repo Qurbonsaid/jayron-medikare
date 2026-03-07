@@ -2,6 +2,7 @@ import {
   useGetAllSettingsQuery,
   useUpdateSettingsMutation,
 } from '@/app/api/settingsApi/settingsApi';
+import type { Settings } from '@/app/api/settingsApi/types';
 import { useUploadCreateMutation } from '@/app/api/upload/uploadApi';
 import { User, UserCreateResponse, UserId } from '@/app/api/userApi/types';
 import {
@@ -43,37 +44,9 @@ import { userSchema } from '@/validation/validationUser';
 import { Edit, Plus, Trash2, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-export type Settings = {
-  clinic_name: string;
-  address: string;
-  phone: string;
-  // email: string
-  work_start_time: string;
-  work_end_time: string;
-  logo_path: string;
-};
-
 const Settings = () => {
-  const auditLogs = [
-    {
-      timestamp: '07.10.2025 14:32',
-      user: 'Др. Алиев А.Р.',
-      action: 'Яратилди',
-      module: 'Янги ташриф',
-      ip: '192.168.1.45',
-    },
-    {
-      timestamp: '07.10.2025 14:15',
-      user: 'Ресепшн: Усмонова М.',
-      action: 'Янгиланди',
-      module: 'Навбат',
-      ip: '192.168.1.32',
-    },
-  ];
-  const navigate = useNavigate();
   const { t } = useTranslation('settings');
   const handleRequest = useHandleRequest();
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -95,7 +68,7 @@ const Settings = () => {
 
   // --- API HOOKLAR ---
   const [createUser] = useCreateUserMutation();
-  const [updateUser] = useUpdateUserMutation(); // ✅ PUT endpoint
+  const [updateUser] = useUpdateUserMutation();
   const { data: usersData, error: usersError } = useGetUsersQuery({
     page,
     limit,
@@ -118,7 +91,6 @@ const Settings = () => {
   const [form, setForm] = useState<UserCreateResponse>({
     fullname: '',
     username: '',
-    // email: '',
     phone: '',
     password: '',
     role: '',
@@ -186,42 +158,6 @@ const Settings = () => {
           license_number: '',
         });
       },
-      // 	console.error('Parameter save error:', error)
-
-      // 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
-      // 	if (error?.error?.msg) {
-      // 		toast.error(error.error.msg)
-      // 		return
-      // 	}
-
-      // 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
-      // 	if (error?.data?.errors) {
-      // 		const backendErrors: Record<string, string> = {}
-
-      // 		if (Array.isArray(error.data.errors)) {
-      // 			error.data.errors.forEach((err: any) => {
-      // 				if (err.field && err.message) {
-      // 					backendErrors[err.field] = err.message
-      // 				}
-      // 			})
-      // 		} else if (typeof error.data.errors === 'object') {
-      // 			Object.entries(error.data.errors).forEach(([key, value]) => {
-      // 				backendErrors[key] = Array.isArray(value)
-      // 					? value[0]
-      // 					: String(value)
-      // 			})
-      // 		}
-
-      // 		if (Object.keys(backendErrors).length > 0) {
-      // 			setErrors(prev => ({ ...prev, ...backendErrors }))
-      // 		}
-      // 	}
-
-      // 	// 3️⃣ Fallback: error.msg string bo‘lsa
-      // 	else if (typeof error?.msg === 'string') {
-      // 		toast.error(error.msg)
-      // 	}
-      // },
       onError: (err) => {
         toast.error(err?.data?.error?.msg);
       },
@@ -344,47 +280,6 @@ const Settings = () => {
           setIsUserModalOpen(false);
           resetForm();
         },
-        // 	console.error('Parameter save error:', error)
-
-        // 	// 1️⃣ Avval backenddan structured error obyektni tekshirish
-        // 	if (error?.error?.msg) {
-        // 		toast.error(error.error.msg)
-        // 		return
-        // 	}
-
-        // 	if (error?.msg) {
-        // 		toast.error(error.msg)
-        // 		return
-        // 	}
-
-        // 	// 2️⃣ Avvalgi errors object/arrayni tekshirish
-        // 	if (error?.data?.errors) {
-        // 		const backendErrors: Record<string, string> = {}
-
-        // 		if (Array.isArray(error.data.errors)) {
-        // 			error.data.errors.forEach((err: any) => {
-        // 				if (err.field && err.message) {
-        // 					backendErrors[err.field] = err.message
-        // 				}
-        // 			})
-        // 		} else if (typeof error.data.errors === 'object') {
-        // 			Object.entries(error.data.errors).forEach(([key, value]) => {
-        // 				backendErrors[key] = Array.isArray(value)
-        // 					? value[0]
-        // 					: String(value)
-        // 			})
-        // 		}
-
-        // 		if (Object.keys(backendErrors).length > 0) {
-        // 			setErrors(prev => ({ ...prev, ...backendErrors }))
-        // 		}
-        // 	}
-
-        // 	// 3️⃣ Fallback: error.msg string bo‘lsa
-        // 	else if (typeof error?.msg === 'string') {
-        // 		toast.error(error.msg)
-        // 	}
-        // },
         onError: (err) => {
           toast.error(err?.data?.error?.msg);
         },
@@ -1128,149 +1023,6 @@ const Settings = () => {
               </div>
             </Card>
           </TabsContent>
-
-          {/* Notifications Tab */}
-          {/* <TabsContent value='notifications' className='space-y-3 sm:space-y-4'>
-						<Card className='p-4 sm:p-5 lg:p-6'>
-							<h2 className='text-lg sm:text-xl font-semibold mb-4 sm:mb-6'>
-								SMS созламалари
-							</h2>
-							<div className='space-y-3 sm:space-y-4 max-w-2xl'>
-								<div>
-									<Label className='text-xs sm:text-sm'>Провайдер</Label>
-									<Select defaultValue='playmobile'>
-										<SelectTrigger className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem
-												value='playmobile'
-												className='text-xs sm:text-sm'
-											>
-												Playmobile
-											</SelectItem>
-											<SelectItem value='ucell' className='text-xs sm:text-sm'>
-												Ucell
-											</SelectItem>
-										</SelectContent>
-									</Select>
-								</div>
-								<div>
-									<Label className='text-xs sm:text-sm'>API калит</Label>
-									<Input
-										type='password'
-										placeholder='••••••••••••'
-										className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-									/>
-								</div>
-								<Button
-									variant='outline'
-									className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
-								>
-									Тест SMS юбориш
-								</Button>
-							</div>
-						</Card>
-						<Card className='p-4 sm:p-5 lg:p-6'>
-							<h2 className='text-lg sm:text-xl font-semibold mb-4 sm:mb-6'>
-								Автоматик билдиришномалар
-							</h2>
-							<div className='space-y-3 sm:space-y-4 max-w-2xl'>
-								<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4'>
-									<div className='flex-1'>
-										<Label className='text-xs sm:text-sm'>
-											Таҳлил натижалари тайёр
-										</Label>
-										<p className='text-[10px] sm:text-xs text-muted-foreground mt-1'>
-											Лаборатория натижалари тайёр бўлганда хабар бериш
-										</p>
-									</div>
-									<Switch defaultChecked />
-								</div>
-							</div>
-						</Card>
-					</TabsContent> */}
-
-          {/* Audit Log Tab */}
-          {/* <TabsContent value='audit' className='space-y-3 sm:space-y-4'>
-						<Card className='p-4 sm:p-5 lg:p-6'>
-							<div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3'>
-								<h2 className='text-lg sm:text-xl font-semibold'>
-									Аудит тарихи
-								</h2>
-								<Button
-									variant='outline'
-									size='sm'
-									className='w-full sm:w-auto text-xs sm:text-sm'
-								>
-									CSV юклаш
-								</Button>
-							</div>
-							<div className='mb-3 sm:mb-4'>
-								<div className='relative'>
-									<Search className='absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground' />
-									<Input
-										placeholder='Фойдаланувчи қидириш...'
-										className='pl-8 sm:pl-10 text-xs sm:text-sm h-9 sm:h-10'
-									/>
-								</div>
-							</div>
-							<div className='overflow-x-auto -mx-4 sm:mx-0'>
-								<div className='inline-block min-w-full align-middle'>
-									<table className='min-w-full'>
-										<thead>
-											<tr className='border-b'>
-												<th className='text-left py-2 sm:py-3 px-2 sm:px-4 font-medium text-muted-foreground text-[10px] sm:text-xs lg:text-sm whitespace-nowrap'>
-													Вақт
-												</th>
-												<th className='text-left py-2 sm:py-3 px-2 sm:px-4 font-medium text-muted-foreground text-[10px] sm:text-xs lg:text-sm whitespace-nowrap'>
-													Фойдаланувчи
-												</th>
-												<th className='text-left py-2 sm:py-3 px-2 sm:px-4 font-medium text-muted-foreground text-[10px] sm:text-xs lg:text-sm whitespace-nowrap'>
-													Ҳаракат
-												</th>
-												<th className='text-left py-2 sm:py-3 px-2 sm:px-4 font-medium text-muted-foreground text-[10px] sm:text-xs lg:text-sm whitespace-nowrap'>
-													Модул
-												</th>
-												<th className='text-left py-2 sm:py-3 px-2 sm:px-4 font-medium text-muted-foreground text-[10px] sm:text-xs lg:text-sm whitespace-nowrap'>
-													IP манзил
-												</th>
-											</tr>
-										</thead>
-										<tbody>
-											{auditLogs.map((log, index) => (
-												<tr
-													key={index}
-													className='border-b hover:bg-muted/50 transition-colors'
-												>
-													<td className='py-2 sm:py-3 px-2 sm:px-4 text-[10px] sm:text-xs lg:text-sm text-muted-foreground whitespace-nowrap'>
-														{log.timestamp}
-													</td>
-													<td className='py-2 sm:py-3 px-2 sm:px-4 font-medium text-[10px] sm:text-xs lg:text-sm whitespace-nowrap'>
-														{log.user}
-													</td>
-													<td className='py-2 sm:py-3 px-2 sm:px-4'>
-														<Badge
-															variant='outline'
-															className='text-[9px] sm:text-[10px] px-1.5 py-0.5'
-														>
-															{log.action}
-														</Badge>
-													</td>
-													<td className='py-2 sm:py-3 px-2 sm:px-4 text-[10px] sm:text-xs lg:text-sm whitespace-nowrap'>
-														{log.module}
-													</td>
-													<td className='py-2 sm:py-3 px-2 sm:px-4 text-[10px] sm:text-xs lg:text-sm text-muted-foreground font-mono whitespace-nowrap'>
-														{log.ip}
-													</td>
-												</tr>
-											))}
-										</tbody>
-									</table>
-								</div>
-							</div>
-						</Card>
-					</TabsContent> */}
         </Tabs>
       </main>
 
@@ -1334,20 +1086,6 @@ const Settings = () => {
               </div>
             </div>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-              {/* <div>
-								<Label className='text-xs sm:text-sm'>Email</Label>
-								<Input
-									value={form.email}
-									onChange={e => handleChange('email', e.target.value)}
-									placeholder='Email манзилингизни киритинг'
-									className='text-xs sm:text-sm h-9 sm:h-10 mt-1.5'
-								/>
-								{errorsUser.email && (
-									<p className='text-red-500 text-xs sm:text-sm mt-1'>
-										{errorsUser.email}
-									</p>
-								)}
-							</div> */}
               <div>
                 <Label className='text-xs sm:text-sm'>{t('phone')}</Label>
                 <Input
