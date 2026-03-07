@@ -42,7 +42,7 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import PatientPDFModal from '../../components/PDF/PatientPDF';
+import PatientPDFModal from '../../components/PDF/PatientPDFModal';
 import EditPatientModal from './components/EditPatientModal';
 import NewVisitDialog from './components/NewVisitDialog';
 
