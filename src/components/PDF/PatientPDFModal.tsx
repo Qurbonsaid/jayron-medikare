@@ -1,4 +1,6 @@
 import { Button } from '@/components/ui/button';
+import { useGetAllSettingsQuery } from '@/app/api/settingsApi/settingsApi';
+import { Settings } from '@/app/api/settingsApi/types.d';
 import {
   Dialog,
   DialogContent,
@@ -174,11 +176,13 @@ const formatDate = (date: Date | string): string => {
 interface PatientPDFDocumentProps {
   patient: any;
   exams?: any[];
+  settings?: Settings;
 }
 
 const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
   patient,
   exams = [],
+  settings,
 }) => (
   <Document>
     <Page size='A4' style={styles.page}>
@@ -214,6 +218,9 @@ const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
           </Text>
           <Text style={{ width: '25%', fontSize: 8 }}>
             Jinsi: {patient.gender === 'male' ? 'Erkak' : 'Ayol'}
+          </Text>
+          <Text style={{ width: '25%', fontSize: 8 }}>
+            Email: {patient.email || '-'}
           </Text>
         </View>
 
@@ -426,6 +433,22 @@ const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
           )}
         </View>
       )}
+
+      {settings?.contacts && settings.contacts.length > 0 && (
+        <View style={styles.patientInfo}>
+          <Text style={styles.sectionTitle}>Aloqa ma&apos;lumotlari</Text>
+          {settings.contacts.map((contact, index) => (
+            <View
+              key={`${contact.full_name}-${contact.phone}-${index}`}
+              style={{ marginBottom: 3 }}
+            >
+              <Text style={styles.bold}>
+                {contact.full_name || '-'} : {contact.phone || '-'}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
     </Page>
   </Document>
 );
@@ -444,6 +467,7 @@ const PatientPDFModal = ({
   exams = [],
 }: PatientPDFModalProps) => {
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const { data: settingsData } = useGetAllSettingsQuery();
 
   const generatePDF = async () => {
     if (!patient) {
@@ -456,7 +480,11 @@ const PatientPDFModal = ({
       toast.loading('PDF tayyorlanmoqda...');
 
       const blob = await pdf(
-        <PatientPDFDocument patient={patient} exams={exams} />
+        <PatientPDFDocument
+          patient={patient}
+          exams={exams}
+          settings={settingsData?.data}
+        />
       ).toBlob();
 
       const url = URL.createObjectURL(blob);

@@ -382,10 +382,10 @@ const NewBilling = ({ isInvoiceModalOpen, setIsInvoiceModalOpen }: Props) => {
     }
 
     const paymentAmountNum = parseFloat(paymentAmount || '0');
-    if (paymentAmountNum <= 0 || isNaN(paymentAmountNum)) {
-      toast.error(t('validation.enterPaymentAmount'));
-      return;
-    }
+    // if (paymentAmountNum <= 0 || isNaN(paymentAmountNum)) {
+    //   toast.error(t('validation.enterPaymentAmount'));
+    //   return;
+    // }
 
     const grandTotal = calculateGrandTotal();
     if (paymentAmountNum > grandTotal) {

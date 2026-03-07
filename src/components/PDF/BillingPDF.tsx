@@ -1,4 +1,5 @@
 import { GetOneBillingRes } from '@/app/api/billingApi/types';
+import { Settings } from '@/app/api/settingsApi/types.d';
 import { Document, Font, Page, StyleSheet, Text, View, pdf } from '@react-pdf/renderer';
 
 Font.register({
@@ -175,9 +176,10 @@ const renderEmpty = (text: string) => (
 interface BillingPDFDocumentProps {
   billing: BillingData;
   t: (key: string) => string;
+  settings?: Settings;
 }
 
-const BillingPDFDocument = ({ billing, t }: BillingPDFDocumentProps) => {
+const BillingPDFDocument = ({ billing, t, settings }: BillingPDFDocumentProps) => {
   const examination = billing.examination_id as ExaminationWithOptionalServices;
   const diagnosisText = examination?.diagnosis
     ? `${examination.diagnosis.name || '-'}${
@@ -433,14 +435,37 @@ const BillingPDFDocument = ({ billing, t }: BillingPDFDocumentProps) => {
           </View>
         </View>
 
+        {settings?.contacts && settings.contacts.length > 0 && (
+          <View style={[styles.section, { marginTop: 12 }]}>
+            <Text style={styles.sectionTitle}>Aloqa ma&apos;lumotlari</Text>
+            {settings.contacts.map((contact, index) => (
+              <View key={index} style={{ marginBottom: 6 }}>
+                <Text style={{ fontSize: 9, marginBottom: 2 }}>
+                  <Text style={styles.label}>Ism: </Text>
+                  {contact.full_name || '-'}
+                </Text>
+                <Text style={{ fontSize: 9 }}>
+                  <Text style={styles.label}>Telefon: </Text>
+                  {contact.phone || '-'}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
 
       </Page>
     </Document>
   );
 };
 
-export const downloadBillingPDF = async (billing: BillingData, t: (key: string) => string) => {
-  const blob = await pdf(<BillingPDFDocument billing={billing} t={t} />).toBlob();
+export const downloadBillingPDF = async (
+  billing: BillingData,
+  t: (key: string) => string,
+  settings?: Settings
+) => {
+  const blob = await pdf(
+    <BillingPDFDocument billing={billing} t={t} settings={settings} />
+  ).toBlob();
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

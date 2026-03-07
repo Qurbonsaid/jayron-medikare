@@ -52,7 +52,6 @@ const Patients = () => {
   const {
     data: patientdata,
     isLoading,
-    isFetching,
   } = useGetAllPatientQuery({
     page: currentPage,
     limit: itemsPerPage,
