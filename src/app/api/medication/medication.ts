@@ -29,11 +29,11 @@ export const MedicationApi = baseApi.injectEndpoints({
 		}),
 		getOneMedication: builder.query<
 			MedicationGetByIdRes,
-			{ id: string; form_date?: string; to_date?: string }
+			{ id: string; from_date?: string; to_date?: string }
 		>({
-			query: ({ id, form_date, to_date }) => {
+			query: ({ id, from_date, to_date }) => {
 				const params: Record<string, string> = {}
-				if (form_date) params.form_date = form_date
+				if (from_date) params.from_date = from_date
 				if (to_date) params.to_date = to_date
 
 				return {

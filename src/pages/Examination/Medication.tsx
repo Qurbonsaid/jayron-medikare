@@ -130,7 +130,7 @@ function Medication() {
 		MedicationApi.useGetOneMedicationQuery(
 			{
 				id: selectedMedicationId!,
-				form_date: fromDate ? format(fromDate, 'yyyy-MM-dd') : '',
+				from_date: fromDate ? format(fromDate, 'yyyy-MM-dd') : '',
 				to_date: toDate ? format(toDate, 'yyyy-MM-dd') : '',
 			},
 			{ skip: !selectedMedicationId },
@@ -1209,7 +1209,6 @@ function Medication() {
 												</div>
 											</PopoverContent>
 										</Popover>
-									
 									</div>
 								</div>{' '}
 								<Separator />{' '}
