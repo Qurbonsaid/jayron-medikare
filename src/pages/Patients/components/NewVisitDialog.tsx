@@ -122,6 +122,7 @@ const NewVisitDialog = ({
   }
   const [medications, setMedications] = useState<MedicationItem[]>([]);
   const [medicationSearch, setMedicationSearch] = useState('');
+  const [cachedMedications, setCachedMedications] = useState<any[]>([]); // Cache for populated medications from templates
 
   // Service states
   interface ServiceDay {
@@ -137,6 +138,7 @@ const NewVisitDialog = ({
   }
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [serviceSearch, setServiceSearch] = useState('');
+  const [cachedServices, setCachedServices] = useState<any[]>([]); // Cache for populated services from templates
   const [serviceDuration, setServiceDuration] = useState<number>(7);
   const [serviceStartDate, setServiceStartDate] = useState<Date | null>(
     new Date()
@@ -224,8 +226,35 @@ const NewVisitDialog = ({
       ...(serviceTemplateSearch && { search: serviceTemplateSearch }),
     });
 
-  const availableMedications = medicationsData?.data || [];
-  const availableServices = servicesData?.data || [];
+  // Merge API medications with cached medications from templates
+  const availableMedications = React.useMemo(() => {
+    const apiMeds = medicationsData?.data || [];
+    const combined = [...apiMeds];
+    
+    // Add cached medications that are not already in the list
+    cachedMedications.forEach((cached) => {
+      if (!combined.find((m) => m._id === cached._id)) {
+        combined.push(cached);
+      }
+    });
+    
+    return combined;
+  }, [medicationsData, cachedMedications]);
+
+  // Merge API services with cached services from templates
+  const availableServices = React.useMemo(() => {
+    const apiServices = servicesData?.data || [];
+    const combined = [...apiServices];
+    
+    // Add cached services that are not already in the list
+    cachedServices.forEach((cached) => {
+      if (!combined.find((s) => s._id === cached._id)) {
+        combined.push(cached);
+      }
+    });
+    
+    return combined;
+  }, [servicesData, cachedServices]);
 
   const patients = patientsData?.data || [];
   const doctors = doctorsData?.data || [];
@@ -320,8 +349,12 @@ const NewVisitDialog = ({
         setSearchQuery('');
         setShowErrors(false);
         setTreatmentType('ambulator');
+        setSubjective('');
+        setDescription('');
         setMedications([]);
         setServices([]);
+        setCachedMedications([]);
+        setCachedServices([]);
         setMedicationSearch('');
         setServiceSearch('');
         setSelectedPrescriptionTemplate('');
@@ -520,6 +553,23 @@ const NewVisitDialog = ({
     const template = prescriptionTemplates.find((t) => t._id === templateId);
     if (!template) return;
 
+    // Cache populated medications from template
+    const populatedMedications = template.items
+      .filter((item) => typeof item.medication_id === 'object' && item.medication_id)
+      .map((item) => item.medication_id);
+    
+    if (populatedMedications.length > 0) {
+      setCachedMedications((prev) => {
+        const combined = [...prev];
+        populatedMedications.forEach((med: any) => {
+          if (!combined.find((m) => m._id === med._id)) {
+            combined.push(med);
+          }
+        });
+        return combined;
+      });
+    }
+
     // Add medications from template - replace existing ones
     const templateMedications: MedicationItem[] = template.items.map((item) => {
       const medicationId =
@@ -549,6 +599,23 @@ const NewVisitDialog = ({
 
     const template = serviceTemplates.find((t) => t._id === templateId);
     if (!template) return;
+
+    // Cache populated services from template
+    const populatedServices = template.items
+      .filter((item) => typeof item.service_type_id === 'object' && item.service_type_id)
+      .map((item) => item.service_type_id);
+    
+    if (populatedServices.length > 0) {
+      setCachedServices((prev) => {
+        const combined = [...prev];
+        populatedServices.forEach((srv: any) => {
+          if (!combined.find((s) => s._id === srv._id)) {
+            combined.push(srv);
+          }
+        });
+        return combined;
+      });
+    }
 
     // Set duration from template
     if (template.duration) {
@@ -888,7 +955,7 @@ const NewVisitDialog = ({
                 </div>
               </div>
 
-                          {/* Subjective - Complaints */}
+              {/* Subjective - Complaints */}
               <div className='space-y-2 shadow-sm border p-2 rounded-lg'>
                 <Label className='flex items-center gap-2'>
                   <FileText className='w-4 h-4 text-primary' />
