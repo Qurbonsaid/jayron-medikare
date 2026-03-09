@@ -13,5 +13,4 @@ export { PDFContactFooter } from './PDFContactFooter';
 export { styles, formatPhone, formatDate, getDiagnosis, getTreatmentType, getTotalPrice, getStatus, getAge } from './PDFUtils';
 
 // Default export for backward compatibility
-import { AllPrescriptionsDownloadButton } from './AllPrescriptionsPDF';
-export default AllPrescriptionsDownloadButton;
+export { AllPrescriptionsDownloadButton as default };
