@@ -440,13 +440,8 @@ const BillingPDFDocument = ({ billing, t, settings }: BillingPDFDocumentProps) =
             <Text style={styles.sectionTitle}>Aloqa ma&apos;lumotlari</Text>
             {settings.contacts.map((contact, index) => (
               <View key={index} style={{ marginBottom: 6 }}>
-                <Text style={{ fontSize: 9, marginBottom: 2 }}>
-                  <Text style={styles.label}>Ism: </Text>
-                  {contact.full_name || '-'}
-                </Text>
                 <Text style={{ fontSize: 9 }}>
-                  <Text style={styles.label}>Telefon: </Text>
-                  {contact.phone || '-'}
+                  {contact.full_name || '-'}: {contact.phone || '-'}
                 </Text>
               </View>
             ))}

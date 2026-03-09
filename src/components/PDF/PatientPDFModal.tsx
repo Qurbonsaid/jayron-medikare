@@ -440,10 +440,9 @@ const PatientPDFDocument: React.FC<PatientPDFDocumentProps> = ({
           {settings.contacts.map((contact, index) => (
             <View
               key={`${contact.full_name}-${contact.phone}-${index}`}
-              style={{ marginBottom: 3 }}
             >
               <Text style={styles.bold}>
-                {contact.full_name || '-'} : {contact.phone || '-'}
+                {contact.full_name || '-'}: {contact.phone || '-'}
               </Text>
             </View>
           ))}
