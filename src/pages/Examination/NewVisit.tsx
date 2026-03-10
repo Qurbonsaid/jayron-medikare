@@ -10,6 +10,9 @@ import { useTranslation } from 'react-i18next';
 
 import { useCreateExamWithPrescriptionAndServiceMutation } from '@/app/api/examinationApi/examinationApi';
 import { useGetAllMedicationsQuery } from '@/app/api/medication/medication';
+import { useGetAllPrecriptionTemplateQuery } from '@/app/api/prescriptionTemplateApi/prescriptionTemplateApi';
+import { useGetAllServiceTemplateQuery } from '@/app/api/serviceTemplateApi/serviceTemplateApi';
+import type { GetServiceResponse } from '@/app/api/serviceTemplateApi/type';
 import {
   useGetAllPatientQuery,
   useGetPatientByIdQuery,
@@ -21,6 +24,13 @@ import { Card } from '@/components/ui/card';
 import { ComboBox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useHandleRequest } from '@/hooks/Handle_Request/useHandleRequest';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -42,6 +52,24 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { calculateAge } from './components/calculateAge';
+
+// Template interfaces
+interface TemplateMedicationItem {
+  medication_id?: { _id: string; name: string; form: string } | string | null;
+  frequency?: number;
+  duration?: number;
+  instructions?: string;
+  addons?: string;
+  _id: string;
+}
+
+interface PrescriptionTemplate {
+  _id: string;
+  name: string;
+  items: TemplateMedicationItem[];
+  created_at: Date;
+  updated_at: Date;
+}
 
 const NewVisit = () => {
   const { t } = useTranslation('examinations');
@@ -125,6 +153,30 @@ const NewVisit = () => {
   const [hasMoreDoctors, setHasMoreDoctors] = useState(true);
   const [isLoadingMoreDoctors, setIsLoadingMoreDoctors] = useState(false);
 
+  // Template states
+  const [selectedPrescriptionTemplate, setSelectedPrescriptionTemplate] =
+    useState('');
+  const [prescriptionTemplateSearch, setPrescriptionTemplateSearch] =
+    useState('');
+  const [prescriptionTemplatePage, setPrescriptionTemplatePage] = useState(1);
+  const [prescriptionTemplates, setPrescriptionTemplates] = useState<
+    PrescriptionTemplate[]
+  >([]);
+  const [hasMorePrescriptionTemplates, setHasMorePrescriptionTemplates] =
+    useState(true);
+
+  const [selectedServiceTemplate, setSelectedServiceTemplate] = useState('');
+  const [serviceTemplateSearch, setServiceTemplateSearch] = useState('');
+  const [serviceTemplatePage, setServiceTemplatePage] = useState(1);
+  const [serviceTemplates, setServiceTemplates] = useState<GetServiceResponse[]>(
+    []
+  );
+  const [hasMoreServiceTemplates, setHasMoreServiceTemplates] = useState(true);
+
+  // Cache for populated medications/services from templates
+  const [cachedMedications, setCachedMedications] = useState<any[]>([]);
+  const [cachedServices, setCachedServices] = useState<any[]>([]);
+
   // Get patient ID from navigation state
   const patientIdFromState = location.state?.patientId;
 
@@ -167,8 +219,58 @@ const NewVisit = () => {
       limit: 20,
     } as any);
 
+  // Fetch prescription templates
+  const {
+    data: prescriptionTemplatesData,
+    isFetching: isFetchingPrescriptionTemplates,
+  } = useGetAllPrecriptionTemplateQuery({
+    page: prescriptionTemplatePage,
+    limit: 20,
+    ...(prescriptionTemplateSearch && { search: prescriptionTemplateSearch }),
+  });
+
+  // Fetch service templates
+  const { data: serviceTemplatesData, isFetching: isFetchingServiceTemplates } =
+    useGetAllServiceTemplateQuery({
+      page: serviceTemplatePage,
+      limit: 20,
+      ...(serviceTemplateSearch && { search: serviceTemplateSearch }),
+    });
+
   const patients = allPatients;
   const doctors = allDoctors;
+
+  // Merge API medications with cached medications from templates
+  const availableMedications = React.useMemo(() => {
+    const apiMeds = medicationsData?.data || [];
+    const combined = [...apiMeds];
+    
+    // Add cached medications that are not already in the list
+    cachedMedications.forEach((cached) => {
+      if (!combined.find((m: any) => m._id === cached._id)) {
+        combined.push(cached);
+      }
+    });
+    
+    return combined;
+  }, [medicationsData, cachedMedications]);
+
+  // Merge API services with cached services from templates
+  const availableServices = React.useMemo(() => {
+    const apiServices = servicesData?.data || [];
+    const combined = [...apiServices];
+    
+    // Add cached services that are not already in the list
+    cachedServices.forEach((cached) => {
+      if (!combined.find((s: any) => s._id === cached._id)) {
+        combined.push(cached);
+      }
+    });
+    
+    return combined;
+  }, [servicesData, cachedServices]);
+
+  const TEMPLATE_PAGE_SIZE = 20;
 
   // Reset medication pagination when search changes
   useEffect(() => {
@@ -179,7 +281,7 @@ const NewVisit = () => {
 
   // Build medicationOptions incrementally when new data arrives
   useEffect(() => {
-    const data = medicationsData?.data || [];
+    const data = availableMedications;
     const totalPages = medicationsData?.pagination?.total_pages || 1;
     setHasMoreMedications(medicationPage < totalPages);
 
@@ -195,11 +297,11 @@ const NewVisit = () => {
     if (!isFetchingMedications) {
       setIsLoadingMoreMedications(false);
     }
-  }, [medicationsData, medicationPage, isFetchingMedications]);
+  }, [availableMedications, medicationsData, medicationPage, isFetchingMedications]);
 
   // Build serviceOptions incrementally when new data arrives
   useEffect(() => {
-    const data = servicesData?.data || [];
+    const data = availableServices;
     const totalPages = servicesData?.pagination?.total_pages || 1;
     setHasMoreServices(servicePage < totalPages);
 
@@ -215,7 +317,7 @@ const NewVisit = () => {
     if (!isFetchingServices) {
       setIsLoadingMoreServices(false);
     }
-  }, [servicesData, servicePage, isFetchingServices]);
+  }, [availableServices, servicesData, servicePage, isFetchingServices]);
 
   // Update patients list when new data arrives
   useEffect(() => {
@@ -273,6 +375,74 @@ const NewVisit = () => {
     }
   }, [patientData, selectedPatientId]);
 
+  // Prescription template pagination
+  useEffect(() => {
+    if (!prescriptionTemplatesData?.data) {
+      return;
+    }
+
+    const newTemplates: PrescriptionTemplate[] = prescriptionTemplatesData.data;
+
+    if (prescriptionTemplatePage === 1) {
+      setPrescriptionTemplates(newTemplates);
+    } else if (newTemplates.length > 0) {
+      setPrescriptionTemplates((prev) => {
+        const merged = [...prev];
+        newTemplates.forEach((template) => {
+          if (!merged.some((item) => item._id === template._id)) {
+            merged.push(template);
+          }
+        });
+        return merged;
+      });
+    }
+
+    if (newTemplates.length < TEMPLATE_PAGE_SIZE) {
+      setHasMorePrescriptionTemplates(false);
+    }
+  }, [prescriptionTemplatesData, prescriptionTemplatePage]);
+
+  // Service template pagination
+  useEffect(() => {
+    if (!serviceTemplatesData?.data) {
+      return;
+    }
+
+    const newTemplates: GetServiceResponse[] = serviceTemplatesData.data;
+
+    if (serviceTemplatePage === 1) {
+      setServiceTemplates(newTemplates);
+    } else if (newTemplates.length > 0) {
+      setServiceTemplates((prev) => {
+        const merged = [...prev];
+        newTemplates.forEach((template) => {
+          if (!merged.some((item) => item._id === template._id)) {
+            merged.push(template);
+          }
+        });
+        return merged;
+      });
+    }
+
+    if (newTemplates.length < TEMPLATE_PAGE_SIZE) {
+      setHasMoreServiceTemplates(false);
+    }
+  }, [serviceTemplatesData, serviceTemplatePage]);
+
+  // Reset prescription template pagination on search change
+  useEffect(() => {
+    setPrescriptionTemplatePage(1);
+    setHasMorePrescriptionTemplates(true);
+    setPrescriptionTemplates([]);
+  }, [prescriptionTemplateSearch]);
+
+  // Reset service template pagination on search change
+  useEffect(() => {
+    setServiceTemplatePage(1);
+    setHasMoreServiceTemplates(true);
+    setServiceTemplates([]);
+  }, [serviceTemplateSearch]);
+
   const selectPatient = (patientId: string) => {
     setSelectedPatientId(patientId);
     setOpen(false);
@@ -284,6 +454,19 @@ const NewVisit = () => {
     setSearchQuery('');
     setShowErrors(false);
     setOpen(true);
+    // Reset templates
+    setSelectedPrescriptionTemplate('');
+    setSelectedServiceTemplate('');
+    setPrescriptionTemplateSearch('');
+    setServiceTemplateSearch('');
+    setPrescriptionTemplatePage(1);
+    setServiceTemplatePage(1);
+    setPrescriptionTemplates([]);
+    setServiceTemplates([]);
+    setHasMorePrescriptionTemplates(true);
+    setHasMoreServiceTemplates(true);
+    setCachedMedications([]);
+    setCachedServices([]);
   };
 
   const loadMorePatients = () => {
@@ -372,8 +555,9 @@ const NewVisit = () => {
 
   // Service handlers
   const addService = () => {
-    // Mark all days by default
-    const allDays = Array.from({ length: serviceDuration }, (_, i) => i + 1);
+    // Mark all days by default - use valid duration (or 7 if invalid)
+    const duration = serviceDuration > 0 ? serviceDuration : 7;
+    const allDays = Array.from({ length: duration }, (_, i) => i + 1);
     setServices([
       ...services,
       {
@@ -455,6 +639,133 @@ const NewVisit = () => {
         return { ...srv, markedDays: allDays };
       })
     );
+  };
+
+  // Handle prescription template selection
+  const handlePrescriptionTemplateSelect = (templateId: string) => {
+    setSelectedPrescriptionTemplate(templateId);
+
+    const template = prescriptionTemplates.find((t) => t._id === templateId);
+    if (!template) return;
+
+    // Cache populated medications from template
+    const populatedMedications = template.items
+      .filter((item) => typeof item.medication_id === 'object' && item.medication_id)
+      .map((item) => item.medication_id);
+    
+    if (populatedMedications.length > 0) {
+      setCachedMedications((prev) => {
+        const combined = [...prev];
+        populatedMedications.forEach((med: any) => {
+          if (!combined.find((m) => m._id === med._id)) {
+            combined.push(med);
+          }
+        });
+        return combined;
+      });
+    }
+
+    // Add medications from template - replace existing ones
+    const templateMedications: MedicationItem[] = template.items.map((item) => {
+      const medicationId =
+        typeof item.medication_id === 'string'
+          ? item.medication_id
+          : item.medication_id?._id || '';
+
+      return {
+        id: Date.now().toString() + Math.random(),
+        medication_id: medicationId,
+        additionalInfo: '',
+        frequency: item.frequency?.toString() || '',
+        duration: item.duration?.toString() || '',
+        instructions: item.instructions || '',
+        addons: item.addons || '',
+      };
+    });
+
+    // Replace medications list instead of appending
+    setMedications(templateMedications);
+    toast.success(t('newVisit.templateApplied'));
+  };
+
+  // Handle service template selection
+  const handleServiceTemplateSelect = (templateId: string) => {
+    setSelectedServiceTemplate(templateId);
+
+    const template = serviceTemplates.find((t) => t._id === templateId);
+    if (!template) return;
+
+    // Cache populated services from template
+    const populatedServices = template.items
+      .filter((item) => item.service_type_id && typeof item.service_type_id === 'object')
+      .map((item) => item.service_type_id);
+    
+    if (populatedServices.length > 0) {
+      setCachedServices((prev) => {
+        const combined = [...prev];
+        populatedServices.forEach((srv: any) => {
+          if (!combined.find((s) => s._id === srv._id)) {
+            combined.push(srv);
+          }
+        });
+        return combined;
+      });
+    }
+
+    // Set duration from template
+    if (template.duration) {
+      setServiceDuration(template.duration);
+    }
+
+    // Add services from template - replace existing ones
+    const duration = template.duration || serviceDuration || 7;
+    const allDays = Array.from({ length: duration }, (_, i) => i + 1);
+
+    const templateServices: ServiceItem[] = template.items.map((item) => {
+      const serviceId =
+        typeof item.service_type_id === 'string'
+          ? item.service_type_id
+          : (item.service_type_id as any)?._id || '';
+
+      return {
+        id: Date.now().toString() + Math.random(),
+        service_id: serviceId,
+        notes: '',
+        markedDays: allDays, // Mark all days by default
+      };
+    });
+
+    // Replace services list instead of appending
+    setServices(templateServices);
+    toast.success(t('newVisit.templateApplied'));
+  };
+
+  const handlePrescriptionTemplateScroll = (
+    event: React.UIEvent<HTMLDivElement>
+  ) => {
+    const target = event.currentTarget;
+    const isNearBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 20;
+
+    if (
+      isNearBottom &&
+      hasMorePrescriptionTemplates &&
+      !isFetchingPrescriptionTemplates
+    ) {
+      setPrescriptionTemplatePage((prev) => prev + 1);
+    }
+  };
+
+  const handleServiceTemplateScroll = (
+    event: React.UIEvent<HTMLDivElement>
+  ) => {
+    const target = event.currentTarget;
+    const isNearBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 20;
+
+    if (isNearBottom && hasMoreServiceTemplates && !isFetchingServiceTemplates) {
+      setServiceTemplatePage((prev) => prev + 1);
+    }
   };
 
   const handleSave = async () => {
@@ -816,6 +1127,141 @@ const NewVisit = () => {
                   />
                 </div>
               </Card>
+
+              {/* Template Selection - Side by Side */}
+              <div className='shadow-sm border rounded-lg p-4 bg-gradient-to-r from-blue-50/50 to-green-50/50'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  {/* Prescription Template */}
+                  <div className='space-y-2'>
+                    <Label className='flex items-center gap-2'>
+                      <Pill className='w-4 h-4 text-primary' />
+                      {t('newVisit.prescriptionTemplate')}
+                    </Label>
+                    <Select
+                      value={selectedPrescriptionTemplate}
+                      onValueChange={handlePrescriptionTemplateSelect}
+                    >
+                      <SelectTrigger className='h-10'>
+                        <SelectValue
+                          placeholder={t('newVisit.selectPrescriptionTemplate')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent
+                        onScroll={handlePrescriptionTemplateScroll}
+                        className='max-h-[300px]'
+                      >
+                        <div className='px-2 py-1.5 sticky top-0 bg-background z-10'>
+                          <Input
+                            placeholder={t('newVisit.searchPrescriptionTemplate')}
+                            value={prescriptionTemplateSearch}
+                            onChange={(e) =>
+                              setPrescriptionTemplateSearch(e.target.value)
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            className='h-8 text-xs'
+                          />
+                        </div>
+                        {prescriptionTemplates.length === 0 ? (
+                          <div className='py-6 text-center text-sm text-muted-foreground'>
+                            {isFetchingPrescriptionTemplates
+                              ? t('newVisit.loadingTemplates')
+                              : t('newVisit.noPrescriptionTemplates')}
+                          </div>
+                        ) : (
+                          prescriptionTemplates.map((template) => (
+                            <SelectItem key={template._id} value={template._id}>
+                              <div className='flex flex-col'>
+                                <span className='font-medium'>{template.name}</span>
+                                <span className='text-xs text-muted-foreground'>
+                                  {template.items.length}{' '}
+                                  {t('newVisit.medications')}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                        {isFetchingPrescriptionTemplates &&
+                          prescriptionTemplates.length > 0 && (
+                            <div className='py-2 text-center text-xs text-muted-foreground'>
+                              {t('newVisit.loadingTemplates')}
+                            </div>
+                          )}
+                        {!hasMorePrescriptionTemplates &&
+                          prescriptionTemplates.length > 0 && (
+                            <div className='py-2 text-center text-xs text-muted-foreground'>
+                              {t('newVisit.allTemplatesLoaded')}
+                            </div>
+                          )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Service Template */}
+                  <div className='space-y-2'>
+                    <Label className='flex items-center gap-2'>
+                      <Activity className='w-4 h-4 text-primary' />
+                      {t('newVisit.serviceTemplate')}
+                    </Label>
+                    <Select
+                      value={selectedServiceTemplate}
+                      onValueChange={handleServiceTemplateSelect}
+                    >
+                      <SelectTrigger className='h-10'>
+                        <SelectValue
+                          placeholder={t('newVisit.selectServiceTemplate')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent
+                        onScroll={handleServiceTemplateScroll}
+                        className='max-h-[300px]'
+                      >
+                        <div className='px-2 py-1.5 sticky top-0 bg-background z-10'>
+                          <Input
+                            placeholder={t('newVisit.searchServiceTemplate')}
+                            value={serviceTemplateSearch}
+                            onChange={(e) =>
+                              setServiceTemplateSearch(e.target.value)
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            className='h-8 text-xs'
+                          />
+                        </div>
+                        {serviceTemplates.length === 0 ? (
+                          <div className='py-6 text-center text-sm text-muted-foreground'>
+                            {isFetchingServiceTemplates
+                              ? t('newVisit.loadingTemplates')
+                              : t('newVisit.noServiceTemplates')}
+                          </div>
+                        ) : (
+                          serviceTemplates.map((template) => (
+                            <SelectItem key={template._id} value={template._id}>
+                              <div className='flex flex-col'>
+                                <span className='font-medium'>{template.name}</span>
+                                <span className='text-xs text-muted-foreground'>
+                                  {template.items.length} {t('newVisit.services')} •{' '}
+                                  {template.duration} {t('newVisit.day')}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                        {isFetchingServiceTemplates &&
+                          serviceTemplates.length > 0 && (
+                            <div className='py-2 text-center text-xs text-muted-foreground'>
+                              {t('newVisit.loadingTemplates')}
+                            </div>
+                          )}
+                        {!hasMoreServiceTemplates &&
+                          serviceTemplates.length > 0 && (
+                            <div className='py-2 text-center text-xs text-muted-foreground'>
+                              {t('newVisit.allTemplatesLoaded')}
+                            </div>
+                          )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
 
               {/* Prescriptions Section */}
               <Card className='card-shadow'>

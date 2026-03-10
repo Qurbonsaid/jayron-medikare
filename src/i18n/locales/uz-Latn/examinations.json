@@ -204,7 +204,19 @@
     "selectPatientError": "Iltimos, bemorni tanlang",
     "selectDoctorError": "Iltimos, shifokorni tanlang",
     "enterComplaintError": "Iltimos, bemor shikoyatini kiriting",
-    "examCreated": "Ko'rik muvaffaqiyatli yaratildi"
+    "examCreated": "Ko'rik muvaffaqiyatli yaratildi",
+    "prescriptionTemplate": "Retsept shabloni",
+    "selectPrescriptionTemplate": "Retsept shablonini tanlang...",
+    "searchPrescriptionTemplate": "Retsept shabloni qidiruv...",
+    "noPrescriptionTemplates": "Retsept shablonlari topilmadi",
+    "serviceTemplate": "Xizmat shabloni",
+    "selectServiceTemplate": "Xizmat shablonini tanlang...",
+    "searchServiceTemplate": "Xizmat shabloni qidiruv...",
+    "noServiceTemplates": "Xizmat shablonlari topilmadi",
+    "templateApplied": "Shablon muvaffaqiyatli qo'llanildi",
+    "loadingTemplates": "Shablonlar yuklanmoqda...",
+    "allTemplatesLoaded": "Barcha shablonlar yuklandi",
+    "medications": "dori"
   },
   "detail": {
     "back": "Orqaga",
