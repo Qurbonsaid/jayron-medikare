@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Edit, FilePlus, Plus, Save, X } from "lucide-react";
+import { Edit, FilePlus, Loader2, Plus, Save, X } from "lucide-react";
 import {Fragment, useRef, useState } from "react";
 import { useGetManyPrescriptionQuery } from "@/app/api/examinationApi";
 import { toast } from "sonner";
@@ -38,7 +38,7 @@ const PrescriptionsTab = (prop: Props) => {
     const [updatePrescription, { isLoading: isUpdatingPrescription }] =
     useUpdatePrescriptionMutation();
 
-    const { data: prescriptions, refetch: refetchPrescriptions } =
+    const { data: prescriptions, refetch: refetchPrescriptions, isLoading: isLoadingPrescriptions, isFetching: isFetchingPrescriptions } =
         useGetManyPrescriptionQuery(
           {
             page: 1,
@@ -200,7 +200,11 @@ const PrescriptionsTab = (prop: Props) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {prescriptions?.data.length > 0 ? (
+          {isLoadingPrescriptions || isFetchingPrescriptions ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : prescriptions?.data.length > 0 ? (
             <div className="space-y-4">
               {prescriptions.data.map((prescriptionDoc: any, docIndex: number) => (
                 <Card
@@ -330,11 +334,11 @@ const PrescriptionsTab = (prop: Props) => {
                                     <Input
                                       type="number"
                                       min={1}
-                                      value={prescriptionForm.frequency}
+                                      value={prescriptionForm.duration}
                                       onChange={(e) =>
                                         setPrescriptionForm({
                                           ...prescriptionForm,
-                                          frequency: e.target.value,
+                                          duration: e.target.value,
                                         })
                                       }
                                       className="mt-1"
@@ -346,11 +350,11 @@ const PrescriptionsTab = (prop: Props) => {
                                       {t("detail.instruction")}
                                     </Label>
                                     <Input
-                                      value={prescriptionForm.frequency}
+                                      value={prescriptionForm.instructions}
                                       onChange={(e) =>
                                         setPrescriptionForm({
                                           ...prescriptionForm,
-                                          frequency: e.target.value,
+                                          instructions: e.target.value,
                                         })
                                       }
                                       className="mt-1"
@@ -365,11 +369,11 @@ const PrescriptionsTab = (prop: Props) => {
                                     {t("detail.additional")}
                                   </Label>
                                   <Textarea
-                                    value={prescriptionForm.frequency}
+                                    value={prescriptionForm.addons}
                                       onChange={(e) =>
                                         setPrescriptionForm({
                                           ...prescriptionForm,
-                                          frequency: e.target.value,
+                                          addons: e.target.value,
                                         })
                                       }
                                     className="mt-1"
@@ -392,7 +396,11 @@ const PrescriptionsTab = (prop: Props) => {
                                     onClick={handleUpdatePrescription}
                                     disabled={isUpdatingPrescription}
                                   >
-                                    <Save className="w-3 h-3 mr-1" />
+                                    {isUpdatingPrescription ? (
+                                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                    ) : (
+                                      <Save className="w-3 h-3 mr-1" />
+                                    )}
                                     {isUpdatingPrescription
                                       ? t("detail.saving")
                                       : t("detail.save")}

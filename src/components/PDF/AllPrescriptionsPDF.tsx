@@ -274,7 +274,7 @@ export const AllPrescriptionsDownloadButton: React.FC<
       variant='outline'
     >
       <Download className='mr-2 h-4 w-4' />
-      {t('downloadPrescriptions')}
+      {t("examinations:downloadPrescriptions")}
     </Button>
   );
 };
