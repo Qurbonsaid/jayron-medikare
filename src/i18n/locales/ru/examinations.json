@@ -449,6 +449,7 @@
     "count": "шт",
     "noImagesYet": "Снимки ещё не добавлены"
   },
+  "downloadPrescriptions": "Скачать рецепты",
   "neurologic": {
     "title": "Неврологический статус",
     "newStatus": "Новый неврологический статус",

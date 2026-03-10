@@ -449,6 +449,7 @@
     "count": "items",
     "noImagesYet": "No images added yet"
   },
+  "downloadPrescriptions": "Download Prescriptions",
   "neurologic": {
     "title": "Neurologic Status",
     "newStatus": "New Neurologic Status",
