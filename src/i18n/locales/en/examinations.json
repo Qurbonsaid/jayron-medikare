@@ -204,7 +204,19 @@
     "selectPatientError": "Please select a patient",
     "selectDoctorError": "Please select a doctor",
     "enterComplaintError": "Please enter patient complaint",
-    "examCreated": "Examination successfully created"
+    "examCreated": "Examination successfully created",
+    "prescriptionTemplate": "Prescription Template",
+    "selectPrescriptionTemplate": "Select prescription template...",
+    "searchPrescriptionTemplate": "Search prescription template...",
+    "noPrescriptionTemplates": "No prescription templates found",
+    "serviceTemplate": "Service Template",
+    "selectServiceTemplate": "Select service template...",
+    "searchServiceTemplate": "Search service template...",
+    "noServiceTemplates": "No service templates found",
+    "templateApplied": "Template applied successfully",
+    "loadingTemplates": "Loading templates...",
+    "allTemplatesLoaded": "All templates loaded",
+    "medications": "medications"
   },
   "detail": {
     "back": "Back",

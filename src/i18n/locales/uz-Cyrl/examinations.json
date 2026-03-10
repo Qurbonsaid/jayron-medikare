@@ -204,7 +204,19 @@
     "selectPatientError": "Илтимос, беморни танланг",
     "selectDoctorError": "Илтимос, шифокорни танланг",
     "enterComplaintError": "Илтимос, бемор шикоятини киритинг",
-    "examCreated": "Кўрик муваффақиятли яратилди"
+    "examCreated": "Кўрик муваффақиятли яратилди",
+    "prescriptionTemplate": "Рецепт шаблони",
+    "selectPrescriptionTemplate": "Рецепт шаблонини танланг...",
+    "searchPrescriptionTemplate": "Рецепт шаблони қидириш...",
+    "noPrescriptionTemplates": "Рецепт шаблонлари топилмади",
+    "serviceTemplate": "Хизмат шаблони",
+    "selectServiceTemplate": "Хизмат шаблонини танланг...",
+    "searchServiceTemplate": "Хизмат шаблони қидириш...",
+    "noServiceTemplates": "Хизмат шаблонлари топилмади",
+    "templateApplied": "Шаблон муваффақиятли қўлланилди",
+    "loadingTemplates": "Шаблонлар юкланмоқда...",
+    "allTemplatesLoaded": "Барча шаблонлар юкланди",
+    "medications": "дори"
   },
   "detail": {
     "back": "Орқага",
